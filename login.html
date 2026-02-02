@@ -1,64 +1,44 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Player Login</title>
+<title>Player Register</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{
-  background:#02060c;
-  color:#fff;
-  font-family:Segoe UI;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
-.box{
-  background:#0b1d2a;
-  padding:20px;
-  border-radius:14px;
-  width:90%;
-  max-width:360px;
-}
-input,button{
-  width:100%;
-  padding:12px;
-  margin:8px 0;
-  border-radius:10px;
-  border:none;
-}
-button{
-  background:#ffd400;
-  font-weight:bold;
-}
-a{color:#00eaff;font-size:14px}
+body{background:#000;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh}
+.box{background:#111;padding:20px;border-radius:12px;width:90%;max-width:360px}
+input,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none}
+button{background:#00eaff;font-weight:bold}
 </style>
 </head>
 <body>
 
 <div class="box">
-  <h2>Player Login</h2>
-  <input id="username" placeholder="Username">
-  <input id="password" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-  <a href="register.html">Create new account</a>
+<h2>Player Register</h2>
+<input id="u" placeholder="Username">
+<input id="p" type="password" placeholder="Password">
+<button onclick="reg()">Create Account</button>
 </div>
 
 <script>
-function login(){
-  const user = username.value.trim();
-  const pass = password.value.trim();
+function reg(){
+  let u=document.getElementById("u").value.trim();
+  let p=document.getElementById("p").value.trim();
 
-  let players = JSON.parse(localStorage.getItem("players")) || {};
+  if(!u||!p){alert("Fill all fields");return;}
 
-  if(!players[user] || players[user].password !== pass){
-    alert("Wrong username or password");
+  let players=JSON.parse(localStorage.getItem("players"))||{};
+
+  if(players[u]){
+    alert("Username already exists");
     return;
   }
 
-  localStorage.setItem("currentPlayer", user);
-  location.href = "player.html";
+  players[u]={password:p,rating:1000,matches:[]};
+  localStorage.setItem("players",JSON.stringify(players));
+
+  alert("Account created! Login now");
+  location.href="login.html";
 }
 </script>
 
