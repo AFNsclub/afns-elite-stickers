@@ -1,10 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Leaderboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{
+    background:#020612;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+}
+</style>
+</head>
+<body>
+
+<h2>Leaderboard</h2>
+
+<div id="list"></div>
+
 <script>
-let players = JSON.parse(localStorage.players || "[]");
+let players = JSON.parse(localStorage.getItem("players") || "[]");
+
 players.sort((a,b)=>b.rating-a.rating);
 
 players.forEach((p,i)=>{
-    document.body.innerHTML += `
-    <p>${i+1}. ${p.username} - ${p.rating}</p>
+    document.getElementById("list").innerHTML += `
+    <p>${i+1}. ${p.username} — ${p.rating}</p>
     `;
 });
 </script>
+
+</body>
+</html>
