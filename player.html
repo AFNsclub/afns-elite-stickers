@@ -27,12 +27,22 @@ body{
     padding:20px;
     border-radius:20px;
     max-width:420px;
-    margin:20px auto;
+    margin:15px auto;
 }
 .rating{
     font-size:60px;
     color:#ffd700;
 }
+.badge{
+    display:inline-block;
+    padding:6px 14px;
+    border-radius:20px;
+    font-weight:bold;
+    margin-top:8px;
+}
+.bronze{background:#cd7f32;}
+.silver{background:#c0c0c0;color:#000;}
+.gold{background:#ffd700;color:#000;}
 button{
     background:#00c8ff;
     border:none;
@@ -52,11 +62,13 @@ button{
     <img id="avatar" class="avatar" src="">
     <h2 id="playerName">Player</h2>
 
+    <!-- Rating & Badge -->
     <div class="card">
         <div class="rating" id="rating">100</div>
-        <small>PLAYER RATING</small>
+        <div id="badge" class="badge bronze">BRONZE</div>
     </div>
 
+    <!-- Bio -->
     <div class="card">
         <h3>About Player</h3>
         <p id="bio">No bio added.</p>
@@ -78,7 +90,21 @@ document.getElementById("playerName").innerText=currentPlayer;
 
 // Rating
 const players = JSON.parse(localStorage.getItem("players"))||{};
-document.getElementById("rating").innerText=players[currentPlayer]||100;
+const rating = players[currentPlayer] || 100;
+document.getElementById("rating").innerText = rating;
+
+// Badge logic
+const badge = document.getElementById("badge");
+if(rating >= 700){
+    badge.innerText="GOLD";
+    badge.className="badge gold";
+}else if(rating >= 400){
+    badge.innerText="SILVER";
+    badge.className="badge silver";
+}else{
+    badge.innerText="BRONZE";
+    badge.className="badge bronze";
+}
 
 // Profile
 const profiles = JSON.parse(localStorage.getItem("profiles"))||{};
@@ -100,7 +126,10 @@ function logout(){
     window.location.href="login.html";
 }
 function shareProfile(){
-    const url = location.origin + location.pathname.replace("player.html","public-profile.html?player=" + currentPlayer);
+    const url = location.origin + location.pathname.replace(
+        "player.html",
+        "public-profile.html?player="+currentPlayer
+    );
     navigator.clipboard.writeText(url);
     alert("Public profile link copied!");
 }
