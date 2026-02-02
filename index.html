@@ -3,49 +3,94 @@
 <head>
 <meta charset="UTF-8">
 <title>AFN's Elite Strikers</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
-  margin:0;
-  background:#020b1c;
-  color:#fff;
-  font-family:Arial;
-  text-align:center;
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at top, #0b1c3d, #020612);
+    color:white;
+    text-align:center;
 }
+
 header{
-  padding:30px 20px;
-}
-img{max-width:180px;}
-h1{color:#ffd700;}
-.tagline{color:#00cfff;font-style:italic;}
-
-.lang-btn{
-  background:#00cfff;
-  border:none;
-  padding:8px 16px;
-  border-radius:20px;
-  font-weight:bold;
-  margin:5px;
+    padding:30px 15px;
 }
 
-.section{
-  max-width:900px;
-  margin:40px auto;
-  padding:20px;
+header img{
+    width:150px;
+    border-radius:20px;
 }
-.card{
-  background:rgba(255,255,255,0.08);
-  padding:20px;
-  border-radius:20px;
-  margin:15px 0;
+
+h1{
+    color:#FFD700;
+    margin:15px 0 5px;
 }
-a{color:#00cfff;text-decoration:none;font-weight:bold;}
+
+.tagline{
+    color:#00eaff;
+    font-style:italic;
+    margin-bottom:20px;
+}
+
+.lang-btns button{
+    padding:8px 18px;
+    margin:5px;
+    border:none;
+    border-radius:20px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.lang-btns .bn{ background:#00eaff; }
+.lang-btns .en{ background:#ccc; }
+
+section{
+    background:#0f1a30;
+    margin:20px auto;
+    padding:20px;
+    width:90%;
+    border-radius:18px;
+}
+
+h2{
+    color:#00eaff;
+    margin-bottom:10px;
+}
+
+.players a{
+    display:block;
+    background:#14285f;
+    margin:10px auto;
+    padding:15px;
+    width:85%;
+    border-radius:15px;
+    text-decoration:none;
+    color:white;
+    font-weight:bold;
+}
+
+.players a span{
+    color:#00eaff;
+    font-size:14px;
+}
+
+.menu a{
+    display:inline-block;
+    margin:10px;
+    padding:12px 20px;
+    border-radius:25px;
+    background:#FFD700;
+    color:black;
+    text-decoration:none;
+    font-weight:bold;
+}
 
 footer{
-  padding:20px;
-  color:#aaa;
-  font-size:14px;
+    margin:30px 0 15px;
+    font-size:13px;
+    opacity:0.7;
 }
 </style>
 </head>
@@ -53,61 +98,69 @@ footer{
 <body>
 
 <header>
-  <img src="logo.png" alt="AFN Logo"><br><br>
-  <h1>AFN's Elite Strikers</h1>
-  <p class="tagline">Champions are made in eFootball.</p>
+    <img src="logo.png" alt="AFN Logo">
+    <h1>AFN's Elite Strikers</h1>
+    <div class="tagline" id="tagline">
+        Champions are made in eFootball!
+    </div>
 
-  <button class="lang-btn" onclick="setLang('bn')">বাংলা</button>
-  <button class="lang-btn" onclick="setLang('en')">English</button>
+    <div class="lang-btns">
+        <button class="bn" onclick="setLang('bn')">বাংলা</button>
+        <button class="en" onclick="setLang('en')">English</button>
+    </div>
 </header>
 
-<!-- ABOUT CLUB -->
-<div class="section card">
-  <h2 id="aboutTitle">About Our Club</h2>
-  <p id="aboutText">
-    AFN's Elite Strikers is a competitive eFootball club where players grow through real match performance.
-  </p>
-</div>
+<section>
+    <h2 id="aboutTitle">About Our Club</h2>
+    <p id="aboutText">
+        AFN's Elite Strikers is a competitive eFootball club where players grow through real match performance.
+    </p>
+</section>
 
-<!-- PLAYERS -->
-<div class="section">
-  <h2>Team Players</h2>
+<section class="players">
+    <h2>Team Players</h2>
 
-  <div class="card">
-    <h3>Player One</h3>
-    <a href="player.html">View Profile</a>
-  </div>
+    <a href="player.html">
+        Player One <br>
+        <span>View Profile</span>
+    </a>
 
-  <div class="card">
-    <h3>Player Two</h3>
-    <a href="player.html">View Profile</a>
-  </div>
+    <a href="player.html">
+        Player Two <br>
+        <span>View Profile</span>
+    </a>
 
-  <div class="card">
-    <h3>Player Three</h3>
-    <a href="player.html">View Profile</a>
-  </div>
-</div>
+    <a href="player.html">
+        Player Three <br>
+        <span>View Profile</span>
+    </a>
+</section>
+
+<section class="menu">
+    <a href="leaderboard.html">🏆 Leaderboard</a>
+    <a href="login.html">👤 Player Login</a>
+    <a href="admin-login.html">🔐 Admin</a>
+</section>
 
 <footer>
-  © 2026 AFN's Elite Strikers | All Rights Reserved
+    © 2026 AFN's Elite Strikers | All Rights Reserved
 </footer>
 
 <script>
-const about = {
-  bn: {
-    title: "আমাদের ক্লাব সম্পর্কে",
-    text: "AFN’s Elite Strikers একটি প্রতিযোগিতামূলক eFootball ক্লাব, যেখানে খেলোয়াড়রা একে অপরের বিরুদ্ধে ম্যাচ খেলে নিজেদের দক্ষতা ও রেটিং উন্নত করে। এখানে রেটিং নির্ধারিত হয় জয় ও পরাজয়ের ভিত্তিতে, যা খেলোয়াড়দের প্রকৃত পারফরম্যান্সকে প্রতিফলিত করে।"
-  },
-  en: {
-    title: "About Our Club",
-    text: "AFN’s Elite Strikers is a competitive eFootball club where players improve their skills and ratings through real match results. Ratings are calculated based on wins and losses, reflecting true performance."
-  }
-};
-
 function setLang(lang){
-  document.getElementById("aboutTitle").innerText = about[lang].title;
-  document.getElementById("aboutText").innerText = about[lang].text;
+    if(lang === "bn"){
+        document.getElementById("aboutTitle").innerText = "আমাদের ক্লাব সম্পর্কে";
+        document.getElementById("aboutText").innerText =
+        "AFN's Elite Strikers একটি প্রতিযোগিতামূলক eFootball ক্লাব, যেখানে খেলোয়াড়রা বাস্তব ম্যাচ পারফরম্যান্সের মাধ্যমে নিজেদের রেটিং ও দক্ষতা বাড়ায়।";
+        document.getElementById("tagline").innerText =
+        "চ্যাম্পিয়ন তৈরি হয় eFootball এ!";
+    }else{
+        document.getElementById("aboutTitle").innerText = "About Our Club";
+        document.getElementById("aboutText").innerText =
+        "AFN's Elite Strikers is a competitive eFootball club where players grow through real match performance.";
+        document.getElementById("tagline").innerText =
+        "Champions are made in eFootball!";
+    }
 }
 </script>
 
