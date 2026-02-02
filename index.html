@@ -2,66 +2,96 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AFNS Club | Official</title>
 
 <style>
+*{
+  box-sizing:border-box;
+}
+
 body{
-    margin:0;
-    font-family: Arial, sans-serif;
-    background:#0b1220;
-    color:white;
+  margin:0;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background: radial-gradient(circle at top, #06141f, #000);
+  color:#fff;
 }
+
+/* HEADER */
 header{
-    text-align:center;
-    padding:30px 15px;
+  text-align:center;
+  padding:50px 20px 30px;
 }
+
 header img{
-    width:120px;
+  width:90px;
+  margin-bottom:15px;
 }
-h1{
-    margin:15px 0 5px;
-    color:#ffd700;
+
+header h1{
+  margin:0;
+  font-size:30px;
+  letter-spacing:1px;
 }
-.tagline{
-    color:#00eaff;
-    font-style:italic;
+
+header .tagline{
+  margin-top:10px;
+  font-size:14px;
+  color:#9aa7b2;
 }
-.lang-btns button{
-    margin:10px 5px;
-    padding:10px 18px;
-    border:none;
-    border-radius:20px;
-    background:#00eaff;
-    font-weight:bold;
-    cursor:pointer;
+
+/* MAIN */
+main{
+  padding:20px;
+  max-width:500px;
+  margin:auto;
 }
-.section{
-    background:#141c2f;
-    margin:15px;
-    padding:20px;
-    border-radius:15px;
+
+/* CARD */
+.card{
+  background:linear-gradient(180deg,#0c1b28,#071018);
+  border-radius:18px;
+  padding:22px;
+  margin-bottom:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.6);
 }
-.section h2{
-    margin-top:0;
-    text-align:center;
+
+.card h2{
+  margin:0 0 10px;
+  font-size:20px;
+  color:#00e6d0;
 }
-.menu a{
-    display:block;
-    text-decoration:none;
-    background:#0b1220;
-    padding:14px;
-    margin:10px 0;
-    border-radius:10px;
-    text-align:center;
-    color:#00eaff;
-    font-weight:bold;
+
+.card p{
+  font-size:14px;
+  line-height:1.7;
+  color:#c7d0d9;
 }
+
+/* BUTTONS */
+.btn{
+  display:block;
+  text-align:center;
+  text-decoration:none;
+  padding:14px;
+  border-radius:14px;
+  font-weight:600;
+  margin-top:12px;
+  background:#00bfa6;
+  color:#000;
+}
+
+.btn.secondary{
+  background:#16232e;
+  color:#fff;
+}
+
+/* FOOTER */
 footer{
-    text-align:center;
-    font-size:13px;
-    color:#aaa;
-    padding:15px;
+  text-align:center;
+  padding:25px 15px;
+  font-size:12px;
+  color:#6c7a86;
 }
 </style>
 </head>
@@ -69,65 +99,34 @@ footer{
 <body>
 
 <header>
-    <img src="logo.png">
-    <h1>AFN's Elite Strikers</h1>
-    <div class="tagline" id="tagline">
-        Champions are made in eFootball!
-    </div>
-
-    <div class="lang-btns">
-        <button onclick="setLang('bn')">বাংলা</button>
-        <button onclick="setLang('en')">English</button>
-    </div>
+  <img src="logo.png" alt="AFNS Club Logo">
+  <h1>AFNS Club</h1>
+  <div class="tagline">
+    Where Skill, Competition & Rankings Matter
+  </div>
 </header>
 
-<div class="section">
-    <h2 id="aboutTitle">About Our Club</h2>
-    <p id="aboutText" style="text-align:center;">
-        AFN's Elite Strikers is a competitive eFootball club where players grow through real match performance.
-    </p>
-</div>
+<main>
 
-<div class="section menu">
-    <a href="login.html">👤 Player Login</a>
-    <a href="player.html">📄 Player Profiles</a>
-    <a href="leaderboard.html">🏆 Leaderboard</a>
-    <a href="admin-login.html">🔐 Admin Login</a>
-    <a href="match-submit.html">⚽ Match Submit (Admin)</a>
-</div>
+  <div class="card">
+    <h2>About AFNS Club</h2>
+    <p>
+      AFNS Club is a competitive mobile gaming platform designed for serious players.
+      Compete in fair matches, submit results, climb the leaderboard and build your
+      reputation through performance — not luck.
+    </p>
+  </div>
+
+  <div class="card">
+    <a href="login.html" class="btn">Player Login / Register</a>
+    <a href="leaderboard.html" class="btn secondary">View Leaderboard</a>
+  </div>
+
+</main>
 
 <footer>
-    © 2026 AFN's Elite Strikers | All Rights Reserved
+  © 2026 AFNS Club • Competitive Mobile Gaming Community
 </footer>
-
-<script>
-const content = {
-    en:{
-        tagline:"Champions are made in eFootball!",
-        aboutTitle:"About Our Club",
-        aboutText:"AFN's Elite Strikers is a competitive eFootball club where players grow through real match performance."
-    },
-    bn:{
-        tagline:"চ্যাম্পিয়ন তৈরি হয় eFootball থেকে!",
-        aboutTitle:"আমাদের ক্লাব সম্পর্কে",
-        aboutText:"AFN's Elite Strikers একটি প্রতিযোগিতামূলক eFootball ক্লাব যেখানে খেলোয়াড়রা বাস্তব ম্যাচ পারফরম্যান্সের মাধ্যমে নিজেদের রেটিং ও দক্ষতা বৃদ্ধি করে।"
-    }
-};
-
-function setLang(lang){
-    localStorage.setItem("siteLang",lang);
-    applyLang();
-}
-
-function applyLang(){
-    const lang = localStorage.getItem("siteLang") || "en";
-    document.getElementById("tagline").innerText = content[lang].tagline;
-    document.getElementById("aboutTitle").innerText = content[lang].aboutTitle;
-    document.getElementById("aboutText").innerText = content[lang].aboutText;
-}
-
-applyLang();
-</script>
 
 </body>
 </html>
