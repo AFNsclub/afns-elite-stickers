@@ -1,97 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>AFN Player Profiles</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body{
-  margin:0;
-  background:#020b1c;
-  color:#fff;
-  font-family:Arial;
-  text-align:center;
-}
-h1{color:#ffd700;}
-.section{
-  max-width:900px;
-  margin:30px auto;
-  padding:20px;
-}
-.card{
-  background:rgba(255,255,255,0.08);
-  padding:20px;
-  border-radius:20px;
-  margin:15px 0;
-}
-button{
-  padding:10px 18px;
-  border:none;
-  border-radius:20px;
-  font-weight:bold;
-  margin:5px;
-}
-.win{background:#00c853;color:#000;}
-.lose{background:#ff5252;color:#000;}
-.rating{font-size:20px;color:#00e5ff;}
-</style>
-</head>
-
-<body>
-
-<h1>AFN Player Profiles</h1>
-
-<div class="section" id="players"></div>
-
 <script>
-const defaultPlayers = [
-  {id:1, name:"Player One", rating:80},
-  {id:2, name:"Player Two", rating:80},
-  {id:3, name:"Player Three", rating:80}
-];
+let players = JSON.parse(localStorage.players);
+let user = localStorage.currentPlayer;
+let p = players.find(x => x.username === user);
 
-function loadPlayers(){
-  return JSON.parse(localStorage.getItem("afnPlayers")) || defaultPlayers;
-}
-
-function savePlayers(players){
-  localStorage.setItem("afnPlayers", JSON.stringify(players));
-}
-
-function updateRating(id, result){
-  let players = loadPlayers();
-  players = players.map(p=>{
-    if(p.id===id){
-      if(result==="win") p.rating += 5;
-      if(result==="lose") p.rating -= 3;
-      if(p.rating < 0) p.rating = 0;
-    }
-    return p;
-  });
-  savePlayers(players);
-  render();
-}
-
-function render(){
-  const players = loadPlayers();
-  const box = document.getElementById("players");
-  box.innerHTML = "";
-
-  players.forEach(p=>{
-    box.innerHTML += `
-      <div class="card">
-        <h2>${p.name}</h2>
-        <p class="rating">Rating: ${p.rating}</p>
-        <button class="win" onclick="updateRating(${p.id}, 'win')">Win</button>
-        <button class="lose" onclick="updateRating(${p.id}, 'lose')">Lose</button>
-      </div>
-    `;
-  });
-}
-
-render();
+document.body.innerHTML = `
+<h2>${p.username}</h2>
+<p>Rating: ${p.rating}</p>
+<p>Wins: ${p.wins}</p>
+<p>Losses: ${p.losses}</p>
+<a href="leaderboard.html">Leaderboard</a>
+`;
 </script>
-
-</body>
-</html>
