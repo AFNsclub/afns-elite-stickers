@@ -2,43 +2,45 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Player Register</title>
+<title>Player Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{background:#000;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh}
 .box{background:#111;padding:20px;border-radius:12px;width:90%;max-width:360px}
 input,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none}
-button{background:#00eaff;font-weight:bold}
+button{background:#ffd400;font-weight:bold}
+a{color:#00eaff}
 </style>
 </head>
 <body>
 
 <div class="box">
-<h2>Player Register</h2>
+<h2>Player Login</h2>
 <input id="u" placeholder="Username">
 <input id="p" type="password" placeholder="Password">
-<button onclick="reg()">Create Account</button>
+<button onclick="login()">Login</button>
+<a href="register.html">Create new account</a>
 </div>
 
 <script>
-function reg(){
+function login(){
   let u=document.getElementById("u").value.trim();
   let p=document.getElementById("p").value.trim();
 
-  if(!u||!p){alert("Fill all fields");return;}
+  let players=JSON.parse(localStorage.getItem("players"));
 
-  let players=JSON.parse(localStorage.getItem("players"))||{};
-
-  if(players[u]){
-    alert("Username already exists");
+  if(!players || !players[u]){
+    alert("Account not found");
     return;
   }
 
-  players[u]={password:p,rating:1000,matches:[]};
-  localStorage.setItem("players",JSON.stringify(players));
+  if(players[u].password!==p){
+    alert("Wrong password");
+    return;
+  }
 
-  alert("Account created! Login now");
-  location.href="login.html";
+  localStorage.setItem("currentPlayer",u);
+  location.href="player.html";
 }
 </script>
 
