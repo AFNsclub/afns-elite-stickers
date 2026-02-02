@@ -4,12 +4,47 @@
   <meta charset="UTF-8">
   <title>Admin Panel | AFNs Elite Stickers</title>
   <style>
-    body { font-family: Arial; background:#111; color:#fff; padding:20px; }
-    select, button { padding:10px; margin:5px; width:100%; }
-    h2 { color:#00ffcc; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 20px;
+    }
+    h2 {
+      color: #00ffcc;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+    button {
+      background: #00ffcc;
+      border: none;
+      cursor: pointer;
+    }
+    #msg {
+      margin-top: 15px;
+      color: lightgreen;
+      text-align: center;
+    }
   </style>
 </head>
+
 <body>
+
+<!-- 🔐 ADMIN LOGIN CHECK -->
+<script>
+  if (localStorage.getItem("adminLogin") !== "yes") {
+    window.location.href = "admin-login.html";
+  }
+</script>
 
 <h2>Admin Match Result Panel</h2>
 
@@ -26,6 +61,53 @@
 
 <p id="msg"></p>
 
-<script src="match.js"></script>
+<script>
+  let players = JSON.parse(localStorage.getItem("players")) || [];
+
+  const a = document.getElementById("playerA");
+  const b = document.getElementById("playerB");
+  const w = document.getElementById("winner");
+
+  function loadPlayers() {
+    a.innerHTML = "";
+    b.innerHTML = "";
+    w.innerHTML = "";
+
+    players.forEach(p => {
+      a.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+      b.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+      w.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+    });
+  }
+
+  loadPlayers();
+
+  function submitMatch() {
+    let pa = a.value;
+    let pb = b.value;
+    let win = w.value;
+
+    if (pa === pb) {
+      alert("Player A and Player B cannot be same");
+      return;
+    }
+
+    players = players.map(p => {
+      if (p.name === win) {
+        p.rating = Math.min(100, p.rating + 10);
+        p.win = (p.win || 0) + 1;
+      } 
+      else if (p.name === pa || p.name === pb) {
+        p.rating = Math.max(0, p.rating - 5);
+        p.lose = (p.lose || 0) + 1;
+      }
+      return p;
+    });
+
+    localStorage.setItem("players", JSON.stringify(players));
+    document.getElementById("msg").innerText = "✅ Match saved successfully!";
+  }
+</script>
+
 </body>
 </html>
