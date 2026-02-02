@@ -1,192 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
 <title>Player Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
 body{
-    margin:0;
-    font-family: Arial, sans-serif;
-    background:#0b1220;
-    color:white;
-}
-header{
-    background:#111a2e;
-    padding:15px;
-    text-align:center;
-}
-.container{
-    padding:15px;
+  background:#02060c;
+  color:#fff;
+  font-family:Segoe UI;
+  padding:20px;
 }
 .card{
-    background:#151f36;
-    padding:15px;
-    border-radius:12px;
-    margin-bottom:15px;
+  background:#0b1d2a;
+  padding:20px;
+  border-radius:14px;
+  max-width:400px;
+  margin:auto;
 }
-.avatar{
-    width:110px;
-    height:110px;
-    border-radius:50%;
-    object-fit:cover;
-    border:3px solid #00e5ff;
-}
-.badge{
-    display:inline-block;
-    padding:5px 10px;
-    border-radius:20px;
-    margin-top:8px;
-}
-.bronze{background:#cd7f32;}
-.silver{background:#c0c0c0;color:black;}
-.gold{background:#ffd700;color:black;}
 button{
-    padding:8px 14px;
-    border:none;
-    border-radius:6px;
-    background:#00e5ff;
-    color:black;
-    cursor:pointer;
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:#ff5252;
+  font-weight:bold;
 }
-input,textarea{
-    width:100%;
-    padding:8px;
-    border-radius:6px;
-    border:none;
-    margin-top:5px;
-}
-.match{
-    background:#1d2b4a;
-    padding:10px;
-    border-radius:8px;
-    margin-top:8px;
-}
-a{color:#00e5ff;text-decoration:none;}
 </style>
 </head>
-
 <body>
 
-<!-- 🔐 Player Login Check -->
-<script>
-if(!localStorage.getItem("loggedInUser")){
-    location.href="login.html";
-}
-</script>
-
-<header>
-    <h2>Player Profile</h2>
-</header>
-
-<div class="container">
-
-<!-- Profile Card -->
-<div class="card" id="profileCard"></div>
-
-<!-- Edit Bio -->
-<div class="card">
-    <h3>Edit Bio</h3>
-    <textarea id="bioInput" placeholder="Write your bio..."></textarea>
-    <br><br>
-    <button onclick="saveBio()">Save Bio</button>
-</div>
-
-<!-- Match History -->
-<div class="card">
-    <h3>Match History</h3>
-    <div id="history"></div>
-</div>
-
-</div>
+<div class="card" id="profile"></div>
+<button onclick="logout()">Logout</button>
 
 <script>
-let username = localStorage.getItem("loggedInUser");
-let players = JSON.parse(localStorage.getItem("players")) || [];
-let history = JSON.parse(localStorage.getItem("matchHistory")) || [];
+const current = localStorage.getItem("currentPlayer");
+const players = JSON.parse(localStorage.getItem("players")) || {};
 
-let player = players.find(p=>p.username===username);
-
-// Default setup
-if(!player){
-    player={
-        username:username,
-        rating:50,
-        bio:"",
-        avatar:"",
-    };
-    players.push(player);
-    localStorage.setItem("players",JSON.stringify(players));
+if(!current || !players[current]){
+  location.href = "login.html";
 }
 
-// Rank system
-function getRank(r){
-    if(r>=80) return {name:"Gold",class:"gold"};
-    if(r>=60) return {name:"Silver",class:"silver"};
-    return {name:"Bronze",class:"bronze"};
+const p = players[current];
+
+document.getElementById("profile").innerHTML = `
+  <h2>${current}</h2>
+  <p>Rating: <b>${p.rating}</b></p>
+  <p>Total Matches: ${p.matches.length}</p>
+`;
+
+function logout(){
+  localStorage.removeItem("currentPlayer");
+  location.href = "login.html";
 }
-
-// Render Profile
-function renderProfile(){
-    let rank=getRank(player.rating);
-    document.getElementById("profileCard").innerHTML=`
-        <center>
-            <img src="${player.avatar || 'https://via.placeholder.com/150'}" class="avatar"><br><br>
-            <input type="file" accept="image/*" onchange="uploadAvatar(event)">
-            <h3>${player.username}</h3>
-            <p>Rating: <b>${player.rating}</b>/100</p>
-            <span class="badge ${rank.class}">${rank.name}</span>
-            <p style="margin-top:10px;">${player.bio || "No bio yet"}</p>
-            <a href="public-profile.html?user=${player.username}">🔗 Public Profile</a>
-        </center>
-    `;
-    document.getElementById("bioInput").value=player.bio;
-}
-
-// Avatar upload
-function uploadAvatar(e){
-    let file=e.target.files[0];
-    let reader=new FileReader();
-    reader.onload=function(){
-        player.avatar=reader.result;
-        localStorage.setItem("players",JSON.stringify(players));
-        renderProfile();
-    }
-    reader.readAsDataURL(file);
-}
-
-// Save bio
-function saveBio(){
-    player.bio=document.getElementById("bioInput").value;
-    localStorage.setItem("players",JSON.stringify(players));
-    renderProfile();
-    alert("Bio updated");
-}
-
-// Match history
-function renderHistory(){
-    let box=document.getElementById("history");
-    box.innerHTML="";
-    let myMatches=history.filter(m=>m.player1===username||m.player2===username);
-
-    if(myMatches.length===0){
-        box.innerHTML="<p>No matches yet</p>";
-        return;
-    }
-
-    myMatches.reverse().forEach(m=>{
-        box.innerHTML+=`
-        <div class="match">
-            ${m.player1} vs ${m.player2}<br>
-            Winner: <b>${m.winner}</b>
-        </div>
-        `;
-    });
-}
-
-renderProfile();
-renderHistory();
 </script>
 
 </body>
