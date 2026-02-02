@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Submit Match | AFN's Elite Strikers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background:#0b1220;
+    color:white;
+}
+.container{
+    max-width:400px;
+    margin:50px auto;
+    background:#141c2f;
+    padding:20px;
+    border-radius:12px;
+}
+h2{
+    text-align:center;
+    color:#00eaff;
+}
+label{
+    display:block;
+    margin-top:15px;
+}
+input,button{
+    width:100%;
+    padding:12px;
+    margin-top:6px;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+}
+input{
+    background:#0b1220;
+    color:white;
+}
+button{
+    background:#00eaff;
+    color:black;
+    font-weight:bold;
+    margin-top:20px;
+}
+button:hover{
+    opacity:0.9;
+}
+.note{
+    font-size:13px;
+    margin-top:10px;
+    color:#aaa;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Submit Match Result</h2>
+
+    <label>Winner Username</label>
+    <input type="text" id="winner" placeholder="Winner username">
+
+    <label>Loser Username</label>
+    <input type="text" id="loser" placeholder="Loser username">
+
+    <button onclick="submit()">Submit Match</button>
+
+    <div class="note">
+        Rating auto update • Leaderboard auto refresh
+    </div>
+</div>
+
+<script src="match.js"></script>
+<script>
+function submit(){
+    const winner = document.getElementById("winner").value.trim();
+    const loser = document.getElementById("loser").value.trim();
+
+    if(!winner || !loser){
+        alert("Both fields required!");
+        return;
+    }
+
+    submitMatch(winner, loser);
+
+    document.getElementById("winner").value = "";
+    document.getElementById("loser").value = "";
+}
+</script>
+
+</body>
+</html>
