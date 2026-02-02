@@ -5,7 +5,6 @@
 <title>AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- ✅ GLOBAL POLISH STYLE -->
 <style>
 :root{
   --bg:#0b1220;
@@ -15,80 +14,132 @@
 
 body{
   margin:0;
-  font-family:Arial, sans-serif;
+  font-family: 'Segoe UI', Arial, sans-serif;
   background:linear-gradient(135deg,#050b18,#0b1220);
   color:white;
 }
 
-header{
+/* HERO */
+.hero{
   text-align:center;
-  padding:20px;
-  background:rgba(0,0,0,0.4);
+  padding:50px 20px;
+  background:radial-gradient(circle at top,#0f2b55,#050b18);
 }
 
-header img{
-  width:80px;
+.hero img{
+  width:110px;
 }
 
+.hero h1{
+  margin:15px 0 5px;
+  font-size:32px;
+  letter-spacing:1px;
+}
+
+.hero p{
+  opacity:.9;
+  font-size:16px;
+}
+
+/* CONTAINER */
 .container{
-  max-width:700px;
+  max-width:750px;
   margin:auto;
-  padding:15px;
+  padding:20px;
 }
 
+/* CARD */
 .card{
   background:var(--card);
-  padding:18px;
-  border-radius:16px;
-  margin-bottom:16px;
-  box-shadow:0 10px 25px rgba(0,0,0,.4);
+  border-radius:18px;
+  padding:20px;
+  margin-bottom:20px;
+  box-shadow:0 15px 35px rgba(0,0,0,.45);
 }
 
+/* BUTTON */
 button{
-  background:var(--accent);
-  color:black;
+  width:100%;
+  padding:14px;
   border:none;
-  padding:12px 18px;
-  border-radius:10px;
-  font-weight:bold;
+  border-radius:14px;
+  background:linear-gradient(135deg,#00e5ff,#00bcd4);
+  color:#000;
+  font-size:16px;
+  font-weight:700;
   cursor:pointer;
 }
 
-a{
+button:active{
+  transform:scale(.97);
+}
+
+.links{
+  text-align:center;
+  margin-top:15px;
+}
+
+.links a{
   color:var(--accent);
   text-decoration:none;
+  margin:0 10px;
+  font-weight:500;
+}
+
+/* MOTIVATION */
+.motive{
+  font-size:15px;
+  opacity:.85;
+  margin-top:10px;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <img src="logo.png" alt="Club Logo">
+<!-- HERO SECTION -->
+<div class="hero">
+  <img src="logo.png" alt="AFN Logo">
   <h1>AFN's Elite Strikers</h1>
-  <p>eFootball Competitive Club</p>
-</header>
+  <p>Competitive eFootball Club</p>
+  <div class="motive" id="motiveLine"></div>
+</div>
 
 <div class="container">
 
+  <!-- ABOUT -->
   <div class="card">
-    <h2>Welcome</h2>
+    <h2>About Our Club</h2>
     <p>
       AFN's Elite Strikers একটি প্রতিযোগিতামূলক eFootball ক্লাব,
-      যেখানে প্লেয়াররা রিয়েল ম্যাচ খেলে নিজেদের স্কিল প্রমাণ করে।
-      এখানে জয়–পরাজয়ের ওপর ভিত্তি করে ফেয়ার রেটিং দেওয়া হয়।
+      যেখানে প্লেয়াররা নিজেদের স্কিল প্রমাণ করে রিয়েল ম্যাচের মাধ্যমে।
+      এখানে জয়–পরাজয়, ফেয়ার প্লে এবং টিম স্পিরিটের ওপর ভিত্তি করে
+      প্লেয়ারদের রেটিং নির্ধারণ করা হয়।
     </p>
   </div>
 
+  <!-- ACTIONS -->
   <div class="card">
-    <a href="login.html">
-      <button>Player Login</button>
-    </a>
-    <br><br>
-    <a href="leaderboard.html">View Leaderboard</a>
+    <a href="login.html"><button>Player Login</button></a>
+    <div class="links">
+      <a href="leaderboard.html">Leaderboard</a> |
+      <a href="gallery.html">Match Gallery</a>
+    </div>
   </div>
 
 </div>
+
+<script>
+const lines=[
+  "Play fair. Rise strong. Be Elite.",
+  "Skill defines you, discipline crowns you.",
+  "Every match is a chance to prove yourself.",
+  "Respect the game. Dominate the pitch.",
+  "Champions are made, not born."
+];
+document.getElementById("motiveLine").innerText =
+  lines[Math.floor(Math.random()*lines.length)];
+</script>
 
 </body>
 </html>
