@@ -19,8 +19,8 @@ body{
 .card{
     background:#141c2f;
     padding:20px;
-    border-radius:15px;
-    max-width:400px;
+    border-radius:20px;
+    max-width:420px;
     margin:auto;
 }
 input, textarea{
@@ -29,7 +29,6 @@ input, textarea{
     margin:10px 0;
     border-radius:10px;
     border:none;
-    font-size:15px;
 }
 button{
     background:#00c8ff;
@@ -40,8 +39,13 @@ button{
     font-size:16px;
     cursor:pointer;
 }
-button:hover{
-    background:#00a6d6;
+img{
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    object-fit:cover;
+    margin:10px 0;
+    border:3px solid #00eaff;
 }
 </style>
 </head>
@@ -52,10 +56,14 @@ button:hover{
     <h2>Edit Profile</h2>
 
     <div class="card">
-        <p><b id="playerName"></b></p>
+        <b id="playerName"></b><br><br>
 
-        <input type="text" id="facebook" placeholder="Facebook Profile Link">
-        <textarea id="bio" rows="4" placeholder="About you"></textarea>
+        <img id="avatarPreview" src="">
+
+        <input type="file" id="avatarInput" accept="image/*">
+
+        <input type="text" id="facebook" placeholder="Facebook profile link">
+        <textarea id="bio" placeholder="About you"></textarea>
 
         <button onclick="saveProfile()">Save Profile</button>
     </div>
@@ -75,12 +83,27 @@ const profiles = JSON.parse(localStorage.getItem("profiles")) || {};
 if(profiles[player]){
     document.getElementById("facebook").value = profiles[player].facebook || "";
     document.getElementById("bio").value = profiles[player].bio || "";
+    if(profiles[player].avatar){
+        document.getElementById("avatarPreview").src = profiles[player].avatar;
+    }
 }
+
+document.getElementById("avatarInput").addEventListener("change",function(){
+    const file = this.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(){
+        document.getElementById("avatarPreview").src = reader.result;
+    }
+    reader.readAsDataURL(file);
+});
 
 function saveProfile(){
     profiles[player] = {
         facebook: document.getElementById("facebook").value,
-        bio: document.getElementById("bio").value
+        bio: document.getElementById("bio").value,
+        avatar: document.getElementById("avatarPreview").src
     };
     localStorage.setItem("profiles", JSON.stringify(profiles));
     alert("Profile updated!");
