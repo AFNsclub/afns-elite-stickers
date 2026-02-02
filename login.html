@@ -1,80 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <title>Player Register / Login</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{
-    background:#020612;
-    color:white;
-    font-family:Arial;
-    text-align:center;
+  background:#000;
+  color:#fff;
+  font-family:Arial;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.box{
+  width:300px;
 }
 input,button{
-    width:80%;
-    padding:12px;
-    margin:8px;
-    border-radius:10px;
-    border:none;
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border:none;
+  border-radius:8px;
 }
 button{
-    background:#00eaff;
-    font-weight:bold;
+  background:#0aa;
+  color:#000;
+  font-weight:bold;
 }
 </style>
 </head>
 <body>
 
-<h2>Player Register</h2>
+<div class="box">
+  <h2>Player Register</h2>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="register()">Create Account</button>
 
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-<button onclick="register()">Create Account</button>
-
-<h2>Login</h2>
-<button onclick="login()">Login</button>
+  <h2>Login</h2>
+  <button onclick="login()">Login</button>
+</div>
 
 <script>
-let players = JSON.parse(localStorage.getItem("players")) || [];
-
 function register(){
-    let u = username.value.trim();
-    let p = password.value.trim();
+  let u = document.getElementById("username").value;
+  let p = document.getElementById("password").value;
 
-    if(!u || !p){
-        alert("Fill all fields");
-        return;
-    }
+  if(!u || !p){
+    alert("Fill all fields");
+    return;
+  }
 
-    if(players.find(pl => pl.username === u)){
-        alert("Username already exists");
-        return;
-    }
+  let players = JSON.parse(localStorage.getItem("players")) || {};
 
-    players.push({
-        username: u,
-        password: p,
-        rating: 1000,
-        wins: 0,
-        losses: 0
-    });
+  if(players[u]){
+    alert("Username already exists");
+    return;
+  }
 
-    localStorage.setItem("players", JSON.stringify(players));
-    alert("Account created!");
+  players[u] = {
+    password:p,
+    rating:1000,
+    bio:"AFNS Club Player"
+  };
+
+  localStorage.setItem("players", JSON.stringify(players));
+  alert("Account created! Now login.");
 }
 
 function login(){
-    let u = username.value;
-    let p = password.value;
+  let u = document.getElementById("username").value;
+  let p = document.getElementById("password").value;
 
-    let player = players.find(pl => pl.username === u && pl.password === p);
-    if(!player){
-        alert("Invalid login");
-        return;
-    }
+  let players = JSON.parse(localStorage.getItem("players")) || {};
 
+  if(players[u] && players[u].password === p){
     localStorage.setItem("currentPlayer", u);
-    window.location = "player.html";
+    window.location.href="player.html";
+  }else{
+    alert("Invalid login");
+  }
 }
 </script>
 
