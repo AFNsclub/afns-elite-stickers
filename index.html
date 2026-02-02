@@ -6,123 +6,157 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root{
-  --bg:#0b1220;
-  --card:#121b2f;
-  --accent:#00e5ff;
-}
+*{box-sizing:border-box}
 
 body{
   margin:0;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background:linear-gradient(135deg,#050b18,#0b1220);
-  color:white;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background:linear-gradient(180deg,#030916,#070f24,#030916);
+  color:#fff;
 }
 
-/* HERO */
+/* ===== HERO ===== */
 .hero{
+  padding:60px 20px 40px;
   text-align:center;
-  padding:50px 20px;
-  background:radial-gradient(circle at top,#0f2b55,#050b18);
+  position:relative;
 }
 
-.hero img{
-  width:110px;
+.hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at top,#00e5ff33,transparent 55%);
+  z-index:-1;
+}
+
+.logo{
+  width:120px;
+  filter:drop-shadow(0 0 20px #00e5ff);
 }
 
 .hero h1{
-  margin:15px 0 5px;
-  font-size:32px;
-  letter-spacing:1px;
+  margin:18px 0 6px;
+  font-size:34px;
+  letter-spacing:1.2px;
 }
 
-.hero p{
-  opacity:.9;
+.tagline{
+  font-size:15px;
+  opacity:.85;
+  letter-spacing:.6px;
+}
+
+/* ===== MOTIVE ===== */
+.motive{
+  margin-top:16px;
   font-size:16px;
+  color:#00e5ff;
+  font-weight:600;
 }
 
-/* CONTAINER */
+/* ===== CONTAINER ===== */
 .container{
-  max-width:750px;
+  max-width:820px;
   margin:auto;
   padding:20px;
 }
 
-/* CARD */
+/* ===== CARD ===== */
 .card{
-  background:var(--card);
-  border-radius:18px;
-  padding:20px;
-  margin-bottom:20px;
-  box-shadow:0 15px 35px rgba(0,0,0,.45);
+  background:linear-gradient(180deg,#0c1633,#0a122b);
+  border-radius:22px;
+  padding:24px;
+  margin-bottom:22px;
+  box-shadow:
+    0 25px 60px rgba(0,0,0,.55),
+    inset 0 0 0 1px #00e5ff22;
 }
 
-/* BUTTON */
-button{
+/* ===== TITLES ===== */
+.card h2{
+  margin:0 0 12px;
+  font-size:22px;
+  color:#00e5ff;
+}
+
+/* ===== ABOUT TEXT ===== */
+.about{
+  font-size:15.5px;
+  line-height:1.7;
+  opacity:.95;
+}
+
+/* ===== BUTTON ===== */
+.btn{
   width:100%;
-  padding:14px;
+  padding:15px;
   border:none;
-  border-radius:14px;
-  background:linear-gradient(135deg,#00e5ff,#00bcd4);
-  color:#000;
-  font-size:16px;
-  font-weight:700;
+  border-radius:16px;
+  background:
+    linear-gradient(135deg,#00e5ff,#1de9b6);
+  color:#001018;
+  font-size:17px;
+  font-weight:800;
   cursor:pointer;
 }
 
-button:active{
+.btn:active{
   transform:scale(.97);
 }
 
+/* ===== LINKS ===== */
 .links{
   text-align:center;
-  margin-top:15px;
+  margin-top:16px;
 }
 
 .links a{
-  color:var(--accent);
+  color:#00e5ff;
   text-decoration:none;
-  margin:0 10px;
-  font-weight:500;
-}
-
-/* MOTIVATION */
-.motive{
+  margin:0 14px;
+  font-weight:600;
   font-size:15px;
-  opacity:.85;
-  margin-top:10px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- HERO SECTION -->
-<div class="hero">
-  <img src="logo.png" alt="AFN Logo">
+<!-- HERO -->
+<section class="hero">
+  <img src="logo.png" class="logo">
   <h1>AFN's Elite Strikers</h1>
-  <p>Competitive eFootball Club</p>
-  <div class="motive" id="motiveLine"></div>
-</div>
+  <div class="tagline">Professional eFootball Club</div>
+  <div class="motive" id="motive"></div>
+</section>
 
 <div class="container">
 
-  <!-- ABOUT -->
+  <!-- ABOUT CLUB -->
   <div class="card">
-    <h2>About Our Club</h2>
-    <p>
-      AFN's Elite Strikers একটি প্রতিযোগিতামূলক eFootball ক্লাব,
-      যেখানে প্লেয়াররা নিজেদের স্কিল প্রমাণ করে রিয়েল ম্যাচের মাধ্যমে।
-      এখানে জয়–পরাজয়, ফেয়ার প্লে এবং টিম স্পিরিটের ওপর ভিত্তি করে
-      প্লেয়ারদের রেটিং নির্ধারণ করা হয়।
-    </p>
+    <h2>About AFN's Elite Strikers</h2>
+    <div class="about">
+      AFN's Elite Strikers শুধুমাত্র একটি eFootball ক্লাব নয় —
+      এটি একটি প্রতিযোগিতামূলক যাত্রা, যেখানে স্কিল, মানসিক শক্তি
+      এবং ডিসিপ্লিন মিলেই একজন প্লেয়ারকে এলিট করে তোলে।
+      <br><br>
+      আমাদের ক্লাবে প্রতিটি ম্যাচ গুরুত্বপূর্ণ।
+      এখানে কোনো ফেক রেটিং নেই, নেই শর্টকাট।
+      প্লেয়ার বনাম প্লেয়ার রিয়েল ম্যাচের ফলাফলের ওপর ভিত্তি করেই
+      তৈরি হয় রেটিং, র‍্যাঙ্ক এবং সম্মান।
+      <br><br>
+      আমরা বিশ্বাস করি —
+      <b>নাম নয়, পারফরম্যান্সই পরিচয়।</b>
+    </div>
   </div>
 
-  <!-- ACTIONS -->
+  <!-- ACTION -->
   <div class="card">
-    <a href="login.html"><button>Player Login</button></a>
+    <a href="login.html"><button class="btn">Enter Club Portal</button></a>
     <div class="links">
-      <a href="leaderboard.html">Leaderboard</a> |
+      <a href="leaderboard.html">Leaderboard</a>
       <a href="gallery.html">Match Gallery</a>
     </div>
   </div>
@@ -130,16 +164,16 @@ button:active{
 </div>
 
 <script>
-const lines=[
-  "Play fair. Rise strong. Be Elite.",
-  "Skill defines you, discipline crowns you.",
-  "Every match is a chance to prove yourself.",
-  "Respect the game. Dominate the pitch.",
-  "Champions are made, not born."
+const motives=[
+  "Earn respect through performance.",
+  "Only real matches define real players.",
+  "No shortcuts. Only skill.",
+  "Pressure creates elite players.",
+  "Play smart. Play fearless."
 ];
-document.getElementById("motiveLine").innerText =
-  lines[Math.floor(Math.random()*lines.length)];
+document.getElementById("motive").innerText =
+  motives[Math.floor(Math.random()*motives.length)];
 </script>
 
 </body>
-</html>
+  </html>
