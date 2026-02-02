@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Player Profile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0b1220;
+    color:white;
+    text-align:center;
+}
+.container{
+    padding:20px;
+}
+.avatar{
+    width:130px;
+    height:130px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid #00eaff;
+    margin:15px auto;
+}
+.card{
+    background:#141c2f;
+    padding:20px;
+    border-radius:20px;
+    max-width:420px;
+    margin:20px auto;
+}
+.rating{
+    font-size:60px;
+    color:#ffd700;
+}
+.win{color:#00ff9c;}
+.loss{color:#ff4c4c;}
+a{
+    color:#00eaff;
+    text-decoration:none;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <img id="avatar" class="avatar" src="">
+    <h2 id="playerName">Player</h2>
+    <small>AFN's Elite Strikers</small>
+
+    <div class="card">
+        <div class="rating" id="rating">100</div>
+        <small>PLAYER RATING</small>
+    </div>
+
+    <div class="card">
+        <h3>About Player</h3>
+        <p id="bio">No bio added.</p>
+        <a id="facebook" href="#" target="_blank" style="display:none;">
+            🔗 Facebook Profile
+        </a>
+    </div>
+
+    <div class="card">
+        <h3>Recent Matches</h3>
+        <div id="history">No matches yet.</div>
+    </div>
+
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const player = params.get("player");
+
+if(!player){
+    document.body.innerHTML="<h2>Player not found</h2>";
+}
+
+document.getElementById("playerName").innerText = player;
+
+// Rating
+const players = JSON.parse(localStorage.getItem("players")) || {};
+document.getElementById("rating").innerText = players[player] || 100;
+
+// Profile
+const profiles = JSON.parse(localStorage.getItem("profiles")) || {};
+if(profiles[player]){
+    if(profiles[player].avatar){
+        document.getElementById("avatar").src = profiles[player].avatar;
+    }
+    if(profiles[player].bio){
+        document.getElementById("bio").innerText = profiles[player].bio;
+    }
+    if(profiles[player].facebook){
+        const fb = document.getElementById("facebook");
+        fb.href = profiles[player].facebook;
+        fb.style.display="inline";
+    }
+}
+
+// Match history
+const historyData = JSON.parse(localStorage.getItem("matchHistory")) || {};
+const list = historyData[player] || [];
+const box = document.getElementById("history");
+
+if(list.length){
+    box.innerHTML="";
+    list.slice(-5).reverse().forEach(m=>{
+        const div=document.createElement("div");
+        const cls=m.result==="Win"?"win":"loss";
+        div.innerHTML=`
+            <b>${m.result}</b> vs ${m.opponent}<br>
+            <span class="${cls}">${m.ratingChange}</span> rating<br>
+            <small>${m.date}</small><hr>
+        `;
+        box.appendChild(div);
+    });
+}
+</script>
+
+</body>
+</html>
