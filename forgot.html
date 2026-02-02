@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Forgot Password</title>
+<style>
+body{background:#0b1320;color:white;font-family:Arial}
+.box{max-width:350px;margin:80px auto;background:#111a2e;padding:20px;border-radius:12px}
+input,button{width:100%;padding:12px;margin-top:10px;border-radius:8px;border:none}
+button{background:#00c2ff;font-weight:bold}
+</style>
+</head>
+
+<body>
+<div class="box">
+<h2>Recover Password</h2>
+
+<input id="username" placeholder="Username">
+<button onclick="next()">Next</button>
+
+<div id="step2" style="display:none">
+<p id="q"></p>
+<input id="ans" placeholder="Your Answer">
+<button onclick="recover()">Recover</button>
+</div>
+</div>
+
+<script>
+let currentUser;
+
+function next(){
+  let players = JSON.parse(localStorage.getItem("players")) || {};
+  let user = username.value.trim();
+
+  if(!players[user]){
+    alert("User not found");
+    return;
+  }
+
+  currentUser = user;
+  q.innerText = players[user].question;
+  step2.style.display="block";
+}
+
+function recover(){
+  let players = JSON.parse(localStorage.getItem("players"));
+  if(ans.value.trim() === players[currentUser].answer){
+    alert("Your Password: " + players[currentUser].password);
+  }else{
+    alert("Wrong Answer");
+  }
+}
+</script>
+</body>
+</html>
