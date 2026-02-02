@@ -1,48 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
 <title>Player Login</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{background:#000;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh}
-.box{background:#111;padding:20px;border-radius:12px;width:90%;max-width:360px}
-input,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none}
-button{background:#ffd400;font-weight:bold}
-a{color:#00eaff}
+body{background:#0b1320;color:white;font-family:Arial}
+.box{max-width:350px;margin:80px auto;background:#111a2e;padding:20px;border-radius:12px}
+input,button{width:100%;padding:12px;margin-top:10px;border-radius:8px;border:none}
+button{background:#00c2ff;font-weight:bold}
+a{color:#00c2ff;text-decoration:none}
 </style>
 </head>
-<body>
 
+<body>
 <div class="box">
 <h2>Player Login</h2>
-<input id="u" placeholder="Username">
-<input id="p" type="password" placeholder="Password">
+
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+
 <button onclick="login()">Login</button>
-<a href="register.html">Create new account</a>
+
+<p style="margin-top:15px">
+<a href="forgot.html">Forgot Password?</a>
+</p>
 </div>
 
 <script>
 function login(){
-  let u=document.getElementById("u").value.trim();
-  let p=document.getElementById("p").value.trim();
+  let user = username.value.trim();
+  let pass = password.value.trim();
 
-  let players=JSON.parse(localStorage.getItem("players"));
+  let players = JSON.parse(localStorage.getItem("players")) || {};
 
-  if(!players || !players[u]){
-    alert("Account not found");
+  if(!players[user] || players[user].password !== pass){
+    alert("Invalid Login");
     return;
   }
 
-  if(players[u].password!==p){
-    alert("Wrong password");
-    return;
-  }
-
-  localStorage.setItem("currentPlayer",u);
-  location.href="player.html";
+  localStorage.setItem("currentPlayer", user);
+  window.location.href="player.html";
 }
 </script>
-
 </body>
 </html>
