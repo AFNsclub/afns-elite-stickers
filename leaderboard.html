@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AFN Leaderboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  background:#010a18;
+  color:#fff;
+  font-family:Arial;
+  text-align:center;
+}
+h1{
+  color:#ffd700;
+  margin-top:20px;
+}
+.table-box{
+  max-width:700px;
+  margin:30px auto;
+  background:rgba(255,255,255,0.07);
+  border-radius:20px;
+  padding:15px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th, td{
+  padding:12px;
+  border-bottom:1px solid rgba(255,255,255,0.2);
+}
+th{
+  color:#00e5ff;
+}
+.rank{
+  font-weight:bold;
+  color:#ffd700;
+}
+.back{
+  margin:20px;
+}
+.back a{
+  color:#00e5ff;
+  text-decoration:none;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🏆 AFN Leaderboard</h1>
+
+<div class="table-box">
+<table>
+<thead>
+<tr>
+  <th>Rank</th>
+  <th>Player Name</th>
+  <th>Rating</th>
+</tr>
+</thead>
+<tbody id="board"></tbody>
+</table>
+</div>
+
+<div class="back">
+  <a href="player.html">← Back to Players</a>
+</div>
+
+<script>
+function loadPlayers(){
+  return JSON.parse(localStorage.getItem("afnPlayers")) || [];
+}
+
+function renderBoard(){
+  let players = loadPlayers();
+
+  players.sort((a,b)=>b.rating - a.rating);
+
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+
+  players.forEach((p,i)=>{
+    board.innerHTML += `
+      <tr>
+        <td class="rank">${i+1}</td>
+        <td>${p.name}</td>
+        <td>${p.rating}</td>
+      </tr>
+    `;
+  });
+}
+
+renderBoard();
+</script>
+
+</body>
+</html>
