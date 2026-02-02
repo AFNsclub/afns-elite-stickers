@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Admin Match Verification</title>
@@ -8,101 +8,133 @@
 <style>
 body{
     margin:0;
-    font-family:Arial;
+    font-family: Arial, sans-serif;
     background:#0b1220;
     color:white;
-    text-align:center;
 }
-.container{padding:20px;}
-.card{
-    background:#141c2f;
+header{
+    background:#111a2e;
     padding:15px;
-    border-radius:15px;
-    margin:15px auto;
-    max-width:420px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
 button{
+    padding:8px 14px;
     border:none;
-    padding:10px 16px;
-    border-radius:20px;
-    margin:6px;
+    border-radius:6px;
+    cursor:pointer;
 }
-.approve{background:#2ecc71;}
-.reject{background:#e74c3c;}
-.logout{background:#ff4c4c;}
+.logout{background:#ff3b3b;color:white;}
+.approve{background:#2ecc71;color:black;}
+.reject{background:#e74c3c;color:white;}
+
+.container{
+    padding:15px;
+}
+.card{
+    background:#151f36;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+}
+img{
+    max-width:100%;
+    border-radius:8px;
+    margin-top:10px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="container">
-<h2>🛡️ Admin Match Verify</h2>
-<button class="logout" onclick="logout()">Logout</button>
-<div id="list"></div>
-</div>
-
+<!-- 🔐 Admin Security -->
 <script>
-/* ===== SECURITY CHECK ===== */
 if(localStorage.getItem("adminLoggedIn")!=="true"){
     location.href="admin-login.html";
 }
-/* ========================= */
+</script>
 
-let pending = JSON.parse(localStorage.getItem("pendingMatches")) || [];
-let players = JSON.parse(localStorage.getItem("players")) || {};
-let history = JSON.parse(localStorage.getItem("matchHistory")) || [];
+<header>
+    <h3>Admin Match Verification</h3>
+    <button class="logout" onclick="logout()">Logout</button>
+</header>
 
-const list = document.getElementById("list");
+<div class="container" id="matchList"></div>
 
-if(pending.length===0){
-    list.innerHTML="<p>No pending matches</p>";
+<script>
+let matches = JSON.parse(localStorage.getItem("pendingMatches")) || [];
+let players = JSON.parse(localStorage.getItem("players")) || [];
+
+function renderMatches(){
+    const box=document.getElementById("matchList");
+    box.innerHTML="";
+
+    if(matches.length===0){
+        box.innerHTML="<p>No pending matches</p>";
+        return;
+    }
+
+    matches.forEach((m,i)=>{
+        box.innerHTML+=`
+        <div class="card">
+            <h4>${m.player1} vs ${m.player2}</h4>
+            <p>Winner: <b>${m.winner}</b></p>
+            <img src="${m.screenshot}">
+            <br><br>
+            <button class="approve" onclick="approve(${i})">Approve</button>
+            <button class="reject" onclick="reject(${i})">Reject</button>
+        </div>
+        `;
+    });
 }
 
-pending.forEach((m,i)=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`
-        <p><b>${m.player}</b> vs <b>${m.opponent}</b></p>
-        <p>Result: ${m.result.toUpperCase()}</p>
-        <small>${m.date}</small><br>
-        <button class="approve" onclick="approve(${i})">Approve</button>
-        <button class="reject" onclick="reject(${i})">Reject</button>
-    `;
-    list.appendChild(div);
-});
+function approve(index){
+    let match=matches[index];
 
-function approve(i){
-    const m = pending[i];
+    updateRating(match.player1, match.player2, match.winner);
 
-    let pChange=0, oChange=0;
-    if(m.result==="win"){ pChange=25; oChange=-15; }
-    if(m.result==="lose"){ pChange=-15; oChange=25; }
-    if(m.result==="draw"){ pChange=5; oChange=5; }
-
-    players[m.player] = Math.max(0,(players[m.player]||100)+pChange);
-    players[m.opponent] = Math.max(0,(players[m.opponent]||100)+oChange);
-
-    history.push(m);
-    pending.splice(i,1);
-    save();
-}
-
-function reject(i){
-    pending.splice(i,1);
-    save();
-}
-
-function save(){
-    localStorage.setItem("players",JSON.stringify(players));
+    let history=JSON.parse(localStorage.getItem("matchHistory"))||[];
+    history.push(match);
     localStorage.setItem("matchHistory",JSON.stringify(history));
-    localStorage.setItem("pendingMatches",JSON.stringify(pending));
-    location.reload();
+
+    matches.splice(index,1);
+    localStorage.setItem("pendingMatches",JSON.stringify(matches));
+
+    renderMatches();
+    alert("Match Approved");
+}
+
+function reject(index){
+    matches.splice(index,1);
+    localStorage.setItem("pendingMatches",JSON.stringify(matches));
+    renderMatches();
+    alert("Match Rejected");
+}
+
+function updateRating(p1,p2,winner){
+    let a=players.find(p=>p.username===p1);
+    let b=players.find(p=>p.username===p2);
+
+    if(!a||!b) return;
+
+    if(winner===p1){
+        a.rating+=10;
+        b.rating-=5;
+    }else{
+        b.rating+=10;
+        a.rating-=5;
+    }
+
+    localStorage.setItem("players",JSON.stringify(players));
 }
 
 function logout(){
     localStorage.removeItem("adminLoggedIn");
     location.href="admin-login.html";
 }
+
+renderMatches();
 </script>
 
 </body>
