@@ -1,93 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Player Profile | AFN</title>
+<title>AFN Player Profiles</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{
+  margin:0;
   background:#020b1c;
   color:#fff;
   font-family:Arial;
   text-align:center;
 }
-.profile{
-  max-width:600px;
-  margin:40px auto;
-  background:rgba(255,255,255,0.08);
-  padding:30px;
-  border-radius:20px;
+h1{color:#ffd700;}
+.section{
+  max-width:900px;
+  margin:30px auto;
+  padding:20px;
 }
-.rating{
-  font-size:26px;
-  color:#00ff6a;
-  font-weight:bold;
+.card{
+  background:rgba(255,255,255,0.08);
+  padding:20px;
+  border-radius:20px;
+  margin:15px 0;
 }
 button{
-  padding:10px 20px;
+  padding:10px 18px;
   border:none;
   border-radius:20px;
-  background:#00cfff;
   font-weight:bold;
   margin:5px;
 }
-a{color:#00cfff;}
+.win{background:#00c853;color:#000;}
+.lose{background:#ff5252;color:#000;}
+.rating{font-size:20px;color:#00e5ff;}
 </style>
 </head>
 
 <body>
 
-<div class="profile">
-  <img src="logo.png" width="120"><br><br>
+<h1>AFN Player Profiles</h1>
 
-  <h2 id="name">Player Name</h2>
-
-  <p>Matches Played: <span id="matches">0</span></p>
-  <p>Wins: <span id="wins">0</span> | Losses: <span id="losses">0</span></p>
-
-  <p>Rating: <span class="rating" id="rating">50</span>/100</p>
-
-  <br>
-
-  <button onclick="win()">Win</button>
-  <button onclick="lose()">Lose</button>
-  <button onclick="draw()">Draw</button>
-
-  <br><br>
-  <a href="index.html">⬅ Back to Home</a>
-</div>
+<div class="section" id="players"></div>
 
 <script>
-let matches = 0;
-let wins = 0;
-let losses = 0;
-let rating = 50;
+const defaultPlayers = [
+  {id:1, name:"Player One", rating:80},
+  {id:2, name:"Player Two", rating:80},
+  {id:3, name:"Player Three", rating:80}
+];
 
-function update(){
-  document.getElementById("matches").innerText = matches;
-  document.getElementById("wins").innerText = wins;
-  document.getElementById("losses").innerText = losses;
-  document.getElementById("rating").innerText = rating;
+function loadPlayers(){
+  return JSON.parse(localStorage.getItem("afnPlayers")) || defaultPlayers;
 }
 
-function win(){
-  matches++; wins++;
-  rating = Math.min(100, rating + 5);
-  update();
+function savePlayers(players){
+  localStorage.setItem("afnPlayers", JSON.stringify(players));
 }
 
-function lose(){
-  matches++; losses++;
-  rating = Math.max(0, rating - 3);
-  update();
+function updateRating(id, result){
+  let players = loadPlayers();
+  players = players.map(p=>{
+    if(p.id===id){
+      if(result==="win") p.rating += 5;
+      if(result==="lose") p.rating -= 3;
+      if(p.rating < 0) p.rating = 0;
+    }
+    return p;
+  });
+  savePlayers(players);
+  render();
 }
 
-function draw(){
-  matches++;
-  rating = Math.min(100, rating + 1);
-  update();
+function render(){
+  const players = loadPlayers();
+  const box = document.getElementById("players");
+  box.innerHTML = "";
+
+  players.forEach(p=>{
+    box.innerHTML += `
+      <div class="card">
+        <h2>${p.name}</h2>
+        <p class="rating">Rating: ${p.rating}</p>
+        <button class="win" onclick="updateRating(${p.id}, 'win')">Win</button>
+        <button class="lose" onclick="updateRating(${p.id}, 'lose')">Lose</button>
+      </div>
+    `;
+  });
 }
+
+render();
 </script>
 
 </body>
