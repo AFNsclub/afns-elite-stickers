@@ -1,13 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Player Profile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{
+    background:#020612;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+}
+</style>
+</head>
+<body>
+
+<h2>Loading...</h2>
+
 <script>
-let players = JSON.parse(localStorage.players);
-let user = localStorage.currentPlayer;
+let players = JSON.parse(localStorage.getItem("players") || "[]");
+let user = localStorage.getItem("currentPlayer");
+
+if(!user){
+    location.href = "login.html";
+}
+
 let p = players.find(x => x.username === user);
+
+if(!p){
+    alert("Player not found");
+    location.href = "login.html";
+}
 
 document.body.innerHTML = `
 <h2>${p.username}</h2>
 <p>Rating: ${p.rating}</p>
 <p>Wins: ${p.wins}</p>
 <p>Losses: ${p.losses}</p>
-<a href="leaderboard.html">Leaderboard</a>
+<br>
+<a href="leaderboard.html" style="color:#00eaff">Leaderboard</a>
 `;
 </script>
+
+</body>
+</html>
