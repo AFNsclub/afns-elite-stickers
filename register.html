@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<title>Player Register</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+  background:#02060c;
+  color:#fff;
+  font-family:Segoe UI;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.box{
+  background:#0b1d2a;
+  padding:20px;
+  border-radius:14px;
+  width:90%;
+  max-width:360px;
+}
+input,button{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  border:none;
+}
+button{
+  background:#00eaff;
+  font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Create Player Profile</h2>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="register()">Register</button>
+</div>
+
+<script>
+function register(){
+  const user = username.value.trim();
+  const pass = password.value.trim();
+
+  if(!user || !pass){
+    alert("সব ফিল্ড পূরণ করো");
+    return;
+  }
+
+  let players = JSON.parse(localStorage.getItem("players")) || {};
+
+  if(players[user]){
+    alert("এই ইউজার আগে থেকেই আছে");
+    return;
+  }
+
+  players[user] = {
+    password: pass,
+    rating: 1000,
+    matches: []
+  };
+
+  localStorage.setItem("players", JSON.stringify(players));
+  alert("Registration Successful");
+  location.href = "login.html";
+}
+</script>
+
+</body>
+</html>
