@@ -1,132 +1,230 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AFNS Club | Official</title>
+  <meta charset="UTF-8">
+  <title>AFN's Elite Strikers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-*{
-  box-sizing:border-box;
-}
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
 
-body{
-  margin:0;
-  font-family: 'Segoe UI', Tahoma, sans-serif;
-  background: radial-gradient(circle at top, #06141f, #000);
-  color:#fff;
-}
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #0c1b2a, #02060c);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-/* HEADER */
-header{
-  text-align:center;
-  padding:50px 20px 30px;
-}
+    .container {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+      text-align: center;
+    }
 
-header img{
-  width:90px;
-  margin-bottom:15px;
-}
+    .logo img {
+      width: 130px;
+      margin-bottom: 10px;
+    }
 
-header h1{
-  margin:0;
-  font-size:30px;
-  letter-spacing:1px;
-}
+    h1 {
+      color: #ffd400;
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
 
-header .tagline{
-  margin-top:10px;
-  font-size:14px;
-  color:#9aa7b2;
-}
+    .tagline {
+      color: #00eaff;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
 
-/* MAIN */
-main{
-  padding:20px;
-  max-width:500px;
-  margin:auto;
-}
+    .lang-btns {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
 
-/* CARD */
-.card{
-  background:linear-gradient(180deg,#0c1b28,#071018);
-  border-radius:18px;
-  padding:22px;
-  margin-bottom:18px;
-  box-shadow:0 10px 30px rgba(0,0,0,.6);
-}
+    .lang-btns button {
+      padding: 8px 20px;
+      border-radius: 20px;
+      border: none;
+      background: #00eaff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-.card h2{
-  margin:0 0 10px;
-  font-size:20px;
-  color:#00e6d0;
-}
+    /* Motivation box */
+    .motive-box {
+      background: linear-gradient(145deg, #0b1d2a, #020b13);
+      padding: 18px;
+      border-radius: 16px;
+      box-shadow: 0 0 15px rgba(0,255,255,0.2);
+      margin-bottom: 22px;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-.card p{
-  font-size:14px;
-  line-height:1.7;
-  color:#c7d0d9;
-}
+    #typingText {
+      color: #00f7ff;
+      font-size: 15px;
+      font-weight: 600;
+      border-right: 2px solid #00f7ff;
+      padding-right: 4px;
+      animation: blink 0.8s infinite;
+    }
 
-/* BUTTONS */
-.btn{
-  display:block;
-  text-align:center;
-  text-decoration:none;
-  padding:14px;
-  border-radius:14px;
-  font-weight:600;
-  margin-top:12px;
-  background:#00bfa6;
-  color:#000;
-}
+    @keyframes blink {
+      0% { border-color: transparent; }
+      50% { border-color: #00f7ff; }
+      100% { border-color: transparent; }
+    }
 
-.btn.secondary{
-  background:#16232e;
-  color:#fff;
-}
+    .about {
+      background: rgba(255,255,255,0.04);
+      padding: 16px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+    }
 
-/* FOOTER */
-footer{
-  text-align:center;
-  padding:25px 15px;
-  font-size:12px;
-  color:#6c7a86;
-}
-</style>
+    .about h2 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .about p {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #ddd;
+    }
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .menu a {
+      text-decoration: none;
+      padding: 12px;
+      border-radius: 14px;
+      background: linear-gradient(145deg, #061726, #020c14);
+      color: #00eaff;
+      font-weight: 600;
+      box-shadow: inset 0 0 0 rgba(0,0,0,0);
+      transition: 0.2s;
+    }
+
+    .menu a:hover {
+      box-shadow: 0 0 12px rgba(0,234,255,0.35);
+      transform: scale(1.02);
+    }
+
+    footer {
+      font-size: 12px;
+      color: #888;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body>
+  <div class="container">
 
-<header>
-  <img src="logo.png" alt="AFNS Club Logo">
-  <h1>AFNS Club</h1>
-  <div class="tagline">
-    Where Skill, Competition & Rankings Matter
+    <div class="logo">
+      <img src="logo.png" alt="AFN Logo">
+    </div>
+
+    <h1>AFN's Elite Strikers</h1>
+    <div class="tagline">চ্যাম্পিয়ন তৈরি হয় eFootball থেকে</div>
+
+    <div class="lang-btns">
+      <button>বাংলা</button>
+      <button>English</button>
+    </div>
+
+    <div class="motive-box">
+      <span id="typingText"></span>
+    </div>
+
+    <div class="about">
+      <h2>আমাদের ক্লাব সম্পর্কে</h2>
+      <p>
+        AFN's Elite Strikers একটি প্রতিযোগিতামূলক eFootball ক্লাব,
+        যেখানে খেলোয়াড়রা বাস্তব ম্যাচ খেলে নিজেদের রেটিং,
+        স্কিল ও মর্যাদা বৃদ্ধি করে।
+      </p>
+    </div>
+
+    <div class="menu">
+      <a href="login.html">👤 Player Login</a>
+      <a href="player.html">📄 Player Profiles</a>
+      <a href="leaderboard.html">🏆 Leaderboard</a>
+      <a href="admin-login.html">🔐 Admin Login</a>
+      <a href="match-submit.html">⚽ Match Submit (Admin)</a>
+    </div>
+
+    <footer>
+      © 2026 AFN's Elite Strikers | All Rights Reserved
+    </footer>
+
   </div>
-</header>
 
-<main>
+  <script>
+    const lines = [
+      "চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।",
+      "হার মানে শেষ না, শেখার শুরু।",
+      "এক ম্যাচেই বদলে যেতে পারে রেটিং।",
+      "AFN মানে স্কিলের প্রমাণ।",
+      "মাঠে নামলে নাম নয়, খেলা কথা বলে।",
+      "আজ খেলোয়াড়, কাল লিজেন্ড।",
+      "রেটিং ভয় পায় না, স্কিল দেখে।",
+      "eFootball শুধু গেম না, এটা যুদ্ধ।",
+      "AFN মাঠে দুর্বলদের জায়গা নেই।"
+    ];
 
-  <div class="card">
-    <h2>About AFNS Club</h2>
-    <p>
-      AFNS Club is a competitive mobile gaming platform designed for serious players.
-      Compete in fair matches, submit results, climb the leaderboard and build your
-      reputation through performance — not luck.
-    </p>
-  </div>
+    let lineIndex = Math.floor(Math.random() * lines.length);
+    let charIndex = 0;
+    const speed = 50;
+    const waitTime = 2000;
+    const textElement = document.getElementById("typingText");
 
-  <div class="card">
-    <a href="login.html" class="btn">Player Login / Register</a>
-    <a href="leaderboard.html" class="btn secondary">View Leaderboard</a>
-  </div>
+    function typeText() {
+      if (charIndex < lines[lineIndex].length) {
+        textElement.textContent += lines[lineIndex].charAt(charIndex);
+        charIndex++;
+        setTimeout(typeText, speed);
+      } else {
+        setTimeout(eraseText, waitTime);
+      }
+    }
 
-</main>
+    function eraseText() {
+      if (charIndex > 0) {
+        textElement.textContent =
+          lines[lineIndex].substring(0, charIndex - 1);
+        charIndex--;
+        setTimeout(eraseText, speed / 2);
+      } else {
+        lineIndex = Math.floor(Math.random() * lines.length);
+        setTimeout(typeText, 400);
+      }
+    }
 
-<footer>
-  © 2026 AFNS Club • Competitive Mobile Gaming Community
-</footer>
+    typeText();
+  </script>
 
 </body>
 </html>
