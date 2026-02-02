@@ -1,32 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Leaderboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Leaderboard | AFN's Elite Strikers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body{
-    background:#020612;
-    color:white;
-    font-family:Arial;
-    text-align:center;
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#050b18,#0b1d3a);
+  color:#fff;
+}
+header{
+  text-align:center;
+  padding:20px;
+}
+header img{
+  width:90px;
+}
+h1{
+  color:#ffd700;
+  margin:10px 0;
+}
+.container{
+  padding:15px;
+  max-width:600px;
+  margin:auto;
+}
+.card{
+  background:rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:15px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.rank{
+  font-size:22px;
+  font-weight:bold;
+  width:40px;
+}
+.name a{
+  color:#00e5ff;
+  text-decoration:none;
+  font-weight:bold;
+}
+.rating{
+  font-size:16px;
+}
+.badge{
+  padding:6px 10px;
+  border-radius:20px;
+  font-size:13px;
+  font-weight:bold;
+}
+.gold{background:#ffd700;color:#000;}
+.silver{background:#c0c0c0;color:#000;}
+.bronze{background:#cd7f32;color:#000;}
+
+footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.7;
+  padding:20px 0;
 }
 </style>
 </head>
+
 <body>
 
-<h2>Leaderboard</h2>
+<header>
+  <img src="logo.png">
+  <h1>Leaderboard</h1>
+  <p>AFN's Elite Strikers</p>
+</header>
 
-<div id="list"></div>
+<div class="container" id="leaderboard"></div>
+
+<footer>
+© 2026 AFN's Elite Strikers
+</footer>
 
 <script>
-let players = JSON.parse(localStorage.getItem("players") || "[]");
+// 🔹 Load players
+let players = JSON.parse(localStorage.getItem("players")) || [];
 
-players.sort((a,b)=>b.rating-a.rating);
+// 🔹 Sort by rating (high → low)
+players.sort((a,b)=>b.rating - a.rating);
 
-players.forEach((p,i)=>{
-    document.getElementById("list").innerHTML += `
-    <p>${i+1}. ${p.username} — ${p.rating}</p>
-    `;
+const board = document.getElementById("leaderboard");
+
+players.forEach((p,index)=>{
+  let badgeClass="bronze", badgeText="Bronze";
+  if(p.rating>=80){badgeClass="gold";badgeText="Gold";}
+  else if(p.rating>=60){badgeClass="silver";badgeText="Silver";}
+
+  const div=document.createElement("div");
+  div.className="card";
+  div.innerHTML=`
+    <div class="rank">#${index+1}</div>
+    <div class="name">
+      <a href="public-profile.html?id=${p.id}">${p.name}</a>
+    </div>
+    <div class="rating">${p.rating}/100</div>
+    <div class="badge ${badgeClass}">${badgeText}</div>
+  `;
+  board.appendChild(div);
 });
 </script>
 
