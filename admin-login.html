@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login | AFNs Elite Stickers</title>
+  <style>
+    body { background:#000; color:#fff; font-family:Arial; text-align:center; padding-top:100px; }
+    input, button { padding:10px; margin:10px; width:80%; }
+    button { background:#00ffcc; border:none; }
+  </style>
+</head>
+<body>
+
+<h2>Admin Login</h2>
+
+<input type="password" id="pass" placeholder="Enter Admin Password">
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+
+<script>
+  const ADMIN_PASS = "afns123"; // চাইলে বদলাবে
+
+  function login(){
+    let p = document.getElementById("pass").value;
+    if(p === ADMIN_PASS){
+      localStorage.setItem("adminLogin","yes");
+      window.location.href = "admin.html";
+    } else {
+      document.getElementById("msg").innerText = "Wrong Password!";
+    }
+  }
+</script>
+
+</body>
+</html>
