@@ -5,63 +5,58 @@
 <title>AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- ✅ GLOBAL POLISH STYLE -->
 <style>
+:root{
+  --bg:#0b1220;
+  --card:#121b2f;
+  --accent:#00e5ff;
+}
+
 body{
-    margin:0;
-    font-family: Arial, sans-serif;
-    background:#0b1220;
-    color:white;
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#050b18,#0b1220);
+  color:white;
 }
+
 header{
-    text-align:center;
-    padding:30px 15px;
+  text-align:center;
+  padding:20px;
+  background:rgba(0,0,0,0.4);
 }
+
 header img{
-    width:120px;
+  width:80px;
 }
-h1{
-    margin:15px 0 5px;
-    color:#ffd700;
+
+.container{
+  max-width:700px;
+  margin:auto;
+  padding:15px;
 }
-.tagline{
-    color:#00eaff;
-    font-style:italic;
+
+.card{
+  background:var(--card);
+  padding:18px;
+  border-radius:16px;
+  margin-bottom:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.4);
 }
-.lang-btns button{
-    margin:10px 5px;
-    padding:10px 18px;
-    border:none;
-    border-radius:20px;
-    background:#00eaff;
-    font-weight:bold;
-    cursor:pointer;
+
+button{
+  background:var(--accent);
+  color:black;
+  border:none;
+  padding:12px 18px;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
 }
-.section{
-    background:#141c2f;
-    margin:15px;
-    padding:20px;
-    border-radius:15px;
-}
-.section h2{
-    margin-top:0;
-    text-align:center;
-}
-.menu a{
-    display:block;
-    text-decoration:none;
-    background:#0b1220;
-    padding:14px;
-    margin:10px 0;
-    border-radius:10px;
-    text-align:center;
-    color:#00eaff;
-    font-weight:bold;
-}
-footer{
-    text-align:center;
-    font-size:13px;
-    color:#aaa;
-    padding:15px;
+
+a{
+  color:var(--accent);
+  text-decoration:none;
 }
 </style>
 </head>
@@ -69,65 +64,31 @@ footer{
 <body>
 
 <header>
-    <img src="logo.png">
-    <h1>AFN's Elite Strikers</h1>
-    <div class="tagline" id="tagline">
-        Champions are made in eFootball!
-    </div>
-
-    <div class="lang-btns">
-        <button onclick="setLang('bn')">বাংলা</button>
-        <button onclick="setLang('en')">English</button>
-    </div>
+  <img src="logo.png" alt="Club Logo">
+  <h1>AFN's Elite Strikers</h1>
+  <p>eFootball Competitive Club</p>
 </header>
 
-<div class="section">
-    <h2 id="aboutTitle">About Our Club</h2>
-    <p id="aboutText" style="text-align:center;">
-        AFN's Elite Strikers is a competitive eFootball club where players grow through real match performance.
+<div class="container">
+
+  <div class="card">
+    <h2>Welcome</h2>
+    <p>
+      AFN's Elite Strikers একটি প্রতিযোগিতামূলক eFootball ক্লাব,
+      যেখানে প্লেয়াররা রিয়েল ম্যাচ খেলে নিজেদের স্কিল প্রমাণ করে।
+      এখানে জয়–পরাজয়ের ওপর ভিত্তি করে ফেয়ার রেটিং দেওয়া হয়।
     </p>
+  </div>
+
+  <div class="card">
+    <a href="login.html">
+      <button>Player Login</button>
+    </a>
+    <br><br>
+    <a href="leaderboard.html">View Leaderboard</a>
+  </div>
+
 </div>
-
-<div class="section menu">
-    <a href="login.html">👤 Player Login</a>
-    <a href="player.html">📄 Player Profiles</a>
-    <a href="leaderboard.html">🏆 Leaderboard</a>
-    <a href="admin-login.html">🔐 Admin Login</a>
-    <a href="match-submit.html">⚽ Match Submit (Admin)</a>
-</div>
-
-<footer>
-    © 2026 AFN's Elite Strikers | All Rights Reserved
-</footer>
-
-<script>
-const content = {
-    en:{
-        tagline:"Champions are made in eFootball!",
-        aboutTitle:"About Our Club",
-        aboutText:"AFN's Elite Strikers is a competitive eFootball club where players grow through real match performance."
-    },
-    bn:{
-        tagline:"চ্যাম্পিয়ন তৈরি হয় eFootball থেকে!",
-        aboutTitle:"আমাদের ক্লাব সম্পর্কে",
-        aboutText:"AFN's Elite Strikers একটি প্রতিযোগিতামূলক eFootball ক্লাব যেখানে খেলোয়াড়রা বাস্তব ম্যাচ পারফরম্যান্সের মাধ্যমে নিজেদের রেটিং ও দক্ষতা বৃদ্ধি করে।"
-    }
-};
-
-function setLang(lang){
-    localStorage.setItem("siteLang",lang);
-    applyLang();
-}
-
-function applyLang(){
-    const lang = localStorage.getItem("siteLang") || "en";
-    document.getElementById("tagline").innerText = content[lang].tagline;
-    document.getElementById("aboutTitle").innerText = content[lang].aboutTitle;
-    document.getElementById("aboutText").innerText = content[lang].aboutText;
-}
-
-applyLang();
-</script>
 
 </body>
 </html>
