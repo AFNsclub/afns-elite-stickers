@@ -9,41 +9,68 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0a0f2c, #2b0a1f);
+      background: linear-gradient(135deg, #0a0f2c, #000000);
       color: white;
       text-align: center;
     }
 
     .container {
-      padding: 30px 15px;
+      padding: 40px 20px;
     }
 
     .logo {
-      width: 160px;
-      max-width: 80%;
+      width: 150px;
       margin: 20px auto;
       display: block;
     }
 
     h1 {
       color: #ffd700;
-      font-size: 34px;
+      font-size: 36px;
       margin: 10px 0;
     }
 
     .tagline {
-      color: #00d4ff;
-      font-size: 18px;
+      color: #00ccff;
       font-style: italic;
       margin-bottom: 40px;
     }
 
+    h2 {
+      color: #00ffcc;
+      margin-top: 50px;
+    }
+
+    .players {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 900px;
+      margin: 30px auto;
+    }
+
+    .player-card {
+      background: rgba(255,255,255,0.08);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    }
+
+    .player-card h3 {
+      color: #ffd700;
+      margin-bottom: 10px;
+    }
+
+    .rating {
+      color: #00ff00;
+      font-weight: bold;
+    }
+
     footer {
       margin-top: 60px;
-      padding: 15px;
+      padding: 20px;
+      background: rgba(0,0,0,0.5);
       font-size: 14px;
-      color: #cccccc;
-      border-top: 1px solid rgba(255,255,255,0.1);
     }
   </style>
 </head>
@@ -57,10 +84,35 @@
 
     <!-- TITLE -->
     <h1>AFN's Elite Strikers</h1>
+    <div class="tagline">Champions are made, not born.</div>
 
-    <!-- TAGLINE -->
-    <div class="tagline">
-      Champions are made, not born.
+    <!-- OWNER -->
+    <h2>Club Owner</h2>
+    <p><strong>S I Sohan</strong></p>
+
+    <!-- PLAYERS -->
+    <h2>Team Players</h2>
+
+    <div class="players">
+
+      <div class="player-card">
+        <h3>Player One</h3>
+        <p>Position: Striker</p>
+        <p>OVR Rating: <span class="rating">88</span>/100</p>
+      </div>
+
+      <div class="player-card">
+        <h3>Player Two</h3>
+        <p>Position: Midfielder</p>
+        <p>OVR Rating: <span class="rating">92</span>/100</p>
+      </div>
+
+      <div class="player-card">
+        <h3>Player Three</h3>
+        <p>Position: Defender</p>
+        <p>OVR Rating: <span class="rating">85</span>/100</p>
+      </div>
+
     </div>
 
   </div>
