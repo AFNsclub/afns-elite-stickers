@@ -1,40 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
 <title>Player Register</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{background:#000;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh}
-.box{background:#111;padding:20px;border-radius:12px;width:90%;max-width:360px}
-input,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none}
-button{background:#00eaff;font-weight:bold}
+body{
+  background:#0b1320;
+  color:white;
+  font-family:Arial;
+}
+.box{
+  max-width:350px;
+  margin:80px auto;
+  background:#111a2e;
+  padding:20px;
+  border-radius:12px;
+}
+input,button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:8px;
+  border:none;
+}
+button{
+  background:#00c2ff;
+  font-weight:bold;
+}
 </style>
 </head>
-<body>
 
+<body>
 <div class="box">
 <h2>Player Register</h2>
-<input id="u" placeholder="Username">
-<input id="p" type="password" placeholder="Password">
-<button onclick="reg()">Create Account</button>
+
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+<input id="question" placeholder="Security Question (eg: fav team?)">
+<input id="answer" placeholder="Security Answer">
+
+<button onclick="register()">Create Account</button>
 </div>
 
 <script>
-function reg(){
-  let u=document.getElementById("u").value.trim();
-  let p=document.getElementById("p").value.trim();
+function register(){
+  let user = username.value.trim();
+  let pass = password.value.trim();
+  let ques = question.value.trim();
+  let ans  = answer.value.trim();
 
-  if(!u||!p){alert("Fill all fields");return;}
+  if(!user || !pass || !ques || !ans){
+    alert("Fill all fields");
+    return;
+  }
 
-  let players=JSON.parse(localStorage.getItem("players"))||{};
+  let players = JSON.parse(localStorage.getItem("players")) || {};
 
-  if(players[u]){
+  if(players[user]){
     alert("Username already exists");
     return;
   }
 
-  players[u]={password:p,rating:1000,matches:[]};
+  players[user] = {
+    password: pass,
+    question: ques,
+    answer: ans,
+    rating: 1000
+  };
+
+  localStorage.setItem("players", JSON.stringify(players));
+  alert("Account Created Successfully");
+  window.location.href="login.html";
+}
+</script>
+</body>
+</html>  players[u]={password:p,rating:1000,matches:[]};
   localStorage.setItem("players",JSON.stringify(players));
 
   alert("Account created! Login now");
