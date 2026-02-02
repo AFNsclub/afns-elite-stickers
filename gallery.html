@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Match Gallery</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0b1220;
+    color:white;
+    text-align:center;
+}
+.container{padding:20px;}
+.card{
+    background:#141c2f;
+    padding:15px;
+    border-radius:15px;
+    margin:15px auto;
+    max-width:420px;
+}
+img{width:100%;border-radius:10px;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>🏆 Approved Match Screenshots</h2>
+<div id="gallery"></div>
+</div>
+
+<script>
+const approved = JSON.parse(localStorage.getItem("approvedShots")) || [];
+const gallery = document.getElementById("gallery");
+
+if(approved.length===0){
+    gallery.innerHTML="<p>No approved screenshots yet</p>";
+}
+
+approved.forEach(shot=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+        <img src="${shot.image}">
+        <p>${shot.player}</p>
+        <small>${shot.time}</small>
+    `;
+    gallery.appendChild(div);
+});
+</script>
+
+</body>
+</html>
