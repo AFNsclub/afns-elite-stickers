@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Match Verification</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0b1220;
+    color:white;
+    text-align:center;
+}
+.container{padding:20px;}
+.card{
+    background:#141c2f;
+    padding:15px;
+    border-radius:15px;
+    margin:15px auto;
+    max-width:420px;
+}
+button{
+    border:none;
+    padding:10px 16px;
+    border-radius:20px;
+    margin:6px;
+}
+.approve{background:#2ecc71;}
+.reject{background:#e74c3c;}
+.logout{background:#ff4c4c;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>🛡️ Admin Match Verify</h2>
+<button class="logout" onclick="logout()">Logout</button>
+<div id="list"></div>
+</div>
+
+<script>
+/* ===== SECURITY CHECK ===== */
+if(localStorage.getItem("adminLoggedIn")!=="true"){
+    location.href="admin-login.html";
+}
+/* ========================= */
+
+let pending = JSON.parse(localStorage.getItem("pendingMatches")) || [];
+let players = JSON.parse(localStorage.getItem("players")) || {};
+let history = JSON.parse(localStorage.getItem("matchHistory")) || [];
+
+const list = document.getElementById("list");
+
+if(pending.length===0){
+    list.innerHTML="<p>No pending matches</p>";
+}
+
+pending.forEach((m,i)=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+        <p><b>${m.player}</b> vs <b>${m.opponent}</b></p>
+        <p>Result: ${m.result.toUpperCase()}</p>
+        <small>${m.date}</small><br>
+        <button class="approve" onclick="approve(${i})">Approve</button>
+        <button class="reject" onclick="reject(${i})">Reject</button>
+    `;
+    list.appendChild(div);
+});
+
+function approve(i){
+    const m = pending[i];
+
+    let pChange=0, oChange=0;
+    if(m.result==="win"){ pChange=25; oChange=-15; }
+    if(m.result==="lose"){ pChange=-15; oChange=25; }
+    if(m.result==="draw"){ pChange=5; oChange=5; }
+
+    players[m.player] = Math.max(0,(players[m.player]||100)+pChange);
+    players[m.opponent] = Math.max(0,(players[m.opponent]||100)+oChange);
+
+    history.push(m);
+    pending.splice(i,1);
+    save();
+}
+
+function reject(i){
+    pending.splice(i,1);
+    save();
+}
+
+function save(){
+    localStorage.setItem("players",JSON.stringify(players));
+    localStorage.setItem("matchHistory",JSON.stringify(history));
+    localStorage.setItem("pendingMatches",JSON.stringify(pending));
+    location.reload();
+}
+
+function logout(){
+    localStorage.removeItem("adminLoggedIn");
+    location.href="admin-login.html";
+}
+</script>
+
+</body>
+</html>
