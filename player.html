@@ -1,60 +1,36 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Player Profile</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Dashboard</title>
 <style>
-body{
-  background:#02060c;
-  color:#fff;
-  font-family:Segoe UI;
-  padding:20px;
-}
-.card{
-  background:#0b1d2a;
-  padding:20px;
-  border-radius:14px;
-  max-width:400px;
-  margin:auto;
-}
-button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border:none;
-  border-radius:10px;
-  background:#ff5252;
-  font-weight:bold;
-}
+body{background:#0b1320;color:white;font-family:Arial;text-align:center}
+.card{margin:100px auto;background:#111a2e;padding:30px;border-radius:12px;width:300px}
+button{padding:10px 20px;border:none;border-radius:8px;background:#ff4444;color:white}
 </style>
 </head>
-<body>
 
-<div class="card" id="profile"></div>
+<body>
+<div class="card">
+<h2 id="name"></h2>
+<p>Rating: <span id="rating"></span></p>
 <button onclick="logout()">Logout</button>
+</div>
 
 <script>
-const current = localStorage.getItem("currentPlayer");
-const players = JSON.parse(localStorage.getItem("players")) || {};
+let user = localStorage.getItem("currentPlayer");
+let players = JSON.parse(localStorage.getItem("players")) || {};
 
-if(!current || !players[current]){
-  location.href = "login.html";
+if(!user || !players[user]){
+  location.href="login.html";
 }
 
-const p = players[current];
-
-document.getElementById("profile").innerHTML = `
-  <h2>${current}</h2>
-  <p>Rating: <b>${p.rating}</b></p>
-  <p>Total Matches: ${p.matches.length}</p>
-`;
+name.innerText = user;
+rating.innerText = players[user].rating;
 
 function logout(){
   localStorage.removeItem("currentPlayer");
-  location.href = "login.html";
+  location.href="login.html";
 }
 </script>
-
 </body>
 </html>
