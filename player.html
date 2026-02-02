@@ -13,35 +13,35 @@ body{
     color:white;
     text-align:center;
 }
-
 .container{
     padding:20px;
 }
-
 .card{
     background:#141c2f;
     padding:20px;
     border-radius:15px;
     margin:15px auto;
-    max-width:400px;
+    max-width:420px;
 }
-
 button{
     background:#00c8ff;
     border:none;
     padding:12px 18px;
     border-radius:25px;
-    font-size:16px;
+    font-size:15px;
     cursor:pointer;
-    margin:10px;
+    margin:8px;
 }
-
 button:hover{
     background:#00a6d6;
 }
-
 .logout{
     background:#ff4c4c;
+}
+a.fb{
+    color:#00c8ff;
+    text-decoration:none;
+    font-weight:bold;
 }
 </style>
 </head>
@@ -52,14 +52,25 @@ button:hover{
 
     <h2 id="playerName">Player</h2>
 
+    <!-- Rating -->
     <div class="card">
         <h3>Rating</h3>
-        <h1 id="rating">0</h1>
+        <h1 id="rating">100</h1>
     </div>
 
+    <!-- Profile Info -->
     <div class="card">
-        <button onclick="viewHistory()">📜 Match History</button>
-        <br>
+        <h3>About Player</h3>
+        <p id="bio">No bio added yet.</p>
+        <a id="facebook" class="fb" href="#" target="_blank" style="display:none;">
+            🔗 Facebook Profile
+        </a>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+        <button onclick="viewHistory()">📜 Match History</button><br>
+        <button onclick="editProfile()">✏️ Edit Profile</button><br>
         <button onclick="logout()" class="logout">Logout</button>
     </div>
 
@@ -73,22 +84,39 @@ if(!currentPlayer){
     window.location.href="login.html";
 }
 
-// Player name
+// Show name
 document.getElementById("playerName").innerText = currentPlayer;
 
-// Rating load
+// Load rating
 const players = JSON.parse(localStorage.getItem("players")) || {};
 document.getElementById("rating").innerText = players[currentPlayer] || 100;
 
-// View history
+// Load profile info
+const profiles = JSON.parse(localStorage.getItem("profiles")) || {};
+if(profiles[currentPlayer]){
+    if(profiles[currentPlayer].bio){
+        document.getElementById("bio").innerText =
+            profiles[currentPlayer].bio;
+    }
+    if(profiles[currentPlayer].facebook){
+        const fb = document.getElementById("facebook");
+        fb.href = profiles[currentPlayer].facebook;
+        fb.style.display = "inline-block";
+    }
+}
+
+// Buttons
 function viewHistory(){
     window.location.href = "history.html?player=" + currentPlayer;
 }
 
-// Logout
+function editProfile(){
+    window.location.href = "edit-profile.html";
+}
+
 function logout(){
     localStorage.removeItem("currentPlayer");
-    window.location.href="login.html";
+    window.location.href = "login.html";
 }
 </script>
 
