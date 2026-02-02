@@ -1,125 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AFN's Elite Strikers</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>AFN's Elite Strikers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0a0f2c, #000000);
-      color: white;
-      text-align: center;
-    }
+<style>
+body{
+  margin:0;
+  background:#020b1c;
+  color:#fff;
+  font-family:Arial;
+  text-align:center;
+}
+header{
+  padding:30px 20px;
+}
+img{max-width:180px;}
+h1{color:#ffd700;}
+.tagline{color:#00cfff;font-style:italic;}
 
-    .container {
-      padding: 40px 20px;
-    }
+.lang-btn{
+  background:#00cfff;
+  border:none;
+  padding:8px 16px;
+  border-radius:20px;
+  font-weight:bold;
+  margin:5px;
+}
 
-    .logo {
-      width: 150px;
-      margin: 20px auto;
-      display: block;
-    }
+.section{
+  max-width:900px;
+  margin:40px auto;
+  padding:20px;
+}
+.card{
+  background:rgba(255,255,255,0.08);
+  padding:20px;
+  border-radius:20px;
+  margin:15px 0;
+}
+a{color:#00cfff;text-decoration:none;font-weight:bold;}
 
-    h1 {
-      color: #ffd700;
-      font-size: 36px;
-      margin: 10px 0;
-    }
-
-    .tagline {
-      color: #00ccff;
-      font-style: italic;
-      margin-bottom: 40px;
-    }
-
-    h2 {
-      color: #00ffcc;
-      margin-top: 50px;
-    }
-
-    .players {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      max-width: 900px;
-      margin: 30px auto;
-    }
-
-    .player-card {
-      background: rgba(255,255,255,0.08);
-      border-radius: 15px;
-      padding: 20px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.4);
-    }
-
-    .player-card h3 {
-      color: #ffd700;
-      margin-bottom: 10px;
-    }
-
-    .rating {
-      color: #00ff00;
-      font-weight: bold;
-    }
-
-    footer {
-      margin-top: 60px;
-      padding: 20px;
-      background: rgba(0,0,0,0.5);
-      font-size: 14px;
-    }
-  </style>
+footer{
+  padding:20px;
+  color:#aaa;
+  font-size:14px;
+}
+</style>
 </head>
 
 <body>
 
-  <div class="container">
+<header>
+  <img src="logo.png" alt="AFN Logo"><br><br>
+  <h1>AFN's Elite Strikers</h1>
+  <p class="tagline">Champions are made in eFootball.</p>
 
-    <!-- LOGO -->
-    <img src="logo.png" alt="AFN Club Logo" class="logo">
+  <button class="lang-btn" onclick="setLang('bn')">বাংলা</button>
+  <button class="lang-btn" onclick="setLang('en')">English</button>
+</header>
 
-    <!-- TITLE -->
-    <h1>AFN's Elite Strikers</h1>
-    <div class="tagline">Champions are made, not born.</div>
+<!-- ABOUT CLUB -->
+<div class="section card">
+  <h2 id="aboutTitle">About Our Club</h2>
+  <p id="aboutText">
+    AFN's Elite Strikers is a competitive eFootball club where players grow through real match performance.
+  </p>
+</div>
 
-    <!-- OWNER -->
-    <h2>Club Owner</h2>
-    <p><strong>SI Sohan</strong></p>
+<!-- PLAYERS -->
+<div class="section">
+  <h2>Team Players</h2>
 
-    <!-- PLAYERS -->
-    <h2>Team Players</h2>
-
-    <div class="players">
-
-      <div class="player-card">
-        <h3>Player One</h3>
-        <p>Position: Striker</p>
-        <p>OVR Rating: <span class="rating">88</span>/100</p>
-      </div>
-
-      <div class="player-card">
-        <h3>Player Two</h3>
-        <p>Position: Midfielder</p>
-        <p>OVR Rating: <span class="rating">92</span>/100</p>
-      </div>
-
-      <div class="player-card">
-        <h3>Player Three</h3>
-        <p>Position: Defender</p>
-        <p>OVR Rating: <span class="rating">85</span>/100</p>
-      </div>
-
-    </div>
-
+  <div class="card">
+    <h3>Player One</h3>
+    <a href="player.html">View Profile</a>
   </div>
 
-  <footer>
-    © 2026 AFN's Elite Strikers | All Rights Reserved
-  </footer>
+  <div class="card">
+    <h3>Player Two</h3>
+    <a href="player.html">View Profile</a>
+  </div>
+
+  <div class="card">
+    <h3>Player Three</h3>
+    <a href="player.html">View Profile</a>
+  </div>
+</div>
+
+<footer>
+  © 2026 AFN's Elite Strikers | All Rights Reserved
+</footer>
+
+<script>
+const about = {
+  bn: {
+    title: "আমাদের ক্লাব সম্পর্কে",
+    text: "AFN’s Elite Strikers একটি প্রতিযোগিতামূলক eFootball ক্লাব, যেখানে খেলোয়াড়রা একে অপরের বিরুদ্ধে ম্যাচ খেলে নিজেদের দক্ষতা ও রেটিং উন্নত করে। এখানে রেটিং নির্ধারিত হয় জয় ও পরাজয়ের ভিত্তিতে, যা খেলোয়াড়দের প্রকৃত পারফরম্যান্সকে প্রতিফলিত করে।"
+  },
+  en: {
+    title: "About Our Club",
+    text: "AFN’s Elite Strikers is a competitive eFootball club where players improve their skills and ratings through real match results. Ratings are calculated based on wins and losses, reflecting true performance."
+  }
+};
+
+function setLang(lang){
+  document.getElementById("aboutTitle").innerText = about[lang].title;
+  document.getElementById("aboutText").innerText = about[lang].text;
+}
+</script>
 
 </body>
 </html>
