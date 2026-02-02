@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Submit Match</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0b1220;
+    color:white;
+    text-align:center;
+}
+.container{padding:20px;}
+.card{
+    background:#141c2f;
+    padding:20px;
+    border-radius:20px;
+    max-width:420px;
+    margin:auto;
+}
+select,button{
+    width:100%;
+    padding:12px;
+    border-radius:25px;
+    border:none;
+    margin:8px 0;
+}
+button{background:#00c8ff;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>⚽ Submit Match Result</h2>
+
+<div class="card">
+    <p>You are: <b id="me"></b></p>
+
+    <select id="opponent"></select>
+
+    <select id="result">
+        <option value="win">Win</option>
+        <option value="draw">Draw</option>
+        <option value="lose">Lose</option>
+    </select>
+
+    <button onclick="submitMatch()">Submit Match</button>
+</div>
+</div>
+
+<script>
+const me = localStorage.getItem("currentPlayer");
+if(!me) location.href="login.html";
+document.getElementById("me").innerText = me;
+
+const players = JSON.parse(localStorage.getItem("players")) || {};
+const matchHistory = JSON.parse(localStorage.getItem("matchHistory")) || [];
+
+const opponentSelect = document.getElementById("opponent");
+Object.keys(players).forEach(p=>{
+    if(p!==me){
+        const o=document.createElement("option");
+        o.value=p;
+        o.innerText=p;
+        opponentSelect.appendChild(o);
+    }
+});
+
+function submitMatch(){
+    const opponent = opponentSelect.value;
+    const result = document.getElementById("result").value;
+
+    let myChange=0, oppChange=0;
+    if(result==="win"){ myChange=25; oppChange=-15; }
+    if(result==="lose"){ myChange=-15; oppChange=25; }
+    if(result==="draw"){ myChange=5; oppChange=5; }
+
+    players[me] = Math.max(0,(players[me]||100)+myChange);
+    players[opponent] = Math.max(0,(players[opponent]||100)+oppChange);
+
+    matchHistory.push({
+        player: me,
+        opponent: opponent,
+        result: result,
+        date: new Date().toLocaleString()
+    });
+
+    localStorage.setItem("players",JSON.stringify(players));
+    localStorage.setItem("matchHistory",JSON.stringify(matchHistory));
+
+    alert("Match saved & rating updated ✅");
+    location.href="player.html";
+}
+</script>
+
+</body>
+</html>
