@@ -9,69 +9,65 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0a0a0a, #1b1b3a);
+      background: linear-gradient(135deg, #0a0f2c, #2b0a1f);
       color: white;
       text-align: center;
     }
 
-    header {
-      padding: 30px 10px;
+    .container {
+      padding: 30px 15px;
     }
 
-    header img {
-      width: 150px;
-      margin-bottom: 15px;
+    .logo {
+      width: 160px;
+      max-width: 80%;
+      margin: 20px auto;
+      display: block;
     }
 
     h1 {
+      color: #ffd700;
+      font-size: 34px;
       margin: 10px 0;
-      color: gold;
-      letter-spacing: 2px;
     }
 
-    #quote {
+    .tagline {
+      color: #00d4ff;
       font-size: 18px;
       font-style: italic;
-      margin-top: 10px;
-      color: #00d4ff;
+      margin-bottom: 40px;
     }
 
     footer {
-      margin-top: 40px;
+      margin-top: 60px;
       padding: 15px;
       font-size: 14px;
-      background: rgba(0,0,0,0.4);
+      color: #cccccc;
+      border-top: 1px solid rgba(255,255,255,0.1);
     }
   </style>
 </head>
 
 <body>
 
-  <header>
-    <img src="logo.png" alt="AFN Club Logo">
+  <div class="container">
+
+    <!-- LOGO -->
+    <img src="logo.png" alt="AFN Club Logo" class="logo">
+
+    <!-- TITLE -->
     <h1>AFN's Elite Strikers</h1>
-    <p id="quote"></p>
-  </header>
+
+    <!-- TAGLINE -->
+    <div class="tagline">
+      Champions are made, not born.
+    </div>
+
+  </div>
 
   <footer>
     © 2026 AFN's Elite Strikers | All Rights Reserved
   </footer>
-
-  <script>
-    const quotes = [
-      "Discipline beats talent when talent fails.",
-      "One club. One family. One mission.",
-      "Champions are made, not born.",
-      "Play with heart, win with pride.",
-      "Hard work today, victory tomorrow.",
-      "AFN never backs down.",
-      "Dream big. Play elite.",
-      "Winners train, losers complain."
-    ];
-
-    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-    document.getElementById("quote").innerText = randomQuote;
-  </script>
 
 </body>
 </html>
