@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Edit Profile</title>
+<title>Public Player Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -13,101 +13,96 @@ body{
     color:white;
     text-align:center;
 }
-.container{
-    padding:20px;
+.container{padding:20px;}
+.avatar{
+    width:130px;
+    height:130px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid #00eaff;
+    margin:15px auto;
 }
 .card{
     background:#141c2f;
     padding:20px;
     border-radius:20px;
     max-width:420px;
-    margin:auto;
+    margin:15px auto;
 }
-input, textarea{
-    width:100%;
-    padding:10px;
-    margin:10px 0;
-    border-radius:10px;
-    border:none;
+.rating{
+    font-size:60px;
+    color:#ffd700;
 }
-button{
-    background:#00c8ff;
-    border:none;
-    padding:12px;
-    width:100%;
-    border-radius:25px;
-    font-size:16px;
-    cursor:pointer;
+.badge{
+    display:inline-block;
+    padding:6px 14px;
+    border-radius:20px;
+    font-weight:bold;
+    margin-top:8px;
 }
-img{
-    width:120px;
-    height:120px;
-    border-radius:50%;
-    object-fit:cover;
-    margin:10px 0;
-    border:3px solid #00eaff;
-}
+.bronze{background:#cd7f32;}
+.silver{background:#c0c0c0;color:#000;}
+.gold{background:#ffd700;color:#000;}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-    <h2>Edit Profile</h2>
+
+    <img id="avatar" class="avatar" src="">
+    <h2 id="playerName">Player</h2>
+    <small>AFN's Elite Strikers</small>
 
     <div class="card">
-        <b id="playerName"></b><br><br>
-
-        <img id="avatarPreview" src="">
-
-        <input type="file" id="avatarInput" accept="image/*">
-
-        <input type="text" id="facebook" placeholder="Facebook profile link">
-        <textarea id="bio" placeholder="About you"></textarea>
-
-        <button onclick="saveProfile()">Save Profile</button>
+        <div class="rating" id="rating">100</div>
+        <div id="badge" class="badge bronze">BRONZE</div>
     </div>
+
+    <div class="card">
+        <h3>About Player</h3>
+        <p id="bio">No bio added.</p>
+    </div>
+
 </div>
 
 <script>
-const player = localStorage.getItem("currentPlayer");
+const params = new URLSearchParams(window.location.search);
+const player = params.get("player");
+
 if(!player){
-    alert("Login required");
-    window.location.href="login.html";
+    document.body.innerHTML="<h2>Player not found</h2>";
 }
 
-document.getElementById("playerName").innerText = player;
+document.getElementById("playerName").innerText=player;
 
-const profiles = JSON.parse(localStorage.getItem("profiles")) || {};
+// Rating
+const players = JSON.parse(localStorage.getItem("players"))||{};
+const rating = players[player] || 100;
+document.getElementById("rating").innerText = rating;
 
+// Badge
+const badge = document.getElementById("badge");
+if(rating >= 700){
+    badge.innerText="GOLD";
+    badge.className="badge gold";
+}else if(rating >= 400){
+    badge.innerText="SILVER";
+    badge.className="badge silver";
+}else{
+    badge.innerText="BRONZE";
+    badge.className="badge bronze";
+}
+
+// Profile
+const profiles = JSON.parse(localStorage.getItem("profiles"))||{};
 if(profiles[player]){
-    document.getElementById("facebook").value = profiles[player].facebook || "";
-    document.getElementById("bio").value = profiles[player].bio || "";
     if(profiles[player].avatar){
-        document.getElementById("avatarPreview").src = profiles[player].avatar;
+        document.getElementById("avatar").src=profiles[player].avatar;
     }
-}
-
-document.getElementById("avatarInput").addEventListener("change",function(){
-    const file = this.files[0];
-    if(!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(){
-        document.getElementById("avatarPreview").src = reader.result;
+    if(profiles[player].bio){
+        document.getElementById("bio").innerText=profiles[player].bio;
     }
-    reader.readAsDataURL(file);
-});
-
-function saveProfile(){
-    profiles[player] = {
-        facebook: document.getElementById("facebook").value,
-        bio: document.getElementById("bio").value,
-        avatar: document.getElementById("avatarPreview").src
-    };
-    localStorage.setItem("profiles", JSON.stringify(profiles));
-    alert("Profile updated!");
-    window.location.href="player.html";
 }
 </script>
 
