@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel | AFNs Elite Stickers</title>
+  <style>
+    body { font-family: Arial; background:#111; color:#fff; padding:20px; }
+    select, button { padding:10px; margin:5px; width:100%; }
+    h2 { color:#00ffcc; }
+  </style>
+</head>
+<body>
+
+<h2>Admin Match Result Panel</h2>
+
+<label>Player A</label>
+<select id="playerA"></select>
+
+<label>Player B</label>
+<select id="playerB"></select>
+
+<label>Winner</label>
+<select id="winner"></select>
+
+<button onclick="submitMatch()">Submit Match</button>
+
+<p id="msg"></p>
+
+<script src="match.js"></script>
+</body>
+</html>
