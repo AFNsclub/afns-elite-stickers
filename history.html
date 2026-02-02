@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Match History</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    background:#0b1220;
+    color:white;
+    font-family:Arial;
+    margin:0;
+}
+h2{
+    text-align:center;
+    padding:15px;
+}
+.card{
+    background:#141c2f;
+    margin:15px;
+    padding:15px;
+    border-radius:12px;
+}
+.win{ color:#00ff7f; }
+.loss{ color:#ff4c4c; }
+.draw{ color:#ffaa00; }
+</style>
+</head>
+
+<body>
+
+<h2 id="title">Match History</h2>
+
+<div id="history"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const player = params.get("player");
+
+document.getElementById("title").innerText = player + " - Match History";
+
+const historyData = JSON.parse(localStorage.getItem("matchHistory")) || {};
+const list = historyData[player] || [];
+
+const container = document.getElementById("history");
+
+if(list.length === 0){
+    container.innerHTML = "<p style='text-align:center;'>No match history found</p>";
+}
+
+list.reverse().forEach(m=>{
+    const div = document.createElement("div");
+    div.className = "card";
+
+    let cls = m.result === "Win" ? "win" : m.result === "Loss" ? "loss" : "draw";
+
+    div.innerHTML = `
+        <b>Opponent:</b> ${m.opponent}<br>
+        <b>Result:</b> <span class="${cls}">${m.result}</span><br>
+        <b>Rating Change:</b> ${m.ratingChange}<br>
+        <small>${m.date}</small>
+    `;
+    container.appendChild(div);
+});
+</script>
+
+</body>
+</html>
