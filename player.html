@@ -13,36 +13,35 @@ body{
     color:white;
     text-align:center;
 }
-.container{
-    padding:20px;
+.container{padding:20px;}
+.avatar{
+    width:130px;
+    height:130px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid #00eaff;
+    margin:15px auto;
 }
 .card{
     background:#141c2f;
     padding:20px;
-    border-radius:15px;
-    margin:15px auto;
+    border-radius:20px;
     max-width:420px;
+    margin:20px auto;
+}
+.rating{
+    font-size:60px;
+    color:#ffd700;
 }
 button{
     background:#00c8ff;
     border:none;
-    padding:12px 18px;
+    padding:12px 20px;
     border-radius:25px;
     font-size:15px;
-    cursor:pointer;
-    margin:8px;
+    margin:6px;
 }
-button:hover{
-    background:#00a6d6;
-}
-.logout{
-    background:#ff4c4c;
-}
-a.fb{
-    color:#00c8ff;
-    text-decoration:none;
-    font-weight:bold;
-}
+.logout{background:#ff4c4c;}
 </style>
 </head>
 
@@ -50,73 +49,60 @@ a.fb{
 
 <div class="container">
 
+    <img id="avatar" class="avatar" src="">
     <h2 id="playerName">Player</h2>
 
-    <!-- Rating -->
     <div class="card">
-        <h3>Rating</h3>
-        <h1 id="rating">100</h1>
+        <div class="rating" id="rating">100</div>
+        <small>PLAYER RATING</small>
     </div>
 
-    <!-- Profile Info -->
     <div class="card">
         <h3>About Player</h3>
-        <p id="bio">No bio added yet.</p>
-        <a id="facebook" class="fb" href="#" target="_blank" style="display:none;">
-            🔗 Facebook Profile
-        </a>
+        <p id="bio">No bio added.</p>
     </div>
 
-    <!-- Actions -->
-    <div class="card">
-        <button onclick="viewHistory()">📜 Match History</button><br>
-        <button onclick="editProfile()">✏️ Edit Profile</button><br>
-        <button onclick="logout()" class="logout">Logout</button>
-    </div>
+    <button onclick="shareProfile()">🔗 Share Public Profile</button><br>
+    <button onclick="editProfile()">✏️ Edit Profile</button>
+    <button onclick="logout()" class="logout">Logout</button>
 
 </div>
 
 <script>
-// 🔐 Login check
 const currentPlayer = localStorage.getItem("currentPlayer");
 if(!currentPlayer){
-    alert("Please login first");
     window.location.href="login.html";
 }
 
-// Show name
-document.getElementById("playerName").innerText = currentPlayer;
+document.getElementById("playerName").innerText=currentPlayer;
 
-// Load rating
-const players = JSON.parse(localStorage.getItem("players")) || {};
-document.getElementById("rating").innerText = players[currentPlayer] || 100;
+// Rating
+const players = JSON.parse(localStorage.getItem("players"))||{};
+document.getElementById("rating").innerText=players[currentPlayer]||100;
 
-// Load profile info
-const profiles = JSON.parse(localStorage.getItem("profiles")) || {};
+// Profile
+const profiles = JSON.parse(localStorage.getItem("profiles"))||{};
 if(profiles[currentPlayer]){
+    if(profiles[currentPlayer].avatar){
+        document.getElementById("avatar").src=profiles[currentPlayer].avatar;
+    }
     if(profiles[currentPlayer].bio){
-        document.getElementById("bio").innerText =
-            profiles[currentPlayer].bio;
-    }
-    if(profiles[currentPlayer].facebook){
-        const fb = document.getElementById("facebook");
-        fb.href = profiles[currentPlayer].facebook;
-        fb.style.display = "inline-block";
+        document.getElementById("bio").innerText=profiles[currentPlayer].bio;
     }
 }
 
-// Buttons
-function viewHistory(){
-    window.location.href = "history.html?player=" + currentPlayer;
-}
-
+// Actions
 function editProfile(){
-    window.location.href = "edit-profile.html";
+    window.location.href="edit-profile.html";
 }
-
 function logout(){
     localStorage.removeItem("currentPlayer");
-    window.location.href = "login.html";
+    window.location.href="login.html";
+}
+function shareProfile(){
+    const url = location.origin + location.pathname.replace("player.html","public-profile.html?player=" + currentPlayer);
+    navigator.clipboard.writeText(url);
+    alert("Public profile link copied!");
 }
 </script>
 
