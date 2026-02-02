@@ -1,64 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Login | AFN</title>
+<title>Player Register / Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{
-  background:#000;
-  color:#fff;
-  font-family:Arial;
-  text-align:center;
+    background:#020612;
+    color:white;
+    font-family:Arial;
+    text-align:center;
 }
-.box{
-  max-width:350px;
-  margin:100px auto;
-  background:rgba(255,255,255,0.08);
-  padding:30px;
-  border-radius:15px;
-}
-input{
-  width:90%;
-  padding:10px;
-  margin:10px 0;
-  border-radius:8px;
-  border:none;
+input,button{
+    width:80%;
+    padding:12px;
+    margin:8px;
+    border-radius:10px;
+    border:none;
 }
 button{
-  padding:10px 20px;
-  border:none;
-  border-radius:20px;
-  background:#00cfff;
-  font-weight:bold;
+    background:#00eaff;
+    font-weight:bold;
 }
 </style>
 </head>
-
 <body>
 
-<div class="box">
-  <img src="logo.png" width="120"><br><br>
-  <h2>Admin / Player Login</h2>
+<h2>Player Register</h2>
 
-  <input type="text" id="user" placeholder="Username">
-  <input type="password" id="pass" placeholder="Password">
-  <br>
-  <button onclick="login()">Login</button>
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+<button onclick="register()">Create Account</button>
 
-  <p id="msg"></p>
-</div>
+<h2>Login</h2>
+<button onclick="login()">Login</button>
 
 <script>
-function login(){
-  let u = document.getElementById("user").value;
-  let p = document.getElementById("pass").value;
+let players = JSON.parse(localStorage.getItem("players")) || [];
 
-  if(u==="admin" && p==="1234"){
-    window.location.href="player.html";
-  }else{
-    document.getElementById("msg").innerText="Wrong login!";
-  }
+function register(){
+    let u = username.value.trim();
+    let p = password.value.trim();
+
+    if(!u || !p){
+        alert("Fill all fields");
+        return;
+    }
+
+    if(players.find(pl => pl.username === u)){
+        alert("Username already exists");
+        return;
+    }
+
+    players.push({
+        username: u,
+        password: p,
+        rating: 1000,
+        wins: 0,
+        losses: 0
+    });
+
+    localStorage.setItem("players", JSON.stringify(players));
+    alert("Account created!");
+}
+
+function login(){
+    let u = username.value;
+    let p = password.value;
+
+    let player = players.find(pl => pl.username === u && pl.password === p);
+    if(!player){
+        alert("Invalid login");
+        return;
+    }
+
+    localStorage.setItem("currentPlayer", u);
+    window.location = "player.html";
 }
 </script>
 
