@@ -1,44 +1,95 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <title>Player Profile</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body{
-    background:#020612;
-    color:white;
+    margin:0;
     font-family:Arial;
+    background:#0b1220;
+    color:white;
     text-align:center;
+}
+
+.container{
+    padding:20px;
+}
+
+.card{
+    background:#141c2f;
+    padding:20px;
+    border-radius:15px;
+    margin:15px auto;
+    max-width:400px;
+}
+
+button{
+    background:#00c8ff;
+    border:none;
+    padding:12px 18px;
+    border-radius:25px;
+    font-size:16px;
+    cursor:pointer;
+    margin:10px;
+}
+
+button:hover{
+    background:#00a6d6;
+}
+
+.logout{
+    background:#ff4c4c;
 }
 </style>
 </head>
+
 <body>
 
-<h2>Loading...</h2>
+<div class="container">
+
+    <h2 id="playerName">Player</h2>
+
+    <div class="card">
+        <h3>Rating</h3>
+        <h1 id="rating">0</h1>
+    </div>
+
+    <div class="card">
+        <button onclick="viewHistory()">📜 Match History</button>
+        <br>
+        <button onclick="logout()" class="logout">Logout</button>
+    </div>
+
+</div>
 
 <script>
-let players = JSON.parse(localStorage.getItem("players") || "[]");
-let user = localStorage.getItem("currentPlayer");
-
-if(!user){
-    location.href = "login.html";
+// 🔐 Login check
+const currentPlayer = localStorage.getItem("currentPlayer");
+if(!currentPlayer){
+    alert("Please login first");
+    window.location.href="login.html";
 }
 
-let p = players.find(x => x.username === user);
+// Player name
+document.getElementById("playerName").innerText = currentPlayer;
 
-if(!p){
-    alert("Player not found");
-    location.href = "login.html";
+// Rating load
+const players = JSON.parse(localStorage.getItem("players")) || {};
+document.getElementById("rating").innerText = players[currentPlayer] || 100;
+
+// View history
+function viewHistory(){
+    window.location.href = "history.html?player=" + currentPlayer;
 }
 
-document.body.innerHTML = `
-<h2>${p.username}</h2>
-<p>Rating: ${p.rating}</p>
-<p>Wins: ${p.wins}</p>
-<p>Losses: ${p.losses}</p>
-<br>
-<a href="leaderboard.html" style="color:#00eaff">Leaderboard</a>
-`;
+// Logout
+function logout(){
+    localStorage.removeItem("currentPlayer");
+    window.location.href="login.html";
+}
 </script>
 
 </body>
