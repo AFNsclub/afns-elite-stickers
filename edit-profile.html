@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Edit Profile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0b1220;
+    color:white;
+    text-align:center;
+}
+.container{
+    padding:20px;
+}
+.card{
+    background:#141c2f;
+    padding:20px;
+    border-radius:15px;
+    max-width:400px;
+    margin:auto;
+}
+input, textarea{
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    border-radius:10px;
+    border:none;
+    font-size:15px;
+}
+button{
+    background:#00c8ff;
+    border:none;
+    padding:12px;
+    width:100%;
+    border-radius:25px;
+    font-size:16px;
+    cursor:pointer;
+}
+button:hover{
+    background:#00a6d6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Edit Profile</h2>
+
+    <div class="card">
+        <p><b id="playerName"></b></p>
+
+        <input type="text" id="facebook" placeholder="Facebook Profile Link">
+        <textarea id="bio" rows="4" placeholder="About you"></textarea>
+
+        <button onclick="saveProfile()">Save Profile</button>
+    </div>
+</div>
+
+<script>
+const player = localStorage.getItem("currentPlayer");
+if(!player){
+    alert("Login required");
+    window.location.href="login.html";
+}
+
+document.getElementById("playerName").innerText = player;
+
+const profiles = JSON.parse(localStorage.getItem("profiles")) || {};
+
+if(profiles[player]){
+    document.getElementById("facebook").value = profiles[player].facebook || "";
+    document.getElementById("bio").value = profiles[player].bio || "";
+}
+
+function saveProfile(){
+    profiles[player] = {
+        facebook: document.getElementById("facebook").value,
+        bio: document.getElementById("bio").value
+    };
+    localStorage.setItem("profiles", JSON.stringify(profiles));
+    alert("Profile updated!");
+    window.location.href="player.html";
+}
+</script>
+
+</body>
+</html>
