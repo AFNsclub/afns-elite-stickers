@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Player Profile</title>
+<title>Public Player Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -13,9 +13,7 @@ body{
     color:white;
     text-align:center;
 }
-.container{
-    padding:20px;
-}
+.container{padding:20px;}
 .avatar{
     width:130px;
     height:130px;
@@ -29,19 +27,22 @@ body{
     padding:20px;
     border-radius:20px;
     max-width:420px;
-    margin:20px auto;
+    margin:15px auto;
 }
 .rating{
     font-size:60px;
     color:#ffd700;
 }
-.win{color:#00ff9c;}
-.loss{color:#ff4c4c;}
-a{
-    color:#00eaff;
-    text-decoration:none;
+.badge{
+    display:inline-block;
+    padding:6px 14px;
+    border-radius:20px;
     font-weight:bold;
+    margin-top:8px;
 }
+.bronze{background:#cd7f32;}
+.silver{background:#c0c0c0;color:#000;}
+.gold{background:#ffd700;color:#000;}
 </style>
 </head>
 
@@ -55,20 +56,12 @@ a{
 
     <div class="card">
         <div class="rating" id="rating">100</div>
-        <small>PLAYER RATING</small>
+        <div id="badge" class="badge bronze">BRONZE</div>
     </div>
 
     <div class="card">
         <h3>About Player</h3>
         <p id="bio">No bio added.</p>
-        <a id="facebook" href="#" target="_blank" style="display:none;">
-            🔗 Facebook Profile
-        </a>
-    </div>
-
-    <div class="card">
-        <h3>Recent Matches</h3>
-        <div id="history">No matches yet.</div>
     </div>
 
 </div>
@@ -81,45 +74,35 @@ if(!player){
     document.body.innerHTML="<h2>Player not found</h2>";
 }
 
-document.getElementById("playerName").innerText = player;
+document.getElementById("playerName").innerText=player;
 
 // Rating
-const players = JSON.parse(localStorage.getItem("players")) || {};
-document.getElementById("rating").innerText = players[player] || 100;
+const players = JSON.parse(localStorage.getItem("players"))||{};
+const rating = players[player] || 100;
+document.getElementById("rating").innerText = rating;
 
-// Profile
-const profiles = JSON.parse(localStorage.getItem("profiles")) || {};
-if(profiles[player]){
-    if(profiles[player].avatar){
-        document.getElementById("avatar").src = profiles[player].avatar;
-    }
-    if(profiles[player].bio){
-        document.getElementById("bio").innerText = profiles[player].bio;
-    }
-    if(profiles[player].facebook){
-        const fb = document.getElementById("facebook");
-        fb.href = profiles[player].facebook;
-        fb.style.display="inline";
-    }
+// Badge
+const badge = document.getElementById("badge");
+if(rating >= 700){
+    badge.innerText="GOLD";
+    badge.className="badge gold";
+}else if(rating >= 400){
+    badge.innerText="SILVER";
+    badge.className="badge silver";
+}else{
+    badge.innerText="BRONZE";
+    badge.className="badge bronze";
 }
 
-// Match history
-const historyData = JSON.parse(localStorage.getItem("matchHistory")) || {};
-const list = historyData[player] || [];
-const box = document.getElementById("history");
-
-if(list.length){
-    box.innerHTML="";
-    list.slice(-5).reverse().forEach(m=>{
-        const div=document.createElement("div");
-        const cls=m.result==="Win"?"win":"loss";
-        div.innerHTML=`
-            <b>${m.result}</b> vs ${m.opponent}<br>
-            <span class="${cls}">${m.ratingChange}</span> rating<br>
-            <small>${m.date}</small><hr>
-        `;
-        box.appendChild(div);
-    });
+// Profile
+const profiles = JSON.parse(localStorage.getItem("profiles"))||{};
+if(profiles[player]){
+    if(profiles[player].avatar){
+        document.getElementById("avatar").src=profiles[player].avatar;
+    }
+    if(profiles[player].bio){
+        document.getElementById("bio").innerText=profiles[player].bio;
+    }
 }
 </script>
 
