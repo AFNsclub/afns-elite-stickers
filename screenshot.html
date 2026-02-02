@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Upload Screenshot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0b1220;
+    color:white;
+    text-align:center;
+}
+.container{padding:20px;}
+.card{
+    background:#141c2f;
+    padding:20px;
+    border-radius:20px;
+    max-width:420px;
+    margin:auto;
+}
+button{
+    background:#00c8ff;
+    border:none;
+    padding:12px 20px;
+    border-radius:25px;
+    font-size:15px;
+    margin-top:10px;
+}
+canvas{width:100%;border-radius:15px;margin-top:15px;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>📸 Upload Match Screenshot</h2>
+
+<div class="card">
+<input type="file" accept="image/*" onchange="loadImage(event)">
+<canvas id="canvas"></canvas><br>
+<button onclick="submitForApproval()">📤 Submit for Admin</button>
+</div>
+</div>
+
+<script>
+const player = localStorage.getItem("currentPlayer");
+if(!player) location.href="login.html";
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+let imageReady = false;
+
+function loadImage(e){
+    const img = new Image();
+    img.onload = ()=>{
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img,0,0);
+
+        ctx.fillStyle="rgba(0,0,0,0.6)";
+        ctx.fillRect(0,canvas.height-80,canvas.width,80);
+
+        ctx.fillStyle="#00eaff";
+        ctx.font="bold 26px Arial";
+        ctx.fillText("AFNs Elite stickers",20,canvas.height-45);
+
+        ctx.fillStyle="white";
+        ctx.font="18px Arial";
+        ctx.fillText("Player: "+player,20,canvas.height-18);
+
+        imageReady = true;
+    };
+    img.src = URL.createObjectURL(e.target.files[0]);
+}
+
+function submitForApproval(){
+    if(!imageReady){ alert("Upload screenshot first"); return; }
+
+    const pending = JSON.parse(localStorage.getItem("pendingShots")) || [];
+    pending.push({
+        player: player,
+        image: canvas.toDataURL(),
+        time: new Date().toLocaleString()
+    });
+    localStorage.setItem("pendingShots", JSON.stringify(pending));
+    alert("Submitted for admin approval ✅");
+    location.href="player.html";
+}
+</script>
+
+</body>
+</html>
