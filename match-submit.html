@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Submit Match | AFN's Elite Strikers</title>
+<title>Admin Match Submit | AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -14,7 +14,7 @@ body{
 }
 .container{
     max-width:400px;
-    margin:50px auto;
+    margin:60px auto;
     background:#141c2f;
     padding:20px;
     border-radius:12px;
@@ -44,9 +44,7 @@ button{
     color:black;
     font-weight:bold;
     margin-top:20px;
-}
-button:hover{
-    opacity:0.9;
+    cursor:pointer;
 }
 .note{
     font-size:13px;
@@ -54,13 +52,28 @@ button:hover{
     color:#aaa;
     text-align:center;
 }
+.logout{
+    text-align:center;
+    margin-top:15px;
+}
+.logout button{
+    background:#ff4d4d;
+    color:white;
+}
 </style>
 </head>
 
 <body>
 
+<!-- 🔐 ADMIN LOGIN CHECK -->
+<script>
+if(localStorage.getItem("adminLogin") !== "yes"){
+    window.location.href = "admin-login.html";
+}
+</script>
+
 <div class="container">
-    <h2>Submit Match Result</h2>
+    <h2>Admin Match Submit</h2>
 
     <label>Winner Username</label>
     <input type="text" id="winner" placeholder="Winner username">
@@ -68,16 +81,20 @@ button:hover{
     <label>Loser Username</label>
     <input type="text" id="loser" placeholder="Loser username">
 
-    <button onclick="submit()">Submit Match</button>
+    <button onclick="submitMatchUI()">Submit Match</button>
 
     <div class="note">
-        Rating auto update • Leaderboard auto refresh
+        Admin only • Rating & Leaderboard auto update
+    </div>
+
+    <div class="logout">
+        <button onclick="logout()">Logout Admin</button>
     </div>
 </div>
 
 <script src="match.js"></script>
 <script>
-function submit(){
+function submitMatchUI(){
     const winner = document.getElementById("winner").value.trim();
     const loser = document.getElementById("loser").value.trim();
 
@@ -90,6 +107,11 @@ function submit(){
 
     document.getElementById("winner").value = "";
     document.getElementById("loser").value = "";
+}
+
+function logout(){
+    localStorage.removeItem("adminLogin");
+    window.location.href = "admin-login.html";
 }
 </script>
 
