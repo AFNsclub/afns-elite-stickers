@@ -1,86 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Player Register / Login</title>
+<title>Player Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
-  background:#000;
+  background:#02060c;
   color:#fff;
-  font-family:Arial;
+  font-family:Segoe UI;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
 }
 .box{
-  width:300px;
+  background:#0b1d2a;
+  padding:20px;
+  border-radius:14px;
+  width:90%;
+  max-width:360px;
 }
 input,button{
   width:100%;
   padding:12px;
-  margin:10px 0;
+  margin:8px 0;
+  border-radius:10px;
   border:none;
-  border-radius:8px;
 }
 button{
-  background:#0aa;
-  color:#000;
+  background:#ffd400;
   font-weight:bold;
 }
+a{color:#00eaff;font-size:14px}
 </style>
 </head>
 <body>
 
 <div class="box">
-  <h2>Player Register</h2>
+  <h2>Player Login</h2>
   <input id="username" placeholder="Username">
   <input id="password" type="password" placeholder="Password">
-  <button onclick="register()">Create Account</button>
-
-  <h2>Login</h2>
   <button onclick="login()">Login</button>
+  <a href="register.html">Create new account</a>
 </div>
 
 <script>
-function register(){
-  let u = document.getElementById("username").value;
-  let p = document.getElementById("password").value;
-
-  if(!u || !p){
-    alert("Fill all fields");
-    return;
-  }
-
-  let players = JSON.parse(localStorage.getItem("players")) || {};
-
-  if(players[u]){
-    alert("Username already exists");
-    return;
-  }
-
-  players[u] = {
-    password:p,
-    rating:1000,
-    bio:"AFNS Club Player"
-  };
-
-  localStorage.setItem("players", JSON.stringify(players));
-  alert("Account created! Now login.");
-}
-
 function login(){
-  let u = document.getElementById("username").value;
-  let p = document.getElementById("password").value;
+  const user = username.value.trim();
+  const pass = password.value.trim();
 
   let players = JSON.parse(localStorage.getItem("players")) || {};
 
-  if(players[u] && players[u].password === p){
-    localStorage.setItem("currentPlayer", u);
-    window.location.href="player.html";
-  }else{
-    alert("Invalid login");
+  if(!players[user] || players[user].password !== pass){
+    alert("Wrong username or password");
+    return;
   }
+
+  localStorage.setItem("currentPlayer", user);
+  location.href = "player.html";
 }
 </script>
 
