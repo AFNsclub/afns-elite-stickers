@@ -1,39 +1,44 @@
-// Load all players
-function getPlayers(){
-    return JSON.parse(localStorage.getItem("players") || "[]");
-}
+function submitMatch(p1,p2,winner){
+    let players = JSON.parse(localStorage.getItem("players")) || {};
+    let history = JSON.parse(localStorage.getItem("matchHistory")) || {};
 
-// Save players
-function savePlayers(players){
-    localStorage.setItem("players", JSON.stringify(players));
-}
+    if(!history[p1]) history[p1]=[];
+    if(!history[p2]) history[p2]=[];
 
-// Match result submit
-function submitMatch(winnerUsername, loserUsername){
-    let players = getPlayers();
+    let date = new Date().toLocaleString();
 
-    let winner = players.find(p => p.username === winnerUsername);
-    let loser = players.find(p => p.username === loserUsername);
+    let p1Result,p2Result,p1Change,p2Change;
 
-    if(!winner || !loser){
-        alert("Player not found!");
-        return;
+    if(winner===p1){
+        p1Result="Win"; p2Result="Loss";
+        p1Change="+10"; p2Change="-10";
+        players[p1]+=10; players[p2]-=10;
+    }else if(winner===p2){
+        p1Result="Loss"; p2Result="Win";
+        p1Change="-10"; p2Change="+10";
+        players[p1]-=10; players[p2]+=10;
+    }else{
+        p1Result="Draw"; p2Result="Draw";
+        p1Change="+2"; p2Change="+2";
+        players[p1]+=2; players[p2]+=2;
     }
 
-    if(winnerUsername === loserUsername){
-        alert("Same player can't play match!");
-        return;
-    }
+    history[p1].push({
+        opponent:p2,
+        result:p1Result,
+        ratingChange:p1Change,
+        date
+    });
 
-    // Rating logic
-    winner.rating += 20;
-    winner.wins += 1;
+    history[p2].push({
+        opponent:p1,
+        result:p2Result,
+        ratingChange:p2Change,
+        date
+    });
 
-    loser.rating -= 15;
-    if(loser.rating < 0) loser.rating = 0;
-    loser.losses += 1;
+    localStorage.setItem("players",JSON.stringify(players));
+    localStorage.setItem("matchHistory",JSON.stringify(history));
 
-    savePlayers(players);
-
-    alert("Match result saved!");
-}
+    alert("Match Saved Successfully");
+            }
