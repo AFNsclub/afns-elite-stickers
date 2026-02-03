@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Single Match Input</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-init.js"></script>
+
+  <style>
+    body {
+      background:#0f172a;
+      color:#e5e7eb;
+      font-family: Arial;
+      padding:20px;
+    }
+    .card {
+      background:#111827;
+      padding:20px;
+      border-radius:12px;
+      max-width:400px;
+      margin:auto;
+    }
+    h2 { text-align:center; }
+    input {
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border:none;
+      border-radius:8px;
+      background:#1f2937;
+      color:white;
+    }
+    .score {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-top:10px;
+    }
+    button {
+      margin-top:20px;
+      width:100%;
+      padding:12px;
+      background:#22c55e;
+      border:none;
+      border-radius:10px;
+      font-size:16px;
+      cursor:pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>⚽ Single Player Match</h2>
+
+  <input id="playerA" placeholder="Player A UID">
+  <input id="playerB" placeholder="Player B UID">
+
+  <div class="score">
+    <input id="goalsA" type="number" placeholder="A Goals">
+    <span>vs</span>
+    <input id="goalsB" type="number" placeholder="B Goals">
+  </div>
+
+  <button onclick="saveSingleMatch()">Save Match</button>
+</div>
+
+<script src="admin-single-match.js"></script>
+</body>
+</html>
