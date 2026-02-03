@@ -5,92 +5,58 @@
 <title>Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background:linear-gradient(180deg,#050b1e,#020617);
+  background:#0b1020;
   color:white;
 }
-.container{
-  max-width:480px;
-  margin:auto;
-  padding:16px;
+.header{
+  padding:15px;
+  background:#121a36;
+  font-size:18px;
+  font-weight:bold;
 }
 .card{
-  background:rgba(255,255,255,.06);
-  border-radius:16px;
-  padding:14px;
-  margin-bottom:16px;
+  background:#161f3f;
+  margin:15px;
+  padding:15px;
+  border-radius:14px;
 }
-h2,h3{
-  text-align:center;
-}
-.stats{
-  display:flex;
-  justify-content:space-between;
-}
-.box{
-  flex:1;
-  margin:4px;
-  background:rgba(255,255,255,.08);
-  border-radius:12px;
-  padding:12px;
-  text-align:center;
+a{
+  color:#4f8cff;
+  text-decoration:none;
 }
 button{
-  width:100%;
-  padding:14px;
+  padding:12px;
   border:none;
-  border-radius:12px;
-  font-size:16px;
-  background:#ff3b3b;
+  border-radius:10px;
+  background:#ff4d4d;
   color:white;
-}
-canvas{
-  margin-top:12px;
+  width:100%;
 }
 </style>
 </head>
 
 <body>
-<div class="container">
 
-<h2>📊 Admin Dashboard</h2>
+<div class="header">👑 Admin Dashboard</div>
 
-<div class="card stats">
-  <div class="box">
-    <h3 id="playerCount">0</h3>
-    <p>Players</p>
-  </div>
-  <div class="box">
-    <h3 id="matchCount">0</h3>
-    <p>Matches</p>
-  </div>
+<div class="card">
+  <p>✔ Match Result Input</p>
+  <a href="admin-match.html">Open Match Input</a>
 </div>
 
 <div class="card">
-  <h3>🏆 Top Ranking (Wins)</h3>
-  <canvas id="rankChart"></canvas>
+  <p>✔ Season Control</p>
+  <button onclick="logout()">Logout</button>
 </div>
 
-<div class="card">
-  <h3>⚔️ Wins vs Losses</h3>
-  <canvas id="wlChart"></canvas>
-</div>
-
-<div class="card">
-  <h3>⚠️ Season Reset</h3>
-  <button onclick="resetSeason()">RESET SEASON</button>
-</div>
-
-</div>
-
-<!-- Firebase -->
+<!-- 🔥 FIREBASE CONFIG -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -103,9 +69,39 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+window.auth = getAuth(app);
 window.db = getFirestore(app);
+
+window.logout = ()=>{
+  signOut(auth).then(()=>{
+    location.href="admin-login.html";
+  });
+};
 </script>
 
-<script src="admin-dashboard.js"></script>
+<!-- 🔐 ADMIN GUARD (আগেই বসানো) -->
+<script type="module">
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import {
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+onAuthStateChanged(auth, async user=>{
+  if(!user){
+    location.href="admin-login.html";
+    return;
+  }
+
+  const snap = await getDoc(doc(db,"users",user.uid));
+  if(!snap.exists() || snap.data().role!=="admin"){
+    location.href="admin-login.html";
+  }
+});
+</script>
+
 </body>
 </html>
