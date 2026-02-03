@@ -2,139 +2,67 @@
 <html>
 <head>
   <title>Edit Player Profile</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <style>
-    body {
-      background: #f3f4f6;
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    .box {
-      max-width: 420px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 12px;
-      font-size: 15px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      background: #2563eb;
-      color: white;
-      cursor: pointer;
-    }
-    .msg {
-      text-align: center;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-  </style>
 </head>
 <body>
 
-<div class="box">
-  <h2>Edit Player Profile</h2>
+<h2>Edit Player Profile</h2>
 
-  <input id="playerName" placeholder="Player Name">
-  <input id="ownerId" placeholder="Owner ID (eFootball)">
-  <input id="deviceName" placeholder="Device Name (Mobile)">
-  <input id="gmail" placeholder="Gmail" disabled>
-  <input id="phone" placeholder="Phone Number">
-  <input id="fbLink" placeholder="Facebook ID Link">
+<input id="name" placeholder="Player Name"><br><br>
+<input id="ownerId" placeholder="Owner ID (eFootball)"><br><br>
+<input id="device" placeholder="Device Name (Mobile)"><br><br>
+<input id="phone" placeholder="Phone Number"><br><br>
+<input id="fb" placeholder="Facebook ID Link"><br><br>
 
-  <button id="saveBtn">Update Profile</button>
-  <div class="msg" id="msg"></div>
-</div>
+<button id="save">Update Profile</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub",
-  storageBucket: "afnsclub.appspot.com",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const fields = {
-  playerName: document.getElementById("playerName"),
-  ownerId: document.getElementById("ownerId"),
-  deviceName: document.getElementById("deviceName"),
-  gmail: document.getElementById("gmail"),
-  phone: document.getElementById("phone"),
-  fbLink: document.getElementById("fbLink")
-};
-
-const msg = document.getElementById("msg");
-let currentUser = null;
+let uid = "";
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     location.href = "login.html";
     return;
   }
+  uid = user.uid;
 
-  currentUser = user;
-  fields.gmail.value = user.email;
-
-  const ref = doc(db, "players", user.uid);
+  const ref = doc(db, "players", uid);
   const snap = await getDoc(ref);
-
   if (snap.exists()) {
     const d = snap.data();
-    fields.playerName.value = d.playerName || "";
-    fields.ownerId.value = d.ownerId || "";
-    fields.deviceName.value = d.deviceName || "";
-    fields.phone.value = d.phone || "";
-    fields.fbLink.value = d.fbLink || "";
-  } else {
-    await setDoc(ref, {
-      email: user.email,
-      createdAt: new Date()
-    });
+    name.value = d.name || "";
+    ownerId.value = d.ownerId || "";
+    device.value = d.device || "";
+    phone.value = d.phone || "";
+    fb.value = d.fb || "";
   }
 });
 
-document.getElementById("saveBtn").onclick = async () => {
-  if (!currentUser) return;
+save.onclick = async () => {
+  await setDoc(doc(db, "players", uid), {
+    name: name.value,
+    ownerId: ownerId.value,
+    device: device.value,
+    phone: phone.value,
+    fb: fb.value,
+    updatedAt: new Date()
+  }, { merge: true });
 
-  await updateDoc(doc(db, "players", currentUser.uid), {
-    playerName: fields.playerName.value.trim(),
-    ownerId: fields.ownerId.value.trim(),
-    deviceName: fields.deviceName.value.trim(),
-    phone: fields.phone.value.trim(),
-    fbLink: fields.fbLink.value.trim()
-  });
-
-  msg.innerText = "✅ Profile Updated Successfully";
-  setTimeout(() => {
-    location.href = "player.html";
-  }, 1200);
+  alert("Profile Updated");
+  location.href = "player.html";
 };
 </script>
 
