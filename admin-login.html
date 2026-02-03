@@ -1,34 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Login | AFNs Elite Stickers</title>
-  <style>
-    body { background:#000; color:#fff; font-family:Arial; text-align:center; padding-top:100px; }
-    input, button { padding:10px; margin:10px; width:80%; }
-    button { background:#00ffcc; border:none; }
-  </style>
+  <title>Admin Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
-<body>
+<body style="background:#000;color:#fff;text-align:center;padding-top:80px">
 
 <h2>Admin Login</h2>
 
-<input type="password" id="pass" placeholder="Enter Admin Password">
+<input id="email" placeholder="Admin Email"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
+
 <button onclick="login()">Login</button>
 
-<p id="msg"></p>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-<script>
-  const ADMIN_PASS = "afns123"; // চাইলে বদলাবে
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID"
+};
 
-  function login(){
-    let p = document.getElementById("pass").value;
-    if(p === ADMIN_PASS){
-      localStorage.setItem("adminLogin","yes");
-      window.location.href = "admin.html";
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+window.login = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    const res = await signInWithEmailAndPassword(auth, email, password);
+    const uid = res.user.uid;
+
+    const adminRef = doc(db, "admins", uid);
+    const adminSnap = await getDoc(adminRef);
+
+    if (adminSnap.exists()) {
+      location.href = "admin.html";
     } else {
-      document.getElementById("msg").innerText = "Wrong Password!";
+      alert("You are not an admin");
+      auth.signOut();
     }
+  } catch (e) {
+    alert(e.message);
   }
+};
 </script>
 
 </body>
