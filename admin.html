@@ -1,210 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Admin Panel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body {
-  background: #0b0b0b;
-  color: #fff;
-  font-family: Arial, sans-serif;
-  padding: 20px;
-}
-h1, h2 {
-  text-align: center;
-}
-.card {
-  background: #1c1c1c;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-}
-button {
-  padding: 6px 12px;
-  margin: 4px;
-  cursor: pointer;
-}
-input {
-  width: 100%;
-  padding: 8px;
-  margin: 6px 0;
-}
-#mainAdminBox {
-  border: 1px solid #333;
-  padding: 15px;
-  border-radius: 10px;
-  margin-top: 30px;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Admin Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .box {
+      width: 90%;
+      max-width: 400px;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background: #00ffd5;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
 </head>
-
 <body>
 
-<h1>Admin Panel</h1>
-<p id="roleInfo" style="text-align:center;"></p>
-
-<div id="players"></div>
-
-<!-- MAIN ADMIN CONTROLS -->
-<div id="mainAdminBox" style="display:none;">
-  <h2>Main Admin Controls</h2>
-
-  <input id="adminUID" placeholder="Admin UID">
-  <input id="adminEmail" placeholder="Admin Email">
-
-  <button onclick="addAdmin()">➕ Add Admin</button>
-  <button onclick="removeAdmin()">❌ Remove Admin</button>
+<div class="box">
+  <h2>Admin Login</h2>
+  <input type="email" id="email" placeholder="Admin Email">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
 </div>
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script type="module">
+  import { auth, db } from "./firebase-init.js";
+  import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-<script>
-/* =========================
-   🔥 FIREBASE CONFIG (READY)
-   ========================= */
-const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub",
-  storageBucket: "afnsclub.firebasestorage.app",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
-};
-/* ========================= */
+  window.login = async function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-firebase.initializeApp(firebaseConfig);
+    try {
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const uid = userCred.user.uid;
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+      const adminRef = doc(db, "admins", uid);
+      const adminSnap = await getDoc(adminRef);
 
-let currentUID = "";
-let currentRole = "";
+      if (!adminSnap.exists()) {
+        alert("You are not an admin!");
+        return;
+      }
 
-/* =========================
-   🔐 ADMIN PROTECTION
-   ========================= */
-auth.onAuthStateChanged(async (user) => {
-  if (!user) {
-    location.href = "admin-login.html";
-    return;
-  }
-
-  currentUID = user.uid;
-
-  const adminDoc = await db.collection("admins").doc(currentUID).get();
-  if (!adminDoc.exists) {
-    alert("Access Denied");
-    auth.signOut();
-    location.href = "admin-login.html";
-    return;
-  }
-
-  currentRole = adminDoc.data().role;
-  document.getElementById("roleInfo").innerText = "Role: " + currentRole;
-
-  if (currentRole === "main") {
-    document.getElementById("mainAdminBox").style.display = "block";
-  }
-
-  loadPlayers();
-});
-
-/* =========================
-   👥 LOAD PLAYERS + RANKING
-   ========================= */
-function loadPlayers() {
-  db.collection("players")
-    .orderBy("win", "desc")
-    .orderBy("lose", "asc")
-    .get()
-    .then(snapshot => {
-      const box = document.getElementById("players");
-      box.innerHTML = "";
-
-      let rank = 1;
-      snapshot.forEach(doc => {
-        const p = doc.data();
-        box.innerHTML += `
-          <div class="card">
-            <b>#${rank} ${p.name || "No Name"}</b><br>
-            Win: ${p.win || 0} | Lose: ${p.lose || 0}<br>
-            <button onclick="updateScore('${doc.id}','win')">+ Win</button>
-            <button onclick="updateScore('${doc.id}','lose')">+ Lose</button>
-          </div>
-        `;
-        rank++;
-      });
-    });
-}
-
-/* =========================
-   🏆 WIN / LOSE UPDATE
-   ========================= */
-function updateScore(uid, type) {
-  const ref = db.collection("players").doc(uid);
-
-  if (type === "win") {
-    ref.update({
-      win: firebase.firestore.FieldValue.increment(1)
-    });
-  }
-
-  if (type === "lose") {
-    ref.update({
-      lose: firebase.firestore.FieldValue.increment(1)
-    });
-  }
-
-  setTimeout(loadPlayers, 500);
-}
-
-/* =========================
-   👑 MAIN ADMIN FUNCTIONS
-   ========================= */
-function addAdmin() {
-  if (currentRole !== "main") {
-    alert("Only Main Admin allowed");
-    return;
-  }
-
-  const uid = document.getElementById("adminUID").value;
-  const email = document.getElementById("adminEmail").value;
-
-  if (!uid || !email) {
-    alert("UID & Email required");
-    return;
-  }
-
-  db.collection("admins").doc(uid).set({
-    email: email,
-    role: "admin"
-  }).then(() => {
-    alert("Admin Added");
-  });
-}
-
-function removeAdmin() {
-  if (currentRole !== "main") {
-    alert("Only Main Admin allowed");
-    return;
-  }
-
-  const uid = document.getElementById("adminUID").value;
-  if (!uid) {
-    alert("UID required");
-    return;
-  }
-
-  db.collection("admins").doc(uid).delete().then(() => {
-    alert("Admin Removed");
-  });
-}
+      window.location.href = "admin-panel.html";
+    } catch (e) {
+      alert(e.message);
+    }
+  };
 </script>
 
 </body>
-  </html>
+</html>
