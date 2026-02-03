@@ -1,55 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Admin Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(180deg,#050b1e,#020617);
+  color:white;
+}
+.container{
+  max-width:380px;
+  margin:auto;
+  padding:20px;
+}
+.card{
+  background:rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:18px;
+}
+input,button{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:none;
+  margin-bottom:12px;
+}
+button{
+  background:#4f8cff;
+  color:white;
+  font-size:16px;
+}
+.error{
+  color:#ff6b6b;
+  font-size:14px;
+  text-align:center;
+}
+</style>
 </head>
-<body style="background:#000;color:#fff;text-align:center;padding-top:80px">
 
-<h2>Admin Login</h2>
+<body>
+<div class="container">
+  <div class="card">
+    <h2 style="text-align:center">🔐 Admin Login</h2>
 
-<input id="email" placeholder="Admin Email"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
+    <input id="email" placeholder="Admin Email">
+    <input id="password" type="password" placeholder="Password">
 
-<button onclick="login()">Login</button>
+    <button onclick="loginAdmin()">Login</button>
+    <div id="error" class="error"></div>
+  </div>
+</div>
 
+<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID"
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-window.login = async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  try {
-    const res = await signInWithEmailAndPassword(auth, email, password);
-    const uid = res.user.uid;
-
-    const adminRef = doc(db, "admins", uid);
-    const adminSnap = await getDoc(adminRef);
-
-    if (adminSnap.exists()) {
-      location.href = "admin.html";
-    } else {
-      alert("You are not an admin");
-      auth.signOut();
-    }
-  } catch (e) {
-    alert(e.message);
-  }
-};
+window.auth = getAuth(app);
+window.db = getFirestore(app);
 </script>
 
+<script src="admin-auth.js"></script>
 </body>
 </html>
