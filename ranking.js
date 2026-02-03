@@ -1,50 +1,62 @@
-import { db } from "./firebase-init.js";
 import {
   collection,
-  getDocs,
-  query,
-  orderBy
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const list = document.getElementById("rankingList");
 
-const q = query(
-  collection(db, "players"),
-  orderBy("points", "desc")
-);
+function trophy(rank){
+  if(rank===1) return "🥇";
+  if(rank===2) return "🥈";
+  if(rank===3) return "🥉";
+  return "";
+}
 
-const snap = await getDocs(q);
+async function loadRanking(){
+  const snap = await getDocs(collection(db,"players"));
+  let players = [];
 
-let rank = 1;
+  snap.forEach(doc=>{
+    const d = doc.data();
+    players.push({
+      id:doc.id,
+      name:d.name || "Player",
+      wins:d.wins || 0,
+      losses:d.losses || 0,
+      goals:d.goals || 0,
+      gd:(d.goals||0)-(d.against||0)
+    });
+  });
 
-snap.forEach((doc) => {
-  const p = doc.data();
-  const id = doc.id;
+  // AUTO SORT
+  players.sort((a,b)=>{
+    if(b.wins!==a.wins) return b.wins-a.wins;
+    if(b.gd!==a.gd) return b.gd-a.gd;
+    return b.goals-a.goals;
+  });
 
-  const div = document.createElement("div");
-  div.className = "player";
+  list.innerHTML="";
 
-  let rankClass = "";
-  if (rank === 1) rankClass = "gold";
-  if (rank === 2) rankClass = "silver";
-  if (rank === 3) rankClass = "bronze";
+  players.forEach((p,i)=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.onclick=()=>{
+      location.href=`player.html?id=${p.id}`;
+    };
 
-  div.innerHTML = `
-    <div class="rank ${rankClass}">${rank}</div>
-    <div class="avatar">${p.playerName?.charAt(0).toUpperCase() || "?"}</div>
-    <div class="info">
-      <div class="name">${p.playerName || "Unknown"}</div>
-      <div class="sub">
-        W: ${p.wins || 0} | L: ${p.losses || 0}
+    div.innerHTML=`
+      <div class="rank">${i+1}</div>
+      <div class="avatar">${p.name.charAt(0).toUpperCase()}</div>
+      <div class="info">
+        <div class="name">${p.name}</div>
+        <div class="stats">
+          W:${p.wins} | L:${p.losses} | GD:${p.gd}
+        </div>
       </div>
-    </div>
-    <div class="points">${p.points || 0}</div>
-  `;
+      <div class="trophy">${trophy(i+1)}</div>
+    `;
+    list.appendChild(div);
+  });
+}
 
-  div.onclick = () => {
-    window.location.href = `public-profile.html?id=${id}`;
-  };
-
-  list.appendChild(div);
-  rank++;
-});
+loadRanking();
