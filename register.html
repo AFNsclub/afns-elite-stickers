@@ -7,108 +7,123 @@
 
 <style>
 body{
-  background:#020617;
-  font-family:Arial;
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#0f172a,#020617);
+  color:#fff;
+  height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  height:100vh;
-  color:#fff;
 }
-.card{
-  background:#0f172a;
-  padding:20px;
-  width:320px;
-  border-radius:12px;
+.box{
+  width:340px;
+  background:#020617;
+  padding:25px;
+  border-radius:14px;
+  box-shadow:0 0 20px rgba(0,0,0,.6);
 }
-input,button{
+h2{text-align:center;margin-bottom:20px;}
+input{
   width:100%;
-  padding:10px;
-  margin:6px 0;
+  padding:12px;
+  margin-bottom:12px;
   border:none;
-  border-radius:6px;
+  border-radius:8px;
+  outline:none;
 }
 button{
+  width:100%;
+  padding:12px;
   background:#3b82f6;
-  color:white;
+  border:none;
+  border-radius:8px;
   font-weight:bold;
+  cursor:pointer;
 }
 a{
   color:#38bdf8;
-  font-size:14px;
   text-decoration:none;
+  font-size:14px;
 }
+p{text-align:center;margin-top:10px;}
 </style>
-
-<!-- 🔥 Firebase Script MUST be module -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-    authDomain: "afnsclub.firebaseapp.com",
-    projectId: "afnsclub",
-    storageBucket: "afnsclub.firebasestorage.app",
-    messagingSenderId: "1088089213558",
-    appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  window.registerUser = async function () {
-    const name = document.getElementById("name").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const fb = document.getElementById("facebook").value.trim();
-    const userId = document.getElementById("userid").value.trim();
-
-    if(!name || !email || !password || !fb || !userId){
-      alert("সব ফিল্ড পূরণ করো");
-      return;
-    }
-
-    try{
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCred.user.uid;
-
-      await setDoc(doc(db,"users",uid),{
-        name: name,
-        email: email,
-        facebook: fb,
-        userid: userId,
-        createdAt: new Date()
-      });
-
-      alert("Account Created Successfully");
-      window.location.href = "login.html";
-
-    }catch(error){
-      alert(error.message);
-    }
-  }
-</script>
 </head>
 
 <body>
-<div class="card">
-  <h2>Create Player Account</h2>
 
-  <input id="name" placeholder="Full Name">
-  <input id="email" placeholder="Gmail">
-  <input id="password" type="password" placeholder="Password">
-  <input id="facebook" placeholder="Facebook Profile Link">
-  <input id="userid" placeholder="Football User ID">
+<div class="box">
+<h2>Create Player Account</h2>
 
-  <!-- ❌ form নাই | ✅ direct onclick -->
-  <button onclick="registerUser()">Register</button>
+<input id="name" placeholder="Full Name">
+<input id="username" placeholder="Username">
+<input id="email" placeholder="Gmail">
+<input id="password" type="password" placeholder="Password">
+<input id="facebook" placeholder="Facebook Profile Link">
+<input id="footballId" placeholder="Football ID">
 
-  <p style="text-align:center">
-    <a href="login.html">Already have an account? Login</a>
-  </p>
+<button onclick="registerUser()">Register</button>
+
+<p>Already have an account? <a href="login.html">Login</a></p>
 </div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+window.registerUser = async function () {
+  const name = nameInput();
+  const username = usernameInput();
+  const email = emailInput();
+  const password = passwordInput();
+  const facebook = facebookInput();
+  const footballId = footballIdInput();
+
+  if(!name || !username || !email || !password){
+    alert("All required fields missing");
+    return;
+  }
+
+  try{
+    const userCred = await createUserWithEmailAndPassword(auth,email,password);
+    await setDoc(doc(db,"players",userCred.user.uid),{
+      name,
+      username,
+      email,
+      facebook,
+      footballId,
+      createdAt: Date.now()
+    });
+
+    alert("Registration Successful");
+    window.location.href="login.html";
+  }catch(err){
+    alert(err.message);
+  }
+}
+
+function nameInput(){return document.getElementById("name").value.trim();}
+function usernameInput(){return document.getElementById("username").value.trim();}
+function emailInput(){return document.getElementById("email").value.trim();}
+function passwordInput(){return document.getElementById("password").value;}
+function facebookInput(){return document.getElementById("facebook").value.trim();}
+function footballIdInput(){return document.getElementById("footballId").value.trim();}
+</script>
+
 </body>
 </html>
