@@ -1,71 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Admin Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      background: #0f172a;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .player {
-      background: #020617;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.6);
-    }
-
-    .player b {
-      color: #22c55e;
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    input {
-      flex: 1;
-      padding: 6px;
-      border-radius: 5px;
-      border: none;
-    }
-
-    button {
-      margin-top: 10px;
-      width: 100%;
-      padding: 8px;
-      background: #22c55e;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #16a34a;
-    }
-  </style>
-</head>
+<html>
 <body>
 
-  <h2>Admin Panel – Player Control</h2>
+<h2>Admin Panel</h2>
+<div id="players"></div>
 
-  <div id="playerList"></div>
-
-  <script type="module" src="admin.js"></script>
+<script type="module" src="admin.js"></script>
 </body>
 </html>
