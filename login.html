@@ -2,118 +2,85 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Login | AFNs Club</title>
+<title>Player Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:linear-gradient(135deg,#020617,#0f172a);
-  color:#fff;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  font-family: Arial;
+  background:#0b1220;
+  color:white;
 }
-.box{
-  width:330px;
-  background:#020617;
-  padding:25px;
-  border-radius:14px;
-  box-shadow:0 0 20px rgba(0,0,0,.6);
+.container{
+  max-width:360px;
+  margin:80px auto;
 }
-h2{text-align:center;margin-bottom:20px;}
-input{
+input,button{
   width:100%;
   padding:12px;
-  margin-bottom:12px;
-  border:none;
-  border-radius:8px;
-  outline:none;
+  margin:8px 0;
+  font-size:16px;
 }
 button{
-  width:100%;
-  padding:12px;
   background:#22c55e;
   border:none;
-  border-radius:8px;
-  font-weight:bold;
   cursor:pointer;
 }
-a{
-  color:#38bdf8;
-  text-decoration:none;
-  font-size:14px;
-}
-p{text-align:center;margin-top:10px;}
+a{ color:#38bdf8; text-decoration:none; display:block; margin-top:10px; text-align:center;}
 </style>
 </head>
 
 <body>
 
-<div class="box">
-<h2>Player Login</h2>
+<div class="container">
+  <h2 style="text-align:center">Player Login</h2>
 
-<input id="input" placeholder="Username or Gmail">
-<input id="password" type="password" placeholder="Password">
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
 
-<button onclick="login()">Login</button>
+  <button id="loginBtn">Login</button>
 
-<p><a href="forgot.html">Forgot Password?</a></p>
-<p><a href="register.html">Create New Account</a></p>
+  <a href="forgot.html">Forgot Password?</a>
+  <a href="register.html">Create New Account</a>
+
+  <p id="msg"></p>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  apiKey: "AIzaSyBtDxu0LJyb1OZkhH8IpxTs8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
   projectId: "afnsclub",
-  storageBucket: "afnsclub.firebasestorage.app",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+  storageBucket: "afnsclub.appspot.com",
+  messagingSenderId: "1092008127589",
+  appId: "1:1092008127589:web:xxxxx"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 
-window.login = async function(){
-  const input = document.getElementById("input").value.trim();
+// 🔁 already login থাকলে player panel এ পাঠাবে
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window.location.href = "player.html";
+  }
+});
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = email.value;
   const password = document.getElementById("password").value;
+  const msg = document.getElementById("msg");
 
-  if(!input || !password){
-    alert("সব ফিল্ড পূরণ করো");
-    return;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    // redirect will be handled by onAuthStateChanged
+  } catch (error) {
+    msg.innerText = error.message;
   }
-
-  let email = input;
-
-  try{
-    // Username হলে → email বের করবো
-    if(!input.includes("@")){
-      const q = query(collection(db,"players"), where("username","==",input));
-      const snap = await getDocs(q);
-
-      if(snap.empty){
-        alert("Username পাওয়া যায়নি");
-        return;
-      }
-
-      email = snap.docs[0].data().email;
-    }
-
-    await signInWithEmailAndPassword(auth,email,password);
-    window.location.href="player.html";
-
-  }catch(err){
-    alert("Login failed: " + err.message);
-  }
-}
+});
 </script>
 
 </body>
