@@ -9,40 +9,37 @@
 body{
   margin:0;
   font-family: Arial, sans-serif;
-  background: linear-gradient(135deg,#020024,#090979,#000);
+  background: linear-gradient(135deg,#020024,#090979,#000428);
   color:#fff;
 }
-header{
-  padding:15px 20px;
+
+.header{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  padding:16px;
 }
-header h2{
-  margin:0;
-}
+
 .logout{
-  background:#ff3b3b;
+  background:#e74c3c;
   border:none;
   padding:8px 14px;
-  color:#fff;
   border-radius:6px;
-  cursor:pointer;
+  color:#fff;
+  font-weight:bold;
 }
-.container{
-  max-width:420px;
-  margin:30px auto;
-  padding:20px;
-}
+
 .card{
+  max-width:420px;
+  margin:20px auto;
   background:rgba(255,255,255,0.08);
-  border-radius:12px;
-  padding:20px;
-  box-shadow:0 0 20px rgba(0,0,0,0.4);
-}
-.profile-top{
+  border-radius:18px;
+  padding:25px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
   text-align:center;
 }
+
+/* Avatar Letter */
 .avatar{
   width:90px;
   height:90px;
@@ -51,72 +48,95 @@ header h2{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:40px;
-  margin:0 auto 10px;
-}
-.name{
-  font-size:20px;
+  font-size:42px;
   font-weight:bold;
+  margin:0 auto 15px;
 }
-.info{
-  margin-top:20px;
-}
-.info div{
+
+.player-name{
+  font-size:22px;
+  font-weight:bold;
   margin-bottom:10px;
-  font-size:15px;
 }
-.label{
-  color:#aaa;
-}
-.edit-btn{
+
+.info{
+  text-align:left;
   margin-top:20px;
+}
+
+.row{
+  margin-bottom:12px;
+}
+
+.label{
+  font-size:13px;
+  opacity:.75;
+}
+
+.value{
+  font-size:15px;
+  font-weight:bold;
+  margin-top:3px;
+  word-break:break-word;
+}
+
+.edit-btn{
+  margin-top:25px;
   width:100%;
   padding:12px;
   background:#1e90ff;
   border:none;
+  border-radius:10px;
   color:#fff;
-  border-radius:8px;
   font-size:16px;
-  cursor:pointer;
-}
-.notice{
-  background:rgba(255,165,0,0.15);
-  padding:10px;
-  border-radius:8px;
-  margin-top:15px;
-  font-size:14px;
-  color:#ffcc80;
+  font-weight:bold;
 }
 </style>
 </head>
 
 <body>
 
-<header>
+<div class="header">
   <h2>Player Panel</h2>
   <button class="logout" id="logoutBtn">Logout</button>
-</header>
+</div>
 
-<div class="container">
-  <div class="card">
-    <div class="profile-top">
-      <div class="avatar" id="avatar">?</div>
-      <div class="name" id="playerName">Loading...</div>
+<div class="card">
+  <div class="avatar" id="avatar">?</div>
+  <div class="player-name" id="playerName">Player</div>
+
+  <div class="info">
+    <div class="row">
+      <div class="label">Owner ID (eFootball)</div>
+      <div class="value" id="ownerId">-</div>
     </div>
 
-    <div class="info">
-      <div><span class="label">Email:</span> <span id="email"></span></div>
-      <div><span class="label">Phone:</span> <span id="phone"></span></div>
+    <div class="row">
+      <div class="label">Device Name</div>
+      <div class="value" id="device">-</div>
     </div>
 
-    <div class="notice" id="notice" style="display:none;">
-      ⚠️ Profile incomplete. Please update your profile.
+    <div class="row">
+      <div class="label">Gmail</div>
+      <div class="value" id="email">-</div>
     </div>
 
-    <button class="edit-btn" onclick="location.href='edit-profile.html'">
-      Edit Profile
-    </button>
+    <div class="row">
+      <div class="label">Phone Number</div>
+      <div class="value" id="phone">-</div>
+    </div>
+
+    <div class="row">
+      <div class="label">Facebook ID</div>
+      <div class="value">
+        <a id="fb" href="#" target="_blank" style="color:#4da3ff">-</a>
+      </div>
+    </div>
   </div>
+
+  <button class="edit-btn" onclick="location.href='edit-profile.html'">
+    Edit Profile
+  </button>
 </div>
 
 <!-- Firebase -->
@@ -129,9 +149,6 @@ const firebaseConfig = {
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
   projectId: "afnsclub",
-  storageBucket: "afnsclub.firebasestorage.app",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -140,35 +157,36 @@ const db = getFirestore(app);
 
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
-    location.href="login.html";
+    location.replace("login.html");
     return;
   }
 
-  document.getElementById("email").innerText = user.email;
+  email.innerText = user.email;
 
   const snap = await getDoc(doc(db,"players",user.uid));
-
   if(snap.exists()){
     const d = snap.data();
 
-    const name = d.playerName || "Unnamed Player";
-    document.getElementById("playerName").innerText = name;
-    document.getElementById("phone").innerText = d.phone || "-";
-    document.getElementById("avatar").innerText = name.charAt(0).toUpperCase();
+    const name = d.name || "Player";
+    playerName.innerText = name;
+    avatar.innerText = name.charAt(0).toUpperCase();
 
-    if(!d.playerName){
-      document.getElementById("notice").style.display="block";
+    ownerId.innerText = d.ownerId || "-";
+    device.innerText = d.device || "-";
+    phone.innerText = d.phone || "-";
+
+    if(d.fb){
+      fb.innerText = d.fb;
+      fb.href = d.fb;
+    }else{
+      fb.innerText = "-";
     }
-
-  }else{
-    document.getElementById("playerName").innerText = "New Player";
-    document.getElementById("notice").style.display="block";
   }
 });
 
-document.getElementById("logoutBtn").onclick = ()=>{
+logoutBtn.onclick = ()=>{
   signOut(auth).then(()=>{
-    location.href="login.html";
+    location.replace("login.html");
   });
 };
 </script>
