@@ -1,52 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Player Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Player Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body{
-      margin:0;
-      min-height:100vh;
-      background:#020617;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      font-family:Arial;
-      color:#fff;
-    }
-    .card{
-      width:360px;
-      background:#0f172a;
-      padding:25px;
-      border-radius:16px;
-      text-align:center;
-    }
-    .avatar{
-      width:80px;
-      height:80px;
-      border-radius:50%;
-      background:#22c55e;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:32px;
-      margin:0 auto 10px;
-      color:#022c22;
-      font-weight:bold;
-    }
-  </style>
+<style>
+body{
+  margin:0;
+  background:#0f172a;
+  color:#fff;
+  font-family:Arial;
+}
+.card{
+  max-width:420px;
+  margin:40px auto;
+  background:#111827;
+  border-radius:16px;
+  padding:20px;
+}
+.avatar{
+  width:80px;height:80px;
+  border-radius:50%;
+  background:#4f8cff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:32px;
+  margin:auto;
+}
+.stat{
+  display:flex;
+  justify-content:space-between;
+  margin:8px 0;
+}
+</style>
 </head>
+
 <body>
 
 <div class="card">
-  <div class="avatar" id="avatar">P</div>
-  <h2 id="playerName">Loading...</h2>
-  <p id="gmail"></p>
-  <p>Win: <span id="win">0</span> | Lose: <span id="lose">0</span></p>
-  <p>GD: <span id="gd">0</span></p>
-  <button onclick="logout()">Logout</button>
+  <div id="avatar" class="avatar">?</div>
+  <h2 id="name" style="text-align:center"></h2>
+
+  <div class="stat"><span>Wins</span><span id="win">0</span></div>
+  <div class="stat"><span>Loses</span><span id="lose">0</span></div>
+  <div class="stat"><span>Goals For</span><span id="gf">0</span></div>
+  <div class="stat"><span>Goals Against</span><span id="ga">0</span></div>
+  <div class="stat"><span>Goal Diff</span><span id="gd">0</span></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -54,38 +55,29 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = {
+firebase.initializeApp({
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub",
-  storageBucket: "afnsclub.firebasestorage.app",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57",
-  measurementId: "G-WT4XY15N6Y"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-auth.onAuthStateChanged(async user=>{
-  if(!user){
-    location.href="login.html";
-    return;
-  }
-  const snap = await db.collection("players").doc(user.uid).get();
-  const d = snap.data();
-  playerName.innerText = d.playerName;
-  avatar.innerText = d.playerName.charAt(0).toUpperCase();
-  gmail.innerText = d.gmail;
-  win.innerText = d.win;
-  lose.innerText = d.lose;
-  gd.innerText = d.goalDifference;
+  projectId: "afnsclub"
 });
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-function logout(){
-  auth.signOut().then(()=>location.href="login.html");
-}
+auth.onAuthStateChanged(user=>{
+  if(!user) location.href="login.html";
+
+  db.collection("players").doc(user.uid).get().then(doc=>{
+    const d=doc.data();
+    document.getElementById("name").innerText=d.name;
+    document.getElementById("avatar").innerText=d.name[0].toUpperCase();
+    win.innerText=d.win;
+    lose.innerText=d.lose;
+    gf.innerText=d.goalsFor;
+    ga.innerText=d.goalsAgainst;
+    gd.innerText=d.goalsFor-d.goalsAgainst;
+  });
+});
 </script>
+
 </body>
 </html>
