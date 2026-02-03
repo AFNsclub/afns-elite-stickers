@@ -1,141 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>AFNS Club Ranking</title>
+  <meta charset="UTF-8">
+  <title>AFNS Ranking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body{
-  margin:0;
-  font-family: Arial, sans-serif;
-  background:#0d1117;
-  color:#fff;
-}
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-h1{
-  text-align:center;
-  padding:20px;
-  color:#facc15;
-}
-
-.table{
-  width:95%;
-  margin:auto;
-  border-collapse:collapse;
-}
-
-.table th, .table td{
-  padding:12px;
-  text-align:center;
-}
-
-.table th{
-  background:#161b22;
-  color:#58a6ff;
-}
-
-.table tr{
-  background:#0d1117;
-  border-bottom:1px solid #21262d;
-}
-
-.rank-1{
-  background:linear-gradient(90deg,#FFD700,#b8860b);
-  color:#000;
-  font-weight:bold;
-}
-.rank-2{
-  background:linear-gradient(90deg,#C0C0C0,#808080);
-  color:#000;
-}
-.rank-3{
-  background:linear-gradient(90deg,#CD7F32,#8b4513);
-  color:#000;
-}
-
-.avatar{
-  width:35px;
-  height:35px;
-  border-radius:50%;
-  background:#238636;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  margin-right:6px;
-}
-
-.trophy{
-  font-size:20px;
-}
-</style>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg,#020617,#020617);
+      color: #e5e7eb;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 40px 1fr 60px 50px;
+      gap: 6px;
+      align-items: center;
+      padding: 12px;
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .rank {
+      font-weight: bold;
+      text-align: center;
+    }
+    .name {
+      font-weight: 600;
+    }
+    .stats {
+      text-align: center;
+      font-size: 13px;
+      color: #cbd5f5;
+    }
+    .points {
+      text-align: center;
+      font-weight: bold;
+      color: #4f8cff;
+    }
+    .gold { color: #facc15; }
+    .silver { color: #e5e7eb; }
+    .bronze { color: #f97316; }
+  </style>
 </head>
-
 <body>
 
-<h1>🏆 AFNS CLUB RANKING</h1>
+<div class="container">
+  <h2>🏆 Player Rankings</h2>
+  <p class="subtitle">Sorted by Points → Goal Difference</p>
 
-<table class="table">
-<thead>
-<tr>
-<th>Rank</th>
-<th>Player</th>
-<th>Win</th>
-<th>Lose</th>
-<th>GF</th>
-<th>GA</th>
-<th>GD</th>
-</tr>
-</thead>
-<tbody id="ranking"></tbody>
-</table>
+  <div id="rankingList"></div>
+</div>
 
-<script type="module">
-import { db } from "./firebase-init.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<script>
+  // Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+    authDomain: "afnsclub.firebaseapp.com",
+    projectId: "afnsclub",
+    storageBucket: "afnsclub.firebasestorage.app",
+    messagingSenderId: "1088089213558",
+    appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+  };
 
-const snap = await getDocs(collection(db,"players"));
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-let players = [];
-snap.forEach(doc=>{
-  const p = doc.data();
-  p.gd = p.goalsFor - p.goalsAgainst;
-  players.push(p);
-});
+  const list = document.getElementById("rankingList");
 
-// SORT → Win → Goal Difference
-players.sort((a,b)=>{
-  if(b.win === a.win){
-    return b.gd - a.gd;
-  }
-  return b.win - a.win;
-});
+  db.collection("players").get().then(snapshot => {
+    let players = [];
 
-const tbody = document.getElementById("ranking");
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      const wins = d.wins || 0;
+      const draws = d.draws || 0;
+      const loses = d.loses || 0;
 
-players.forEach((p,i)=>{
-  let cls="";
-  let trophy="";
+      const points = (wins * 3) + draws;
+      const gd = (d.goalsFor || 0) - (d.goalsAgainst || 0);
 
-  if(i===0){cls="rank-1"; trophy="🥇";}
-  if(i===1){cls="rank-2"; trophy="🥈";}
-  if(i===2){cls="rank-3"; trophy="🥉";}
+      players.push({
+        name: d.name || d.username || "Player",
+        points,
+        gd,
+        wins
+      });
+    });
 
-  tbody.innerHTML += `
-    <tr class="${cls}">
-      <td>${i+1} <span class="trophy">${trophy}</span></td>
-      <td>
-        <span class="avatar">${p.name.charAt(0).toUpperCase()}</span>
-        ${p.name}
-      </td>
-      <td>${p.win}</td>
-      <td>${p.lose}</td>
-      <td>${p.goalsFor}</td>
-      <td>${p.goalsAgainst}</td>
-      <td>${p.gd}</td>
-    </tr>
-  `;
-});
+    players.sort((a,b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.gd !== a.gd) return b.gd - a.gd;
+      return b.wins - a.wins;
+    });
+
+    players.forEach((p, i) => {
+      let medal = "";
+      let cls = "";
+
+      if (i === 0) { medal = "🏆"; cls = "gold"; }
+      else if (i === 1) { medal = "🥈"; cls = "silver"; }
+      else if (i === 2) { medal = "🥉"; cls = "bronze"; }
+
+      list.innerHTML += `
+        <div class="row">
+          <div class="rank ${cls}">${medal || i+1}</div>
+          <div class="name">${p.name}</div>
+          <div class="stats">GD ${p.gd}</div>
+          <div class="points">${p.points}</div>
+        </div>
+      `;
+    });
+  });
 </script>
 
 </body>
