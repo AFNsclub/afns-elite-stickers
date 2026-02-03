@@ -1,45 +1,191 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
-<title>Player Login</title>
-<style>
-body{background:#0b1320;color:white;font-family:Arial}
-.box{max-width:350px;margin:80px auto;background:#111a2e;padding:20px;border-radius:12px}
-input,button{width:100%;padding:12px;margin-top:10px;border-radius:8px;border:none}
-button{background:#00c2ff;font-weight:bold}
-a{color:#00c2ff;text-decoration:none}
-</style>
+  <meta charset="UTF-8">
+  <title>Player Login | AFNS Club</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:#0f172a;
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+    }
+
+    .box{
+      background:#020617;
+      padding:25px;
+      border-radius:14px;
+      width:100%;
+      max-width:420px;
+      box-shadow:0 0 25px rgba(34,197,94,0.25);
+    }
+
+    h2{
+      text-align:center;
+      color:#22c55e;
+      margin-bottom:20px;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      margin-bottom:12px;
+      border-radius:8px;
+      border:none;
+      outline:none;
+      font-size:15px;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      background:#22c55e;
+      color:#000;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    button:hover{
+      background:#16a34a;
+    }
+
+    .switch{
+      text-align:center;
+      margin-top:12px;
+      font-size:14px;
+      cursor:pointer;
+      color:#38bdf8;
+    }
+
+    .switch:hover{
+      text-decoration:underline;
+    }
+
+    .note{
+      font-size:13px;
+      color:#94a3b8;
+      margin-bottom:10px;
+    }
+  </style>
 </head>
 
 <body>
+
 <div class="box">
-<h2>Player Login</h2>
+  <h2 id="title">Player Login</h2>
 
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
+  <!-- REGISTER FIELDS -->
+  <div id="registerFields" style="display:none">
+    <input type="text" id="regUsername" placeholder="Username">
+    <input type="email" id="regEmail" placeholder="Gmail">
+    <input type="text" id="regFacebook" placeholder="Facebook Profile Link">
+    <input type="text" id="regEfootball" placeholder="eFootball User ID">
+  </div>
 
-<button onclick="login()">Login</button>
+  <!-- COMMON -->
+  <input type="password" id="password" placeholder="Password">
 
-<p style="margin-top:15px">
-<a href="forgot.html">Forgot Password?</a>
-</p>
+  <button onclick="submitForm()">Login</button>
+
+  <div class="switch" onclick="toggleMode()">
+    No account? Create one
+  </div>
+
+  <p class="note">
+    👉 Login করতে Username অথবা Gmail যেকোনো একটা ব্যবহার করতে পারো
+  </p>
 </div>
 
 <script>
-function login(){
-  let user = username.value.trim();
-  let pass = password.value.trim();
+  let isRegister = false;
 
-  let players = JSON.parse(localStorage.getItem("players")) || {};
+  function toggleMode(){
+    isRegister = !isRegister;
 
-  if(!players[user] || players[user].password !== pass){
-    alert("Invalid Login");
-    return;
+    document.getElementById("registerFields").style.display =
+      isRegister ? "block" : "none";
+
+    document.getElementById("title").innerText =
+      isRegister ? "Create Player Account" : "Player Login";
+
+    document.querySelector("button").innerText =
+      isRegister ? "Create Account" : "Login";
+
+    document.querySelector(".switch").innerText =
+      isRegister ? "Already have account? Login" : "No account? Create one";
   }
 
-  localStorage.setItem("currentPlayer", user);
-  window.location.href="player.html";
-}
+  function submitForm(){
+    const password = document.getElementById("password").value.trim();
+    let players = JSON.parse(localStorage.getItem("players")) || [];
+
+    if(isRegister){
+      const username = document.getElementById("regUsername").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const facebook = document.getElementById("regFacebook").value.trim();
+      const efootballId = document.getElementById("regEfootball").value.trim();
+
+      if(!username || !email || !facebook || !efootballId || !password){
+        alert("সব ফিল্ড পূরণ করো");
+        return;
+      }
+
+      const exists = players.find(p => p.username === username || p.email === email);
+      if(exists){
+        alert("এই Username বা Gmail আগে থেকেই আছে");
+        return;
+      }
+
+      const newPlayer = {
+        username,
+        email,
+        facebook,
+        efootballId,
+        password,
+        rating: 1000
+      };
+
+      players.push(newPlayer);
+      localStorage.setItem("players", JSON.stringify(players));
+      localStorage.setItem("currentPlayer", JSON.stringify(newPlayer));
+
+      alert("Account created successfully!");
+      window.location.href = "player.html";
+
+    } else {
+      const loginInput = document.getElementById("regUsername").value.trim() ||
+                         document.getElementById("regEmail").value.trim();
+
+      if(!loginInput || !password){
+        alert("Username/Gmail এবং Password দাও");
+        return;
+      }
+
+      const player = players.find(p =>
+        (p.username === loginInput || p.email === loginInput) &&
+        p.password === password
+      );
+
+      if(!player){
+        alert("Login failed! Info ভুল");
+        return;
+      }
+
+      localStorage.setItem("currentPlayer", JSON.stringify(player));
+      alert("Login successful!");
+      window.location.href = "player.html";
+    }
+  }
 </script>
+
 </body>
 </html>
