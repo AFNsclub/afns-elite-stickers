@@ -1,83 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      background: #0b0b1a;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      padding: 15px;
-    }
-    .player {
-      background: #111;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-    button {
-      margin-right: 5px;
-      padding: 6px 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .win { background: #00ff88; }
-    .lose { background: #ff4444; }
-  </style>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  background:#0d1117;
+  font-family:Arial, sans-serif;
+  color:#fff;
+}
+
+.container{
+  max-width:500px;
+  margin:20px auto;
+  padding:15px;
+}
+
+h1{
+  text-align:center;
+  color:#22c55e;
+  margin-bottom:20px;
+}
+
+.card{
+  background:#161b22;
+  border-radius:14px;
+  padding:15px;
+  margin-bottom:15px;
+  box-shadow:0 0 10px #000;
+}
+
+.player-name{
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin-bottom:8px;
+  border:none;
+  border-radius:8px;
+  background:#0d1117;
+  color:#fff;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:#22c55e;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover{
+  background:#16a34a;
+}
+</style>
 </head>
+
 <body>
 
-<h2>Admin Panel</h2>
-<div id="players"></div>
+<div class="container">
+  <h1>🛠️ Admin Panel</h1>
+  <div id="players"></div>
+</div>
 
 <script type="module">
-  import { auth, db } from "./firebase-init.js";
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { collection, getDocs, updateDoc, doc, increment } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { auth, db } from "./firebase-init.js";
+import {
+  collection,
+  getDocs,
+  updateDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "admin.html";
-      return;
-    }
+// 🔐 Admin protection
+const ADMIN_UIDS = [
+  "v0LwR5bq0FMYcCzeiLAc01bAGVU2" // main admin UID
+];
 
-    loadPlayers();
+onAuthStateChanged(auth,user=>{
+  if(!user || !ADMIN_UIDS.includes(user.uid)){
+    alert("Access Denied");
+    location.href="admin-login.html";
+  }
+});
+
+const container = document.getElementById("players");
+const snap = await getDocs(collection(db,"players"));
+
+snap.forEach(docSnap=>{
+  const p = docSnap.data();
+
+  const card = document.createElement("div");
+  card.className="card";
+
+  card.innerHTML=`
+    <div class="player-name">${p.name}</div>
+
+    <input type="number" placeholder="Goals For" id="gf-${docSnap.id}">
+    <input type="number" placeholder="Goals Against" id="ga-${docSnap.id}">
+    <input type="number" placeholder="Win" id="win-${docSnap.id}">
+    <input type="number" placeholder="Lose" id="lose-${docSnap.id}">
+
+    <button onclick="update('${docSnap.id}')">Update</button>
+  `;
+
+  container.appendChild(card);
+});
+
+window.update = async (id)=>{
+  const gf = Number(document.getElementById(`gf-${id}`).value);
+  const ga = Number(document.getElementById(`ga-${id}`).value);
+  const win = Number(document.getElementById(`win-${id}`).value);
+  const lose = Number(document.getElementById(`lose-${id}`).value);
+
+  await updateDoc(doc(db,"players",id),{
+    goalsFor: gf,
+    goalsAgainst: ga,
+    win: win,
+    lose: lose
   });
 
-  async function loadPlayers() {
-    const list = document.getElementById("players");
-    list.innerHTML = "";
-
-    const snap = await getDocs(collection(db, "players"));
-    snap.forEach(docSnap => {
-      const p = docSnap.data();
-      list.innerHTML += `
-        <div class="player">
-          <b>${p.name || "No Name"}</b><br>
-          Win: ${p.win || 0} | Lose: ${p.lose || 0}<br><br>
-          <button class="win" onclick="win('${docSnap.id}')">Win</button>
-          <button class="lose" onclick="lose('${docSnap.id}')">Lose</button>
-        </div>
-      `;
-    });
-  }
-
-  window.win = async (id) => {
-    await updateDoc(doc(db, "players", id), {
-      win: increment(1)
-    });
-    loadPlayers();
-  };
-
-  window.lose = async (id) => {
-    await updateDoc(doc(db, "players", id), {
-      lose: increment(1)
-    });
-    loadPlayers();
-  };
+  alert("Updated Successfully ✅");
+};
 </script>
 
 </body>
