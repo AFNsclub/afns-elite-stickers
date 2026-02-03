@@ -2,7 +2,8 @@ import {
   collection,
   getDocs,
   doc,
-  updateDoc
+  updateDoc,
+  addDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let players=[];
@@ -15,17 +16,16 @@ async function loadDashboard(){
   snap.forEach(d=>{
     const p=d.data();
     players.push({id:d.id,...p});
-    matches += (p.wins||0)+(p.losses||0);
+    matches+=(p.wins||0)+(p.losses||0);
   });
 
   document.getElementById("playerCount").innerText=players.length;
   document.getElementById("matchCount").innerText=Math.floor(matches/2);
 
-  drawRankChart();
-  drawWLChart();
+  drawChart();
 }
 
-function drawRankChart(){
+function drawChart(){
   const top=[...players]
     .sort((a,b)=>b.wins-a.wins)
     .slice(0,10);
@@ -42,24 +42,43 @@ function drawRankChart(){
   });
 }
 
-function drawWLChart(){
-  new Chart(wlChart,{
-    type:"bar",
-    data:{
-      labels:players.map(p=>p.name),
-      datasets:[
-        {label:"Wins",data:players.map(p=>p.wins)},
-        {label:"Losses",data:players.map(p=>p.losses)}
-      ]
-    }
+/* ======================
+   SAVE SEASON ARCHIVE
+====================== */
+async function saveSeasonArchive(){
+  let list=[...players]
+    .map(p=>({
+      name:p.name,
+      wins:p.wins||0,
+      losses:p.losses||0,
+      goals:p.goals||0,
+      gd:(p.goals||0)-(p.against||0)
+    }))
+    .sort((a,b)=>{
+      if(b.wins!==a.wins) return b.wins-a.wins;
+      if(b.gd!==a.gd) return b.gd-a.gd;
+      return b.goals-a.goals;
+    });
+
+  const topPlayers=list.slice(0,10).map((p,i)=>({
+    rank:i+1,
+    ...p
+  }));
+
+  await addDoc(collection(db,"seasons"),{
+    seasonName:`Season ${new Date().getFullYear()}`,
+    date:Date.now(),
+    topPlayers
   });
 }
 
 /* ======================
-   SEASON RESET
+   RESET SEASON
 ====================== */
 window.resetSeason = async ()=>{
-  if(!confirm("ARE YOU SURE? ALL STATS WILL RESET")) return;
+  if(!confirm("ARE YOU SURE?")) return;
+
+  await saveSeasonArchive();
 
   for(const p of players){
     await updateDoc(doc(db,"players",p.id),{
@@ -70,7 +89,7 @@ window.resetSeason = async ()=>{
     });
   }
 
-  alert("Season reset done");
+  alert("Season archived & reset done");
   location.reload();
 };
 
