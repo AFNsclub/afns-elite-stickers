@@ -1,136 +1,101 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Player Profile | AFNS Club</title>
+<meta charset="UTF-8">
+<title>Player Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body{
-      margin:0;
-      font-family: Arial, Helvetica, sans-serif;
-      background:#0f172a;
-      color:#fff;
-    }
-
-    header{
-      background:#020617;
-      padding:15px;
-      text-align:center;
-      border-bottom:2px solid #22c55e;
-    }
-
-    header h1{
-      margin:0;
-      font-size:22px;
-      color:#22c55e;
-    }
-
-    .container{
-      padding:20px;
-      max-width:800px;
-      margin:auto;
-    }
-
-    .card{
-      background:#020617;
-      border-radius:12px;
-      padding:20px;
-      margin-bottom:20px;
-      box-shadow:0 0 15px rgba(34,197,94,0.2);
-    }
-
-    .card h2{
-      margin-top:0;
-      color:#22c55e;
-    }
-
-    .info p{
-      margin:8px 0;
-      font-size:16px;
-    }
-
-    .rating{
-      font-size:28px;
-      font-weight:bold;
-      color:#facc15;
-    }
-
-    button{
-      background:#ef4444;
-      color:#fff;
-      border:none;
-      padding:12px 20px;
-      border-radius:8px;
-      font-size:16px;
-      cursor:pointer;
-      margin-top:10px;
-    }
-
-    button:hover{
-      background:#dc2626;
-    }
-  </style>
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#020617,#0f172a);
+  color:#fff;
+}
+.header{
+  padding:15px;
+  background:#020617;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+button{
+  background:#ef4444;
+  border:none;
+  padding:10px 16px;
+  color:#fff;
+  border-radius:8px;
+  cursor:pointer;
+}
+.container{
+  padding:20px;
+}
+.card{
+  background:#020617;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 0 15px rgba(0,0,0,.6);
+}
+</style>
 </head>
 
 <body>
 
-<!-- ================= LOGIN PROTECTION ================= -->
-<script>
-  const currentPlayer = localStorage.getItem("currentPlayer");
-
-  if (!currentPlayer) {
-    alert("⚠️ Please login first!");
-    window.location.href = "login.html";
-  }
-</script>
-<!-- ==================================================== -->
-
-<header>
-  <h1>AFNS Club – Player Profile</h1>
-</header>
-
-<div class="container">
-
-  <!-- Player Info -->
-  <div class="card info">
-    <h2>Player Information</h2>
-    <p><strong>Username:</strong> <span id="username"></span></p>
-    <p><strong>Email:</strong> <span id="email"></span></p>
-    <p><strong>Facebook:</strong> <span id="facebook"></span></p>
-    <p><strong>eFootball ID:</strong> <span id="efootball"></span></p>
-  </div>
-
-  <!-- Rating -->
-  <div class="card">
-    <h2>Player Rating</h2>
-    <div class="rating" id="rating">0</div>
-  </div>
-
-  <!-- Logout -->
-  <div class="card">
-    <h2>Account</h2>
-    <button onclick="logout()">Logout</button>
-  </div>
-
+<div class="header">
+  <h3>Player Panel</h3>
+  <button onclick="logout()">Logout</button>
 </div>
 
-<script>
-  // Load player data
-  const player = JSON.parse(localStorage.getItem("currentPlayer"));
+<div class="container">
+  <div class="card">
+    <h2 id="name">Loading...</h2>
+    <p id="email"></p>
+    <p id="username"></p>
+  </div>
+</div>
 
-  document.getElementById("username").innerText = player.username;
-  document.getElementById("email").innerText = player.email;
-  document.getElementById("facebook").innerText = player.facebook;
-  document.getElementById("efootball").innerText = player.efootballId;
-  document.getElementById("rating").innerText = player.rating || 1000;
+<!-- Firebase Auth Protection -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  function logout(){
-    localStorage.removeItem("currentPlayer");
-    alert("Logged out successfully");
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 🔐 LOGIN CHECK
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){
     window.location.href = "login.html";
+    return;
   }
+
+  // Load player info
+  const snap = await getDoc(doc(db,"players",user.uid));
+  if(snap.exists()){
+    const data = snap.data();
+    document.getElementById("name").innerText = "Welcome, " + data.username;
+    document.getElementById("email").innerText = "Email: " + data.email;
+    document.getElementById("username").innerText = "Football ID: " + data.footballId;
+  }
+});
+
+// Logout
+window.logout = function(){
+  signOut(auth).then(()=>{
+    window.location.href = "login.html";
+  });
+}
 </script>
 
 </body>
