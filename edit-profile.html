@@ -1,118 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>Edit Profile</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body{
-  background:#0a0f2c;
-  font-family:Arial;
+  margin:0;
+  font-family:Arial, sans-serif;
+  background: linear-gradient(135deg,#020024,#090979,#000428);
   color:#fff;
 }
-.container{
-  max-width:420px;
-  margin:40px auto;
-  background:rgba(255,255,255,0.08);
-  padding:20px;
-  border-radius:12px;
+
+.header{
+  padding:16px;
+  text-align:center;
 }
-h2{text-align:center}
+
+.card{
+  max-width:420px;
+  margin:20px auto;
+  background:rgba(255,255,255,0.08);
+  border-radius:18px;
+  padding:25px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+
 input{
   width:100%;
-  padding:10px;
-  margin:10px 0;
-  border-radius:6px;
+  padding:12px;
+  margin-bottom:14px;
   border:none;
+  border-radius:10px;
+  font-size:15px;
 }
+
 button{
   width:100%;
-  padding:12px;
+  padding:13px;
   background:#1e90ff;
-  color:#fff;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
+  color:#fff;
   font-size:16px;
-}
-img{
-  width:120px;
-  height:120px;
-  border-radius:50%;
-  object-fit:cover;
-  display:block;
-  margin:10px auto;
+  font-weight:bold;
 }
 </style>
 </head>
 
 <body>
-<div class="container">
+
+<div class="header">
   <h2>Edit Profile</h2>
+</div>
 
-  <img id="preview" src="" />
-  <input type="file" id="photo">
-
+<div class="card">
   <input type="text" id="name" placeholder="Player Name">
+  <input type="text" id="ownerId" placeholder="Owner ID (eFootball)">
+  <input type="text" id="device" placeholder="Device Name (Mobile)">
   <input type="text" id="phone" placeholder="Phone Number">
+  <input type="text" id="fb" placeholder="Facebook Profile Link">
 
   <button id="saveBtn">Save Profile</button>
 </div>
 
+<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
   projectId: "afnsclub",
-  storageBucket: "afnsclub.appspot.com",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
-let currentUser;
+let uid = null;
 
-onAuthStateChanged(auth,(user)=>{
-  if(!user) location.href="login.html";
-  currentUser = user;
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){
+    location.replace("login.html");
+    return;
+  }
+
+  uid = user.uid;
+
+  const snap = await getDoc(doc(db,"players",uid));
+  if(snap.exists()){
+    const d = snap.data();
+    name.value = d.name || "";
+    ownerId.value = d.ownerId || "";
+    device.value = d.device || "";
+    phone.value = d.phone || "";
+    fb.value = d.fb || "";
+  }
 });
 
-document.getElementById("photo").onchange = e=>{
-  const file = e.target.files[0];
-  if(file){
-    document.getElementById("preview").src = URL.createObjectURL(file);
-  }
-};
+saveBtn.onclick = async ()=>{
+  if(!uid) return;
 
-document.getElementById("saveBtn").onclick = async ()=>{
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
-  const file = document.getElementById("photo").files[0];
+  await setDoc(doc(db,"players",uid),{
+    name: name.value,
+    ownerId: ownerId.value,
+    device: device.value,
+    phone: phone.value,
+    fb: fb.value
+  },{ merge:true });
 
-  let photoURL = "";
-
-  if(file){
-    const photoRef = ref(storage, "players/"+currentUser.uid+".jpg");
-    await uploadBytes(photoRef,file);
-    photoURL = await getDownloadURL(photoRef);
-  }
-
-  await setDoc(doc(db,"players",currentUser.uid),{
-    playerName:name,
-    phone:phone,
-    photo:photoURL
-  },{merge:true});
-
-  alert("Profile Updated!");
-  location.href="player.html";
+  alert("Profile Updated Successfully ✅");
+  location.href = "player.html";
 };
 </script>
+
 </body>
 </html>
