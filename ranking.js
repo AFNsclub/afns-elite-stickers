@@ -1,45 +1,51 @@
-const db = firebase.firestore();
+import { db } from "./firebase-init.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const list = document.getElementById("rankingList");
+const rankingList = document.getElementById("rankingList");
 
-db.collection("players")
-.orderBy("wins", "desc")
-.orderBy("goalDifference", "desc")
-.orderBy("goalsFor", "desc")
-.onSnapshot(snapshot => {
+function getTrophy(rank) {
+  if (rank === 1) return "🥇";
+  if (rank === 2) return "🥈";
+  if (rank === 3) return "🥉";
+  return "";
+}
 
-  list.innerHTML = "";
-  let rank = 1;
+async function loadRanking() {
+  rankingList.innerHTML = "Loading ranking...";
+
+  const snapshot = await getDocs(collection(db, "players"));
+  let players = [];
 
   snapshot.forEach(doc => {
-    const p = doc.data();
+    players.push(doc.data());
+  });
 
-    let trophy = "";
-    if (rank === 1) trophy = "🥇";
-    if (rank === 2) trophy = "🥈";
-    if (rank === 3) trophy = "🥉";
+  // 🔥 Sort logic
+  players.sort((a, b) => {
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
+    return b.goalsFor - a.goalsFor;
+  });
 
-    const row = document.createElement("div");
-    row.className = "row";
+  rankingList.innerHTML = "";
 
-    row.innerHTML = `
-      <div class="rank">${trophy || rank}</div>
+  players.forEach((p, index) => {
+    const div = document.createElement("div");
+    div.className = "player";
 
-      <div class="name">
-        <div class="avatar">${p.playerName.charAt(0).toUpperCase()}</div>
-        <div>
-          <div>${p.playerName}</div>
+    div.innerHTML = `
+      <div class="rank">${index + 1}</div>
+      <div class="avatar">${p.playerName?.charAt(0).toUpperCase() || "?"}</div>
+      <div class="info">
+        <div class="name">${p.playerName || "Unknown"} ${getTrophy(index + 1)}</div>
+        <div class="stats">
+          W:${p.wins} | L:${p.losses} | GD:${p.goalDifference}
         </div>
       </div>
-
-      <div>${p.wins}</div>
-      <div>${p.losses}</div>
-      <div>${p.goalsFor}</div>
-      <div>${p.goalsAgainst}</div>
-      <div>${p.goalDifference}</div>
     `;
 
-    list.appendChild(row);
-    rank++;
+    rankingList.appendChild(div);
   });
-});
+}
+
+loadRanking();
