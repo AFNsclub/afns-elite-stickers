@@ -1,76 +1,36 @@
-// register.js
-
 import { auth, db } from "./firebase-init.js";
+import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import {
-  createUserWithEmailAndPassword
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+window.register = async () => {
+  const name = name.value;
+  const mobile = mobile.value;
+  const email = email.value;
+  const password = password.value;
+  const device = device.value;
+  const gameid = gameid.value;
+  const facebook = facebook.value;
 
-import {
-  doc,
-  setDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-
-// Register function
-window.register = async function () {
-
-  // Input values
-  const playerName = document.getElementById("playerName").value.trim();
-  const mobile = document.getElementById("mobile").value.trim();
-  const gmail = document.getElementById("gmail").value.trim();
-  const ownerGameId = document.getElementById("ownerId").value.trim();
-  const facebookLink = document.getElementById("facebook").value.trim();
-
-  // Basic empty check
-  if (!playerName || !mobile || !gmail || !ownerGameId) {
-    alert("সব তথ্য ঠিকভাবে পূরণ করো");
+  if (!/^01\d{9}$/.test(mobile)) {
+    alert("Invalid BD Mobile Number");
     return;
   }
 
-  // 🇧🇩 Bangladeshi mobile validation
-  const bdMobileRegex = /^01[3-9]\d{8}$/;
-  if (!bdMobileRegex.test(mobile)) {
-    alert("Invalid Bangladeshi mobile number! (01XXXXXXXXX)");
-    return;
-  }
+  const user = await createUserWithEmailAndPassword(auth, email, password);
 
-  // Default password (player পরে change করতে পারবে)
-  const defaultPassword = "123456";
+  await setDoc(doc(db, "players", user.user.uid), {
+    name,
+    mobile,
+    email,
+    device,
+    gameid,
+    facebook,
+    win: 0,
+    lose: 0,
+    goalsFor: 0,
+    goalsAgainst: 0,
+    createdAt: serverTimestamp()
+  });
 
-  try {
-    // Create auth account
-    const cred = await createUserWithEmailAndPassword(
-      auth,
-      gmail,
-      defaultPassword
-    );
-
-    const uid = cred.user.uid;
-
-    // Save player data to Firestore
-    await setDoc(doc(db, "players", uid), {
-      playerName: playerName,
-      mobile: mobile,
-      gmail: gmail,
-
-      ownerGameId: ownerGameId,
-      facebookLink: facebookLink || "",
-
-      win: 0,
-      lose: 0,
-      goalsFor: 0,
-      goalsAgainst: 0,
-      goalDifference: 0,
-
-      createdAt: serverTimestamp()
-    });
-
-    alert("Player account successfully created!");
-    window.location.href = "login.html";
-
-  } catch (error) {
-    alert(error.message);
-  }
+  alert("Registration Successful");
 };
