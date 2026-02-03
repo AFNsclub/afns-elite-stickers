@@ -1,122 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Player Profile</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Player Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body{
-  margin:0;
-  background:#050b1a;
-  font-family:Arial,sans-serif;
-  color:#fff;
-}
-.card{
-  max-width:420px;
-  margin:20px auto;
-  background:#0b132b;
-  border-radius:20px;
-  padding:20px;
-}
-.motivation{
-  text-align:center;
-  font-size:14px;
-  opacity:.9;
-  margin-bottom:16px;
-}
-.avatar{
-  width:90px;height:90px;
-  border-radius:50%;
-  background:#4f8cff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:36px;
-  margin:0 auto;
-}
-#playerName{
-  text-align:center;
-  margin:12px 0;
-}
-.info{
-  font-size:13px;
-  opacity:.9;
-  margin-bottom:14px;
-}
-.info div{margin-bottom:4px}
-
-.stats{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin:16px 0;
-}
-.stat{
-  background:#070d20;
-  padding:12px;
-  border-radius:12px;
-  text-align:center;
-}
-
-.edit{
-  margin-top:14px;
-}
-input{
-  width:100%;
-  margin-bottom:8px;
-  padding:12px;
-  border-radius:12px;
-  border:none;
-  background:#070d20;
-  color:#fff;
-}
-button{
-  width:100%;
-  padding:14px;
-  border-radius:14px;
-  border:none;
-  background:#4f8cff;
-  color:#fff;
-  font-size:16px;
-}
-</style>
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg,#050b1e,#020617);
+      color:#fff;
+    }
+    .container{
+      max-width:420px;
+      margin:auto;
+      padding:16px;
+    }
+    .card{
+      background:rgba(255,255,255,.05);
+      border-radius:18px;
+      padding:18px;
+      margin-bottom:16px;
+      box-shadow:0 10px 25px rgba(0,0,0,.4);
+    }
+    .center{text-align:center;}
+    .avatar{
+      width:90px;height:90px;
+      border-radius:50%;
+      background:#4f8cff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:42px;
+      font-weight:bold;
+      margin:10px auto;
+    }
+    .motivation{
+      font-size:14px;
+      opacity:.85;
+      margin-bottom:6px;
+    }
+    h2{margin:6px 0;}
+    .info{
+      font-size:14px;
+      opacity:.9;
+      margin:6px 0;
+    }
+    .info a{color:#4f8cff;text-decoration:none;}
+    .stats{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    .stat{
+      background:rgba(0,0,0,.35);
+      border-radius:14px;
+      padding:14px;
+      text-align:center;
+    }
+    .stat span{
+      display:block;
+      font-size:20px;
+      font-weight:bold;
+    }
+    input{
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      border:none;
+      margin-bottom:12px;
+      background:#0b122c;
+      color:#fff;
+      font-size:15px;
+    }
+    button{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:16px;
+      background:#4f8cff;
+      color:#fff;
+      font-size:16px;
+      font-weight:bold;
+    }
+  </style>
 </head>
 
 <body>
+<div class="container">
 
-<div class="card">
+  <!-- PROFILE CARD -->
+  <div class="card center">
 
-  <!-- MOTIVATION TOP -->
-  <div id="motivationText" class="motivation"></div>
+    <!-- MOTIVATION (TOP) -->
+    <div id="motivationText" class="motivation">Loading...</div>
 
-  <div class="avatar" id="avatar">?</div>
-  <h2 id="playerName">Loading...</h2>
+    <!-- AVATAR -->
+    <div id="avatar" class="avatar">?</div>
 
-  <!-- PLAYER INFO -->
-  <div class="info">
-    <div>📞 <span id="phoneText"></span></div>
-    <div>📧 <span id="emailText"></span></div>
-    <div>🎮 Owner / Game ID: <span id="gameIdText"></span></div>
-    <div>📱 Device: <span id="deviceText"></span></div>
-    <div>🔗 <a id="fbLink" target="_blank" style="color:#4f8cff">Facebook Profile</a></div>
+    <!-- PLAYER NAME -->
+    <h2 id="playerName">Player</h2>
+
+    <!-- RANK -->
+    <div style="margin:8px 0;">
+      <div style="font-size:13px;opacity:.7;">Current Rank</div>
+      <div id="rankText" style="font-size:22px;font-weight:bold;">
+        Loading...
+      </div>
+    </div>
+
+    <!-- INFO -->
+    <div class="info">📞 <span id="phoneText"></span></div>
+    <div class="info">✉️ <span id="emailText"></span></div>
+    <div class="info">🎮 Game ID: <span id="gameIdText"></span></div>
+    <div class="info">📱 Device: <span id="deviceText"></span></div>
+    <div class="info">
+      🔗 <a id="fbLink" target="_blank">Facebook Profile</a>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat">
+        Wins
+        <span id="wins">0</span>
+      </div>
+      <div class="stat">
+        Losses
+        <span id="losses">0</span>
+      </div>
+      <div class="stat">
+        Goals
+        <span id="goals">0</span>
+      </div>
+      <div class="stat">
+        Goal Diff
+        <span id="gd">0</span>
+      </div>
+    </div>
   </div>
 
-  <!-- STATS -->
-  <div class="stats">
-    <div class="stat">Wins<br><b id="wins">0</b></div>
-    <div class="stat">Losses<br><b id="losses">0</b></div>
-    <div class="stat">Goals<br><b id="goals">0</b></div>
-    <div class="stat">Goal Diff<br><b id="gd">0</b></div>
-  </div>
+  <!-- EDIT CARD -->
+  <div class="card">
+    <h3>Edit Profile</h3>
 
-  <!-- EDIT -->
-  <div class="edit">
-    <input id="phoneInput" placeholder="BD Mobile Number">
-    <input id="emailInput" placeholder="Gmail">
-    <input id="gameIdInput" placeholder="Owner / Game ID">
+    <input id="nameInput" placeholder="Player name">
+    <input id="phoneInput" placeholder="Phone number">
+    <input id="emailInput" placeholder="Email">
+    <input id="gameIdInput" placeholder="Game ID">
     <input id="deviceInput" placeholder="Device name">
     <input id="fbInput" placeholder="Facebook profile link">
+
     <button onclick="saveProfile()">Save Changes</button>
   </div>
 
