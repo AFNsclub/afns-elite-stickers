@@ -1,45 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Edit Profile</title>
+  <title>Edit Player Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-    body {
-      background:#0b1020;
-      color:white;
-      font-family:sans-serif;
+    body{
+      font-family: Arial, Helvetica, sans-serif;
       padding:20px;
     }
-    input, button {
+    input{
       width:100%;
       padding:10px;
-      margin:10px 0;
-      border-radius:6px;
-      border:none;
-    }
-    button {
-      background:#4caf50;
-      color:white;
+      margin-bottom:12px;
       font-size:16px;
+    }
+    button{
+      padding:10px 16px;
+      font-size:16px;
+      cursor:pointer;
     }
   </style>
 </head>
+
 <body>
 
 <h2>Edit Player Profile</h2>
 
 <input type="text" id="name" placeholder="Player Name">
-<input type="number" id="age" placeholder="Age">
-<input type="text" id="position" placeholder="Position">
+<input type="text" id="nickname" placeholder="Nickname">
+<input type="text" id="phone" placeholder="Phone Number">
 
-<button onclick="saveProfile()">Save Profile</button>
+<button id="updateBtn">Update Profile</button>
 
 <p id="msg"></p>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBtDxu0LJyb1OZkhH8IpxTs8PcKc4nUxM",
@@ -54,35 +54,50 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser;
+const nameEl = document.getElementById("name");
+const nickEl = document.getElementById("nickname");
+const phoneEl = document.getElementById("phone");
+const msg = document.getElementById("msg");
+const btn = document.getElementById("updateBtn");
+
+let currentUser = null;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "login.html";
     return;
   }
-  currentUser = user;
 
+  currentUser = user;
   const ref = doc(db, "players", user.uid);
   const snap = await getDoc(ref);
 
   if (snap.exists()) {
     const d = snap.data();
-    name.value = d.name || "";
-    age.value = d.age || "";
-    position.value = d.position || "";
+    nameEl.value = d.name || "";
+    nickEl.value = d.nickname || "";
+    phoneEl.value = d.phone || "";
   }
 });
 
-window.saveProfile = async () => {
+btn.addEventListener("click", async () => {
+  if (!currentUser) return;
+
   const ref = doc(db, "players", currentUser.uid);
+
   await setDoc(ref, {
-    name: name.value,
-    age: age.value,
-    position: position.value
-  });
-  msg.innerText = "✅ Profile Updated Successfully!";
-};
+    name: nameEl.value,
+    nickname: nickEl.value,
+    phone: phoneEl.value,
+    email: currentUser.email
+  }, { merge: true });
+
+  msg.innerText = "✅ Profile Updated Successfully";
+
+  setTimeout(()=>{
+    window.location.href = "player.html";
+  }, 1200);
+});
 </script>
 
 </body>
