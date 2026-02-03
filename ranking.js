@@ -1,51 +1,50 @@
 import { db } from "./firebase-init.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const rankingList = document.getElementById("rankingList");
+const list = document.getElementById("rankingList");
 
-function getTrophy(rank) {
-  if (rank === 1) return "🥇";
-  if (rank === 2) return "🥈";
-  if (rank === 3) return "🥉";
-  return "";
-}
+const q = query(
+  collection(db, "players"),
+  orderBy("points", "desc")
+);
 
-async function loadRanking() {
-  rankingList.innerHTML = "Loading ranking...";
+const snap = await getDocs(q);
 
-  const snapshot = await getDocs(collection(db, "players"));
-  let players = [];
+let rank = 1;
 
-  snapshot.forEach(doc => {
-    players.push(doc.data());
-  });
+snap.forEach((doc) => {
+  const p = doc.data();
+  const id = doc.id;
 
-  // 🔥 Sort logic
-  players.sort((a, b) => {
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
-    return b.goalsFor - a.goalsFor;
-  });
+  const div = document.createElement("div");
+  div.className = "player";
 
-  rankingList.innerHTML = "";
+  let rankClass = "";
+  if (rank === 1) rankClass = "gold";
+  if (rank === 2) rankClass = "silver";
+  if (rank === 3) rankClass = "bronze";
 
-  players.forEach((p, index) => {
-    const div = document.createElement("div");
-    div.className = "player";
-
-    div.innerHTML = `
-      <div class="rank">${index + 1}</div>
-      <div class="avatar">${p.playerName?.charAt(0).toUpperCase() || "?"}</div>
-      <div class="info">
-        <div class="name">${p.playerName || "Unknown"} ${getTrophy(index + 1)}</div>
-        <div class="stats">
-          W:${p.wins} | L:${p.losses} | GD:${p.goalDifference}
-        </div>
+  div.innerHTML = `
+    <div class="rank ${rankClass}">${rank}</div>
+    <div class="avatar">${p.playerName?.charAt(0).toUpperCase() || "?"}</div>
+    <div class="info">
+      <div class="name">${p.playerName || "Unknown"}</div>
+      <div class="sub">
+        W: ${p.wins || 0} | L: ${p.losses || 0}
       </div>
-    `;
+    </div>
+    <div class="points">${p.points || 0}</div>
+  `;
 
-    rankingList.appendChild(div);
-  });
-}
+  div.onclick = () => {
+    window.location.href = `public-profile.html?id=${id}`;
+  };
 
-loadRanking();
+  list.appendChild(div);
+  rank++;
+});
