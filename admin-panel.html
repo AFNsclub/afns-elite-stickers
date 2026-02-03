@@ -1,137 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Admin Panel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{
-  margin:0;
   background:#0d1117;
-  font-family:Arial, sans-serif;
   color:#fff;
+  font-family:Arial;
+  margin:0;
 }
-
 .container{
-  max-width:500px;
-  margin:20px auto;
+  max-width:480px;
+  margin:auto;
   padding:15px;
 }
-
-h1{
-  text-align:center;
-  color:#22c55e;
-  margin-bottom:20px;
-}
-
+h2{text-align:center;color:#22c55e;}
 .card{
   background:#161b22;
-  border-radius:14px;
   padding:15px;
-  margin-bottom:15px;
-  box-shadow:0 0 10px #000;
+  border-radius:12px;
+  margin-bottom:12px;
 }
-
-.player-name{
-  font-weight:bold;
-  margin-bottom:10px;
-}
-
 input{
   width:100%;
-  padding:10px;
-  margin-bottom:8px;
-  border:none;
+  padding:8px;
+  margin:5px 0;
   border-radius:8px;
-  background:#0d1117;
-  color:#fff;
+  border:none;
 }
-
 button{
   width:100%;
   padding:10px;
-  border:none;
-  border-radius:10px;
   background:#22c55e;
   color:#000;
+  border:none;
+  border-radius:10px;
   font-weight:bold;
-  cursor:pointer;
-}
-button:hover{
-  background:#16a34a;
 }
 </style>
 </head>
-
 <body>
 
 <div class="container">
-  <h1>🛠️ Admin Panel</h1>
-  <div id="players"></div>
+<h2>Admin Panel</h2>
+<div id="players"></div>
 </div>
 
 <script type="module">
-import { auth, db } from "./firebase-init.js";
-import {
-  collection,
-  getDocs,
-  updateDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { db, auth } from "./firebase-init.js";
+import { collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// 🔐 Admin protection
-const ADMIN_UIDS = [
-  "v0LwR5bq0FMYcCzeiLAc01bAGVU2" // main admin UID
-];
-
 onAuthStateChanged(auth,user=>{
-  if(!user || !ADMIN_UIDS.includes(user.uid)){
-    alert("Access Denied");
+  if(!user){
     location.href="admin-login.html";
   }
 });
 
-const container = document.getElementById("players");
 const snap = await getDocs(collection(db,"players"));
+const wrap = document.getElementById("players");
 
-snap.forEach(docSnap=>{
-  const p = docSnap.data();
-
-  const card = document.createElement("div");
-  card.className="card";
-
-  card.innerHTML=`
-    <div class="player-name">${p.name}</div>
-
-    <input type="number" placeholder="Goals For" id="gf-${docSnap.id}">
-    <input type="number" placeholder="Goals Against" id="ga-${docSnap.id}">
-    <input type="number" placeholder="Win" id="win-${docSnap.id}">
-    <input type="number" placeholder="Lose" id="lose-${docSnap.id}">
-
-    <button onclick="update('${docSnap.id}')">Update</button>
+snap.forEach(d=>{
+  const p=d.data();
+  const div=document.createElement("div");
+  div.className="card";
+  div.innerHTML=`
+    <b>${p.name}</b><br><br>
+    Goals For <input id="gf-${d.id}" value="${p.goalsFor||0}">
+    Goals Against <input id="ga-${d.id}" value="${p.goalsAgainst||0}">
+    Win <input id="w-${d.id}" value="${p.win||0}">
+    Lose <input id="l-${d.id}" value="${p.lose||0}">
+    <button onclick="update('${d.id}')">Update</button>
   `;
-
-  container.appendChild(card);
+  wrap.appendChild(div);
 });
 
-window.update = async (id)=>{
-  const gf = Number(document.getElementById(`gf-${id}`).value);
-  const ga = Number(document.getElementById(`ga-${id}`).value);
-  const win = Number(document.getElementById(`win-${id}`).value);
-  const lose = Number(document.getElementById(`lose-${id}`).value);
-
+window.update=async(id)=>{
   await updateDoc(doc(db,"players",id),{
-    goalsFor: gf,
-    goalsAgainst: ga,
-    win: win,
-    lose: lose
+    goalsFor:+document.getElementById("gf-"+id).value,
+    goalsAgainst:+document.getElementById("ga-"+id).value,
+    win:+document.getElementById("w-"+id).value,
+    lose:+document.getElementById("l-"+id).value
   });
-
-  alert("Updated Successfully ✅");
-};
+  alert("Updated");
+}
 </script>
-
 </body>
 </html>
