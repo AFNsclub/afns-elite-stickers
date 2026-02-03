@@ -1,72 +1,71 @@
-/************************************
- * 🔐 LOGIN GUARD (MUST BE ON TOP)
- ************************************/
-firebase.auth().onAuthStateChanged((user) => {
-  if (!user) {
-    // যদি লগইন না থাকে → login page এ পাঠাবে
-    window.location.href = "login.html";
-  }
-});
-
-
-/************************************
- * 🔥 FIREBASE INITIALIZE
- ************************************/
-const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub",
-  storageBucket: "afnsclub.firebasestorage.app",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57",
-  measurementId: "G-WT4XY15N6Y"
-};
-
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+let currentUserId = null;
 
-/************************************
- * 👤 LOAD PLAYER DATA
- ************************************/
-auth.onAuthStateChanged(async (user) => {
-  if (!user) return;
-
-  try {
-    const snap = await db.collection("players").doc(user.uid).get();
-    if (!snap.exists) return;
-
-    const d = snap.data();
-
-    // UI Fill
-    document.getElementById("playerName").innerText = d.playerName;
-    document.getElementById("avatar").innerText =
-      d.playerName.charAt(0).toUpperCase();
-
-    document.getElementById("mobile").innerText = d.mobile || "-";
-    document.getElementById("gmail").innerText = d.gmail || "-";
-    document.getElementById("gameId").innerText = d.gameId || "-";
-    document.getElementById("device").innerText = d.device || "-";
-
-    document.getElementById("win").innerText = d.win || 0;
-    document.getElementById("lose").innerText = d.lose || 0;
-    document.getElementById("gd").innerText = d.goalDifference || 0;
-
-  } catch (err) {
-    console.error("Player load error:", err);
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
   }
+
+  currentUserId = user.uid;
+  loadProfile();
 });
 
+function loadProfile(){
+  db.collection("players").doc(currentUserId).get()
+  .then(doc => {
+    if(!doc.exists) return;
 
-/************************************
- * 🚪 LOGOUT
- ************************************/
-function logout() {
-  auth.signOut().then(() => {
-    window.location.href = "login.html";
+    const p = doc.data();
+
+    document.getElementById("playerName").innerText = p.playerName;
+    document.getElementById("avatar").innerText = p.playerName.charAt(0).toUpperCase();
+
+    document.getElementById("infoBox").innerHTML = `
+      <div>📱 Mobile: ${p.mobile}</div>
+      <div>📧 Gmail: ${p.email}</div>
+      <div>🎮 Device: ${p.device}</div>
+      <div>🆔 Owner/Game ID: ${p.ownerId}</div>
+      <div>🔵 Facebook: <a href="${p.facebook}" target="_blank">Open</a></div>
+    `;
+
+    document.getElementById("win").innerText = p.wins;
+    document.getElementById("loss").innerText = p.losses;
+    document.getElementById("gf").innerText = p.goalsFor;
+    document.getElementById("ga").innerText = p.goalsAgainst;
+    document.getElementById("gd").innerText = p.goalDifference;
+
+    document.getElementById("device").value = p.device;
+    document.getElementById("mobile").value = p.mobile;
+    document.getElementById("ownerId").value = p.ownerId;
+    document.getElementById("facebook").value = p.facebook;
   });
+}
+
+function toggleEdit(){
+  const box = document.getElementById("editBox");
+  box.style.display = box.style.display === "block" ? "none" : "block";
+}
+
+function saveProfile(){
+  const mobile = document.getElementById("mobile").value;
+
+  if(!mobile.startsWith("01") || mobile.length !== 11){
+    alert("Invalid Bangladeshi mobile number");
+    return;
   }
+
+  db.collection("players").doc(currentUserId).update({
+    device: document.getElementById("device").value,
+    mobile,
+    ownerId: document.getElementById("ownerId").value,
+    facebook: document.getElementById("facebook").value
+  })
+  .then(()=>{
+    alert("Profile Updated");
+    toggleEdit();
+    loadProfile();
+  });
+}
