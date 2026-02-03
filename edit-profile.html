@@ -1,114 +1,116 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Edit Profile</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#0b1220;
-    color:white;
-    text-align:center;
-}
-.container{
-    padding:20px;
-}
-.card{
-    background:#141c2f;
-    padding:20px;
-    border-radius:20px;
-    max-width:420px;
-    margin:auto;
-}
-input, textarea{
-    width:100%;
-    padding:10px;
-    margin:10px 0;
-    border-radius:10px;
-    border:none;
-}
-button{
-    background:#00c8ff;
-    border:none;
-    padding:12px;
-    width:100%;
-    border-radius:25px;
-    font-size:16px;
-    cursor:pointer;
-}
-img{
-    width:120px;
-    height:120px;
-    border-radius:50%;
-    object-fit:cover;
-    margin:10px 0;
-    border:3px solid #00eaff;
-}
-</style>
+  <title>Edit Player Profile</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .box {
+      background: white;
+      padding: 20px;
+      max-width: 400px;
+      border-radius: 8px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px;
+      width: 100%;
+      cursor: pointer;
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="container">
-    <h2>Edit Profile</h2>
+<h2>Edit Player Profile</h2>
 
-    <div class="card">
-        <b id="playerName"></b><br><br>
-
-        <img id="avatarPreview" src="">
-
-        <input type="file" id="avatarInput" accept="image/*">
-
-        <input type="text" id="facebook" placeholder="Facebook profile link">
-        <textarea id="bio" placeholder="About you"></textarea>
-
-        <button onclick="saveProfile()">Save Profile</button>
-    </div>
+<div class="box">
+  <input type="text" id="name" placeholder="Player Name">
+  <input type="text" id="username" placeholder="Username">
+  <input type="text" id="phone" placeholder="Phone Number">
+  <button id="updateBtn">Update Profile</button>
 </div>
 
-<script>
-const player = localStorage.getItem("currentPlayer");
-if(!player){
-    alert("Login required");
-    window.location.href="login.html";
-}
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-document.getElementById("playerName").innerText = player;
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.appspot.com",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
 
-const profiles = JSON.parse(localStorage.getItem("profiles")) || {};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-if(profiles[player]){
-    document.getElementById("facebook").value = profiles[player].facebook || "";
-    document.getElementById("bio").value = profiles[player].bio || "";
-    if(profiles[player].avatar){
-        document.getElementById("avatarPreview").src = profiles[player].avatar;
-    }
-}
+const nameInput = document.getElementById("name");
+const usernameInput = document.getElementById("username");
+const phoneInput = document.getElementById("phone");
+const updateBtn = document.getElementById("updateBtn");
 
-document.getElementById("avatarInput").addEventListener("change",function(){
-    const file = this.files[0];
-    if(!file) return;
+let currentUser = null;
 
-    const reader = new FileReader();
-    reader.onload = function(){
-        document.getElementById("avatarPreview").src = reader.result;
-    }
-    reader.readAsDataURL(file);
+// 🔐 Login check + load profile
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  currentUser = user;
+
+  const ref = doc(db, "players", user.uid);
+  const snap = await getDoc(ref);
+
+  if (snap.exists()) {
+    const data = snap.data();
+    nameInput.value = data.name || "";
+    usernameInput.value = data.username || "";
+    phoneInput.value = data.phone || "";
+  }
 });
 
-function saveProfile(){
-    profiles[player] = {
-        facebook: document.getElementById("facebook").value,
-        bio: document.getElementById("bio").value,
-        avatar: document.getElementById("avatarPreview").src
-    };
-    localStorage.setItem("profiles", JSON.stringify(profiles));
-    alert("Profile updated!");
-    window.location.href="player.html";
-}
+// 💾 Update profile
+updateBtn.addEventListener("click", async () => {
+  if (!currentUser) return;
+
+  const name = nameInput.value.trim();
+  const username = usernameInput.value.trim();
+  const phone = phoneInput.value.trim();
+
+  if (!name || !username || !phone) {
+    alert("All fields are required");
+    return;
+  }
+
+  try {
+    await updateDoc(doc(db, "players", currentUser.uid), {
+      name,
+      username,
+      phone,
+      updatedAt: new Date()
+    });
+
+    alert("Profile updated successfully");
+    window.location.href = "player.html";
+
+  } catch (err) {
+    alert("Error updating profile");
+    console.error(err);
+  }
+});
 </script>
 
 </body>
