@@ -1,151 +1,148 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Player Register | AFNS Club</title>
+  <title>Player Register</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body{
-      margin:0;
-      font-family: Arial, Helvetica, sans-serif;
-      background:#0f172a;
-      color:#fff;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      min-height:100vh;
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #141e30, #243b55);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
 
-    .box{
-      background:#020617;
-      padding:25px;
-      border-radius:14px;
-      width:100%;
-      max-width:450px;
-      box-shadow:0 0 30px rgba(34,197,94,0.3);
+    .register-box {
+      background: rgba(0,0,0,0.45);
+      padding: 25px;
+      width: 340px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
     }
 
-    h2{
-      text-align:center;
-      color:#22c55e;
-      margin-bottom:20px;
+    h2 {
+      text-align: center;
+      margin-bottom: 18px;
     }
 
-    input{
-      width:100%;
-      padding:12px;
-      margin-bottom:12px;
-      border-radius:8px;
-      border:none;
-      outline:none;
-      font-size:15px;
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: none;
+      border-radius: 6px;
+      outline: none;
+      font-size: 14px;
     }
 
-    button{
-      width:100%;
-      padding:12px;
-      border:none;
-      border-radius:8px;
-      background:#22c55e;
-      color:#000;
-      font-size:16px;
-      font-weight:bold;
-      cursor:pointer;
+    button {
+      width: 100%;
+      padding: 11px;
+      background: #2979ff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
     }
 
-    button:hover{
-      background:#16a34a;
+    button:hover {
+      background: #448aff;
     }
 
-    .link{
-      text-align:center;
-      margin-top:12px;
-      font-size:14px;
+    .links {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
     }
 
-    .link a{
-      color:#38bdf8;
-      text-decoration:none;
+    .links a {
+      color: #90caf9;
+      text-decoration: none;
     }
 
-    .link a:hover{
-      text-decoration:underline;
-    }
-
-    .note{
-      font-size:13px;
-      color:#94a3b8;
-      margin-bottom:10px;
-      text-align:center;
+    .links a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 
 <body>
 
-<div class="box">
-  <h2>Create Player Account</h2>
+  <div class="register-box">
+    <h2>Create Player Account</h2>
 
-  <input type="text" id="username" placeholder="Username">
-  <input type="email" id="email" placeholder="Gmail">
-  <input type="text" id="facebook" placeholder="Facebook Profile Link">
-  <input type="text" id="efootball" placeholder="eFootball User ID">
-  <input type="password" id="password" placeholder="Password">
+    <input type="text" id="username" placeholder="Username">
+    <input type="email" id="email" placeholder="Gmail">
+    <input type="password" id="password" placeholder="Password">
+    <input type="text" id="facebook" placeholder="Facebook Profile Link">
+    <input type="text" id="football" placeholder="eFootball User ID">
 
-  <button onclick="register()">Create Account</button>
+    <button id="registerBtn">Register</button>
 
-  <div class="link">
-    Already have account? <a href="login.html">Login</a>
+    <div class="links">
+      <p><a href="login.html">Already have an account? Login</a></p>
+    </div>
   </div>
 
-  <p class="note">
-    ⚠️ Username ও Gmail ইউনিক হতে হবে
-  </p>
-</div>
+  <!-- Firebase -->
+  <script type="module" src="firebase.js"></script>
 
-<script>
-function register(){
-  const username = document.getElementById("username").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const facebook = document.getElementById("facebook").value.trim();
-  const efootball = document.getElementById("efootball").value.trim();
-  const password = document.getElementById("password").value.trim();
+  <!-- Register Logic -->
+  <script type="module">
+    import {
+      auth,
+      db,
+      createUserWithEmailAndPassword,
+      doc,
+      setDoc
+    } from "./firebase.js";
 
-  if(!username || !email || !facebook || !efootball || !password){
-    alert("সব ফিল্ড পূরণ করো");
-    return;
-  }
+    document.getElementById("registerBtn").onclick = async () => {
+      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const facebook = document.getElementById("facebook").value.trim();
+      const football = document.getElementById("football").value.trim();
 
-  let players = JSON.parse(localStorage.getItem("players")) || [];
+      if (!username || !email || !password || !facebook || !football) {
+        alert("Please fill all fields");
+        return;
+      }
 
-  const exists = players.find(p =>
-    p.username === username || p.email === email
-  );
+      try {
+        // Create auth account
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
 
-  if(exists){
-    alert("এই Username অথবা Gmail আগেই ব্যবহার করা হয়েছে");
-    return;
-  }
+        // Player profile
+        await setDoc(doc(db, "players", userCred.user.uid), {
+          username,
+          email,
+          facebook,
+          football,
+          rating: 1000,
+          createdAt: Date.now()
+        });
 
-  const newPlayer = {
-    username: username,
-    email: email,
-    facebook: facebook,
-    efootballId: efootball,
-    password: password,
-    rating: 1000,
-    matches: []
-  };
+        // Username → Email mapping (for username login)
+        await setDoc(doc(db, "usernames", username), {
+          email: email
+        });
 
-  players.push(newPlayer);
-  localStorage.setItem("players", JSON.stringify(players));
-  localStorage.setItem("currentPlayer", JSON.stringify(newPlayer));
+        alert("Registration successful!");
+        window.location.href = "login.html";
 
-  alert("Account created successfully!");
-  window.location.href = "player.html";
-}
-</script>
+      } catch (error) {
+        alert(error.message);
+      }
+    };
+  </script>
 
 </body>
 </html>
