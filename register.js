@@ -1,36 +1,44 @@
 import { auth, db } from "./firebase-init.js";
 import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-window.register = async () => {
-  const name = name.value;
-  const mobile = mobile.value;
-  const email = email.value;
+window.register = async function () {
+  const name = name.value.trim();
+  const mobile = mobile.value.trim();
+  const device = device.value.trim();
+  const ownerId = ownerId.value.trim();
+  const fb = fb.value.trim();
+  const email = email.value.trim();
   const password = password.value;
-  const device = device.value;
-  const gameid = gameid.value;
-  const facebook = facebook.value;
 
-  if (!/^01\d{9}$/.test(mobile)) {
-    alert("Invalid BD Mobile Number");
+  if (!/^01[3-9]\d{8}$/.test(mobile)) {
+    alert("Invalid BD mobile number");
     return;
   }
 
-  const user = await createUserWithEmailAndPassword(auth, email, password);
+  try {
+    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = userCred.user.uid;
 
-  await setDoc(doc(db, "players", user.user.uid), {
-    name,
-    mobile,
-    email,
-    device,
-    gameid,
-    facebook,
-    win: 0,
-    lose: 0,
-    goalsFor: 0,
-    goalsAgainst: 0,
-    createdAt: serverTimestamp()
-  });
+    await setDoc(doc(db, "players", uid), {
+      name,
+      mobile,
+      device,
+      ownerId,
+      fb,
+      email,
+      win: 0,
+      lose: 0,
+      goalsFor: 0,
+      goalsAgainst: 0,
+      role: "player",
+      createdAt: Date.now()
+    });
 
-  alert("Registration Successful");
+    alert("Registration Successful!");
+    window.location.href = "login.html";
+
+  } catch (e) {
+    alert(e.message);
+  }
 };
