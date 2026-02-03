@@ -1,142 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Player Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Login | AFNs Club</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0f172a, #020617);
-      color: #fff;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .box {
-      background: #020617;
-      padding: 25px;
-      width: 320px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 12px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-      font-size: 14px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      background: #22c55e;
-      color: #000;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    a {
-      color: #38bdf8;
-      text-decoration: none;
-      font-size: 14px;
-    }
-
-    p {
-      text-align: center;
-      margin-top: 10px;
-    }
-  </style>
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#020617,#0f172a);
+  color:#fff;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.box{
+  width:330px;
+  background:#020617;
+  padding:25px;
+  border-radius:14px;
+  box-shadow:0 0 20px rgba(0,0,0,.6);
+}
+h2{text-align:center;margin-bottom:20px;}
+input{
+  width:100%;
+  padding:12px;
+  margin-bottom:12px;
+  border:none;
+  border-radius:8px;
+  outline:none;
+}
+button{
+  width:100%;
+  padding:12px;
+  background:#22c55e;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+}
+a{
+  color:#38bdf8;
+  text-decoration:none;
+  font-size:14px;
+}
+p{text-align:center;margin-top:10px;}
+</style>
 </head>
+
 <body>
 
 <div class="box">
-  <h2>Login</h2>
+<h2>Player Login</h2>
 
-  <input type="text" id="loginInput" placeholder="Username or Gmail">
-  <input type="password" id="password" placeholder="Password">
+<input id="input" placeholder="Username or Gmail">
+<input id="password" type="password" placeholder="Password">
 
-  <button onclick="loginUser()">Login</button>
+<button onclick="login()">Login</button>
 
-  <p>
-    <a href="forgot.html">Forgot Password?</a>
-  </p>
-
-  <p>
-    <a href="register.html">Create New Account</a>
-  </p>
+<p><a href="forgot.html">Forgot Password?</a></p>
+<p><a href="register.html">Create New Account</a></p>
 </div>
 
-<!-- Firebase SDK -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-    authDomain: "afnsclub.firebaseapp.com",
-    projectId: "afnsclub",
-    storageBucket: "afnsclub.firebasestorage.app",
-    messagingSenderId: "1088089213558",
-    appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  window.loginUser = async function () {
-    const input = document.getElementById("loginInput").value.trim();
-    const password = document.getElementById("password").value;
+window.login = async function(){
+  const input = document.getElementById("input").value.trim();
+  const password = document.getElementById("password").value;
 
-    if (!input || !password) {
-      alert("All fields required");
-      return;
-    }
+  if(!input || !password){
+    alert("সব ফিল্ড পূরণ করো");
+    return;
+  }
 
-    let email = input;
+  let email = input;
 
-    // যদি Username হয়
-    if (!input.includes("@")) {
-      const q = query(collection(db, "players"), where("username", "==", input));
+  try{
+    // Username হলে → email বের করবো
+    if(!input.includes("@")){
+      const q = query(collection(db,"players"), where("username","==",input));
       const snap = await getDocs(q);
 
-      if (snap.empty) {
-        alert("User not found");
+      if(snap.empty){
+        alert("Username পাওয়া যায়নি");
         return;
       }
 
-      snap.forEach(doc => {
-        email = doc.data().email;
-      });
+      email = snap.docs[0].data().email;
     }
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        alert("Login Successful");
-        window.location.href = "player.html";
-      })
-      .catch(err => {
-        alert(err.message);
-      });
+    await signInWithEmailAndPassword(auth,email,password);
+    window.location.href="player.html";
+
+  }catch(err){
+    alert("Login failed: " + err.message);
   }
+}
 </script>
 
 </body>
