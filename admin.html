@@ -2,73 +2,70 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Login</title>
+  <title>Admin Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
-      background: #000;
+      background: #0f172a;
       color: #fff;
       font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .player {
+      background: #020617;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.6);
+    }
+
+    .player b {
+      color: #22c55e;
+    }
+
+    .row {
       display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .box {
-      width: 90%;
-      max-width: 400px;
-    }
-    input, button {
-      width: 100%;
-      padding: 12px;
+      gap: 10px;
       margin-top: 10px;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
     }
+
+    input {
+      flex: 1;
+      padding: 6px;
+      border-radius: 5px;
+      border: none;
+    }
+
     button {
-      background: #00ffd5;
-      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+      padding: 8px;
+      background: #22c55e;
+      border: none;
+      border-radius: 6px;
       font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #16a34a;
     }
   </style>
 </head>
 <body>
 
-<div class="box">
-  <h2>Admin Login</h2>
-  <input type="email" id="email" placeholder="Admin Email">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-</div>
+  <h2>Admin Panel – Player Control</h2>
 
-<script type="module">
-  import { auth, db } from "./firebase-init.js";
-  import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  <div id="playerList"></div>
 
-  window.login = async function () {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      const uid = userCred.user.uid;
-
-      const adminRef = doc(db, "admins", uid);
-      const adminSnap = await getDoc(adminRef);
-
-      if (!adminSnap.exists()) {
-        alert("You are not an admin!");
-        return;
-      }
-
-      window.location.href = "admin-panel.html";
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-</script>
-
+  <script type="module" src="admin.js"></script>
 </body>
 </html>
