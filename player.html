@@ -1,74 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Player Panel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Player Profile</title>
+<meta name="viewport" content="width=device-width">
 <style>
-body{
-  background:#0f172a;
-  color:#fff;
-  font-family:Arial, sans-serif;
-  margin:0;
-  padding:15px;
-}
-h2{
-  text-align:center;
-  margin-bottom:20px;
-}
-.player{
-  background:#020617;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:15px;
-  display:flex;
-  gap:15px;
+body{background:#0d1117;color:#fff;font-family:Arial}
+.card{
+ max-width:400px;margin:30px auto;
+ background:#161b22;padding:20px;
+ border-radius:14px;text-align:center;
 }
 .avatar{
-  width:55px;
-  height:55px;
-  border-radius:50%;
-  background:#22c55e;
-  color:#000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-  font-weight:bold;
-}
-.name{
-  font-size:18px;
-  font-weight:bold;
-  color:#22c55e;
-}
-.rank{
-  float:right;
-  background:#16a34a;
-  padding:3px 8px;
-  border-radius:6px;
-  font-size:12px;
-  color:#000;
-  font-weight:bold;
-}
-.line{
-  font-size:13px;
-  margin-top:3px;
-  color:#cbd5f5;
-}
-.stats{
-  margin-top:6px;
-  font-size:13px;
+ width:80px;height:80px;border-radius:50%;
+ background:#22c55e;font-size:40px;
+ display:flex;align-items:center;justify-content:center;
+ margin:auto;
 }
 </style>
 </head>
-
 <body>
 
-<h2>🏆 Player Ranking</h2>
+<div class="card">
+<div class="avatar" id="av"></div>
+<h2 id="name"></h2>
+<p id="info"></p>
+</div>
 
-<div id="players"></div>
+<script type="module">
+import { db } from "./firebase-init.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-<script type="module" src="player.js"></script>
+const id=new URLSearchParams(location.search).get("id");
+const d=await getDoc(doc(db,"players",id));
+const p=d.data();
+
+av.innerText=p.name[0];
+name.innerText=p.name;
+info.innerHTML=`
+📱 ${p.mobile}<br>
+🎮 ${p.device}<br>
+🆔 ${p.ownerId}<br>
+📧 ${p.email}<br>
+🏆 Win:${p.win} Lose:${p.lose}
+`;
+</script>
 </body>
 </html>
