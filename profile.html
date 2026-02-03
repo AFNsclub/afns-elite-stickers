@@ -1,59 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Edit Profile</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background:#0b1020;
+      color:white;
+      font-family:sans-serif;
+      padding:20px;
+    }
+    input, button {
+      width:100%;
+      padding:10px;
+      margin:10px 0;
+      border-radius:6px;
+      border:none;
+    }
+    button {
+      background:#4caf50;
+      color:white;
+      font-size:16px;
+    }
+  </style>
 </head>
 <body>
 
 <h2>Edit Player Profile</h2>
 
-<input id="name" placeholder="Full Name"><br><br>
-<input id="facebook" placeholder="Facebook Profile"><br><br>
-<input id="playerid" placeholder="Player ID"><br><br>
+<input type="text" id="name" placeholder="Player Name">
+<input type="number" id="age" placeholder="Age">
+<input type="text" id="position" placeholder="Position">
 
-<button onclick="updateProfile()">Update Profile</button>
+<button onclick="saveProfile()">Save Profile</button>
+
 <p id="msg"></p>
 
-<script type="module" src="firebase.js"></script>
-
 <script type="module">
-import { onAuthStateChanged } from
-"https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, getDoc, updateDoc } from
-"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let uid = null;
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb1OZkhH8IpxTs8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.appspot.com",
+  messagingSenderId: "1092008127589",
+  appId: "1:1092008127589:web:xxxxx"
+};
 
-onAuthStateChanged(auth, async user => {
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser;
+
+onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    location.href = "login.html";
+    window.location.href = "login.html";
     return;
   }
+  currentUser = user;
 
-  uid = user.uid;
-  const snap = await getDoc(doc(db, "players", uid));
+  const ref = doc(db, "players", user.uid);
+  const snap = await getDoc(ref);
 
   if (snap.exists()) {
-    name.value = snap.data().name || "";
-    facebook.value = snap.data().fb || "";
-    playerid.value = snap.data().pid || "";
+    const d = snap.data();
+    name.value = d.name || "";
+    age.value = d.age || "";
+    position.value = d.position || "";
   }
 });
 
-async function updateProfile() {
-  try {
-    await updateDoc(doc(db, "players", uid), {
-      name: name.value,
-      fb: facebook.value,
-      pid: playerid.value
-    });
-
-    msg.innerText = "✅ Profile Updated Successfully";
-  } catch (e) {
-    msg.innerText = e.message;
-  }
-}
+window.saveProfile = async () => {
+  const ref = doc(db, "players", currentUser.uid);
+  await setDoc(ref, {
+    name: name.value,
+    age: age.value,
+    position: position.value
+  });
+  msg.innerText = "✅ Profile Updated Successfully!";
+};
 </script>
 
 </body>
