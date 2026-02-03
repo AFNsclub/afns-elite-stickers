@@ -1,82 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Player Login</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body{
-  font-family: Arial;
-  background:#0b1220;
-  color:white;
-}
-.container{
-  max-width:360px;
-  margin:80px auto;
-}
-input,button{
-  width:100%;
-  padding:12px;
-  margin:8px 0;
-  font-size:16px;
-}
-button{
-  background:#22c55e;
-  border:none;
-  cursor:pointer;
-}
-a{ color:#38bdf8; text-decoration:none; display:block; margin-top:10px; text-align:center;}
-</style>
+  <title>Player Login</title>
 </head>
-
 <body>
 
-<div class="container">
-  <h2 style="text-align:center">Player Login</h2>
+<h2>Player Login</h2>
 
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
+<form id="loginForm">
+  <input type="text" id="email" placeholder="Email or Username" required><br><br>
+  <input type="password" id="password" placeholder="Password" required><br><br>
+  <button type="submit">Login</button>
+</form>
 
-  <button id="loginBtn">Login</button>
-
-  <a href="forgot.html">Forgot Password?</a>
-  <a href="register.html">Create New Account</a>
-
-  <p id="msg"></p>
-</div>
+<p id="msg" style="color:red;"></p>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb1OZkhH8IpxTs8PcKc4nUxM",
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
   projectId: "afnsclub",
   storageBucket: "afnsclub.appspot.com",
-  messagingSenderId: "1092008127589",
-  appId: "1:1092008127589:web:xxxxx"
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// 🔁 already login থাকলে player panel এ পাঠাবে
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    window.location.href = "player.html";
-  }
-});
+const form = document.getElementById("loginForm");
+const msg = document.getElementById("msg");
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
-  const email = email.value;
+form.addEventListener("submit", async (e) => {
+  e.preventDefault(); // 🔥 এটা না থাকলেই login কাজ করে না
+
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
-  const msg = document.getElementById("msg");
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    // redirect will be handled by onAuthStateChanged
+    window.location.href = "player.html";
   } catch (error) {
     msg.innerText = error.message;
   }
