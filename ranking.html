@@ -2,54 +2,64 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AFNS Ranking</title>
+  <title>Player Ranking</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(180deg, #0b1220, #020617);
+      background: linear-gradient(180deg, #020617, #0b1220);
       color: #fff;
     }
 
-    h1 {
-      text-align: center;
-      padding: 20px 0;
-      margin: 0;
+    .container {
+      max-width: 420px;
+      margin: auto;
+      padding: 16px;
     }
 
-    .ranking-list {
-      max-width: 500px;
-      margin: auto;
-      padding: 10px;
+    h2 {
+      text-align: center;
+      margin-bottom: 16px;
     }
 
     .player {
       display: flex;
       align-items: center;
       background: #0f172a;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 12px;
       margin-bottom: 10px;
+      cursor: pointer;
+      animation: fadeUp 0.4s ease;
     }
 
     .rank {
-      font-size: 20px;
-      width: 35px;
-      text-align: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #020617;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-weight: bold;
+      margin-right: 10px;
     }
 
+    .rank.gold { background: gold; color: #000; }
+    .rank.silver { background: silver; color: #000; }
+    .rank.bronze { background: #cd7f32; color: #000; }
+
     .avatar {
-      width: 45px;
-      height: 45px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       background: #4f8cff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-weight: bold;
       margin-right: 10px;
     }
 
@@ -61,29 +71,31 @@
       font-weight: bold;
     }
 
-    .stats {
-      font-size: 13px;
-      color: #ccc;
+    .sub {
+      font-size: 12px;
+      color: #aaa;
     }
 
-    .trophy {
-      font-size: 22px;
-      margin-left: 6px;
+    .points {
+      font-weight: bold;
+      color: #4f8cff;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 
 <body>
 
-  <h1>🏆 Player Ranking</h1>
-
-  <div class="ranking-list" id="rankingList">
-    Loading ranking...
+  <div class="container">
+    <h2>🏆 Ranking</h2>
+    <div id="rankingList"></div>
   </div>
 
-  <!-- Firebase -->
   <script type="module" src="firebase-init.js"></script>
   <script type="module" src="ranking.js"></script>
-
 </body>
 </html>
