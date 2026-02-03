@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Season History</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(180deg,#050b1e,#020617);
+  color:white;
+}
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:16px;
+}
+.card{
+  background:rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:16px;
+}
+h2,h3{
+  text-align:center;
+}
+.player{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:8px 0;
+}
+.rank{
+  font-size:20px;
+  width:30px;
+}
+.avatar{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:#4f8cff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+}
+.info{
+  flex:1;
+}
+.small{
+  font-size:12px;
+  opacity:.75;
+}
+.trophy{
+  font-size:22px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h2>🏆 Season History</h2>
+  <div id="seasonList"></div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+
+const app = initializeApp(firebaseConfig);
+window.db = getFirestore(app);
+</script>
+
+<script src="season-archive.js"></script>
+</body>
+</html>
