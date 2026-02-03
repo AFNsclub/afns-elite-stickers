@@ -1,92 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Player Registration</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    .box {
-      background: #020617;
-      padding: 20px;
-      border-radius: 10px;
-      width: 100%;
-      max-width: 380px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.6);
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 12px;
-      border-radius: 6px;
-      border: none;
-      outline: none;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px;
-      background: #22c55e;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background: #16a34a;
-    }
-
-    .note {
-      font-size: 12px;
-      color: #94a3b8;
-      text-align: center;
-      margin-top: 10px;
-    }
-  </style>
-</head>
+<html>
 <body>
 
-  <div class="box">
-    <h2>Player Registration</h2>
+<h2>Player Registration</h2>
 
-    <input type="text" id="playerName" placeholder="Player Name">
+<input id="name" placeholder="Player Name"><br>
+<input id="mobile" placeholder="Mobile Number (01XXXXXXXXX)"><br>
+<input id="email" placeholder="Gmail"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<input id="device" placeholder="Device Name"><br>
+<input id="gameid" placeholder="Owner / Game ID"><br>
+<input id="facebook" placeholder="Facebook Profile Link"><br>
 
-    <input type="tel" id="mobile" placeholder="Mobile Number (01XXXXXXXXX)">
+<button onclick="register()">Register</button>
 
-    <input type="email" id="gmail" placeholder="Gmail Account">
-
-    <input type="text" id="ownerId" placeholder="Owner / Game ID">
-
-    <input type="url" id="facebook" placeholder="Facebook Profile Link (optional)">
-
-    <button onclick="register()">Register</button>
-
-    <div class="note">
-      Default password will be provided by admin
-    </div>
-  </div>
-
-  <!-- Register JS -->
-  <script type="module" src="register.js"></script>
-
+<script type="module" src="register.js"></script>
 </body>
 </html>
