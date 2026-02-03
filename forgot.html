@@ -1,54 +1,148 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
-<title>Forgot Password</title>
-<style>
-body{background:#0b1320;color:white;font-family:Arial}
-.box{max-width:350px;margin:80px auto;background:#111a2e;padding:20px;border-radius:12px}
-input,button{width:100%;padding:12px;margin-top:10px;border-radius:8px;border:none}
-button{background:#00c2ff;font-weight:bold}
-</style>
+  <meta charset="UTF-8">
+  <title>Recover Password | AFNS Club</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:#0f172a;
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+    }
+
+    .box{
+      background:#020617;
+      padding:25px;
+      border-radius:14px;
+      width:100%;
+      max-width:420px;
+      box-shadow:0 0 30px rgba(56,189,248,0.3);
+    }
+
+    h2{
+      text-align:center;
+      color:#38bdf8;
+      margin-bottom:18px;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      margin-bottom:12px;
+      border-radius:8px;
+      border:none;
+      outline:none;
+      font-size:15px;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      background:#38bdf8;
+      color:#000;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    button:hover{
+      background:#0ea5e9;
+    }
+
+    .result{
+      margin-top:15px;
+      background:#020617;
+      border:1px solid #334155;
+      padding:12px;
+      border-radius:8px;
+      font-size:14px;
+      display:none;
+    }
+
+    .link{
+      text-align:center;
+      margin-top:14px;
+      font-size:14px;
+    }
+
+    .link a{
+      color:#22c55e;
+      text-decoration:none;
+    }
+
+    .link a:hover{
+      text-decoration:underline;
+    }
+
+    .note{
+      font-size:12px;
+      color:#94a3b8;
+      margin-bottom:10px;
+      text-align:center;
+    }
+  </style>
 </head>
 
 <body>
+
 <div class="box">
-<h2>Recover Password</h2>
+  <h2>Recover Password</h2>
 
-<input id="username" placeholder="Username">
-<button onclick="next()">Next</button>
+  <p class="note">
+    Username অথবা Gmail যেকোনো একটা লিখো
+  </p>
 
-<div id="step2" style="display:none">
-<p id="q"></p>
-<input id="ans" placeholder="Your Answer">
-<button onclick="recover()">Recover</button>
-</div>
+  <input type="text" id="recoverInput" placeholder="Username or Gmail">
+
+  <button onclick="recover()">Recover</button>
+
+  <div class="result" id="resultBox"></div>
+
+  <div class="link">
+    Back to <a href="login.html">Login</a>
+  </div>
 </div>
 
 <script>
-let currentUser;
+function recover(){
+  const input = document.getElementById("recoverInput").value.trim();
+  const resultBox = document.getElementById("resultBox");
 
-function next(){
-  let players = JSON.parse(localStorage.getItem("players")) || {};
-  let user = username.value.trim();
-
-  if(!players[user]){
-    alert("User not found");
+  if(!input){
+    alert("Username অথবা Gmail লিখো");
     return;
   }
 
-  currentUser = user;
-  q.innerText = players[user].question;
-  step2.style.display="block";
-}
+  let players = JSON.parse(localStorage.getItem("players")) || [];
 
-function recover(){
-  let players = JSON.parse(localStorage.getItem("players"));
-  if(ans.value.trim() === players[currentUser].answer){
-    alert("Your Password: " + players[currentUser].password);
-  }else{
-    alert("Wrong Answer");
+  const player = players.find(p =>
+    p.username === input || p.email === input
+  );
+
+  if(!player){
+    resultBox.style.display = "block";
+    resultBox.innerHTML = "❌ কোনো একাউন্ট পাওয়া যায়নি";
+    return;
   }
+
+  resultBox.style.display = "block";
+  resultBox.innerHTML = `
+    ✅ <b>Account Found</b><br><br>
+    Username: <b>${player.username}</b><br>
+    Gmail: <b>${player.email}</b><br><br>
+    🔑 Password: <b>${player.password}</b>
+  `;
 }
 </script>
+
 </body>
 </html>
