@@ -1,226 +1,174 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <title>AFN's Elite Strikers</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>AFN's Elite Strikers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', sans-serif;
-    }
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
-    body {
-      min-height: 100vh;
-      background: radial-gradient(circle at top, #0c1b2a, #02060c);
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+body{
+min-height:100vh;
+background:radial-gradient(circle at top,#0c1b2a,#02060c);
+color:#fff;display:flex;justify-content:center;align-items:center;
+}
+.container{width:100%;max-width:420px;padding:20px;text-align:center}
+.logo img{width:120px;margin-bottom:8px}
+h1{color:#ffd400;font-size:26px}
+.tagline{color:#00eaff;font-size:14px;margin-bottom:14px}
 
-    .container {
-      width: 100%;
-      max-width: 420px;
-      padding: 20px;
-      text-align: center;
-    }
+/* LIVE SEASON */
+.live-season{
+background:linear-gradient(135deg,#081825,#020b13);
+border-radius:16px;padding:14px;margin-bottom:14px;
+box-shadow:0 0 18px rgba(0,234,255,.35)
+}
+.live-header{display:flex;justify-content:space-between;align-items:center}
+.live-badge{
+background:red;color:#fff;font-size:11px;
+padding:3px 8px;border-radius:20px;font-weight:700;
+animation:blink 1s infinite
+}
+@keyframes blink{50%{opacity:.4}}
+.season-name{color:#ffd400;font-weight:700}
+.season-info{font-size:13px;color:#ccc;margin-top:4px}
+.countdown{color:#00eaff;font-weight:600;margin-top:6px}
 
-    .logo img {
-      width: 130px;
-      margin-bottom: 10px;
-    }
+/* TOP 3 */
+.top3{
+background:rgba(255,255,255,.05);
+border-radius:16px;padding:14px;margin-bottom:18px
+}
+.top3 h3{color:#ffd400;margin-bottom:10px;font-size:16px}
+.top3-list{display:flex;justify-content:space-between}
+.top-card{
+flex:1;margin:0 4px;
+background:#061726;border-radius:14px;
+padding:10px 6px;font-size:12px;
+box-shadow:0 0 10px rgba(0,234,255,.2)
+}
+.top-card span{display:block;font-size:20px}
 
-    h1 {
-      color: #ffd400;
-      font-size: 28px;
-      margin-bottom: 6px;
-    }
+/* MOTIVATION */
+.motive-box{
+background:linear-gradient(145deg,#0b1d2a,#020b13);
+padding:18px;border-radius:16px;
+box-shadow:0 0 15px rgba(0,255,255,0.25);
+margin-bottom:22px;min-height:80px;
+display:flex;align-items:center;justify-content:center
+}
+#typingText{
+color:#00f7ff;font-size:15px;
+font-weight:600;border-right:2px solid #00f7ff;
+padding-right:5px
+}
 
-    .tagline {
-      color: #00eaff;
-      font-size: 14px;
-      margin-bottom: 18px;
-    }
+.menu{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.menu a{
+text-decoration:none;padding:12px;border-radius:14px;
+background:linear-gradient(145deg,#061726,#020c14);
+color:#00eaff;font-weight:600
+}
 
-    /* Motivation box */
-    .motive-box {
-      background: linear-gradient(145deg, #0b1d2a, #020b13);
-      padding: 18px;
-      border-radius: 16px;
-      box-shadow: 0 0 15px rgba(0,255,255,0.25);
-      margin-bottom: 22px;
-      min-height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #typingText {
-      color: #00f7ff;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-      border-right: 2px solid #00f7ff;
-      padding-right: 5px;
-      animation: blink 0.9s infinite;
-    }
-
-    @keyframes blink {
-      0% { border-color: transparent; }
-      50% { border-color: #00f7ff; }
-      100% { border-color: transparent; }
-    }
-
-    .about {
-      background: rgba(255,255,255,0.04);
-      padding: 16px;
-      border-radius: 14px;
-      margin-bottom: 22px;
-    }
-
-    .about h2 {
-      font-size: 18px;
-      margin-bottom: 8px;
-    }
-
-    .about p {
-      font-size: 14px;
-      line-height: 1.6;
-      color: #ddd;
-    }
-
-    .menu {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    .menu a {
-      text-decoration: none;
-      padding: 12px;
-      border-radius: 14px;
-      background: linear-gradient(145deg, #061726, #020c14);
-      color: #00eaff;
-      font-weight: 600;
-      transition: 0.2s;
-    }
-
-    .menu a:hover {
-      box-shadow: 0 0 12px rgba(0,234,255,0.4);
-      transform: scale(1.03);
-    }
-
-    footer {
-      font-size: 12px;
-      color: #888;
-      margin-top: 10px;
-    }
-  </style>
+footer{font-size:12px;color:#888}
+</style>
 </head>
 
 <body>
-  <div class="container">
+<div class="container">
 
-    <div class="logo">
-      <img src="logo.png" alt="AFN Logo">
-    </div>
+<div class="logo"><img src="logo.png"></div>
+<h1>AFN's Elite Strikers</h1>
+<div class="tagline">চ্যাম্পিয়ন তৈরি হয় eFootball থেকে</div>
 
-    <h1>AFN's Elite Strikers</h1>
-    <div class="tagline">চ্যাম্পিয়ন তৈরি হয় eFootball থেকে</div>
+<!-- LIVE SEASON -->
+<div class="live-season">
+<div class="live-header">
+<div class="season-name" id="seasonName">AFN Season 01</div>
+<div class="live-badge" id="seasonStatus">LIVE</div>
+</div>
+<div class="season-info">
+🏆 Ranking Active
+<div class="countdown" id="countdown"></div>
+</div>
+</div>
 
-    <div class="motive-box">
-      <span id="typingText"></span>
-    </div>
+<!-- TOP 3 -->
+<div class="top3">
+<h3>🏆 Live Top 3</h3>
+<div class="top3-list">
+<div class="top-card"><span>🥇</span><div id="top1">Loading...</div></div>
+<div class="top-card"><span>🥈</span><div id="top2">Loading...</div></div>
+<div class="top-card"><span>🥉</span><div id="top3">Loading...</div></div>
+</div>
+</div>
 
-    <div class="about">
-      <h2>আমাদের ক্লাব সম্পর্কে</h2>
-      <p>
-        AFNs Elite strikers – AFN eFootball Club হলো স্কিল, স্ট্র্যাটেজি এবং এলিট মাইন্ডসেটের এক অনন্য সমন্বয়। এই ক্লাব গড়ে উঠেছে জয়ের প্রতি অদম্য ইচ্ছা, টিমওয়ার্ক এবং প্রতিটি ম্যাচে সর্বোচ্চ পারফরম্যান্স দেওয়ার লক্ষ্য নিয়ে।
-আমরা বিশ্বাস করি, eFootball শুধু একটি গেম নয়—এটি প্রতিযোগিতা, শৃঙ্খলা এবং স্মার্ট গেমপ্লের প্রকাশ। AFNs Elite strikers প্রতিটি ম্যাচে শার্প অ্যাটাক, শক্তিশালী ডিফেন্স এবং কৌশলী সিদ্ধান্তের মাধ্যমে নিজেদের আলাদা করে তুলে ধরে।
-এই ক্লাব তাদের জন্য, যারা এলিট হতে চায়, চাপের মধ্যেও শান্ত থাকতে জানে এবং প্রতিটি স্ট্রাইকে জয়ের স্বপ্ন দেখে। AFNs Elite strikers – AFN eFootball Club মানেই আত্মবিশ্বাস, ধারাবাহিকতা এবং এলিট পারফরম্যান্সের প্রতিশ্রুতি। </p>
-    </div>
+<!-- MOTIVATION -->
+<div class="motive-box"><span id="typingText"></span></div>
 
-    <div class="menu">
-      <a href="login.html">👤 Player Login</a>
-      <a href="player.html">📄 Player Profiles</a>
-      <a href="leaderboard.html">🏆 Leaderboard</a>
-      <a href="admin-login.html">🔐 Admin Login</a>
-      <a href="match-submit.html">⚽ Match Submit (Admin)</a>
-    </div>
+<div class="menu">
+<a href="login.html">👤 Player Login</a>
+<a href="leaderboard.html">🏆 Leaderboard</a>
+<a href="admin-login.html">🔐 Admin Login</a>
+</div>
 
-    <footer>
-      © 2026 AFN's Elite Strikers | SI SHOHAN
-    </footer>
+<footer>© 2026 AFN's Elite Strikers</footer>
 
-  </div>
+</div>
 
-  <script>
-    const lines = [
-      "চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।",
-      "হার মানে শেষ না, শেখার শুরু।",
-      "এক ম্যাচেই বদলে যেতে পারে রেটিং।",
-      "AFN মানে স্কিলের প্রমাণ।",
-      "মাঠে নামলে নাম নয়, খেলা কথা বলে।",
-      "আজ খেলোয়াড়, কাল লিজেন্ড।",
-      "রেটিং ভয় পায় না, স্কিল দেখে।",
-      "eFootball শুধু গেম না, এটা যুদ্ধ।",
-      "AFN মাঠে দুর্বলদের জায়গা নেই।",
-      "হার মানলে শেষ, লড়লে শুরু।",
-      "প্রতিটা ম্যাচ তোমার পরিচয়।",
-      "আজ ঘাম, কাল গৌরব।",
-      "স্কিল চুপ থাকে না, সে কথা বলে।",
-      "লিজেন্ড হতে চাইলে চাপ নিতে শেখো।",
-      "AFN তে খেলোয়াড় না, যোদ্ধা তৈরি হয়।",
-      "একটা ম্যাচ ইতিহাস বদলে দেয়।",
-      "মাঠই শেষ বিচারক।",
-      "জয় তাদেরই হয় যারা হাল ছাড়ে না।",
-      "র‍্যাঙ্ক অর্জন করতে হয়, পাওয়া যায় না।",
-      "আজ খেলো, কাল স্মরণীয় হও।",
-      "রেটিং তোমার নীরব পরিচয়।",
-      "হার মানে থামা নয়, এগিয়ে যাওয়া।",
-      "AFN মানে শৃঙ্খলা ও স্কিল।",
-      "মাঠে নামলে অজুহাত থাকে না।",
-      "আজকের ম্যাচই আগামীর লিজেন্ড।"
-    ];
+<script>
+/* 🔥 FIREBASE CONFIG */
+firebase.initializeApp({
+apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+authDomain:"afnsclub.firebaseapp.com",
+projectId:"afnsclub"
+});
+const db=firebase.firestore();
 
-    let lineIndex = Math.floor(Math.random() * lines.length);
-    let charIndex = 0;
+/* ⏰ SEASON TIMER */
+const seasonEnd=new Date("March 30, 2026 23:59:59").getTime();
+setInterval(()=>{
+const now=Date.now();
+const d=seasonEnd-now;
+if(d<=0){
+document.getElementById("seasonStatus").innerText="ENDED";
+document.getElementById("countdown").innerText="Season Ended";
+return;
+}
+document.getElementById("countdown").innerText=
+`⏳ ${Math.floor(d/86400000)}d ${Math.floor(d/3600000)%24}h ${Math.floor(d/60000)%60}m`;
+},1000);
 
-    const typingSpeed = 120;        // স্লো টাইপ
-    const eraseSpeed = 60;
-    const waitAfterType = 120000;  // 2 মিনিট
+/* 🏆 LIVE RANK PREVIEW */
+db.collection("players")
+.orderBy("win","desc")
+.orderBy("goalDiff","desc")
+.limit(3)
+.onSnapshot(snap=>{
+const ids=["top1","top2","top3"];
+snap.docs.forEach((doc,i)=>{
+document.getElementById(ids[i]).innerText=doc.data().name;
+});
+});
 
-    const textElement = document.getElementById("typingText");
-
-    function typeText() {
-      if (charIndex < lines[lineIndex].length) {
-        textElement.textContent += lines[lineIndex].charAt(charIndex);
-        charIndex++;
-        setTimeout(typeText, typingSpeed);
-      } else {
-        setTimeout(eraseText, waitAfterType);
-      }
-    }
-
-    function eraseText() {
-      if (charIndex > 0) {
-        textElement.textContent =
-          lines[lineIndex].substring(0, charIndex - 1);
-        charIndex--;
-        setTimeout(eraseText, eraseSpeed);
-      } else {
-        lineIndex = Math.floor(Math.random() * lines.length);
-        setTimeout(typeText, 1000);
-      }
-    }
-
-    typeText();
-  </script>
+/* 💬 MOTIVATION */
+const lines=[
+"চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।",
+"হার মানে শেষ না, শেখার শুরু।",
+"আজ খেলো, কাল লিজেন্ড।",
+"AFN মানে স্কিলের প্রমাণ।"
+];
+let i=0,j=0;const t=document.getElementById("typingText");
+function type(){
+if(j<lines[i].length){t.textContent+=lines[i][j++];setTimeout(type,80);}
+else setTimeout(()=>{t.textContent="";j=0;i=(i+1)%lines.length;type();},4000);
+}
+type();
+</script>
 
 </body>
-</html>
+  </html>
