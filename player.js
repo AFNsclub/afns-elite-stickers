@@ -1,71 +1,59 @@
-const auth = firebase.auth();
-const db = firebase.firestore();
+import { auth, db } from "./firebase-init.js";
+import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-let currentUserId = null;
+const avatar = document.getElementById("avatar");
+const playerName = document.getElementById("playerName");
+const playerMobile = document.getElementById("playerMobile");
+const playerEmail = document.getElementById("playerEmail");
 
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
+const wins = document.getElementById("wins");
+const losses = document.getElementById("losses");
+const goalsFor = document.getElementById("goalsFor");
+const goalDiff = document.getElementById("goalDiff");
 
-  currentUserId = user.uid;
-  loadProfile();
+const deviceInput = document.getElementById("device");
+const gameIdInput = document.getElementById("gameId");
+const facebookInput = document.getElementById("facebook");
+
+let userId = null;
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+
+  userId = user.uid;
+  const ref = doc(db, "players", userId);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) return;
+
+  const p = snap.data();
+
+  avatar.innerText = p.playerName?.charAt(0).toUpperCase() || "?";
+  playerName.innerText = p.playerName || "Unknown";
+  playerMobile.innerText = p.mobile || "";
+  playerEmail.innerText = p.email || "";
+
+  wins.innerText = p.wins || 0;
+  losses.innerText = p.losses || 0;
+  goalsFor.innerText = p.goalsFor || 0;
+  goalDiff.innerText = p.goalDifference || 0;
+
+  deviceInput.value = p.device || "";
+  gameIdInput.value = p.gameId || "";
+  facebookInput.value = p.facebook || "";
 });
 
-function loadProfile(){
-  db.collection("players").doc(currentUserId).get()
-  .then(doc => {
-    if(!doc.exists) return;
+window.saveProfile = async function () {
+  if (!userId) return;
 
-    const p = doc.data();
+  const ref = doc(db, "players", userId);
 
-    document.getElementById("playerName").innerText = p.playerName;
-    document.getElementById("avatar").innerText = p.playerName.charAt(0).toUpperCase();
-
-    document.getElementById("infoBox").innerHTML = `
-      <div>📱 Mobile: ${p.mobile}</div>
-      <div>📧 Gmail: ${p.email}</div>
-      <div>🎮 Device: ${p.device}</div>
-      <div>🆔 Owner/Game ID: ${p.ownerId}</div>
-      <div>🔵 Facebook: <a href="${p.facebook}" target="_blank">Open</a></div>
-    `;
-
-    document.getElementById("win").innerText = p.wins;
-    document.getElementById("loss").innerText = p.losses;
-    document.getElementById("gf").innerText = p.goalsFor;
-    document.getElementById("ga").innerText = p.goalsAgainst;
-    document.getElementById("gd").innerText = p.goalDifference;
-
-    document.getElementById("device").value = p.device;
-    document.getElementById("mobile").value = p.mobile;
-    document.getElementById("ownerId").value = p.ownerId;
-    document.getElementById("facebook").value = p.facebook;
+  await updateDoc(ref, {
+    device: deviceInput.value,
+    gameId: gameIdInput.value,
+    facebook: facebookInput.value
   });
-}
 
-function toggleEdit(){
-  const box = document.getElementById("editBox");
-  box.style.display = box.style.display === "block" ? "none" : "block";
-}
-
-function saveProfile(){
-  const mobile = document.getElementById("mobile").value;
-
-  if(!mobile.startsWith("01") || mobile.length !== 11){
-    alert("Invalid Bangladeshi mobile number");
-    return;
-  }
-
-  db.collection("players").doc(currentUserId).update({
-    device: document.getElementById("device").value,
-    mobile,
-    ownerId: document.getElementById("ownerId").value,
-    facebook: document.getElementById("facebook").value
-  })
-  .then(()=>{
-    alert("Profile Updated");
-    toggleEdit();
-    loadProfile();
-  });
-}
+  alert("Profile updated successfully ✅");
+};
