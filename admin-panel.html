@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #0b0b1a;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 15px;
+    }
+    .player {
+      background: #111;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    button {
+      margin-right: 5px;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .win { background: #00ff88; }
+    .lose { background: #ff4444; }
+  </style>
+</head>
+<body>
+
+<h2>Admin Panel</h2>
+<div id="players"></div>
+
+<script type="module">
+  import { auth, db } from "./firebase-init.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { collection, getDocs, updateDoc, doc, increment } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "admin.html";
+      return;
+    }
+
+    loadPlayers();
+  });
+
+  async function loadPlayers() {
+    const list = document.getElementById("players");
+    list.innerHTML = "";
+
+    const snap = await getDocs(collection(db, "players"));
+    snap.forEach(docSnap => {
+      const p = docSnap.data();
+      list.innerHTML += `
+        <div class="player">
+          <b>${p.name || "No Name"}</b><br>
+          Win: ${p.win || 0} | Lose: ${p.lose || 0}<br><br>
+          <button class="win" onclick="win('${docSnap.id}')">Win</button>
+          <button class="lose" onclick="lose('${docSnap.id}')">Lose</button>
+        </div>
+      `;
+    });
+  }
+
+  window.win = async (id) => {
+    await updateDoc(doc(db, "players", id), {
+      win: increment(1)
+    });
+    loadPlayers();
+  };
+
+  window.lose = async (id) => {
+    await updateDoc(doc(db, "players", id), {
+      lose: increment(1)
+    });
+    loadPlayers();
+  };
+</script>
+
+</body>
+</html>
