@@ -1,110 +1,109 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Public Player Profile</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Player Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#0b1220;
-    color:white;
-    text-align:center;
-}
-.container{padding:20px;}
-.avatar{
-    width:130px;
-    height:130px;
-    border-radius:50%;
-    object-fit:cover;
-    border:4px solid #00eaff;
-    margin:15px auto;
-}
-.card{
-    background:#141c2f;
-    padding:20px;
-    border-radius:20px;
-    max-width:420px;
-    margin:15px auto;
-}
-.rating{
-    font-size:60px;
-    color:#ffd700;
-}
-.badge{
-    display:inline-block;
-    padding:6px 14px;
-    border-radius:20px;
-    font-weight:bold;
-    margin-top:8px;
-}
-.bronze{background:#cd7f32;}
-.silver{background:#c0c0c0;color:#000;}
-.gold{background:#ffd700;color:#000;}
-</style>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: linear-gradient(180deg, #020617, #0b1220);
+      color: white;
+    }
+
+    .box {
+      max-width: 420px;
+      margin: auto;
+      padding: 20px;
+      animation: fadeUp 0.5s ease;
+    }
+
+    .card {
+      background: #0f172a;
+      border-radius: 18px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: #4f8cff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: bold;
+      margin: auto;
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      background: #020617;
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="container">
-
-    <img id="avatar" class="avatar" src="">
-    <h2 id="playerName">Player</h2>
-    <small>AFN's Elite Strikers</small>
-
+  <div class="box">
     <div class="card">
-        <div class="rating" id="rating">100</div>
-        <div id="badge" class="badge bronze">BRONZE</div>
+      <div class="avatar" id="avatar">?</div>
+      <h2 id="name">Loading...</h2>
+      <p id="mobile"></p>
+
+      <div class="stats">
+        <div class="stat">Wins<br><b id="wins">0</b></div>
+        <div class="stat">Losses<br><b id="losses">0</b></div>
+        <div class="stat">Points<br><b id="points">0</b></div>
+        <div class="stat">Goal Diff<br><b id="gd">0</b></div>
+      </div>
     </div>
+  </div>
 
-    <div class="card">
-        <h3>About Player</h3>
-        <p id="bio">No bio added.</p>
-    </div>
+  <script type="module" src="firebase-init.js"></script>
+  <script type="module">
+    import { db } from "./firebase-init.js";
+    import { doc, getDoc } from
+      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-</div>
+    const id = new URLSearchParams(window.location.search).get("id");
+    if (!id) location.href = "ranking.html";
 
-<script>
-const params = new URLSearchParams(window.location.search);
-const player = params.get("player");
+    const snap = await getDoc(doc(db, "players", id));
+    if (!snap.exists()) return;
 
-if(!player){
-    document.body.innerHTML="<h2>Player not found</h2>";
-}
+    const p = snap.data();
 
-document.getElementById("playerName").innerText=player;
+    document.getElementById("avatar").innerText =
+      p.playerName?.charAt(0).toUpperCase() || "?";
 
-// Rating
-const players = JSON.parse(localStorage.getItem("players"))||{};
-const rating = players[player] || 100;
-document.getElementById("rating").innerText = rating;
+    document.getElementById("name").innerText = p.playerName;
+    document.getElementById("mobile").innerText = p.mobile || "";
 
-// Badge
-const badge = document.getElementById("badge");
-if(rating >= 700){
-    badge.innerText="GOLD";
-    badge.className="badge gold";
-}else if(rating >= 400){
-    badge.innerText="SILVER";
-    badge.className="badge silver";
-}else{
-    badge.innerText="BRONZE";
-    badge.className="badge bronze";
-}
-
-// Profile
-const profiles = JSON.parse(localStorage.getItem("profiles"))||{};
-if(profiles[player]){
-    if(profiles[player].avatar){
-        document.getElementById("avatar").src=profiles[player].avatar;
-    }
-    if(profiles[player].bio){
-        document.getElementById("bio").innerText=profiles[player].bio;
-    }
-}
-</script>
+    wins.innerText = p.wins || 0;
+    losses.innerText = p.losses || 0;
+    points.innerText = p.points || 0;
+    gd.innerText = p.goalDifference || 0;
+  </script>
 
 </body>
 </html>
