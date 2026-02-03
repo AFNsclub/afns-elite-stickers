@@ -1,108 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
+    body{
+      margin:0;
+      height:100vh;
+      background:#0b1020;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:Arial;
+      color:#fff;
     }
-
-    body {
-      margin: 0;
-      height: 100vh;
-      background: linear-gradient(135deg, #0b1020, #0f172a);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
+    .card{
+      width:320px;
+      background:#121a33;
+      padding:25px;
+      border-radius:12px;
     }
-
-    .login-card {
-      width: 100%;
-      max-width: 360px;
-      background: #0f172a;
-      padding: 30px;
-      border-radius: 14px;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-      text-align: center;
+    input,button{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border:none;
+      border-radius:6px;
+      font-size:15px;
     }
-
-    .login-card h2 {
-      margin-bottom: 20px;
+    button{
+      background:#4f8cff;
+      color:#fff;
+      cursor:pointer;
     }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 14px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-      font-size: 15px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      background: #4f8cff;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #3b73e6;
-    }
-
-    .link {
-      display: block;
-      margin-top: 12px;
-      color: #9bb3ff;
-      text-decoration: none;
-      font-size: 14px;
-    }
-
-    .link:hover {
-      text-decoration: underline;
-    }
+    a{color:#4f8cff;text-decoration:none}
+    p{text-align:center;color:#aaa;font-size:14px}
   </style>
 </head>
-
 <body>
 
-  <div class="login-card">
-    <h2>Login</h2>
+<div class="card">
+  <h2 style="text-align:center;">Login</h2>
 
-    <input type="email" id="email" placeholder="Gmail" />
-    <input type="password" id="password" placeholder="Password" />
+  <input id="email" type="email" placeholder="Gmail">
+  <input id="password" type="password" placeholder="Password">
 
-    <button onclick="login()">Login</button>
+  <button onclick="login()">Login</button>
 
-    <!-- Forgot password -->
-    <a class="link" href="#" onclick="resetPassword()">Forgot Password?</a>
+  <p onclick="resetPassword()" style="cursor:pointer;">Forgot Password?</p>
 
-    <!-- ✅ NEW PLAYER OPTION -->
-    <p style="margin-top:15px; color:#aaa;">
-      New player?
-      <a href="register.html" style="color:#4f8cff; text-decoration:none;">
-        Create Account
-      </a>
-    </p>
-  </div>
+  <p>
+    New player?
+    <a href="register.html">Create Account</a>
+  </p>
+</div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-  <script>
-    // 🔥 Firebase config (নিজেরটা বসাবে)
-    
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
@@ -112,38 +70,28 @@ const firebaseConfig = {
   appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57",
   measurementId: "G-WT4XY15N6Y"
 };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
 
-    function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
-      if (!email || !password) {
-        alert("Please fill all fields");
-        return;
-      }
+function login(){
+  auth.signInWithEmailAndPassword(
+    email.value,
+    password.value
+  ).then(()=>{
+    location.href="player.html";
+  }).catch(e=>alert(e.message));
+}
 
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          window.location.href = "player.html";
-        })
-        .catch(err => alert(err.message));
-    }
-
-    function resetPassword() {
-      const email = document.getElementById("email").value;
-
-      if (!email) {
-        alert("Enter your Gmail first");
-        return;
-      }
-
-      auth.sendPasswordResetEmail(email)
-        .then(() => alert("Password reset email sent"))
-        .catch(err => alert(err.message));
-    }
-  </script>
-
+function resetPassword(){
+  if(!email.value){
+    alert("Enter your Gmail first");
+    return;
+  }
+  auth.sendPasswordResetEmail(email.value)
+    .then(()=>alert("Reset email sent"))
+    .catch(e=>alert(e.message));
+}
+</script>
 </body>
 </html>
