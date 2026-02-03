@@ -1,37 +1,74 @@
-import { auth, db } from "./firebase-init.js";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+const errorBox = document.getElementById("errorBox");
 
-window.login = async function () {
-  try {
-    const emailVal = email.value.trim();
-    const passVal = password.value;
+function showError(msg){
+  errorBox.innerText = msg;
+  errorBox.style.display = "block";
+}
 
-    const userCred = await signInWithEmailAndPassword(auth, emailVal, passVal);
-    const uid = userCred.user.uid;
+function clearError(){
+  errorBox.innerText = "";
+  errorBox.style.display = "none";
+}
 
-    const snap = await getDoc(doc(db, "players", uid));
-    const role = snap.exists() ? snap.data().role : "player";
-
-    if (role === "admin") {
-      window.location.href = "admin.html";
-    } else {
-      window.location.href = "player-panel.html";
-    }
-
-  } catch (e) {
-    alert("Login Failed!");
+function togglePassword(){
+  if(password.type === "password"){
+    password.type = "text";
+    document.querySelector(".toggle").innerText = "Hide";
+  }else{
+    password.type = "password";
+    document.querySelector(".toggle").innerText = "Show";
   }
-};
+}
 
-window.resetPassword = function () {
-  const emailVal = email.value.trim();
-  if (!emailVal) {
-    alert("Enter your Gmail first");
+function login(){
+  clearError();
+
+  if(!email.value || !password.value){
+    showError("⚠️ Gmail এবং Password দিতে হবে");
     return;
   }
 
-  sendPasswordResetEmail(auth, emailVal)
-    .then(() => alert("Password reset email sent"))
-    .catch(err => alert(err.message));
-};
+  auth.signInWithEmailAndPassword(
+    email.value.trim(),
+    password.value
+  ).then(()=>{
+    window.location.href = "player.html";
+  }).catch(error=>{
+    let msg = "Login failed";
+
+    if(
+      error.code === "auth/invalid-login-credentials" ||
+      error.code === "auth/wrong-password" ||
+      error.code === "auth/user-not-found"
+    ){
+      msg = "❌ আপনার Gmail অথবা Password ভুল";
+    }
+    else if(error.code === "auth/invalid-email"){
+      msg = "❌ Gmail ঠিক নাই";
+    }
+    else if(error.code === "auth/too-many-requests"){
+      msg = "⏳ অনেকবার ভুল চেষ্টা করা হয়েছে, একটু পরে চেষ্টা করুন";
+    }
+
+    showError(msg);
+  });
+}
+
+function forgotPassword(){
+  clearError();
+
+  if(!email.value){
+    showError("📧 আগে Gmail লিখুন");
+    return;
+  }
+
+  auth.sendPasswordResetEmail(email.value.trim())
+  .then(()=>{
+    showError("✅ Password reset link Gmail এ পাঠানো হয়েছে");
+  })
+  .catch(()=>{
+    showError("❌ Gmail পাওয়া যায়নি");
+  });
+}
