@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#000428,#004e92);
+  color:#fff;
+}
+
+.header{
+  padding:16px;
+  text-align:center;
+  font-size:22px;
+  font-weight:bold;
+}
+
+.card{
+  max-width:600px;
+  margin:15px auto;
+  background:rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:15px;
+}
+
+.player{
+  border-bottom:1px solid rgba(255,255,255,0.15);
+  padding:10px 0;
+}
+
+.player:last-child{
+  border:none;
+}
+
+.name{
+  font-weight:bold;
+}
+
+input{
+  width:70px;
+  padding:6px;
+  margin-right:6px;
+  border:none;
+  border-radius:6px;
+}
+
+button{
+  padding:7px 10px;
+  background:#1e90ff;
+  border:none;
+  border-radius:6px;
+  color:#fff;
+  font-weight:bold;
+}
+
+.logout{
+  background:#e74c3c;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">Admin Panel</div>
+
+<div class="card" id="playerList">
+  Loading players...
+</div>
+
+<div style="text-align:center">
+  <button class="logout" id="logoutBtn">Logout</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){
+    location.replace("login.html");
+    return;
+  }
+
+  const snap = await getDocs(collection(db,"players"));
+  let html = "";
+
+  snap.forEach(docu=>{
+    const d = docu.data();
+    html += `
+      <div class="player">
+        <div class="name">${d.name || "No Name"} (${d.email || ""})</div>
+        <div>
+          Wins: <input type="number" id="w_${docu.id}" value="${d.wins || 0}">
+          Losses: <input type="number" id="l_${docu.id}" value="${d.losses || 0}">
+          <button onclick="updateWL('${docu.id}')">Update</button>
+        </div>
+      </div>
+    `;
+  });
+
+  playerList.innerHTML = html;
+});
+
+window.updateWL = async (uid)=>{
+  const wins = Number(document.getElementById("w_"+uid).value);
+  const losses = Number(document.getElementById("l_"+uid).value);
+
+  await updateDoc(doc(db,"players",uid),{
+    wins:wins,
+    losses:losses
+  });
+
+  alert("Updated Successfully ✅");
+};
+
+logoutBtn.onclick = ()=>{
+  signOut(auth).then(()=>{
+    location.replace("login.html");
+  });
+};
+</script>
+
+</body>
+</html>
