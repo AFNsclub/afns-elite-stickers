@@ -1,144 +1,106 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Match Panel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Match Input</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background:#0b1d3a;
+  background:#0b1020;
   color:white;
 }
-header{
-  background:#111;
+.header{
   padding:15px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-button{
-  padding:8px 14px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
+  background:#121a36;
   font-weight:bold;
 }
-.logout{
-  background:#ff4d4d;
-  color:white;
-}
-.approve{
-  background:#4CAF50;
-  color:white;
-}
-.reject{
-  background:#ff9800;
-  color:black;
-}
-.container{
-  padding:15px;
-}
 .card{
-  background:#111;
-  border-radius:10px;
+  background:#161f3f;
+  margin:15px;
   padding:15px;
-  margin-bottom:15px;
+  border-radius:14px;
 }
-.small{
-  opacity:.8;
-  font-size:14px;
+input,select,button{
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:10px;
+  border:none;
+}
+button{
+  background:#4f8cff;
+  color:white;
 }
 </style>
 </head>
 
 <body>
 
-<!-- 🔐 ADMIN SECURITY CHECK -->
-<script>
-if(localStorage.getItem("adminLoggedIn")!=="true"){
-  alert("Admin access only!");
-  location.href="admin-login.html";
-}
-</script>
+<div class="header">⚽ Match Result Input</div>
 
-<header>
-  <h2>Admin Match Approval</h2>
-  <button class="logout" onclick="logout()">Logout</button>
-</header>
+<div class="card">
+  <select id="type">
+    <option value="single">Single Match</option>
+    <option value="team">Team Tournament</option>
+  </select>
 
-<div class="container" id="matchList">
-  <!-- Matches will load here -->
+  <input id="playerA" placeholder="Player / Team A">
+  <input id="playerB" placeholder="Player / Team B">
+  <input id="scoreA" placeholder="Goals A">
+  <input id="scoreB" placeholder="Goals B">
+
+  <button onclick="saveMatch()">Save Result</button>
 </div>
 
-<script>
-// 🔐 LOGOUT
-function logout(){
-  localStorage.removeItem("adminLoggedIn");
-  location.href="admin-login.html";
-}
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Load matches
-let matches = JSON.parse(localStorage.getItem("matches")) || [];
-let players = JSON.parse(localStorage.getItem("players")) || [];
-const box = document.getElementById("matchList");
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
 
-function saveAll(){
-  localStorage.setItem("matches", JSON.stringify(matches));
-  localStorage.setItem("players", JSON.stringify(players));
-}
+const app = initializeApp(firebaseConfig);
+window.auth = getAuth(app);
+window.db = getFirestore(app);
 
-function approveMatch(i){
-  if(matches[i].status!=="pending") return;
+window.saveMatch = async ()=>{
+  await addDoc(collection(db,"matches"),{
+    type: type.value,
+    A: playerA.value,
+    B: playerB.value,
+    scoreA: Number(scoreA.value),
+    scoreB: Number(scoreB.value),
+    time: Date.now()
+  });
+  alert("✅ Match Saved");
+};
+</script>
 
-  matches[i].status="approved";
+<!-- 🔐 ADMIN GUARD (আগেই বসানো) -->
+<script type="module">
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  let winner = players.find(p=>p.username===matches[i].winner);
-  let loser  = players.find(p=>p.username===matches[i].loser);
-
-  if(winner){
-    winner.rating = (winner.rating || 1000) + 25;
-  }
-  if(loser){
-    loser.rating = (loser.rating || 1000) - 15;
-  }
-
-  saveAll();
-  load();
-}
-
-function rejectMatch(i){
-  matches[i].status="rejected";
-  saveAll();
-  load();
-}
-
-function load(){
-  box.innerHTML="";
-  if(matches.length===0){
-    box.innerHTML="<p>No matches submitted</p>";
+onAuthStateChanged(auth, async user=>{
+  if(!user){
+    location.href="admin-login.html";
     return;
   }
-
-  matches.forEach((m,i)=>{
-    box.innerHTML+=`
-      <div class="card">
-        <h3>${m.winner} 🆚 ${m.loser}</h3>
-        <p class="small">Result: ${m.score}</p>
-        <p class="small">Status: <b>${m.status}</b></p>
-
-        ${m.status==="pending" ? `
-          <button class="approve" onclick="approveMatch(${i})">Approve</button>
-          <button class="reject" onclick="rejectMatch(${i})">Reject</button>
-        ` : ""}
-      </div>
-    `;
-  });
-}
-
-load();
+  const snap = await getDoc(doc(db,"users",user.uid));
+  if(!snap.exists() || snap.data().role!=="admin"){
+    location.href="admin-login.html";
+  }
+});
 </script>
 
 </body>
