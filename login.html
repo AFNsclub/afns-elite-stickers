@@ -1,139 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Player Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Login | AFNs Club</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+    authDomain: "afnsclub.firebaseapp.com",
+    projectId: "afnsclub",
+    storageBucket: "afnsclub.firebasestorage.app",
+    messagingSenderId: "1088089213558",
+    appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  window.loginUser = async function () {
+    const input = document.getElementById("loginInput").value;
+    const password = document.getElementById("password").value;
+
+    if (!input || !password) {
+      alert("সব ফিল্ড পূরণ করো");
+      return;
     }
 
-    .login-box {
-      background: rgba(0,0,0,0.4);
-      padding: 25px;
-      width: 320px;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 12px;
-      border: none;
-      border-radius: 6px;
-      outline: none;
-      font-size: 14px;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px;
-      background: #00c853;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #00e676;
-    }
-
-    .links {
-      margin-top: 15px;
-      text-align: center;
-    }
-
-    .links a {
-      color: #90caf9;
-      text-decoration: none;
-      font-size: 14px;
-    }
-
-    .links a:hover {
-      text-decoration: underline;
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="login-box">
-    <h2>Player Login</h2>
-
-    <input type="text" id="loginInput" placeholder="Username or Gmail">
-    <input type="password" id="password" placeholder="Password">
-
-    <button id="loginBtn">Login</button>
-
-    <div class="links">
-      <p><a href="register.html">Create Account</a></p>
-      <p><a href="forgot.html">Forgot Password?</a></p>
-    </div>
-  </div>
-
-  <!-- Firebase -->
-  <script type="module" src="firebase.js"></script>
-
-  <!-- Login Logic -->
-  <script type="module">
-    import {
-      auth,
-      signInWithEmailAndPassword,
-      db,
-      doc,
-      getDoc
-    } from "./firebase.js";
-
-    document.getElementById("loginBtn").onclick = async () => {
-      const input = document.getElementById("loginInput").value.trim();
-      const password = document.getElementById("password").value;
-
-      if (input === "" || password === "") {
-        alert("Please fill all fields");
-        return;
-      }
-
+    try {
       let email = input;
 
-      // Username হলে email বের করা
+      // Username দিয়ে login হলে → email বের করবো
       if (!input.includes("@")) {
-        const userRef = doc(db, "usernames", input);
-        const snap = await getDoc(userRef);
+        const q = query(collection(db, "users"), where("username", "==", input));
+        const snap = await getDocs(q);
 
-        if (!snap.exists()) {
-          alert("Username not found");
+        if (snap.empty) {
+          alert("Username পাওয়া যায়নি");
           return;
         }
 
-        email = snap.data().email;
+        snap.forEach(doc => {
+          email = doc.data().email;
+        });
       }
 
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        alert("Login successful");
-        window.location.href = "player.html";
-      } catch (error) {
-        alert("Wrong login information");
-      }
-    };
-  </script>
+      await signInWithEmailAndPassword(auth, email, password);
+      alert("Login Successful");
+      window.location.href = "player.html";
 
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+</script>
+
+<style>
+body {
+  background:#020617;
+  color:#fff;
+  font-family:Arial;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.box {
+  width:300px;
+  background:#0f172a;
+  padding:20px;
+  border-radius:10px;
+}
+input,button {
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:5px;
+  border:none;
+}
+button {
+  background:#22c55e;
+  font-weight:bold;
+}
+a {
+  color:#38bdf8;
+  text-decoration:none;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+<div class="box">
+  <h2>Login</h2>
+  <input id="loginInput" placeholder="Username or Gmail">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="loginUser()">Login</button>
+  <a href="forgot.html">Forgot Password?</a>
+</div>
 </body>
 </html>
