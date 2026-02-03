@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Player Profile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#0d1117;
+  color:#fff;
+}
+
+.container{
+  max-width:420px;
+  margin:40px auto;
+  padding:20px;
+}
+
+.card{
+  background:#161b22;
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 0 20px #000;
+}
+
+.avatar{
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  background:#22c55e;
+  color:#000;
+  font-size:32px;
+  font-weight:bold;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:auto;
+}
+
+.name{
+  text-align:center;
+  font-size:22px;
+  font-weight:bold;
+  margin-top:10px;
+}
+
+.rank{
+  text-align:center;
+  margin-top:5px;
+  color:#facc15;
+  font-weight:bold;
+}
+
+.info{
+  margin-top:20px;
+  font-size:14px;
+}
+
+.info div{
+  margin:6px 0;
+  color:#c9d1d9;
+}
+
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:20px;
+}
+
+.stat{
+  background:#0d1117;
+  border-radius:12px;
+  padding:10px;
+  width:30%;
+  text-align:center;
+}
+
+.stat h3{
+  margin:0;
+  font-size:20px;
+  color:#58a6ff;
+}
+
+.stat span{
+  font-size:12px;
+  color:#8b949e;
+}
+
+.footer{
+  margin-top:20px;
+  text-align:center;
+  font-size:13px;
+}
+
+.footer a{
+  color:#58a6ff;
+  text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="card">
+    <div class="avatar" id="avatar">A</div>
+    <div class="name" id="name">Player Name</div>
+    <div class="rank" id="rank">🏆 Rank #</div>
+
+    <div class="info">
+      <div>📱 Device: <span id="device"></span></div>
+      <div>📞 Mobile: <span id="mobile"></span></div>
+      <div>📧 Gmail: <span id="email"></span></div>
+      <div>🎮 Owner / Game ID: <span id="gameid"></span></div>
+      <div>
+        🔗 <a id="facebook" href="#" target="_blank">Facebook Profile</a>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <h3 id="win">0</h3>
+        <span>Wins</span>
+      </div>
+      <div class="stat">
+        <h3 id="lose">0</h3>
+        <span>Loses</span>
+      </div>
+      <div class="stat">
+        <h3 id="gd">0</h3>
+        <span>Goal Diff</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      ⚽ Goals: <span id="gf">0</span> - <span id="ga">0</span>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from "./firebase-init.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+onAuthStateChanged(auth, async user=>{
+  if(!user){
+    alert("Please login first");
+    return;
+  }
+
+  const userSnap = await getDoc(doc(db,"players",user.uid));
+  const p = userSnap.data();
+
+  // Set basic info
+  document.getElementById("avatar").innerText = p.name.charAt(0).toUpperCase();
+  document.getElementById("name").innerText = p.name;
+  document.getElementById("device").innerText = p.device;
+  document.getElementById("mobile").innerText = p.mobile;
+  document.getElementById("email").innerText = p.email;
+  document.getElementById("gameid").innerText = p.gameid;
+  document.getElementById("facebook").href = p.facebook;
+
+  document.getElementById("win").innerText = p.win;
+  document.getElementById("lose").innerText = p.lose;
+  document.getElementById("gf").innerText = p.goalsFor;
+  document.getElementById("ga").innerText = p.goalsAgainst;
+  document.getElementById("gd").innerText = p.goalsFor - p.goalsAgainst;
+
+  // Calculate Rank
+  const snap = await getDocs(collection(db,"players"));
+  let list = [];
+  snap.forEach(d=>{
+    const x = d.data();
+    x.gd = x.goalsFor - x.goalsAgainst;
+    list.push(x);
+  });
+
+  list.sort((a,b)=>{
+    if(b.win === a.win){
+      return b.gd - a.gd;
+    }
+    return b.win - a.win;
+  });
+
+  const rank = list.findIndex(x=>x.email === p.email) + 1;
+  document.getElementById("rank").innerText = "🏆 Rank #" + rank;
+});
+</script>
+
+</body>
+</html>
