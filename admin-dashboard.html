@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(180deg,#050b1e,#020617);
+  color:white;
+}
+.container{
+  max-width:480px;
+  margin:auto;
+  padding:16px;
+}
+.card{
+  background:rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:16px;
+}
+h2,h3{
+  text-align:center;
+}
+.stats{
+  display:flex;
+  justify-content:space-between;
+}
+.box{
+  flex:1;
+  margin:4px;
+  background:rgba(255,255,255,.08);
+  border-radius:12px;
+  padding:12px;
+  text-align:center;
+}
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  background:#ff3b3b;
+  color:white;
+}
+canvas{
+  margin-top:12px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>📊 Admin Dashboard</h2>
+
+<div class="card stats">
+  <div class="box">
+    <h3 id="playerCount">0</h3>
+    <p>Players</p>
+  </div>
+  <div class="box">
+    <h3 id="matchCount">0</h3>
+    <p>Matches</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3>🏆 Top Ranking (Wins)</h3>
+  <canvas id="rankChart"></canvas>
+</div>
+
+<div class="card">
+  <h3>⚔️ Wins vs Losses</h3>
+  <canvas id="wlChart"></canvas>
+</div>
+
+<div class="card">
+  <h3>⚠️ Season Reset</h3>
+  <button onclick="resetSeason()">RESET SEASON</button>
+</div>
+
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+
+const app = initializeApp(firebaseConfig);
+window.db = getFirestore(app);
+</script>
+
+<script src="admin-dashboard.js"></script>
+</body>
+</html>
