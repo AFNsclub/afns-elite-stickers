@@ -1,49 +1,191 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Player Profile</title>
-<meta name="viewport" content="width=device-width">
-<style>
-body{background:#0d1117;color:#fff;font-family:Arial}
-.card{
- max-width:400px;margin:30px auto;
- background:#161b22;padding:20px;
- border-radius:14px;text-align:center;
-}
-.avatar{
- width:80px;height:80px;border-radius:50%;
- background:#22c55e;font-size:40px;
- display:flex;align-items:center;justify-content:center;
- margin:auto;
-}
-</style>
+  <meta charset="UTF-8" />
+  <title>Player Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a, #020617);
+      font-family: Arial, sans-serif;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      width: 90%;
+      max-width: 420px;
+      background: #020617;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+      text-align: center;
+    }
+
+    .avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: #22c55e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: bold;
+      margin: 0 auto 12px;
+      color: #022c22;
+    }
+
+    h2 {
+      margin: 8px 0;
+    }
+
+    .info {
+      margin-top: 16px;
+      text-align: left;
+      font-size: 14px;
+      color: #cbd5f5;
+    }
+
+    .info div {
+      margin-bottom: 8px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .stat h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #22c55e;
+    }
+
+    .stat p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: #ef4444;
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="card">
-<div class="avatar" id="av"></div>
-<h2 id="name"></h2>
-<p id="info"></p>
-</div>
+  <div class="card">
+    <div class="avatar" id="avatar">P</div>
+    <h2 id="playerName">Loading...</h2>
 
-<script type="module">
-import { db } from "./firebase-init.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <div class="info">
+      <div>📱 Mobile: <span id="mobile">-</span></div>
+      <div>📧 Gmail: <span id="gmail">-</span></div>
+      <div>🎮 Owner / Game ID: <span id="gameId">-</span></div>
+      <div>📱 Device: <span id="device">-</span></div>
+    </div>
 
-const id=new URLSearchParams(location.search).get("id");
-const d=await getDoc(doc(db,"players",id));
-const p=d.data();
+    <div class="stats">
+      <div class="stat">
+        <h3 id="win">0</h3>
+        <p>Win</p>
+      </div>
+      <div class="stat">
+        <h3 id="lose">0</h3>
+        <p>Lose</p>
+      </div>
+      <div class="stat">
+        <h3 id="gd">0</h3>
+        <p>GD</p>
+      </div>
+    </div>
 
-av.innerText=p.name[0];
-name.innerText=p.name;
-info.innerHTML=`
-📱 ${p.mobile}<br>
-🎮 ${p.device}<br>
-🆔 ${p.ownerId}<br>
-📧 ${p.email}<br>
-🏆 Win:${p.win} Lose:${p.lose}
-`;
-</script>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <!-- 🔥🔥🔥 STEP 1: SCRIPT ORDER (এটা খুব গুরুত্বপূর্ণ) 🔥🔥🔥 -->
+
+  <!-- 1️⃣ Firebase App -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+
+  <!-- 2️⃣ Firebase Auth -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <!-- 3️⃣ Firebase Firestore -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- 4️⃣ YOUR MAIN SCRIPT -->
+  <script>
+    // 🔐 Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+      authDomain: "afnsclub.firebaseapp.com",
+      projectId: "afnsclub",
+      storageBucket: "afnsclub.firebasestorage.app",
+      messagingSenderId: "1088089213558",
+      appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57",
+      measurementId: "G-WT4XY15N6Y"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const doc = await db.collection("players").doc(user.uid).get();
+      if (!doc.exists) return;
+
+      const d = doc.data();
+
+      document.getElementById("playerName").innerText = d.playerName;
+      document.getElementById("avatar").innerText = d.playerName.charAt(0).toUpperCase();
+      document.getElementById("mobile").innerText = d.mobile;
+      document.getElementById("gmail").innerText = d.gmail;
+      document.getElementById("gameId").innerText = d.gameId;
+      document.getElementById("device").innerText = d.device || "-";
+
+      document.getElementById("win").innerText = d.win || 0;
+      document.getElementById("lose").innerText = d.lose || 0;
+      document.getElementById("gd").innerText = d.goalDifference || 0;
+    });
+
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "login.html";
+      });
+    }
+  </script>
+
 </body>
 </html>
