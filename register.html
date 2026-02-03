@@ -1,129 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Create Player Account</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Player Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:linear-gradient(135deg,#0f172a,#020617);
-  color:#fff;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-.box{
-  width:340px;
-  background:#020617;
-  padding:25px;
-  border-radius:14px;
-  box-shadow:0 0 20px rgba(0,0,0,.6);
-}
-h2{text-align:center;margin-bottom:20px;}
-input{
-  width:100%;
-  padding:12px;
-  margin-bottom:12px;
-  border:none;
-  border-radius:8px;
-  outline:none;
-}
-button{
-  width:100%;
-  padding:12px;
-  background:#3b82f6;
-  border:none;
-  border-radius:8px;
-  font-weight:bold;
-  cursor:pointer;
-}
-a{
-  color:#38bdf8;
-  text-decoration:none;
-  font-size:14px;
-}
-p{text-align:center;margin-top:10px;}
-</style>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .box {
+      background: #020617;
+      padding: 20px;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #22c55e;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #16a34a;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="box">
-<h2>Create Player Account</h2>
+  <div class="box">
+    <h2>Player Registration</h2>
 
-<input id="name" placeholder="Full Name">
-<input id="username" placeholder="Username">
-<input id="email" placeholder="Gmail">
-<input id="password" type="password" placeholder="Password">
-<input id="facebook" placeholder="Facebook Profile Link">
-<input id="footballId" placeholder="Football ID">
+    <input type="text" id="playerName" placeholder="Player Name">
 
-<button onclick="registerUser()">Register</button>
+    <input type="tel" id="mobile" placeholder="Mobile Number (01XXXXXXXXX)">
 
-<p>Already have an account? <a href="login.html">Login</a></p>
-</div>
+    <input type="email" id="gmail" placeholder="Gmail Account">
 
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <input type="text" id="ownerId" placeholder="Owner / Game ID">
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub",
-  storageBucket: "afnsclub.firebasestorage.app",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
-};
+    <input type="url" id="facebook" placeholder="Facebook Profile Link (optional)">
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    <button onclick="register()">Register</button>
 
-window.registerUser = async function () {
-  const name = nameInput();
-  const username = usernameInput();
-  const email = emailInput();
-  const password = passwordInput();
-  const facebook = facebookInput();
-  const footballId = footballIdInput();
+    <div class="note">
+      Default password will be provided by admin
+    </div>
+  </div>
 
-  if(!name || !username || !email || !password){
-    alert("All required fields missing");
-    return;
-  }
-
-  try{
-    const userCred = await createUserWithEmailAndPassword(auth,email,password);
-    await setDoc(doc(db,"players",userCred.user.uid),{
-      name,
-      username,
-      email,
-      facebook,
-      footballId,
-      createdAt: Date.now()
-    });
-
-    alert("Registration Successful");
-    window.location.href="login.html";
-  }catch(err){
-    alert(err.message);
-  }
-}
-
-function nameInput(){return document.getElementById("name").value.trim();}
-function usernameInput(){return document.getElementById("username").value.trim();}
-function emailInput(){return document.getElementById("email").value.trim();}
-function passwordInput(){return document.getElementById("password").value;}
-function facebookInput(){return document.getElementById("facebook").value.trim();}
-function footballIdInput(){return document.getElementById("footballId").value.trim();}
-</script>
+  <!-- Register JS -->
+  <script type="module" src="register.js"></script>
 
 </body>
 </html>
