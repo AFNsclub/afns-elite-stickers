@@ -1,122 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Edit Profile</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background: linear-gradient(135deg,#020024,#090979,#000428);
-  color:#fff;
+body{background:#0d1117;color:#fff;font-family:Arial}
+.box{max-width:400px;margin:auto;padding:20px}
+input,button{
+  width:100%;padding:10px;margin:6px 0;
+  border-radius:10px;border:none;
 }
-
-.header{
-  padding:16px;
-  text-align:center;
-}
-
-.card{
-  max-width:420px;
-  margin:20px auto;
-  background:rgba(255,255,255,0.08);
-  border-radius:18px;
-  padding:25px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.5);
-}
-
-input{
-  width:100%;
-  padding:12px;
-  margin-bottom:14px;
-  border:none;
-  border-radius:10px;
-  font-size:15px;
-}
-
-button{
-  width:100%;
-  padding:13px;
-  background:#1e90ff;
-  border:none;
-  border-radius:10px;
-  color:#fff;
-  font-size:16px;
-  font-weight:bold;
-}
+button{background:#22c55e;font-weight:bold}
 </style>
 </head>
-
 <body>
 
-<div class="header">
-  <h2>Edit Profile</h2>
+<div class="box">
+<h3>Edit Profile</h3>
+<input id="device" placeholder="Device Name">
+<input id="owner" placeholder="Owner / Game ID">
+<input id="fb" placeholder="Facebook Profile Link">
+<button onclick="save()">Save</button>
 </div>
 
-<div class="card">
-  <input type="text" id="name" placeholder="Player Name">
-  <input type="text" id="ownerId" placeholder="Owner ID (eFootball)">
-  <input type="text" id="device" placeholder="Device Name (Mobile)">
-  <input type="text" id="phone" placeholder="Phone Number">
-  <input type="text" id="fb" placeholder="Facebook Profile Link">
-
-  <button id="saveBtn">Save Profile</button>
-</div>
-
-<!-- Firebase -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { auth, db } from "./firebase-init.js";
+import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub",
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let uid = null;
-
-onAuthStateChanged(auth, async (user)=>{
-  if(!user){
-    location.replace("login.html");
-    return;
-  }
-
-  uid = user.uid;
-
-  const snap = await getDoc(doc(db,"players",uid));
-  if(snap.exists()){
-    const d = snap.data();
-    name.value = d.name || "";
-    ownerId.value = d.ownerId || "";
-    device.value = d.device || "";
-    phone.value = d.phone || "";
-    fb.value = d.fb || "";
-  }
+let uid;
+onAuthStateChanged(auth,u=>{
+  if(!u) location.href="login.html";
+  uid=u.uid;
 });
 
-saveBtn.onclick = async ()=>{
-  if(!uid) return;
-
-  await setDoc(doc(db,"players",uid),{
-    name: name.value,
-    ownerId: ownerId.value,
-    device: device.value,
-    phone: phone.value,
-    fb: fb.value
-  },{ merge:true });
-
-  alert("Profile Updated Successfully ✅");
-  location.href = "player.html";
-};
+window.save=async()=>{
+  await updateDoc(doc(db,"players",uid),{
+    device:device.value,
+    ownerId:owner.value,
+    facebook:fb.value
+  });
+  alert("Saved");
+}
 </script>
-
 </body>
 </html>
