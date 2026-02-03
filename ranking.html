@@ -1,87 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Player Ranking</title>
+  <meta charset="UTF-8" />
+  <title>AFNS Ranking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="firebase-init.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, #0b1220, #020617);
+      color: #fff;
+    }
 
-<style>
-body{
-  background:#0f172a;
-  color:#e5e7eb;
-  font-family:Arial;
-  padding:20px;
-}
-h1{
-  text-align:center;
-  margin-bottom:20px;
-}
-.table{
-  max-width:900px;
-  margin:auto;
-  background:#111827;
-  border-radius:12px;
-  overflow:hidden;
-}
-.row{
-  display:grid;
-  grid-template-columns:50px 1fr 70px 70px 70px 70px 70px;
-  padding:12px;
-  align-items:center;
-}
-.head{
-  background:#1f2937;
-  font-weight:bold;
-}
-.row:nth-child(even){
-  background:#0b1220;
-}
-.rank{
-  font-size:20px;
-  text-align:center;
-}
-.name{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.avatar{
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  background:#2563eb;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-}
-.trophy{
-  font-size:22px;
-}
-</style>
+    h1 {
+      text-align: center;
+      padding: 20px 0;
+      margin: 0;
+    }
+
+    .ranking-list {
+      max-width: 500px;
+      margin: auto;
+      padding: 10px;
+    }
+
+    .player {
+      display: flex;
+      align-items: center;
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .rank {
+      font-size: 20px;
+      width: 35px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: #4f8cff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-right: 10px;
+    }
+
+    .info {
+      flex: 1;
+    }
+
+    .name {
+      font-weight: bold;
+    }
+
+    .stats {
+      font-size: 13px;
+      color: #ccc;
+    }
+
+    .trophy {
+      font-size: 22px;
+      margin-left: 6px;
+    }
+  </style>
 </head>
 
 <body>
 
-<h1>🏆 Player Ranking</h1>
+  <h1>🏆 Player Ranking</h1>
 
-<div class="table">
-  <div class="row head">
-    <div>#</div>
-    <div>Player</div>
-    <div>Win</div>
-    <div>Loss</div>
-    <div>GF</div>
-    <div>GA</div>
-    <div>GD</div>
+  <div class="ranking-list" id="rankingList">
+    Loading ranking...
   </div>
 
-  <div id="rankingList"></div>
-</div>
+  <!-- Firebase -->
+  <script type="module" src="firebase-init.js"></script>
+  <script type="module" src="ranking.js"></script>
 
-<script src="ranking.js"></script>
 </body>
 </html>
