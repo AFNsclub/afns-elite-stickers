@@ -1,83 +1,149 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
-<title>Player Register</title>
-<style>
-body{
-  background:#0b1320;
-  color:white;
-  font-family:Arial;
-}
-.box{
-  max-width:350px;
-  margin:80px auto;
-  background:#111a2e;
-  padding:20px;
-  border-radius:12px;
-}
-input,button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:8px;
-  border:none;
-}
-button{
-  background:#00c2ff;
-  font-weight:bold;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Player Register | AFNS Club</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:#0f172a;
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+    }
+
+    .box{
+      background:#020617;
+      padding:25px;
+      border-radius:14px;
+      width:100%;
+      max-width:450px;
+      box-shadow:0 0 30px rgba(34,197,94,0.3);
+    }
+
+    h2{
+      text-align:center;
+      color:#22c55e;
+      margin-bottom:20px;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      margin-bottom:12px;
+      border-radius:8px;
+      border:none;
+      outline:none;
+      font-size:15px;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      background:#22c55e;
+      color:#000;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    button:hover{
+      background:#16a34a;
+    }
+
+    .link{
+      text-align:center;
+      margin-top:12px;
+      font-size:14px;
+    }
+
+    .link a{
+      color:#38bdf8;
+      text-decoration:none;
+    }
+
+    .link a:hover{
+      text-decoration:underline;
+    }
+
+    .note{
+      font-size:13px;
+      color:#94a3b8;
+      margin-bottom:10px;
+      text-align:center;
+    }
+  </style>
 </head>
 
 <body>
+
 <div class="box">
-<h2>Player Register</h2>
+  <h2>Create Player Account</h2>
 
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-<input id="question" placeholder="Security Question (eg: fav team?)">
-<input id="answer" placeholder="Security Answer">
+  <input type="text" id="username" placeholder="Username">
+  <input type="email" id="email" placeholder="Gmail">
+  <input type="text" id="facebook" placeholder="Facebook Profile Link">
+  <input type="text" id="efootball" placeholder="eFootball User ID">
+  <input type="password" id="password" placeholder="Password">
 
-<button onclick="register()">Create Account</button>
+  <button onclick="register()">Create Account</button>
+
+  <div class="link">
+    Already have account? <a href="login.html">Login</a>
+  </div>
+
+  <p class="note">
+    ⚠️ Username ও Gmail ইউনিক হতে হবে
+  </p>
 </div>
 
 <script>
 function register(){
-  let user = username.value.trim();
-  let pass = password.value.trim();
-  let ques = question.value.trim();
-  let ans  = answer.value.trim();
+  const username = document.getElementById("username").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const facebook = document.getElementById("facebook").value.trim();
+  const efootball = document.getElementById("efootball").value.trim();
+  const password = document.getElementById("password").value.trim();
 
-  if(!user || !pass || !ques || !ans){
-    alert("Fill all fields");
+  if(!username || !email || !facebook || !efootball || !password){
+    alert("সব ফিল্ড পূরণ করো");
     return;
   }
 
-  let players = JSON.parse(localStorage.getItem("players")) || {};
+  let players = JSON.parse(localStorage.getItem("players")) || [];
 
-  if(players[user]){
-    alert("Username already exists");
+  const exists = players.find(p =>
+    p.username === username || p.email === email
+  );
+
+  if(exists){
+    alert("এই Username অথবা Gmail আগেই ব্যবহার করা হয়েছে");
     return;
   }
 
-  players[user] = {
-    password: pass,
-    question: ques,
-    answer: ans,
-    rating: 1000
+  const newPlayer = {
+    username: username,
+    email: email,
+    facebook: facebook,
+    efootballId: efootball,
+    password: password,
+    rating: 1000,
+    matches: []
   };
 
+  players.push(newPlayer);
   localStorage.setItem("players", JSON.stringify(players));
-  alert("Account Created Successfully");
-  window.location.href="login.html";
-}
-</script>
-</body>
-</html>  players[u]={password:p,rating:1000,matches:[]};
-  localStorage.setItem("players",JSON.stringify(players));
+  localStorage.setItem("currentPlayer", JSON.stringify(newPlayer));
 
-  alert("Account created! Login now");
-  location.href="login.html";
+  alert("Account created successfully!");
+  window.location.href = "player.html";
 }
 </script>
 
