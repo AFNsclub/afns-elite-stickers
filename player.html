@@ -14,7 +14,7 @@ body{
 }
 .card{
   max-width:420px;
-  margin:40px auto;
+  margin:30px auto;
   background:#111827;
   border-radius:16px;
   padding:20px;
@@ -27,27 +27,68 @@ body{
   justify-content:center;
   align-items:center;
   font-size:32px;
-  margin:auto;
+  margin:10px auto;
 }
-.stat{
+.stat,.info{
   display:flex;
   justify-content:space-between;
   margin:8px 0;
+  color:#cbd5e1;
 }
+button{
+  width:100%;
+  padding:12px;
+  margin-top:15px;
+  border:none;
+  border-radius:10px;
+  background:#4f8cff;
+  color:#fff;
+  font-size:16px;
+}
+input{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:8px;
+  border:none;
+}
+.hidden{display:none;}
 </style>
 </head>
 
 <body>
 
 <div class="card">
+
   <div id="avatar" class="avatar">?</div>
   <h2 id="name" style="text-align:center"></h2>
 
+  <!-- PLAYER INFO -->
+  <div class="info"><span>Mobile</span><span id="mobile"></span></div>
+  <div class="info"><span>Email</span><span id="email"></span></div>
+  <div class="info"><span>Device</span><span id="device"></span></div>
+  <div class="info"><span>Game ID</span><span id="gameId"></span></div>
+
+  <hr style="opacity:.2">
+
+  <!-- STATS -->
   <div class="stat"><span>Wins</span><span id="win">0</span></div>
   <div class="stat"><span>Loses</span><span id="lose">0</span></div>
   <div class="stat"><span>Goals For</span><span id="gf">0</span></div>
   <div class="stat"><span>Goals Against</span><span id="ga">0</span></div>
   <div class="stat"><span>Goal Diff</span><span id="gd">0</span></div>
+
+  <button onclick="showEdit()">Edit Profile</button>
+
+  <!-- EDIT FORM -->
+  <div id="editBox" class="hidden">
+    <h3>Edit Info</h3>
+    <input id="editDevice" placeholder="Device Name">
+    <input id="editGameId" placeholder="Owner / Game ID">
+    <input id="editFacebook" placeholder="Facebook Profile Link">
+    <button onclick="saveEdit()">Save Changes</button>
+  </div>
+
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -63,20 +104,47 @@ firebase.initializeApp({
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-auth.onAuthStateChanged(user=>{
-  if(!user) location.href="login.html";
+let uid;
 
-  db.collection("players").doc(user.uid).get().then(doc=>{
+auth.onAuthStateChanged(user=>{
+  if(!user) return location.href="login.html";
+  uid=user.uid;
+
+  db.collection("players").doc(uid).get().then(doc=>{
     const d=doc.data();
-    document.getElementById("name").innerText=d.name;
-    document.getElementById("avatar").innerText=d.name[0].toUpperCase();
+    name.innerText=d.name;
+    avatar.innerText=d.name[0].toUpperCase();
+    mobile.innerText=d.mobile;
+    email.innerText=d.email;
+    device.innerText=d.device || "-";
+    gameId.innerText=d.gameId || "-";
+
     win.innerText=d.win;
     lose.innerText=d.lose;
     gf.innerText=d.goalsFor;
     ga.innerText=d.goalsAgainst;
-    gd.innerText=d.goalsFor-d.goalsAgainst;
+    gd.innerText=d.goalsFor - d.goalsAgainst;
+
+    editDevice.value=d.device || "";
+    editGameId.value=d.gameId || "";
+    editFacebook.value=d.facebook || "";
   });
 });
+
+function showEdit(){
+  document.getElementById("editBox").classList.toggle("hidden");
+}
+
+function saveEdit(){
+  db.collection("players").doc(uid).update({
+    device: editDevice.value,
+    gameId: editGameId.value,
+    facebook: editFacebook.value
+  }).then(()=>{
+    alert("Profile Updated");
+    location.reload();
+  });
+}
 </script>
 
 </body>
