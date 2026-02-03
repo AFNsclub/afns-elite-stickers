@@ -1,5 +1,6 @@
 const uid = new URLSearchParams(window.location.search).get("uid") || "demo";
 
+/* ---------- MOTIVATION ---------- */
 const MOTIVATIONS = [
   "Train hard, win easy.",
   "No excuses, only results.",
@@ -23,6 +24,7 @@ function getTodayMotivation(uid){
   return MOTIVATIONS[Math.abs(hash)%MOTIVATIONS.length];
 }
 
+/* ---------- LOAD PLAYER ---------- */
 const key = "player_"+uid;
 const data = JSON.parse(localStorage.getItem(key)) || {
   name:"Player",
@@ -37,10 +39,10 @@ const data = JSON.parse(localStorage.getItem(key)) || {
   gd:0
 };
 
-// LOAD
+/* ---------- UI LOAD ---------- */
 motivationText.textContent = getTodayMotivation(uid);
 playerName.textContent = data.name;
-avatar.textContent = data.name[0] || "?";
+avatar.textContent = data.name.charAt(0).toUpperCase();
 
 phoneText.textContent = data.phone || "—";
 emailText.textContent = data.email || "—";
@@ -53,15 +55,17 @@ losses.textContent = data.losses;
 goals.textContent = data.goals;
 gd.textContent = data.gd;
 
-// INPUTS
+/* ---------- INPUT VALUES ---------- */
+nameInput.value = data.name;
 phoneInput.value = data.phone;
 emailInput.value = data.email;
 gameIdInput.value = data.gameId;
 deviceInput.value = data.device;
 fbInput.value = data.fb;
 
-// SAVE
+/* ---------- SAVE ---------- */
 function saveProfile(){
+  data.name = nameInput.value || "Player";
   data.phone = phoneInput.value;
   data.email = emailInput.value;
   data.gameId = gameIdInput.value;
@@ -72,3 +76,37 @@ function saveProfile(){
   alert("Profile Saved ✅");
   location.reload();
 }
+
+/* ---------- RANKING SYSTEM ---------- */
+function calculateRank(){
+  let players = [];
+
+  // Load all players from localStorage
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(k.startsWith("player_")){
+      players.push(JSON.parse(localStorage.getItem(k)));
+    }
+  }
+
+  // Sort by ranking rule
+  players.sort((a,b)=>{
+    if(b.wins !== a.wins) return b.wins - a.wins;
+    if(b.gd !== a.gd) return b.gd - a.gd;
+    return b.goals - a.goals;
+  });
+
+  // Find rank
+  const index = players.findIndex(p => p.name === data.name);
+  const rank = index + 1;
+
+  // Trophy
+  let trophy = "";
+  if(rank === 1) trophy = " 🥇";
+  else if(rank === 2) trophy = " 🥈";
+  else if(rank === 3) trophy = " 🥉";
+
+  rankText.textContent = "#" + rank + trophy;
+}
+
+calculateRank();
