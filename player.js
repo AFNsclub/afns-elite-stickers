@@ -1,59 +1,62 @@
 import { auth, db } from "./firebase-init.js";
-import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const avatar = document.getElementById("avatar");
-const playerName = document.getElementById("playerName");
-const playerMobile = document.getElementById("playerMobile");
-const playerEmail = document.getElementById("playerEmail");
+const saveBtn = document.getElementById("saveBtn");
 
-const wins = document.getElementById("wins");
-const losses = document.getElementById("losses");
-const goalsFor = document.getElementById("goalsFor");
-const goalDiff = document.getElementById("goalDiff");
+auth.onAuthStateChanged(async user => {
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
 
-const deviceInput = document.getElementById("device");
-const gameIdInput = document.getElementById("gameId");
-const facebookInput = document.getElementById("facebook");
-
-let userId = null;
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
-
-  userId = user.uid;
-  const ref = doc(db, "players", userId);
+  const ref = doc(db, "players", user.uid);
   const snap = await getDoc(ref);
-
   if (!snap.exists()) return;
 
   const p = snap.data();
 
-  avatar.innerText = p.playerName?.charAt(0).toUpperCase() || "?";
-  playerName.innerText = p.playerName || "Unknown";
-  playerMobile.innerText = p.mobile || "";
-  playerEmail.innerText = p.email || "";
+  avatar.textContent = p.playerName?.charAt(0).toUpperCase() || "?";
+  playerName.textContent = p.playerName || "Player";
+  tagline.textContent = p.motivation || "🔥 Play hard. Win smart.";
 
-  wins.innerText = p.wins || 0;
-  losses.innerText = p.losses || 0;
-  goalsFor.innerText = p.goalsFor || 0;
-  goalDiff.innerText = p.goalDifference || 0;
+  wins.textContent = p.wins || 0;
+  losses.textContent = p.losses || 0;
+  goals.textContent = p.goalsFor || 0;
+  gd.textContent = p.goalDifference || 0;
 
+  motivationInput.value = p.motivation || "";
   deviceInput.value = p.device || "";
   gameIdInput.value = p.gameId || "";
-  facebookInput.value = p.facebook || "";
+  fbInput.value = p.facebook || "";
 });
 
-window.saveProfile = async function () {
-  if (!userId) return;
+saveBtn.addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) return;
 
-  const ref = doc(db, "players", userId);
+  saveBtn.textContent = "Saving...";
+  saveBtn.disabled = true;
 
-  await updateDoc(ref, {
-    device: deviceInput.value,
-    gameId: gameIdInput.value,
-    facebook: facebookInput.value
-  });
+  try {
+    await updateDoc(doc(db, "players", user.uid), {
+      motivation: motivationInput.value.trim(),
+      device: deviceInput.value.trim(),
+      gameId: gameIdInput.value.trim(),
+      facebook: fbInput.value.trim()
+    });
 
-  alert("Profile updated successfully ✅");
-};
+    tagline.textContent =
+      motivationInput.value.trim() || "🔥 Play hard. Win smart.";
+
+    alert("Profile saved successfully ✅");
+  } catch (e) {
+    alert("Save failed ❌");
+  }
+
+  saveBtn.textContent = "Save Changes";
+  saveBtn.disabled = false;
+});
