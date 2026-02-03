@@ -1,54 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Player Ranking</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<title>AFNS Club Ranking</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(180deg, #0b1220, #020617);
-      color: white;
-    }
+<style>
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#0d1117;
+  color:#fff;
+}
 
-    h1 {
-      text-align: center;
-      padding: 20px;
-    }
+h1{
+  text-align:center;
+  padding:20px;
+  color:#facc15;
+}
 
-    .player {
-      background: #020617;
-      border-radius: 12px;
-      padding: 15px;
-      margin: 12px;
-      box-shadow: 0 0 10px #000;
-    }
+.table{
+  width:95%;
+  margin:auto;
+  border-collapse:collapse;
+}
 
-    .row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-      margin-top: 6px;
-    }
+.table th, .table td{
+  padding:12px;
+  text-align:center;
+}
 
-    .rank {
-      font-size: 20px;
-      font-weight: bold;
-      color: gold;
-    }
-  </style>
+.table th{
+  background:#161b22;
+  color:#58a6ff;
+}
+
+.table tr{
+  background:#0d1117;
+  border-bottom:1px solid #21262d;
+}
+
+.rank-1{
+  background:linear-gradient(90deg,#FFD700,#b8860b);
+  color:#000;
+  font-weight:bold;
+}
+.rank-2{
+  background:linear-gradient(90deg,#C0C0C0,#808080);
+  color:#000;
+}
+.rank-3{
+  background:linear-gradient(90deg,#CD7F32,#8b4513);
+  color:#000;
+}
+
+.avatar{
+  width:35px;
+  height:35px;
+  border-radius:50%;
+  background:#238636;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  margin-right:6px;
+}
+
+.trophy{
+  font-size:20px;
+}
+</style>
 </head>
 
 <body>
 
-<h1>🏆 Player Ranking</h1>
+<h1>🏆 AFNS CLUB RANKING</h1>
 
-<div id="players"></div>
+<table class="table">
+<thead>
+<tr>
+<th>Rank</th>
+<th>Player</th>
+<th>Win</th>
+<th>Lose</th>
+<th>GF</th>
+<th>GA</th>
+<th>GD</th>
+</tr>
+</thead>
+<tbody id="ranking"></tbody>
+</table>
 
-<!-- Firebase -->
-<script type="module" src="ranking.js"></script>
+<script type="module">
+import { db } from "./firebase-init.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const snap = await getDocs(collection(db,"players"));
+
+let players = [];
+snap.forEach(doc=>{
+  const p = doc.data();
+  p.gd = p.goalsFor - p.goalsAgainst;
+  players.push(p);
+});
+
+// SORT → Win → Goal Difference
+players.sort((a,b)=>{
+  if(b.win === a.win){
+    return b.gd - a.gd;
+  }
+  return b.win - a.win;
+});
+
+const tbody = document.getElementById("ranking");
+
+players.forEach((p,i)=>{
+  let cls="";
+  let trophy="";
+
+  if(i===0){cls="rank-1"; trophy="🥇";}
+  if(i===1){cls="rank-2"; trophy="🥈";}
+  if(i===2){cls="rank-3"; trophy="🥉";}
+
+  tbody.innerHTML += `
+    <tr class="${cls}">
+      <td>${i+1} <span class="trophy">${trophy}</span></td>
+      <td>
+        <span class="avatar">${p.name.charAt(0).toUpperCase()}</span>
+        ${p.name}
+      </td>
+      <td>${p.win}</td>
+      <td>${p.lose}</td>
+      <td>${p.goalsFor}</td>
+      <td>${p.goalsAgainst}</td>
+      <td>${p.gd}</td>
+    </tr>
+  `;
+});
+</script>
 
 </body>
 </html>
