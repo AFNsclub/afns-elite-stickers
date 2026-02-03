@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<h2>Edit Player Profile</h2>
+
+<input id="name" placeholder="Full Name"><br><br>
+<input id="facebook" placeholder="Facebook Profile"><br><br>
+<input id="playerid" placeholder="Player ID"><br><br>
+
+<button onclick="updateProfile()">Update Profile</button>
+<p id="msg"></p>
+
+<script type="module" src="firebase.js"></script>
+
+<script type="module">
+import { onAuthStateChanged } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { doc, getDoc, updateDoc } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+let uid = null;
+
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
+
+  uid = user.uid;
+  const snap = await getDoc(doc(db, "players", uid));
+
+  if (snap.exists()) {
+    name.value = snap.data().name || "";
+    facebook.value = snap.data().fb || "";
+    playerid.value = snap.data().pid || "";
+  }
+});
+
+async function updateProfile() {
+  try {
+    await updateDoc(doc(db, "players", uid), {
+      name: name.value,
+      fb: facebook.value,
+      pid: playerid.value
+    });
+
+    msg.innerText = "✅ Profile Updated Successfully";
+  } catch (e) {
+    msg.innerText = e.message;
+  }
+}
+</script>
+
+</body>
+</html>
