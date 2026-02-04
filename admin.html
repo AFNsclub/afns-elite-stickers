@@ -3,246 +3,237 @@
 <head>
 <meta charset="UTF-8">
 <title>Admin Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root{
+  /* 🎨 Theme based on logo.png (blue / dark premium) */
   --bg:#050b1e;
-  --card:#0b1628;
+  --card:#0b1622;
   --accent:#4f8cff;
-  --danger:#ff4d4d;
-  --success:#2ecc71;
   --text:#ffffff;
-  --muted:#9aa4bf;
+  --muted:rgba(255,255,255,.6);
 }
 
 *{box-sizing:border-box}
 
 body{
   margin:0;
-  background:linear-gradient(180deg,#050b1e,#020617);
-  font-family:Arial,Helvetica,sans-serif;
+  font-family:Arial, sans-serif;
+  background:var(--bg);
   color:var(--text);
 }
 
-header{
-  padding:18px;
-  text-align:center;
-  font-size:22px;
-  font-weight:bold;
-  background:#060d22;
-  border-bottom:1px solid #111c3a;
+/* ===== HEADER ===== */
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 16px;
+  background:#070f2a;
+  border-bottom:1px solid rgba(255,255,255,.06);
 }
 
-.container{
-  padding:18px;
-  max-width:1200px;
-  margin:auto;
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:16px;
+.brand img{
+  height:36px;
 }
 
-.card{
-  background:var(--card);
-  border-radius:16px;
-  padding:18px;
-  box-shadow:0 10px 30px rgba(0,0,0,.35);
-  cursor:pointer;
-  transition:.25s;
-  position:relative;
-  overflow:hidden;
-}
-
-.card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 16px 40px rgba(0,0,0,.55);
-}
-
-.card::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(120deg,transparent,rgba(255,255,255,.05),transparent);
-  opacity:0;
-  transition:.3s;
-}
-.card:hover::after{opacity:1}
-
-.icon{
-  font-size:32px;
-  margin-bottom:10px;
-}
-
-.title{
-  font-size:16px;
-  font-weight:bold;
-}
-
-.desc{
-  font-size:13px;
-  color:var(--muted);
-  margin-top:6px;
-}
-
-.section-title{
-  margin:26px 0 12px;
+.brand span{
   font-size:18px;
   font-weight:bold;
 }
 
 .logout{
-  margin-top:30px;
-  background:var(--danger);
-  padding:14px;
-  border-radius:14px;
-  text-align:center;
-  font-weight:bold;
+  background:none;
+  border:1px solid var(--accent);
+  color:var(--accent);
+  padding:6px 12px;
+  border-radius:8px;
+  font-size:14px;
   cursor:pointer;
 }
 
-.logout:hover{
-  opacity:.9;
+/* ===== DASHBOARD ===== */
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:16px;
 }
 
-/* small widgets */
-.stats{
+.grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
   gap:14px;
 }
 
+/* ===== CARD ===== */
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 10px 25px rgba(0,0,0,.4);
+  transition:.2s;
+  cursor:pointer;
+}
+
+.card:hover{
+  transform:translateY(-4px);
+}
+
+.icon{
+  font-size:26px;
+}
+
+.title{
+  margin-top:10px;
+  font-size:15px;
+  font-weight:bold;
+}
+
+.desc{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+/* ===== STATS ===== */
+.stats{
+  margin-top:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px;
+}
+
 .stat{
-  background:#091433;
+  background:rgba(255,255,255,.05);
   border-radius:14px;
   padding:14px;
   text-align:center;
 }
 
-.stat h2{
-  margin:0;
-  font-size:24px;
+.stat span{
+  display:block;
+  font-size:22px;
+  font-weight:bold;
+  margin-bottom:4px;
 }
-.stat p{
-  margin:6px 0 0;
-  font-size:13px;
-  color:var(--muted);
+
+/* ===== FOOTER ===== */
+.footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.5;
+  margin:24px 0 10px;
 }
 </style>
 </head>
 
 <body>
 
-<header>🔥 AFNS Admin Dashboard</header>
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <div class="brand">
+    <!-- ✅ MAIN INDEX LOGO -->
+    <img src="logo.png" alt="Logo">
+    <span>Admin Dashboard</span>
+  </div>
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
 
+<!-- ===== CONTENT ===== -->
 <div class="container">
 
-  <!-- LIVE STATS -->
-  <div class="stats">
-    <div class="stat">
-      <h2>12</h2>
-      <p>Total Tournaments</p>
-    </div>
-    <div class="stat">
-      <h2>58</h2>
-      <p>Total Players</p>
-    </div>
-    <div class="stat">
-      <h2>9</h2>
-      <p>Champions</p>
-    </div>
-    <div class="stat">
-      <h2>OK</h2>
-      <p>System Health</p>
-    </div>
-  </div>
-
-  <!-- TOURNAMENT -->
-  <div class="section-title">🏆 Tournament Management</div>
+  <!-- ACTION CARDS -->
   <div class="grid">
-    <div class="card" onclick="go('single')">
-      <div class="icon">🎯</div>
-      <div class="title">Single Tournament</div>
-      <div class="desc">Create & manage single tournaments</div>
+
+    <div class="card" onclick="go('tournament.html')">
+      <div class="icon">🏆</div>
+      <div class="title">Tournament Builder</div>
+      <div class="desc">Create & manage tournaments</div>
     </div>
 
-    <div class="card" onclick="go('team')">
-      <div class="icon">👥</div>
-      <div class="title">Team Tournament</div>
-      <div class="desc">Team draw & knockout system</div>
-    </div>
-
-    <div class="card" onclick="go('pvp')">
+    <div class="card" onclick="go('pvp-result.html')">
       <div class="icon">⚔️</div>
       <div class="title">PvP Match</div>
-      <div class="desc">Player vs Player results</div>
-    </div>
-  </div>
-
-  <!-- CHAMPION -->
-  <div class="section-title">👑 Champion System</div>
-  <div class="grid">
-    <div class="card" onclick="go('champion-profile')">
-      <div class="icon">👤</div>
-      <div class="title">Champion Profile</div>
-      <div class="desc">View champion details</div>
+      <div class="desc">Player vs Player result</div>
     </div>
 
-    <div class="card" onclick="go('certificate')">
-      <div class="icon">📄</div>
-      <div class="title">Certificate PDF</div>
-      <div class="desc">Auto generate champion certificate</div>
-    </div>
-
-    <div class="card" onclick="go('history')">
-      <div class="icon">📜</div>
-      <div class="title">Champion History</div>
-      <div class="desc">All past champions</div>
-    </div>
-  </div>
-
-  <!-- SYSTEM -->
-  <div class="section-title">⚙️ System & Admin</div>
-  <div class="grid">
-    <div class="card" onclick="go('ranking')">
+    <div class="card" onclick="go('ranking.html')">
       <div class="icon">📊</div>
-      <div class="title">Player Ranking</div>
-      <div class="desc">Auto updated leaderboard</div>
+      <div class="title">Ranking Board</div>
+      <div class="desc">Auto updated rankings</div>
     </div>
 
-    <div class="card" onclick="go('activity')">
-      <div class="icon">📝</div>
+    <div class="card" onclick="go('champion.html')">
+      <div class="icon">👑</div>
+      <div class="title">Champion</div>
+      <div class="desc">Champion profile & PDF</div>
+    </div>
+
+    <div class="card" onclick="go('certificate.html')">
+      <div class="icon">📄</div>
+      <div class="title">Certificates</div>
+      <div class="desc">Generate & download PDF</div>
+    </div>
+
+    <div class="card" onclick="go('activity.html')">
+      <div class="icon">🧾</div>
       <div class="title">Activity Log</div>
-      <div class="desc">Admin actions & logs</div>
+      <div class="desc">Admin system actions</div>
     </div>
 
-    <div class="card" onclick="go('roles')">
-      <div class="icon">🛡️</div>
-      <div class="title">Admin Roles</div>
-      <div class="desc">Super / Moderator control</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <span id="totalPlayers">0</span>
+      Players
+    </div>
+    <div class="stat">
+      <span id="totalMatches">0</span>
+      Matches
+    </div>
+    <div class="stat">
+      <span id="totalTournaments">0</span>
+      Tournaments
+    </div>
+    <div class="stat">
+      <span id="systemStatus">OK</span>
+      System
     </div>
   </div>
 
-  <!-- LOGOUT -->
-  <div class="logout" onclick="logout()">🚪 Logout</div>
+  <div class="footer">
+    AFNS Club Admin • Secure System
+  </div>
 
 </div>
 
 <script>
 function go(page){
-  // 🔗 তুমি পরে এখানে routing বসাবে
-  alert("Go to: " + page);
+  window.location.href = page;
 }
 
 function logout(){
-  // 🔐 এখানে Firebase auth.signOut() বসবে
-  alert("Logged out");
-  // location.href = "login.html";
+  if(confirm("Logout from admin panel?")){
+    firebase.auth().signOut().then(()=>{
+      window.location.href = "admin-login.html";
+    });
+  }
 }
+
+/* Dummy stats (later connect with DB) */
+document.getElementById("totalPlayers").innerText = localStorage.length;
+document.getElementById("totalMatches").innerText = 42;
+document.getElementById("totalTournaments").innerText = 7;
 </script>
 
 </body>
-      </html>
+</html>
