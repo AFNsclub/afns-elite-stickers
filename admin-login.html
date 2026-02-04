@@ -8,56 +8,73 @@
 <style>
 body{
   margin:0;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#0b122c;
   font-family:Arial;
-  background:#0b0f1a;
-  color:white;
-}
-.container{
-  max-width:380px;
-  margin:auto;
-  padding:20px;
 }
 .card{
   background:#111827;
+  padding:25px;
+  width:100%;
+  max-width:360px;
   border-radius:14px;
-  padding:20px;
 }
+h2{color:#fff;text-align:center;}
 input,button{
   width:100%;
   padding:14px;
-  margin-bottom:12px;
   border-radius:10px;
   border:none;
+  margin-top:12px;
+  font-size:15px;
 }
 button{
-  background:#3b66f5;
-  color:white;
-  font-size:16px;
+  background:#4f8cff;
+  color:#fff;
   cursor:pointer;
 }
-#error{
-  margin-top:10px;
-  color:#ff5c5c;
+.error{
+  color:#ff6b6b;
+  margin-top:12px;
   text-align:center;
 }
 </style>
 </head>
 
 <body>
-<div class="container">
-  <div class="card">
-    <h2 style="text-align:center">🔐 Admin Login</h2>
 
-    <input type="email" id="email" placeholder="Admin Email">
-    <input type="password" id="password" placeholder="Password">
+<div class="card">
+  <h2>🔐 Admin Login</h2>
 
-    <button onclick="loginAdmin()">Login</button>
+  <input type="email" id="email" placeholder="Admin Gmail">
+  <input type="password" id="password" placeholder="Password">
 
-    <div id="error"></div>
-  </div>
+  <button onclick="adminLogin()">Login</button>
+
+  <div id="error" class="error"></div>
 </div>
 
-<!-- 🔥 IMPORTANT -->
-<script type="module" src="admin-login.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+</script>
+
+<script src="admin-auth.js"></script>
 </body>
 </html>
