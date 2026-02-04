@@ -56,8 +56,17 @@ button{
 <!-- 🔥 FIREBASE CONFIG -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { 
+  getAuth,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import { 
+  getFirestore,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
@@ -69,38 +78,32 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-window.auth = getAuth(app);
-window.db = getFirestore(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
+/* 🔐 ADMIN GUARD – FINAL */
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){
+    location.href = "admin-login.html";
+    return;
+  }
+
+  const adminRef = doc(db, "admins", user.email);
+  const snap = await getDoc(adminRef);
+
+  if(!snap.exists() || snap.data().active !== true){
+    alert("You are not authorized admin");
+    await signOut(auth);
+    location.href = "admin-login.html";
+  }
+});
+
+/* 🚪 Logout */
 window.logout = ()=>{
   signOut(auth).then(()=>{
     location.href="admin-login.html";
   });
 };
-</script>
-
-<!-- 🔐 ADMIN GUARD (আগেই বসানো) -->
-<script type="module">
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import {
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-onAuthStateChanged(auth, async user=>{
-  if(!user){
-    location.href="admin-login.html";
-    return;
-  }
-
-  const snap = await getDoc(doc(db,"users",user.uid));
-  if(!snap.exists() || snap.data().role!=="admin"){
-    location.href="admin-login.html";
-  }
-});
 </script>
 
 </body>
