@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Create Team Tournament</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(180deg,#050b1e,#020617);
+  color:#fff;
+}
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:16px;
+}
+.card{
+  background:rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+}
+h2,h3{text-align:center;}
+input,button{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  margin-top:10px;
+}
+button{
+  background:#4f8cff;
+  color:#fff;
+  font-size:16px;
+}
+.team{
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:12px;
+  padding:12px;
+  margin-top:14px;
+}
+.player{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+  margin:4px 0;
+}
+.small{
+  font-size:12px;
+  opacity:.7;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>🏆 Create Team Tournament</h2>
+
+<div class="card">
+  <input id="tName" placeholder="Tournament Name">
+
+  <input type="number" id="teamCount" min="2" max="10"
+         placeholder="Number of Teams (2–10)">
+
+  <button onclick="generateTeams()">Next</button>
+</div>
+
+<div id="teamsArea"></div>
+
+<button style="display:none" id="saveBtn" onclick="saveTournament()">
+  Save Tournament
+</button>
+
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, addDoc
+} from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+window.db = db;
+window.collection = collection;
+window.getDocs = getDocs;
+window.addDoc = addDoc;
+</script>
+
+<script src="admin-create-tournament.js"></script>
+</body>
+</html>
