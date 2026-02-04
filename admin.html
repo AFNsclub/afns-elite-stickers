@@ -2,137 +2,78 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Admin Dashboard</title>
+<title>Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 :root{
   --bg:#050b1e;
-  --panel:#0b142e;
-  --card:rgba(15,25,60,.75);
+  --card:#0b1628;
   --accent:#4f8cff;
-  --accent-glow:rgba(79,140,255,.55);
-  --text:#ffffff;
-  --muted:#a8b2d6;
   --danger:#ff4d4d;
+  --success:#2ecc71;
+  --text:#ffffff;
+  --muted:#9aa4bf;
 }
 
 *{box-sizing:border-box}
 
 body{
   margin:0;
+  background:linear-gradient(180deg,#050b1e,#020617);
   font-family:Arial,Helvetica,sans-serif;
-  background:
-    radial-gradient(1200px 600px at top,#0b1a4a,transparent),
-    linear-gradient(180deg,#050b1e,#020617);
   color:var(--text);
 }
 
-/* ===== HEADER ===== */
 header{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:16px 18px;
-  background:rgba(8,14,40,.9);
-  backdrop-filter:blur(10px);
-  border-bottom:1px solid rgba(79,140,255,.25);
-}
-
-header img{
-  width:40px;
-  height:40px;
-}
-
-header span{
-  font-size:20px;
+  padding:18px;
+  text-align:center;
+  font-size:22px;
   font-weight:bold;
-  letter-spacing:.5px;
+  background:#060d22;
+  border-bottom:1px solid #111c3a;
 }
 
-/* ===== LAYOUT ===== */
 .container{
   padding:18px;
   max-width:1200px;
   margin:auto;
 }
 
-/* ===== STATS ===== */
-.stats{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-  gap:14px;
-  margin-bottom:26px;
-}
-
-.stat{
-  background:var(--panel);
-  border-radius:16px;
-  padding:16px;
-  text-align:center;
-  box-shadow:0 0 0 1px rgba(79,140,255,.15),
-             0 10px 30px rgba(0,0,0,.4);
-}
-
-.stat h2{
-  margin:0;
-  font-size:26px;
-  color:var(--accent);
-}
-.stat p{
-  margin-top:6px;
-  font-size:13px;
-  color:var(--muted);
-}
-
-/* ===== SECTIONS ===== */
-.section-title{
-  font-size:18px;
-  font-weight:bold;
-  margin:28px 0 12px;
-  letter-spacing:.4px;
-}
-
-/* ===== CARDS ===== */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
   gap:16px;
 }
 
 .card{
   background:var(--card);
-  border-radius:18px;
+  border-radius:16px;
   padding:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
   cursor:pointer;
+  transition:.25s;
   position:relative;
   overflow:hidden;
-  backdrop-filter:blur(12px);
-  box-shadow:
-    inset 0 0 0 1px rgba(79,140,255,.18),
-    0 12px 35px rgba(0,0,0,.45);
-  transition:.25s;
 }
 
-.card::before{
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 16px 40px rgba(0,0,0,.55);
+}
+
+.card::after{
   content:"";
   position:absolute;
   inset:0;
-  background:linear-gradient(120deg,transparent,var(--accent-glow),transparent);
+  background:linear-gradient(120deg,transparent,rgba(255,255,255,.05),transparent);
   opacity:0;
   transition:.3s;
 }
-
-.card:hover::before{opacity:.35}
-.card:hover{
-  transform:translateY(-5px);
-  box-shadow:
-    inset 0 0 0 1px rgba(79,140,255,.35),
-    0 18px 45px rgba(0,0,0,.6);
-}
+.card:hover::after{opacity:1}
 
 .icon{
-  font-size:34px;
+  font-size:32px;
   margin-bottom:10px;
 }
 
@@ -143,73 +84,165 @@ header span{
 
 .desc{
   font-size:13px;
-  margin-top:6px;
   color:var(--muted);
+  margin-top:6px;
 }
 
-/* ===== LOGOUT ===== */
+.section-title{
+  margin:26px 0 12px;
+  font-size:18px;
+  font-weight:bold;
+}
+
 .logout{
-  margin:34px auto 10px;
-  max-width:320px;
-  text-align:center;
+  margin-top:30px;
+  background:var(--danger);
   padding:14px;
-  border-radius:16px;
-  background:linear-gradient(135deg,#ff4d4d,#ff1f1f);
+  border-radius:14px;
+  text-align:center;
   font-weight:bold;
   cursor:pointer;
-  box-shadow:0 10px 30px rgba(255,77,77,.4);
 }
-.logout:hover{opacity:.9}
+
+.logout:hover{
+  opacity:.9;
+}
+
+/* small widgets */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:14px;
+}
+
+.stat{
+  background:#091433;
+  border-radius:14px;
+  padding:14px;
+  text-align:center;
+}
+
+.stat h2{
+  margin:0;
+  font-size:24px;
+}
+.stat p{
+  margin:6px 0 0;
+  font-size:13px;
+  color:var(--muted);
+}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<header>
-  <!-- 🔵 তোমার LOGO -->
-  <img src="https://i.imgur.com/ssP9KMa.png" alt="Logo">
-  <span>AFNS Admin Panel</span>
-</header>
+<header>🔥 AFNS Admin Dashboard</header>
 
 <div class="container">
 
   <!-- LIVE STATS -->
   <div class="stats">
-    <div class="stat"><h2>12</h2><p>Tournaments</p></div>
-    <div class="stat"><h2>58</h2><p>Players</p></div>
-    <div class="stat"><h2>9</h2><p>Champions</p></div>
-    <div class="stat"><h2>OK</h2><p>System</p></div>
+    <div class="stat">
+      <h2>12</h2>
+      <p>Total Tournaments</p>
+    </div>
+    <div class="stat">
+      <h2>58</h2>
+      <p>Total Players</p>
+    </div>
+    <div class="stat">
+      <h2>9</h2>
+      <p>Champions</p>
+    </div>
+    <div class="stat">
+      <h2>OK</h2>
+      <p>System Health</p>
+    </div>
   </div>
 
   <!-- TOURNAMENT -->
-  <div class="section-title">🏆 Tournament</div>
+  <div class="section-title">🏆 Tournament Management</div>
   <div class="grid">
-    <div class="card"><div class="icon">🎯</div><div class="title">Single Tournament</div><div class="desc">Create & manage</div></div>
-    <div class="card"><div class="icon">👥</div><div class="title">Team Tournament</div><div class="desc">Draw & knockout</div></div>
-    <div class="card"><div class="icon">⚔️</div><div class="title">PvP Match</div><div class="desc">Result & ranking</div></div>
+    <div class="card" onclick="go('single')">
+      <div class="icon">🎯</div>
+      <div class="title">Single Tournament</div>
+      <div class="desc">Create & manage single tournaments</div>
+    </div>
+
+    <div class="card" onclick="go('team')">
+      <div class="icon">👥</div>
+      <div class="title">Team Tournament</div>
+      <div class="desc">Team draw & knockout system</div>
+    </div>
+
+    <div class="card" onclick="go('pvp')">
+      <div class="icon">⚔️</div>
+      <div class="title">PvP Match</div>
+      <div class="desc">Player vs Player results</div>
+    </div>
   </div>
 
   <!-- CHAMPION -->
-  <div class="section-title">👑 Champion</div>
+  <div class="section-title">👑 Champion System</div>
   <div class="grid">
-    <div class="card"><div class="icon">👤</div><div class="title">Champion Profile</div><div class="desc">Details & stats</div></div>
-    <div class="card"><div class="icon">📄</div><div class="title">Certificate PDF</div><div class="desc">Auto generate</div></div>
-    <div class="card"><div class="icon">📜</div><div class="title">History</div><div class="desc">Past champions</div></div>
+    <div class="card" onclick="go('champion-profile')">
+      <div class="icon">👤</div>
+      <div class="title">Champion Profile</div>
+      <div class="desc">View champion details</div>
+    </div>
+
+    <div class="card" onclick="go('certificate')">
+      <div class="icon">📄</div>
+      <div class="title">Certificate PDF</div>
+      <div class="desc">Auto generate champion certificate</div>
+    </div>
+
+    <div class="card" onclick="go('history')">
+      <div class="icon">📜</div>
+      <div class="title">Champion History</div>
+      <div class="desc">All past champions</div>
+    </div>
   </div>
 
   <!-- SYSTEM -->
-  <div class="section-title">⚙️ System</div>
+  <div class="section-title">⚙️ System & Admin</div>
   <div class="grid">
-    <div class="card"><div class="icon">📊</div><div class="title">Ranking</div><div class="desc">Auto update</div></div>
-    <div class="card"><div class="icon">📝</div><div class="title">Activity Log</div><div class="desc">Admin actions</div></div>
-    <div class="card"><div class="icon">🛡️</div><div class="title">Admin Roles</div><div class="desc">Super / Mod</div></div>
+    <div class="card" onclick="go('ranking')">
+      <div class="icon">📊</div>
+      <div class="title">Player Ranking</div>
+      <div class="desc">Auto updated leaderboard</div>
+    </div>
+
+    <div class="card" onclick="go('activity')">
+      <div class="icon">📝</div>
+      <div class="title">Activity Log</div>
+      <div class="desc">Admin actions & logs</div>
+    </div>
+
+    <div class="card" onclick="go('roles')">
+      <div class="icon">🛡️</div>
+      <div class="title">Admin Roles</div>
+      <div class="desc">Super / Moderator control</div>
+    </div>
   </div>
 
   <!-- LOGOUT -->
-  <div class="logout">🚪 Logout</div>
+  <div class="logout" onclick="logout()">🚪 Logout</div>
 
 </div>
 
+<script>
+function go(page){
+  // 🔗 তুমি পরে এখানে routing বসাবে
+  alert("Go to: " + page);
+}
+
+function logout(){
+  // 🔐 এখানে Firebase auth.signOut() বসবে
+  alert("Logged out");
+  // location.href = "login.html";
+}
+</script>
+
 </body>
-</html>
+      </html>
