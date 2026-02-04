@@ -1,161 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Leaderboard | AFN's Elite Strikers</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaderboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:linear-gradient(135deg,#050b18,#0b1d3a);
+  background:radial-gradient(circle at top,#0b1b33,#020816);
   color:#fff;
-}
-
-header{
-  text-align:center;
+  font-family:Arial;
+  margin:0;
   padding:20px;
 }
-header img{
-  width:90px;
-  filter:drop-shadow(0 0 15px rgba(255,215,0,.6));
+
+.logo{
+  text-align:center;
 }
+.logo img{
+  width:120px;
+  filter:drop-shadow(0 0 25px gold);
+}
+
 h1{
+  text-align:center;
   color:#ffd700;
-  margin:10px 0;
 }
 
-.container{
-  padding:15px;
-  max-width:600px;
-  margin:auto;
+.board{
+  margin-top:30px;
 }
 
-.card{
-  background:rgba(255,255,255,0.08);
-  border-radius:14px;
-  padding:15px;
-  margin-bottom:12px;
+.row{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  box-shadow:0 0 20px rgba(79,140,255,.15);
-  animation:fadeUp .4s ease;
-}
-
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(10px);}
-  to{opacity:1;transform:translateY(0);}
-}
-
-.rank{
-  font-size:22px;
-  font-weight:bold;
-  width:45px;
+  padding:16px;
+  margin:14px 0;
+  border-radius:20px;
+  background:linear-gradient(145deg,#0e1b2e,#081427);
+  box-shadow:0 0 22px rgba(79,140,255,.3);
+  animation:slide .6s ease;
 }
 
 .name{
-  flex:1;
-}
-.name a{
-  color:#00e5ff;
-  text-decoration:none;
+  color:#25eaff;
   font-weight:bold;
-}
-
-.rating{
-  font-size:16px;
-  margin-right:10px;
 }
 
 .badge{
-  padding:6px 12px;
+  background:#ffd700;
+  color:#000;
+  padding:6px 14px;
   border-radius:20px;
-  font-size:13px;
   font-weight:bold;
 }
 
-.gold{background:#ffd700;color:#000;}
-.silver{background:#c0c0c0;color:#000;}
-.bronze{background:#cd7f32;color:#000;}
-
-footer{
-  text-align:center;
-  font-size:12px;
-  opacity:.7;
-  padding:20px 0;
+@keyframes slide{
+  from{opacity:0; transform:translateY(30px)}
+  to{opacity:1; transform:translateY(0)}
 }
 </style>
 </head>
 
 <body>
 
-<header>
+<div class="logo">
   <img src="logo.png">
-  <h1>Leaderboard</h1>
-  <p>AFN's Elite Strikers</p>
-</header>
+</div>
 
-<div class="container" id="leaderboard"></div>
+<h1>Leaderboard</h1>
 
-<footer>
-© 2026 AFN's Elite Strikers
-</footer>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<div class="board" id="leaderboard"></div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub",
-  storageBucket: "afnsclub.firebasestorage.app",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
 const board = document.getElementById("leaderboard");
 
-// 🔥 LIVE LEADERBOARD
-db.collection("players")
-  .orderBy("points","desc")
-  .onSnapshot(snapshot=>{
-    board.innerHTML="";
+function renderLeaderboard(){
+  let players = JSON.parse(localStorage.getItem("players")) || [];
 
-    snapshot.docs.forEach((doc,index)=>{
-      const p = doc.data();
+  players.sort((a,b)=>b.points-a.points);
+  board.innerHTML="";
 
-      let badgeClass="bronze", badgeText="Bronze";
-      if(p.points >= 1500){
-        badgeClass="gold"; badgeText="Gold";
-      }
-      else if(p.points >= 1200){
-        badgeClass="silver"; badgeText="Silver";
-      }
-
-      const div=document.createElement("div");
-      div.className="card";
-      div.innerHTML=`
-        <div class="rank">#${index+1}</div>
-        <div class="name">
-          <a href="public-profile.html?id=${doc.id}">
-            ${p.name}
-          </a>
-        </div>
-        <div class="rating">${p.points}</div>
-        <div class="badge ${badgeClass}">
-          ${badgeText}
-        </div>
-      `;
-      board.appendChild(div);
-    });
+  players.forEach((p,i)=>{
+    const div = document.createElement("div");
+    div.className="row";
+    div.innerHTML=`
+      <span>#${i+1}</span>
+      <span class="name">${p.name}</span>
+      <span>${p.points}/100</span>
+      <span class="badge">Gold</span>
+    `;
+    board.appendChild(div);
   });
+}
+
+renderLeaderboard();
+setInterval(renderLeaderboard,2000); // 🔥 LIVE AUTO UPDATE
 </script>
 
 </body>
