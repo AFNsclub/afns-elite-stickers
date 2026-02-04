@@ -1,60 +1,20 @@
-/* ---------- DEMO TOURNAMENT DATA ---------- */
-/* পরে চাইলে এটা Firebase / Admin panel থেকে আসবে */
+/* ---------- CURRENT CHAMPION DATA ---------- */
+/* পরে Admin panel / Firebase থেকে update করা যাবে */
 
-const tournaments = [
-  {
-    id:"t1",
-    name:"Single Tournament – March",
-    champion:"Player A"
-  },
-  {
-    id:"t2",
-    name:"Team Knockout – April",
-    champion:"Team Red"
-  }
-];
+const currentChampion = {
+  name: "Team Black",
+  type: "Team Tournament",   // Single Tournament / Team Tournament
+  tournament: "Knockout Championship",
+  date: "2025-06-01"
+};
 
-/* ---------- ELEMENTS ---------- */
-const tournamentSelect=document.getElementById("tournamentSelect");
-const championCard=document.getElementById("championCard");
-const championName=document.getElementById("championName");
-const tournamentName=document.getElementById("tournamentName");
+/* ---------- LOAD UI ---------- */
+document.getElementById("championName").innerText = currentChampion.name;
+document.getElementById("championType").innerText = currentChampion.type;
+document.getElementById("tournamentName").innerText = currentChampion.tournament;
+document.getElementById("championDate").innerText = currentChampion.date;
 
-/* ---------- LOAD TOURNAMENTS ---------- */
-tournaments.forEach(t=>{
-  const opt=document.createElement("option");
-  opt.value=t.id;
-  opt.textContent=t.name;
-  tournamentSelect.appendChild(opt);
-});
-
-/* ---------- CONFETTI ---------- */
-function celebrate(){
-  for(let i=0;i<80;i++){
-    const c=document.createElement("div");
-    c.className="confetti";
-    c.style.left=Math.random()*100+"vw";
-    c.style.background=`hsl(${Math.random()*360},100%,50%)`;
-    c.style.animationDuration=(2+Math.random()*3)+"s";
-    document.body.appendChild(c);
-    setTimeout(()=>c.remove(),5000);
-  }
-}
-
-/* ---------- LOAD CHAMPION ---------- */
-function loadChampion(){
-  const id=tournamentSelect.value;
-  if(!id){
-    championCard.style.display="none";
-    return;
-  }
-
-  const t=tournaments.find(x=>x.id===id);
-  if(!t) return;
-
-  championName.textContent=t.champion;
-  tournamentName.textContent=t.name;
-  championCard.style.display="block";
-
-  celebrate();
-               }
+document.getElementById("championBadge").innerText =
+  currentChampion.type === "Team Tournament"
+  ? "👥 TEAM CHAMPION"
+  : "🎮 SINGLE CHAMPION";
