@@ -84,6 +84,11 @@
       color:#fff;
       font-size:16px;
       font-weight:bold;
+      cursor:pointer;
+    }
+    .logout{
+      background:#ff4f4f;
+      margin-top:10px;
     }
   </style>
 </head>
@@ -93,52 +98,29 @@
 
   <!-- PROFILE CARD -->
   <div class="card center">
-
-    <!-- MOTIVATION (TOP) -->
     <div id="motivationText" class="motivation">Loading...</div>
-
-    <!-- AVATAR -->
     <div id="avatar" class="avatar">?</div>
-
-    <!-- PLAYER NAME -->
     <h2 id="playerName">Player</h2>
 
-    <!-- RANK -->
     <div style="margin:8px 0;">
       <div style="font-size:13px;opacity:.7;">Current Rank</div>
-      <div id="rankText" style="font-size:22px;font-weight:bold;">
-        Loading...
-      </div>
+      <div id="rankText" style="font-size:22px;font-weight:bold;">Loading...</div>
     </div>
 
-    <!-- INFO -->
     <div class="info">📞 <span id="phoneText"></span></div>
     <div class="info">✉️ <span id="emailText"></span></div>
     <div class="info">🎮 Game ID: <span id="gameIdText"></span></div>
     <div class="info">📱 Device: <span id="deviceText"></span></div>
-    <div class="info">
-      🔗 <a id="fbLink" target="_blank">Facebook Profile</a>
+    <div class="info">🔗 <a id="fbLink" target="_blank">Facebook Profile</a></div>
+
+    <div class="stats">
+      <div class="stat">Wins <span id="wins">0</span></div>
+      <div class="stat">Losses <span id="losses">0</span></div>
+      <div class="stat">Goals <span id="goals">0</span></div>
+      <div class="stat">Goal Diff <span id="gd">0</span></div>
     </div>
 
-    <!-- STATS -->
-    <div class="stats">
-      <div class="stat">
-        Wins
-        <span id="wins">0</span>
-      </div>
-      <div class="stat">
-        Losses
-        <span id="losses">0</span>
-      </div>
-      <div class="stat">
-        Goals
-        <span id="goals">0</span>
-      </div>
-      <div class="stat">
-        Goal Diff
-        <span id="gd">0</span>
-      </div>
-    </div>
+    <button class="logout" onclick="logout()">Logout</button>
   </div>
 
   <!-- EDIT CARD -->
@@ -154,8 +136,40 @@
 
     <button onclick="saveProfile()">Save Changes</button>
   </div>
-
 </div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+    authDomain: "afnsclub.firebaseapp.com",
+    projectId: "afnsclub",
+    storageBucket: "afnsclub.firebasestorage.app",
+    messagingSenderId: "1088089213558",
+    appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
+  // 🔒 AUTH GUARD
+  auth.onAuthStateChanged(user=>{
+    if(!user){
+      window.location.replace("login.html");
+    }else{
+      window.__UID__ = user.uid;
+    }
+  });
+
+  function logout(){
+    auth.signOut().then(()=>{
+      window.location.replace("login.html");
+    });
+  }
+</script>
 
 <script src="player.js"></script>
 </body>
