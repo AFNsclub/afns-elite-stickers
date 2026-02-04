@@ -1,62 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Champion</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:linear-gradient(180deg,#050b1e,#020617);
-  color:#fff;
-}
-.container{
-  max-width:420px;
-  margin:auto;
-  padding:20px;
-  text-align:center;
-}
-.card{
-  background:rgba(255,255,255,.06);
-  border-radius:18px;
-  padding:20px;
-}
-.champion{
-  font-size:28px;
-  font-weight:bold;
-  margin:20px 0;
-  color:#ffd700;
-}
-button{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:16px;
-  background:#4f8cff;
-  color:#fff;
-  font-size:16px;
-  font-weight:bold;
-  margin-top:14px;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Champion Certificate</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      background:#0b1220;
+      color:white;
+      font-family: Arial, sans-serif;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+    }
+    .box {
+      background:#111a2e;
+      padding:30px;
+      border-radius:12px;
+      text-align:center;
+      width:320px;
+    }
+    button {
+      margin-top:20px;
+      padding:12px 18px;
+      background:#4f8cff;
+      border:none;
+      border-radius:8px;
+      color:white;
+      font-size:16px;
+      cursor:pointer;
+    }
+    button:hover {
+      background:#3b74e0;
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="container">
-  <div class="card">
-    <h2>🏆 Tournament Champion</h2>
-    <div id="championName" class="champion">Loading...</div>
-
-    <button onclick="downloadPDF()">⬇️ Download Champion Certificate</button>
-  </div>
+<div class="box">
+  <h2>🏆 Champion Certificate</h2>
+  <p>Auto PDF Generate</p>
+  <button onclick="generatePDF()">Download PDF</button>
 </div>
 
-<!-- jsPDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ===============================
+   FINAL CONFIRM CONFIG (READY)
+================================ */
+const LOGO_IMAGE_URL = "https://i.imgur.com/ssP9KMa.png";
+const SIGNATURE_IMAGE_URL = "https://i.imgur.com/lQqjvC6.png";
 
-<script type="module" src="champion.js"></script>
+/* ===============================
+   SAMPLE CHAMPION DATA
+   (Firebase থেকে পরে auto আসবে)
+================================ */
+const CHAMPION_TEAM = "AFNS WARRIORS";
+const TOURNAMENT_NAME = "AFNS Knockout Tournament";
+const DATE_TEXT = new Date().toDateString();
+
+/* ===============================
+   PDF GENERATOR
+================================ */
+async function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("landscape", "px", "a4");
+
+  const loadImage = (url) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.src = url;
+    });
+  };
+
+  const logo = await loadImage(LOGO_IMAGE_URL);
+  const sign = await loadImage(SIGNATURE_IMAGE_URL);
+
+  // Background
+  pdf.setFillColor(15, 20, 40);
+  pdf.rect(0, 0, 842, 595, "F");
+
+  // Logo
+  pdf.addImage(logo, "PNG", 360, 30, 120, 120);
+
+  // Title
+  pdf.setTextColor(255, 215, 0);
+  pdf.setFontSize(42);
+  pdf.text("CHAMPION", 421, 200, { align: "center" });
+
+  // Tournament
+  pdf.setFontSize(22);
+  pdf.setTextColor(255, 255, 255);
+  pdf.text(TOURNAMENT_NAME, 421, 240, { align: "center" });
+
+  // Team name
+  pdf.setFontSize(30);
+  pdf.setTextColor(79, 140, 255);
+  pdf.text(CHAMPION_TEAM, 421, 290, { align: "center" });
+
+  // Date
+  pdf.setFontSize(16);
+  pdf.setTextColor(200, 200, 200);
+  pdf.text(DATE_TEXT, 421, 330, { align: "center" });
+
+  // Signature
+  pdf.addImage(sign, "PNG", 620, 380, 120, 60);
+  pdf.setFontSize(14);
+  pdf.text("Organizer Signature", 680, 460, { align: "center" });
+
+  pdf.save("Champion_Certificate.pdf");
+}
+</script>
+
 </body>
 </html>
