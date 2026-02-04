@@ -34,24 +34,25 @@ function login(){
     email.value.trim(),
     password.value
   )
-  .then(() => {
+  .then(res=>{
+    // 🔥 login success → player.html
     window.location.href = "player.html";
   })
-  .catch(error => {
-    let msg = "Login failed";
+  .catch(error=>{
+    let msg="Login failed";
 
     if(
-      error.code === "auth/invalid-login-credentials" ||
-      error.code === "auth/wrong-password" ||
-      error.code === "auth/user-not-found"
+      error.code==="auth/invalid-login-credentials" ||
+      error.code==="auth/wrong-password" ||
+      error.code==="auth/user-not-found"
     ){
-      msg = "❌ আপনার Gmail অথবা Password ভুল";
+      msg="❌ আপনার Gmail অথবা Password ভুল";
     }
-    else if(error.code === "auth/invalid-email"){
-      msg = "❌ Gmail ঠিক নাই";
+    else if(error.code==="auth/invalid-email"){
+      msg="❌ Gmail ঠিক নাই";
     }
-    else if(error.code === "auth/too-many-requests"){
-      msg = "⏳ অনেকবার ভুল চেষ্টা করা হয়েছে, একটু পরে চেষ্টা করুন";
+    else if(error.code==="auth/too-many-requests"){
+      msg="⏳ অনেকবার ভুল চেষ্টা করা হয়েছে, পরে আবার চেষ্টা করুন";
     }
 
     showError(msg);
@@ -67,10 +68,10 @@ function forgotPassword(){
   }
 
   auth.sendPasswordResetEmail(email.value.trim())
-    .then(() => {
+    .then(()=>{
       showError("✅ Password reset link Gmail এ পাঠানো হয়েছে");
     })
-    .catch(() => {
+    .catch(()=>{
       showError("❌ Gmail পাওয়া যায়নি");
     });
 }
