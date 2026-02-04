@@ -1,102 +1,134 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Leaderboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leaderboard | AFN's Elite Strikers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
-  background:radial-gradient(circle at top,#0b1b33,#020816);
-  color:#fff;
-  font-family:Arial;
   margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#050b18,#0b1d3a);
+  color:#fff;
+}
+header{
+  text-align:center;
   padding:20px;
 }
-
-.logo{
-  text-align:center;
+header img{
+  width:90px;
 }
-.logo img{
-  width:120px;
-  filter:drop-shadow(0 0 25px gold);
-}
-
 h1{
-  text-align:center;
   color:#ffd700;
+  margin:10px 0;
 }
-
-.board{
-  margin-top:30px;
+.container{
+  padding:15px;
+  max-width:600px;
+  margin:auto;
 }
-
-.row{
+.card{
+  background:rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:15px;
+  margin-bottom:12px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:16px;
-  margin:14px 0;
-  border-radius:20px;
-  background:linear-gradient(145deg,#0e1b2e,#081427);
-  box-shadow:0 0 22px rgba(79,140,255,.3);
-  animation:slide .6s ease;
+  animation:fadeIn .4s ease;
 }
-
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
+.rank{
+  font-size:22px;
+  font-weight:bold;
+  width:40px;
+}
 .name{
-  color:#25eaff;
   font-weight:bold;
+  color:#00e5ff;
 }
-
+.rating{
+  font-size:16px;
+}
 .badge{
-  background:#ffd700;
-  color:#000;
-  padding:6px 14px;
+  padding:6px 10px;
   border-radius:20px;
+  font-size:13px;
   font-weight:bold;
 }
+.gold{background:#ffd700;color:#000;}
+.silver{background:#c0c0c0;color:#000;}
+.bronze{background:#cd7f32;color:#000;}
 
-@keyframes slide{
-  from{opacity:0; transform:translateY(30px)}
-  to{opacity:1; transform:translateY(0)}
+footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.7;
+  padding:20px 0;
 }
 </style>
 </head>
 
 <body>
 
-<div class="logo">
+<header>
   <img src="logo.png">
-</div>
+  <h1>Leaderboard</h1>
+  <p>AFN's Elite Strikers</p>
+</header>
 
-<h1>Leaderboard</h1>
+<div class="container" id="leaderboard"></div>
 
-<div class="board" id="leaderboard"></div>
+<footer>
+© 2026 AFN's Elite Strikers
+</footer>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 const board = document.getElementById("leaderboard");
 
-function renderLeaderboard(){
-  let players = JSON.parse(localStorage.getItem("players")) || [];
+// 🔥 Firestore → leaderboard
+db.collection("players")
+  .orderBy("rating","desc")
+  .onSnapshot(snapshot=>{
+    board.innerHTML="";
+    let rank=1;
 
-  players.sort((a,b)=>b.points-a.points);
-  board.innerHTML="";
+    snapshot.forEach(doc=>{
+      const p = doc.data();
 
-  players.forEach((p,i)=>{
-    const div = document.createElement("div");
-    div.className="row";
-    div.innerHTML=`
-      <span>#${i+1}</span>
-      <span class="name">${p.name}</span>
-      <span>${p.points}/100</span>
-      <span class="badge">Gold</span>
-    `;
-    board.appendChild(div);
+      let badgeClass="bronze", badgeText="Bronze";
+      if(p.rating>=80){badgeClass="gold";badgeText="Gold";}
+      else if(p.rating>=60){badgeClass="silver";badgeText="Silver";}
+
+      const div=document.createElement("div");
+      div.className="card";
+      div.innerHTML=`
+        <div class="rank">#${rank}</div>
+        <div class="name">${p.name}</div>
+        <div class="rating">${p.rating || 0}</div>
+        <div class="badge ${badgeClass}">${badgeText}</div>
+      `;
+      board.appendChild(div);
+      rank++;
+    });
   });
-}
-
-renderLeaderboard();
-setInterval(renderLeaderboard,2000); // 🔥 LIVE AUTO UPDATE
 </script>
 
 </body>
