@@ -1,4 +1,15 @@
-const uid = new URLSearchParams(window.location.search).get("uid") || "demo";
+let uid = null;
+
+// Firebase auth থেকে UID নেবে
+const waitForUID = setInterval(()=>{
+  if(window.__UID__){
+    uid = window.__UID__;
+    clearInterval(waitForUID);
+    initPlayer();
+  }
+},50);
+
+function initPlayer(){
 
 /* ---------- MOTIVATION ---------- */
 const MOTIVATIONS = [
@@ -24,7 +35,6 @@ function getTodayMotivation(uid){
   return MOTIVATIONS[Math.abs(hash)%MOTIVATIONS.length];
 }
 
-/* ---------- LOAD PLAYER ---------- */
 const key = "player_"+uid;
 const data = JSON.parse(localStorage.getItem(key)) || {
   name:"Player",
@@ -39,7 +49,6 @@ const data = JSON.parse(localStorage.getItem(key)) || {
   gd:0
 };
 
-/* ---------- UI LOAD ---------- */
 motivationText.textContent = getTodayMotivation(uid);
 playerName.textContent = data.name;
 avatar.textContent = data.name.charAt(0).toUpperCase();
@@ -55,7 +64,6 @@ losses.textContent = data.losses;
 goals.textContent = data.goals;
 gd.textContent = data.gd;
 
-/* ---------- INPUT VALUES ---------- */
 nameInput.value = data.name;
 phoneInput.value = data.phone;
 emailInput.value = data.email;
@@ -63,8 +71,7 @@ gameIdInput.value = data.gameId;
 deviceInput.value = data.device;
 fbInput.value = data.fb;
 
-/* ---------- SAVE ---------- */
-function saveProfile(){
+window.saveProfile = function(){
   data.name = nameInput.value || "Player";
   data.phone = phoneInput.value;
   data.email = emailInput.value;
@@ -75,13 +82,11 @@ function saveProfile(){
   localStorage.setItem(key, JSON.stringify(data));
   alert("Profile Saved ✅");
   location.reload();
-}
+};
 
-/* ---------- RANKING SYSTEM ---------- */
+/* ---------- RANK ---------- */
 function calculateRank(){
   let players = [];
-
-  // Load all players from localStorage
   for(let i=0;i<localStorage.length;i++){
     const k = localStorage.key(i);
     if(k.startsWith("player_")){
@@ -89,24 +94,22 @@ function calculateRank(){
     }
   }
 
-  // Sort by ranking rule
   players.sort((a,b)=>{
     if(b.wins !== a.wins) return b.wins - a.wins;
     if(b.gd !== a.gd) return b.gd - a.gd;
     return b.goals - a.goals;
   });
 
-  // Find rank
   const index = players.findIndex(p => p.name === data.name);
   const rank = index + 1;
 
-  // Trophy
   let trophy = "";
-  if(rank === 1) trophy = " 🥇";
-  else if(rank === 2) trophy = " 🥈";
-  else if(rank === 3) trophy = " 🥉";
+  if(rank === 1) trophy=" 🥇";
+  else if(rank === 2) trophy=" 🥈";
+  else if(rank === 3) trophy=" 🥉";
 
   rankText.textContent = "#" + rank + trophy;
 }
 
 calculateRank();
+}
