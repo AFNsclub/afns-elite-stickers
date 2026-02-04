@@ -1,187 +1,215 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>AFNS Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+:root{
+  --bg:#050b1e;
+  --panel:#0b142e;
+  --card:rgba(15,25,60,.75);
+  --accent:#4f8cff;
+  --accent-glow:rgba(79,140,255,.55);
+  --text:#ffffff;
+  --muted:#a8b2d6;
+  --danger:#ff4d4d;
+}
+
+*{box-sizing:border-box}
+
 body{
   margin:0;
-  background:radial-gradient(circle at top,#0b1630,#020617);
-  color:#fff;
-  font-family:Arial;
+  font-family:Arial,Helvetica,sans-serif;
+  background:
+    radial-gradient(1200px 600px at top,#0b1a4a,transparent),
+    linear-gradient(180deg,#050b1e,#020617);
+  color:var(--text);
 }
-.wrapper{
-  max-width:1100px;
-  margin:auto;
-  padding:20px;
+
+/* ===== HEADER ===== */
+header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:16px 18px;
+  background:rgba(8,14,40,.9);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(79,140,255,.25);
 }
-h1{
-  text-align:center;
-  margin-bottom:10px;
+
+header img{
+  width:40px;
+  height:40px;
 }
-.section{
-  margin-top:30px;
-}
-.section h2{
+
+header span{
   font-size:20px;
-  margin-bottom:14px;
-  color:#9ab7ff;
+  font-weight:bold;
+  letter-spacing:.5px;
 }
+
+/* ===== LAYOUT ===== */
+.container{
+  padding:18px;
+  max-width:1200px;
+  margin:auto;
+}
+
+/* ===== STATS ===== */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:14px;
+  margin-bottom:26px;
+}
+
+.stat{
+  background:var(--panel);
+  border-radius:16px;
+  padding:16px;
+  text-align:center;
+  box-shadow:0 0 0 1px rgba(79,140,255,.15),
+             0 10px 30px rgba(0,0,0,.4);
+}
+
+.stat h2{
+  margin:0;
+  font-size:26px;
+  color:var(--accent);
+}
+.stat p{
+  margin-top:6px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+/* ===== SECTIONS ===== */
+.section-title{
+  font-size:18px;
+  font-weight:bold;
+  margin:28px 0 12px;
+  letter-spacing:.4px;
+}
+
+/* ===== CARDS ===== */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
   gap:16px;
 }
+
 .card{
-  background:linear-gradient(180deg,#111e30,#0b1622);
-  border-radius:16px;
+  background:var(--card);
+  border-radius:18px;
   padding:18px;
   cursor:pointer;
-  border:1px solid #1c2d4a;
+  position:relative;
+  overflow:hidden;
+  backdrop-filter:blur(12px);
+  box-shadow:
+    inset 0 0 0 1px rgba(79,140,255,.18),
+    0 12px 35px rgba(0,0,0,.45);
   transition:.25s;
 }
+
+.card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg,transparent,var(--accent-glow),transparent);
+  opacity:0;
+  transition:.3s;
+}
+
+.card:hover::before{opacity:.35}
 .card:hover{
-  transform:translateY(-4px);
-  border-color:#4f8cff;
-  box-shadow:0 10px 30px rgba(79,140,255,.25);
+  transform:translateY(-5px);
+  box-shadow:
+    inset 0 0 0 1px rgba(79,140,255,.35),
+    0 18px 45px rgba(0,0,0,.6);
 }
-.card h3{
-  margin:0;
-  font-size:18px;
+
+.icon{
+  font-size:34px;
+  margin-bottom:10px;
 }
-.card p{
-  margin:8px 0 0;
-  font-size:13px;
-  color:#aaa;
-}
-.logout{
-  margin-top:40px;
-  width:100%;
-  padding:16px;
-  font-size:17px;
-  background:#ff4d4d;
-  border:none;
-  border-radius:14px;
-  color:#fff;
+
+.title{
+  font-size:16px;
   font-weight:bold;
 }
-.footer{
-  margin-top:20px;
-  text-align:center;
-  font-size:12px;
-  color:#777;
+
+.desc{
+  font-size:13px;
+  margin-top:6px;
+  color:var(--muted);
 }
+
+/* ===== LOGOUT ===== */
+.logout{
+  margin:34px auto 10px;
+  max-width:320px;
+  text-align:center;
+  padding:14px;
+  border-radius:16px;
+  background:linear-gradient(135deg,#ff4d4d,#ff1f1f);
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 10px 30px rgba(255,77,77,.4);
+}
+.logout:hover{opacity:.9}
 </style>
 </head>
 
 <body>
 
-<div class="wrapper">
-<h1>AFNS Admin Dashboard</h1>
+<!-- HEADER -->
+<header>
+  <!-- 🔵 তোমার LOGO -->
+  <img src="https://i.imgur.com/ssP9KMa.png" alt="Logo">
+  <span>AFNS Admin Panel</span>
+</header>
 
-<!-- 🎮 Tournament -->
-<div class="section">
-<h2>🏆 Tournament Control</h2>
-<div class="grid">
-  <div class="card" onclick="go('single-tournament.html')">
-    <h3>Single Tournament</h3>
-    <p>Create, draw & manage bracket</p>
-  </div>
-  <div class="card" onclick="go('team-tournament.html')">
-    <h3>Team Tournament</h3>
-    <p>Team knockout system</p>
-  </div>
-  <div class="card" onclick="go('tournament-bracket.html')">
-    <h3>Bracket Viewer</h3>
-    <p>Live tournament bracket</p>
-  </div>
-</div>
-</div>
+<div class="container">
 
-<!-- ⚔️ Matches -->
-<div class="section">
-<h2>⚔️ Match & Result Control</h2>
-<div class="grid">
-  <div class="card" onclick="go('pvp-result.html')">
-    <h3>PvP Result Entry</h3>
-    <p>Direct player vs player match</p>
+  <!-- LIVE STATS -->
+  <div class="stats">
+    <div class="stat"><h2>12</h2><p>Tournaments</p></div>
+    <div class="stat"><h2>58</h2><p>Players</p></div>
+    <div class="stat"><h2>9</h2><p>Champions</p></div>
+    <div class="stat"><h2>OK</h2><p>System</p></div>
   </div>
-  <div class="card" onclick="go('admin-final-result.html')">
-    <h3>Final Match Result</h3>
-    <p>Declare champion</p>
-  </div>
-</div>
-</div>
 
-<!-- 👑 Champion -->
-<div class="section">
-<h2>👑 Champion System</h2>
-<div class="grid">
-  <div class="card" onclick="go('champion-profile.html')">
-    <h3>Champion Profile</h3>
-    <p>View champion details</p>
+  <!-- TOURNAMENT -->
+  <div class="section-title">🏆 Tournament</div>
+  <div class="grid">
+    <div class="card"><div class="icon">🎯</div><div class="title">Single Tournament</div><div class="desc">Create & manage</div></div>
+    <div class="card"><div class="icon">👥</div><div class="title">Team Tournament</div><div class="desc">Draw & knockout</div></div>
+    <div class="card"><div class="icon">⚔️</div><div class="title">PvP Match</div><div class="desc">Result & ranking</div></div>
   </div>
-  <div class="card" onclick="go('champion-history.html')">
-    <h3>Champion History</h3>
-    <p>All past champions</p>
+
+  <!-- CHAMPION -->
+  <div class="section-title">👑 Champion</div>
+  <div class="grid">
+    <div class="card"><div class="icon">👤</div><div class="title">Champion Profile</div><div class="desc">Details & stats</div></div>
+    <div class="card"><div class="icon">📄</div><div class="title">Certificate PDF</div><div class="desc">Auto generate</div></div>
+    <div class="card"><div class="icon">📜</div><div class="title">History</div><div class="desc">Past champions</div></div>
   </div>
-  <div class="card" onclick="go('certificate.html')">
-    <h3>Certificate Generator</h3>
-    <p>Champion PDF certificate</p>
+
+  <!-- SYSTEM -->
+  <div class="section-title">⚙️ System</div>
+  <div class="grid">
+    <div class="card"><div class="icon">📊</div><div class="title">Ranking</div><div class="desc">Auto update</div></div>
+    <div class="card"><div class="icon">📝</div><div class="title">Activity Log</div><div class="desc">Admin actions</div></div>
+    <div class="card"><div class="icon">🛡️</div><div class="title">Admin Roles</div><div class="desc">Super / Mod</div></div>
   </div>
-</div>
+
+  <!-- LOGOUT -->
+  <div class="logout">🚪 Logout</div>
+
 </div>
 
-<!-- 👤 Player -->
-<div class="section">
-<h2>👤 Player System</h2>
-<div class="grid">
-  <div class="card" onclick="go('ranking.html')">
-    <h3>Player Rankings</h3>
-    <p>Auto updated leaderboard</p>
-  </div>
-  <div class="card" onclick="go('player-profile.html')">
-    <h3>Player Profiles</h3>
-    <p>Individual player stats</p>
-  </div>
-</div>
-</div>
-
-<button class="logout" onclick="logoutAdmin()">Logout</button>
-
-<div class="footer">
-AFNS Premium Admin System
-</div>
-</div>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub",
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-
-const ADMIN_EMAILS = ["sisaif167@gmail.com"];
-
-auth.onAuthStateChanged(user=>{
-  if(!user || !ADMIN_EMAILS.includes(user.email)){
-    location.href="admin-login.html";
-  }
-});
-
-function go(page){
-  location.href = page;
-}
-</script>
-
-<script src="admin-auth.js"></script>
 </body>
 </html>
