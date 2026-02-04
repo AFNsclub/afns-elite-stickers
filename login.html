@@ -118,9 +118,15 @@
 
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
+
+  // ✅ যদি আগেই login করা থাকে → সরাসরি player page
+  auth.onAuthStateChanged(user => {
+    if(user){
+      window.location.replace("player.html");
+    }
+  });
 </script>
 
 <script src="login.js"></script>
-
 </body>
 </html>
