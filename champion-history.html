@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Champion History</title>
@@ -8,9 +8,9 @@
 <style>
 body{
   margin:0;
-  font-family:Arial,sans-serif;
+  font-family:Arial;
   background:linear-gradient(180deg,#050b1e,#020617);
-  color:#fff;
+  color:white;
 }
 .container{
   max-width:420px;
@@ -19,26 +19,27 @@ body{
 }
 h2{
   text-align:center;
-  margin-bottom:16px;
+  margin-bottom:14px;
 }
 .card{
   background:rgba(255,255,255,.06);
-  border-radius:18px;
-  padding:16px;
+  border-radius:16px;
+  padding:14px;
   margin-bottom:12px;
-  box-shadow:0 8px 20px rgba(0,0,0,.4);
 }
-.trophy{
-  font-size:32px;
-}
-.name{
+.champion{
   font-size:18px;
   font-weight:bold;
-  margin-top:6px;
+  color:#ffd700;
 }
-.small{
+.players{
   font-size:13px;
-  opacity:.75;
+  opacity:.85;
+}
+.date{
+  font-size:12px;
+  opacity:.6;
+  margin-top:6px;
 }
 </style>
 </head>
@@ -46,12 +47,12 @@ h2{
 <body>
 <div class="container">
 
-  <h2>🏆 Champion History</h2>
+<h2>🏆 Champion History</h2>
 
-  <div id="historyList"></div>
+<div id="list"></div>
 
 </div>
 
-<script src="champion-history.js"></script>
+<script type="module" src="champion-history.js"></script>
 </body>
 </html>
