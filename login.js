@@ -33,9 +33,11 @@ function login(){
   auth.signInWithEmailAndPassword(
     email.value.trim(),
     password.value
-  ).then(()=>{
+  )
+  .then(() => {
     window.location.href = "player.html";
-  }).catch(error=>{
+  })
+  .catch(error => {
     let msg = "Login failed";
 
     if(
@@ -65,10 +67,10 @@ function forgotPassword(){
   }
 
   auth.sendPasswordResetEmail(email.value.trim())
-  .then(()=>{
-    showError("✅ Password reset link Gmail এ পাঠানো হয়েছে");
-  })
-  .catch(()=>{
-    showError("❌ Gmail পাওয়া যায়নি");
-  });
+    .then(() => {
+      showError("✅ Password reset link Gmail এ পাঠানো হয়েছে");
+    })
+    .catch(() => {
+      showError("❌ Gmail পাওয়া যায়নি");
+    });
 }
