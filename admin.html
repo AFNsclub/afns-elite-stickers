@@ -7,10 +7,10 @@
 
 <style>
 :root{
-  /* 🎨 Theme based on logo.png (blue / dark premium) */
   --bg:#050b1e;
   --card:#0b1622;
   --accent:#4f8cff;
+  --accent-glow:0 0 12px rgba(79,140,255,.6);
   --text:#ffffff;
   --muted:rgba(255,255,255,.6);
 }
@@ -20,8 +20,16 @@
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:var(--bg);
+  background:
+    radial-gradient(circle at top,#0a1a4a 0%,#050b1e 60%);
   color:var(--text);
+  animation:fadeIn .6s ease;
+}
+
+/* ===== ANIMATION ===== */
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
 }
 
 /* ===== HEADER ===== */
@@ -30,7 +38,7 @@ body{
   align-items:center;
   justify-content:space-between;
   padding:14px 16px;
-  background:#070f2a;
+  background:linear-gradient(180deg,#070f2a,#050b1e);
   border-bottom:1px solid rgba(255,255,255,.06);
 }
 
@@ -42,6 +50,7 @@ body{
 
 .brand img{
   height:36px;
+  filter:drop-shadow(0 0 8px rgba(79,140,255,.5));
 }
 
 .brand span{
@@ -53,41 +62,70 @@ body{
   background:none;
   border:1px solid var(--accent);
   color:var(--accent);
-  padding:6px 12px;
+  padding:6px 14px;
   border-radius:8px;
   font-size:14px;
   cursor:pointer;
+  transition:.2s;
 }
 
-/* ===== DASHBOARD ===== */
+.logout:hover{
+  background:var(--accent);
+  color:#fff;
+  box-shadow:var(--accent-glow);
+}
+
+/* ===== CONTENT ===== */
 .container{
   max-width:1100px;
   margin:auto;
-  padding:16px;
+  padding:18px;
 }
 
+/* ===== GRID ===== */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:14px;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:16px;
 }
 
 /* ===== CARD ===== */
 .card{
-  background:var(--card);
-  border-radius:16px;
-  padding:18px;
-  box-shadow:0 10px 25px rgba(0,0,0,.4);
-  transition:.2s;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.04),transparent),
+    var(--card);
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 12px 30px rgba(0,0,0,.5);
   cursor:pointer;
+  transition:.25s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+/* glow border */
+.card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:18px;
+  background:linear-gradient(120deg,transparent,rgba(79,140,255,.4),transparent);
+  opacity:0;
+  transition:.25s;
+}
+
+.card:hover::before{
+  opacity:1;
 }
 
 .card:hover{
-  transform:translateY(-4px);
+  transform:translateY(-6px) scale(1.02);
+  box-shadow:0 0 0 1px rgba(79,140,255,.4),0 0 25px rgba(79,140,255,.25);
 }
 
 .icon{
-  font-size:26px;
+  font-size:28px;
+  filter:drop-shadow(0 0 6px rgba(79,140,255,.6));
 }
 
 .title{
@@ -104,24 +142,29 @@ body{
 
 /* ===== STATS ===== */
 .stats{
-  margin-top:20px;
+  margin-top:22px;
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  gap:12px;
+  gap:14px;
 }
 
 .stat{
-  background:rgba(255,255,255,.05);
-  border-radius:14px;
-  padding:14px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.06),transparent),
+    rgba(255,255,255,.04);
+  border-radius:16px;
+  padding:16px;
   text-align:center;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
 }
 
 .stat span{
   display:block;
-  font-size:22px;
+  font-size:24px;
   font-weight:bold;
   margin-bottom:4px;
+  color:var(--accent);
+  text-shadow:0 0 10px rgba(79,140,255,.6);
 }
 
 /* ===== FOOTER ===== */
@@ -129,7 +172,7 @@ body{
   text-align:center;
   font-size:12px;
   opacity:.5;
-  margin:24px 0 10px;
+  margin:26px 0 12px;
 }
 </style>
 </head>
@@ -139,17 +182,16 @@ body{
 <!-- ===== HEADER ===== -->
 <div class="header">
   <div class="brand">
-    <!-- ✅ MAIN INDEX LOGO -->
+    <!-- MAIN LOGO -->
     <img src="logo.png" alt="Logo">
     <span>Admin Dashboard</span>
   </div>
   <button class="logout" onclick="logout()">Logout</button>
 </div>
 
-<!-- ===== CONTENT ===== -->
+<!-- ===== MAIN ===== -->
 <div class="container">
 
-  <!-- ACTION CARDS -->
   <div class="grid">
 
     <div class="card" onclick="go('tournament.html')">
@@ -173,19 +215,19 @@ body{
     <div class="card" onclick="go('champion.html')">
       <div class="icon">👑</div>
       <div class="title">Champion</div>
-      <div class="desc">Champion profile & PDF</div>
+      <div class="desc">Profile & certificate</div>
     </div>
 
     <div class="card" onclick="go('certificate.html')">
       <div class="icon">📄</div>
       <div class="title">Certificates</div>
-      <div class="desc">Generate & download PDF</div>
+      <div class="desc">Generate PDF</div>
     </div>
 
     <div class="card" onclick="go('activity.html')">
       <div class="icon">🧾</div>
       <div class="title">Activity Log</div>
-      <div class="desc">Admin system actions</div>
+      <div class="desc">System actions</div>
     </div>
 
   </div>
@@ -193,25 +235,21 @@ body{
   <!-- STATS -->
   <div class="stats">
     <div class="stat">
-      <span id="totalPlayers">0</span>
-      Players
+      <span id="players">0</span>Players
     </div>
     <div class="stat">
-      <span id="totalMatches">0</span>
-      Matches
+      <span id="matches">0</span>Matches
     </div>
     <div class="stat">
-      <span id="totalTournaments">0</span>
-      Tournaments
+      <span id="tournaments">0</span>Tournaments
     </div>
     <div class="stat">
-      <span id="systemStatus">OK</span>
-      System
+      <span>OK</span>System
     </div>
   </div>
 
   <div class="footer">
-    AFNS Club Admin • Secure System
+    AFNS Club • Premium Admin System|SI Shohan 
   </div>
 
 </div>
@@ -224,15 +262,15 @@ function go(page){
 function logout(){
   if(confirm("Logout from admin panel?")){
     firebase.auth().signOut().then(()=>{
-      window.location.href = "admin-login.html";
+      location.href="admin-login.html";
     });
   }
 }
 
-/* Dummy stats (later connect with DB) */
-document.getElementById("totalPlayers").innerText = localStorage.length;
-document.getElementById("totalMatches").innerText = 42;
-document.getElementById("totalTournaments").innerText = 7;
+/* demo stats */
+players.innerText = localStorage.length;
+matches.innerText = 42;
+tournaments.innerText = 7;
 </script>
 
 </body>
