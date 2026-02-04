@@ -7,18 +7,19 @@
 
 <style>
 body{
-  background:#020617;
-  color:#fff;
-  font-family:Arial;
+  margin:0;
+  height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  height:100vh;
+  background:#020617;
+  font-family:Arial;
+  color:#fff;
 }
-.box{
+.card{
   background:#0f172a;
-  padding:25px;
-  border-radius:12px;
+  padding:24px;
+  border-radius:14px;
   width:100%;
   max-width:360px;
 }
@@ -26,8 +27,8 @@ h2{text-align:center;}
 input{
   width:100%;
   padding:12px;
-  margin:10px 0;
-  border-radius:8px;
+  margin-bottom:12px;
+  border-radius:10px;
   border:none;
 }
 .pass-box{position:relative;}
@@ -36,38 +37,42 @@ input{
   right:12px;
   top:50%;
   transform:translateY(-50%);
-  cursor:pointer;
   font-size:13px;
   color:#38bdf8;
+  cursor:pointer;
 }
 button{
   width:100%;
   padding:12px;
-  background:#22c55e;
-  color:#000;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
+  background:#22c55e;
   font-size:16px;
   font-weight:bold;
+}
+.error{
+  text-align:center;
+  color:#ff6b6b;
+  margin-top:8px;
 }
 .forgot{
   text-align:center;
   margin-top:10px;
-  font-size:14px;
 }
 .forgot a{
   color:#38bdf8;
   text-decoration:none;
+  font-size:14px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="box">
+<div class="card">
   <h2>🔐 Admin Login</h2>
 
-  <input id="username" placeholder="Admin Username">
+  <input id="email" type="email" placeholder="Admin Email">
 
   <div class="pass-box">
     <input id="password" type="password" placeholder="Password">
@@ -79,7 +84,27 @@ button{
   <div class="forgot">
     <a href="#" onclick="forgotPassword()">Forgot Password?</a>
   </div>
+
+  <div id="error" class="error"></div>
 </div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+</script>
 
 <script src="admin-auth.js"></script>
 </body>
