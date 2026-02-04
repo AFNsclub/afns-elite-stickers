@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Knockout Bracket</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(180deg,#050b1e,#020617);
+  color:#fff;
+}
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:16px;
+}
+.card{
+  background:rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+}
+h2{text-align:center}
+select,button{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  margin-top:10px;
+}
+button{
+  background:#4f8cff;
+  color:white;
+  font-size:16px;
+}
+.match{
+  background:rgba(0,0,0,.35);
+  padding:10px;
+  border-radius:12px;
+  margin-top:10px;
+}
+.match select{
+  margin-top:6px;
+}
+.round{
+  font-size:15px;
+  font-weight:bold;
+  margin-bottom:6px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>🏆 Knockout Bracket</h2>
+
+<div class="card">
+  <select id="tournamentSelect" onchange="loadBracket()">
+    <option value="">Select Tournament</option>
+  </select>
+</div>
+
+<div id="bracket"></div>
+
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, addDoc
+} from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+window.db=db;
+window.collection=collection;
+window.getDocs=getDocs;
+window.addDoc=addDoc;
+</script>
+
+<script src="knockout.js"></script>
+</body>
+</html>
