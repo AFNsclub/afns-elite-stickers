@@ -8,7 +8,7 @@
 <style>
 body{
   margin:0;
-  font-family:Arial,sans-serif;
+  font-family:Arial;
   background:linear-gradient(180deg,#050b1e,#020617);
   color:#fff;
 }
@@ -17,10 +17,6 @@ body{
   margin:auto;
   padding:16px;
 }
-h2{
-  text-align:center;
-  margin-bottom:14px;
-}
 .card{
   background:rgba(255,255,255,.06);
   border-radius:20px;
@@ -28,56 +24,55 @@ h2{
   text-align:center;
   box-shadow:0 10px 25px rgba(0,0,0,.45);
 }
-.trophy{
-  font-size:60px;
-  margin-bottom:10px;
-}
-.name{
-  font-size:22px;
-  font-weight:bold;
-}
-.type{
-  font-size:14px;
-  opacity:.8;
-  margin-top:4px;
-}
-.info{
-  margin-top:12px;
-  font-size:14px;
-  opacity:.85;
-}
-.badge{
-  margin-top:16px;
-  display:inline-block;
-  padding:6px 14px;
-  border-radius:20px;
+.trophy{font-size:60px}
+.name{font-size:22px;font-weight:bold;margin-top:8px}
+.type{font-size:14px;opacity:.8}
+.info{margin-top:10px;font-size:14px}
+button{
+  margin-top:18px;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:16px;
   background:#4f8cff;
-  font-size:13px;
+  color:#fff;
+  font-size:16px;
 }
+.loading{opacity:.7}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-  <h2>🏆 Current Champion</h2>
+<h2 style="text-align:center">🏆 Current Champion</h2>
 
-  <div class="card">
-    <div class="trophy">🏆</div>
+<div class="card">
+  <div class="trophy">🏆</div>
 
-    <div id="championName" class="name">Loading...</div>
-    <div id="championType" class="type"></div>
+  <div id="status" class="loading">Loading champion...</div>
+
+  <div id="content" style="display:none">
+    <div id="cName" class="name"></div>
+    <div id="cType" class="type"></div>
 
     <div class="info">
-      Tournament: <b id="tournamentName"></b><br>
-      Date: <b id="championDate"></b>
+      Tournament: <b id="cTournament"></b><br>
+      Date: <b id="cDate"></b>
     </div>
 
-    <div id="championBadge" class="badge"></div>
+    <button onclick="downloadCertificate()">
+      📄 Download Champion Certificate
+    </button>
   </div>
+</div>
 
 </div>
 
-<script src="champion.js"></script>
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Firebase -->
+<script type="module" src="champion.js"></script>
 </body>
 </html>
