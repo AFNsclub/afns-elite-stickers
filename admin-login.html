@@ -69,7 +69,7 @@ button{
   </div>
 </div>
 
-<!-- 🔥 FIREBASE + LOGIN LOGIC (ALL IN ONE) -->
+<!-- 🔥 FIREBASE + ADMIN LOGIN (FIXED) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -79,8 +79,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   getFirestore,
-  doc,
-  getDoc
+  collection,
+  query,
+  where,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -113,15 +115,21 @@ window.loginAdmin = async function(){
     const res = await signInWithEmailAndPassword(auth,email,password);
     const user = res.user;
 
-    const adminRef = doc(db,"admins",user.email);
-    const snap = await getDoc(adminRef);
+    // 🔥 CHECK ADMIN BY EMAIL (CORRECT WAY)
+    const q = query(
+      collection(db,"admins"),
+      where("email","==",user.email),
+      where("active","==",true)
+    );
 
-    if(!snap.exists() || snap.data().active !== true){
+    const snap = await getDocs(q);
+
+    if(snap.empty){
       error.textContent = "You are not an authorized admin";
       return;
     }
 
-    // ✅ SUCCESS
+    // ✅ LOGIN SUCCESS
     location.href = "admin-dashboard.html";
 
   }catch(err){
