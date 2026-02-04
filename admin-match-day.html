@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Match Day Result</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(180deg,#050b1e,#020617);
+  color:#fff;
+}
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:16px;
+}
+.card{
+  background:rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+}
+h2,h3{text-align:center;}
+select,input,button{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  margin-top:10px;
+}
+button{
+  background:#4f8cff;
+  color:#fff;
+  font-size:16px;
+}
+.player{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+  margin:4px 0;
+}
+.small{
+  font-size:12px;
+  opacity:.7;
+}
+.teamBox{
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:12px;
+  padding:12px;
+  margin-top:10px;
+}
+.goals{
+  display:flex;
+  gap:8px;
+}
+.goals input{flex:1;}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>⚔️ Match Day</h2>
+
+<div class="card">
+  <select id="tournamentSelect" onchange="loadTeams()">
+    <option value="">Select Tournament</option>
+  </select>
+
+  <select id="teamASelect" onchange="loadPlayers('A')">
+    <option value="">Select Team A</option>
+  </select>
+
+  <select id="teamBSelect" onchange="loadPlayers('B')">
+    <option value="">Select Team B</option>
+  </select>
+</div>
+
+<div class="card teamBox">
+  <h3>Team A Squad (max 6)</h3>
+  <div id="teamAPlayers"></div>
+</div>
+
+<div class="card teamBox">
+  <h3>Team B Squad (max 6)</h3>
+  <div id="teamBPlayers"></div>
+</div>
+
+<div class="card">
+  <div class="goals">
+    <input type="number" id="goalA" placeholder="Team A Goals">
+    <input type="number" id="goalB" placeholder="Team B Goals">
+  </div>
+  <button onclick="submitMatch()">Submit Match Result</button>
+</div>
+
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, addDoc
+} from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+window.db=db;
+window.collection=collection;
+window.getDocs=getDocs;
+window.addDoc=addDoc;
+</script>
+
+<script src="admin-match-day.js"></script>
+</body>
+</html>
