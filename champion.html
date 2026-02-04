@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Champion</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(180deg,#050b1e,#020617);
+  color:#fff;
+}
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:20px;
+  text-align:center;
+}
+.card{
+  background:rgba(255,255,255,.06);
+  border-radius:20px;
+  padding:24px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+.trophy{
+  font-size:70px;
+  margin-bottom:10px;
+}
+h2{
+  margin:10px 0;
+}
+.champion{
+  font-size:26px;
+  font-weight:bold;
+  color:#4f8cff;
+  margin:10px 0;
+}
+.small{
+  font-size:14px;
+  opacity:.7;
+}
+select{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:none;
+  margin-bottom:16px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <select id="tournamentSelect" onchange="loadChampion()">
+    <option value="">Select Tournament</option>
+  </select>
+
+  <div class="card" id="championCard" style="display:none">
+    <div class="trophy">🏆</div>
+    <div class="small">Tournament Champion</div>
+    <div id="championName" class="champion"></div>
+    <h2 id="tournamentName"></h2>
+  </div>
+
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, collection, getDocs
+} from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.db=db;
+window.collection=collection;
+window.getDocs=getDocs;
+</script>
+
+<script src="champion.js"></script>
+</body>
+</html>
