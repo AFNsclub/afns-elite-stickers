@@ -5,212 +5,280 @@
 <title>AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+:root{
+  --neon:#00f7ff;
+  --gold:#ffd400;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',sans-serif;
+}
+
 body{
-min-height:100vh;
-background:radial-gradient(circle at top,#0c1b2a,#02060c);
-color:#fff;display:flex;justify-content:center;align-items:center
-}
-.container{width:100%;max-width:420px;padding:20px;text-align:center}
-.logo img{width:130px;margin-bottom:10px}
-h1{color:#ffd400;font-size:28px;margin-bottom:6px}
-.tagline{color:#00eaff;font-size:14px;margin-bottom:18px}
-
-/* ADMIN NOTICE */
-.notice{
-background:#2a0b0b;color:#ffbdbd;
-padding:10px;border-radius:12px;
-font-size:13px;margin-bottom:14px
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top,var(--bg2),var(--bg1));
+  color:#fff;
+  display:flex;
+  justify-content:center;
 }
 
-/* LIVE SEASON */
-.live-season{
-background:linear-gradient(135deg,#081825,#020b13);
-border-radius:16px;padding:14px;margin-bottom:16px;
-box-shadow:0 0 18px rgba(0,234,255,.35)
+.container{
+  width:100%;
+  max-width:430px;
+  padding:20px;
+  text-align:center;
 }
-.live-header{display:flex;justify-content:space-between;align-items:center}
-.live-badge{
-background:red;color:#fff;font-size:11px;
-padding:3px 8px;border-radius:20px;font-weight:700;
-animation:blink 1s infinite
-}
-@keyframes blink{50%{opacity:.4}}
-.season-name{color:#ffd400;font-weight:700}
-.season-info{font-size:13px;color:#ccc;margin-top:6px}
-.countdown{color:#00eaff;font-weight:600;margin-top:4px}
 
-/* TOP 3 */
-.top3{
-background:rgba(255,255,255,.05);
-border-radius:16px;padding:14px;margin-bottom:18px
+/* LOGO */
+.logo img{
+  width:130px;
+  filter:drop-shadow(0 0 20px rgba(255,215,0,.6));
+  margin-bottom:10px;
 }
-.top3 h3{color:#ffd400;margin-bottom:10px;font-size:16px}
-.top3-list{display:flex;justify-content:space-between}
-.top-card{
-flex:1;margin:0 4px;
-background:#061726;border-radius:14px;
-padding:10px 6px;font-size:12px;
-box-shadow:0 0 10px rgba(0,234,255,.2)
+
+/* TITLE */
+h1{
+  color:var(--gold);
+  font-size:30px;
+  letter-spacing:1px;
 }
-.top-card span{display:block;font-size:20px}
+
+.tagline{
+  color:var(--neon);
+  font-size:14px;
+  margin:6px 0 18px;
+}
 
 /* MOTIVATION */
 .motive-box{
-background:linear-gradient(145deg,#0b1d2a,#020b13);
-padding:18px;border-radius:16px;
-box-shadow:0 0 15px rgba(0,255,255,0.25);
-margin-bottom:22px;min-height:80px;
-display:flex;align-items:center;justify-content:center
+  background:linear-gradient(145deg,#0b1d2a,#020b13);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 0 20px rgba(0,247,255,.35);
+  margin-bottom:22px;
 }
+
 #typingText{
-color:#00f7ff;font-size:15px;font-weight:600;
-border-right:2px solid #00f7ff;padding-right:5px
+  color:var(--neon);
+  font-weight:700;
+  font-size:15px;
+  border-right:2px solid var(--neon);
+  padding-right:5px;
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  0%,100%{border-color:transparent}
+  50%{border-color:var(--neon)}
 }
 
 /* ABOUT */
 .about{
-background:rgba(255,255,255,0.04);
-padding:16px;border-radius:14px;margin-bottom:22px
+  background:rgba(255,255,255,.05);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:22px;
+  backdrop-filter:blur(6px);
 }
-.about h2{font-size:18px;margin-bottom:8px}
-.about p{font-size:14px;line-height:1.6;color:#ddd}
+
+.about h2{
+  font-size:18px;
+  margin-bottom:8px;
+}
+
+.about p{
+  font-size:14px;
+  line-height:1.6;
+  color:#ddd;
+}
 
 /* MENU */
-.menu{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
-.menu a{
-text-decoration:none;padding:12px;border-radius:14px;
-background:linear-gradient(145deg,#061726,#020c14);
-color:#00eaff;font-weight:600
+.menu{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-bottom:24px;
 }
 
-/* FOOTER PROFILE */
-.footer-profile{
-margin-top:10px;
-padding-top:14px;
-border-top:1px solid rgba(255,255,255,.1)
+.menu a{
+  text-decoration:none;
+  padding:14px;
+  border-radius:16px;
+  background:linear-gradient(145deg,#061726,#020c14);
+  color:var(--neon);
+  font-weight:700;
+  letter-spacing:.5px;
+  transition:.25s;
+  position:relative;
+  overflow:hidden;
 }
-.footer-profile img{
-width:60px;height:60px;border-radius:50%;
-object-fit:cover;margin-bottom:6px;
-border:2px solid #00eaff
+
+.menu a::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg,transparent,rgba(0,247,255,.2),transparent);
+  transform:translateX(-100%);
 }
-.footer-profile a{
-color:#00eaff;text-decoration:none;font-size:13px
+
+.menu a:hover::after{
+  transform:translateX(100%);
+  transition:.6s;
 }
-footer{font-size:12px;color:#888;margin-top:6px}
+
+.menu a:hover{
+  box-shadow:0 0 16px rgba(0,247,255,.45);
+  transform:scale(1.04);
+}
+
+/* ADMIN PANEL */
+.admin-panel{
+  margin-top:10px;
+  padding:18px;
+  border-radius:20px;
+  background:linear-gradient(145deg,#091a27,#020a12);
+  box-shadow:0 0 25px rgba(255,215,0,.2);
+}
+
+.admin-panel h2{
+  color:var(--gold);
+  margin-bottom:16px;
+  font-size:18px;
+}
+
+.admins{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.admin-card{
+  background:rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:10px;
+}
+
+.admin-card img{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid var(--neon);
+  margin-bottom:6px;
+}
+
+.admin-card span{
+  font-size:12px;
+  color:var(--neon);
+  font-weight:700;
+}
+
+/* FOOTER */
+footer{
+  margin-top:20px;
+  font-size:12px;
+  color:#aaa;
+}
+
+footer a{
+  color:var(--neon);
+  text-decoration:none;
+  font-weight:700;
+}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<div class="logo">
-<img src="logo.png" alt="AFN Logo">
-</div>
+  <div class="logo">
+    <img src="logo.png">
+  </div>
 
-<h1>AFN's Elite Strikers</h1>
-<div class="tagline">চ্যাম্পিয়ন তৈরি হয় eFootball থেকে</div>
+  <h1>AFN's Elite Strikers</h1>
+  <div class="tagline">চ্যাম্পিয়ন তৈরি হয় eFootball থেকে</div>
 
-<div class="notice">
-📢 Tournament matches are live. Play fair & stay sharp.
-</div>
+  <div class="motive-box">
+    <span id="typingText"></span>
+  </div>
 
-<div class="live-season">
-<div class="live-header">
-<div class="season-name">AFN Season 01</div>
-<div class="live-badge" id="seasonStatus">LIVE</div>
-</div>
-<div class="season-info">
-🏆 Ranking Active
-<div class="countdown" id="countdown"></div>
-</div>
-</div>
+  <div class="about">
+    <h2>আমাদের ক্লাব সম্পর্কে</h2>
+    <p>
+      AFNs Elite Strikers হলো স্কিল, ডিসিপ্লিন এবং এলিট মাইন্ডসেটের সমন্বয়।
+      এখানে খেলোয়াড় তৈরি হয় লিজেন্ড হওয়ার জন্য।
+    </p>
+  </div>
 
-<div class="top3">
-<h3>🏆 Live Top 3</h3>
-<div class="top3-list">
-<div class="top-card"><span>🥇</span><div id="top1">Loading</div></div>
-<div class="top-card"><span>🥈</span><div id="top2">Loading</div></div>
-<div class="top-card"><span>🥉</span><div id="top3">Loading</div></div>
-</div>
-</div>
+  <div class="menu">
+    <a href="login.html">👤 Player Login</a>
+    <a href="player.html">📄 Player Profiles</a>
+    <a href="leaderboard.html">🏆 Leaderboard</a>
+    <a href="admin-login.html">🔐 Admin Login</a>
+    <a href="match-submit.html">⚽ Match Submit (Admin)</a>
+  </div>
 
-<div class="motive-box">
-<span id="typingText"></span>
-</div>
+  <div class="admin-panel">
+    <h2>👑 Admin Panel</h2>
+    <div class="admins">
+      <div class="admin-card"><img src="admin1.jpg"><span>Admin One</span></div>
+      <div class="admin-card"><img src="admin2.jpg"><span>Admin Two</span></div>
+      <div class="admin-card"><img src="admin3.jpg"><span>Admin Three</span></div>
+      <div class="admin-card"><img src="admin4.jpg"><span>Admin Four</span></div>
+      <div class="admin-card"><img src="admin5.jpg"><span>Admin Five</span></div>
+      <div class="admin-card"><img src="admin6.jpg"><span>Admin Six</span></div>
+    </div>
+  </div>
 
-<div class="about">
-<h2>আমাদের ক্লাব সম্পর্কে</h2>
-<p>
-AFNs Elite strikers – AFN eFootball Club হলো স্কিল, স্ট্র্যাটেজি এবং এলিট মাইন্ডসেটের এক অনন্য সমন্বয়।
-এই ক্লাব তাদের জন্য, যারা এলিট হতে চায়, চাপের মধ্যেও শান্ত থাকতে জানে এবং প্রতিটি স্ট্রাইকে জয়ের স্বপ্ন দেখে।
-</p>
-</div>
-
-<div class="menu">
-<a href="login.html">👤 Player Login</a>
-<a href="player.html">📄 Player Profiles</a>
-<a href="leaderboard.html">🏆 Leaderboard</a>
-<a href="admin-login.html">🔐 Admin Login</a>
-</div>
-
-<div class="footer-profile">
-<img src="your-photo.jpg" alt="Owner">
-<div><a href="YOUR_FACEBOOK_LINK" target="_blank">Facebook Profile</a></div>
-<footer>© 2026 AFN's Elite Strikers | SI SHOHAN</footer>
-</div>
+  <footer>
+    © 2026 AFN's Elite Strikers |
+    <a href="https://facebook.com/yourprofile" target="_blank">SI SHOHAN</a>
+  </footer>
 
 </div>
 
 <script>
-firebase.initializeApp({
-apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-authDomain:"afnsclub.firebaseapp.com",
-projectId:"afnsclub"
-});
-const db=firebase.firestore();
-
-/* COUNTDOWN */
-const end=new Date("March 30, 2026 23:59:59").getTime();
-setInterval(()=>{
-const d=end-Date.now();
-if(d<=0){
-document.getElementById("seasonStatus").innerText="ENDED";
-document.getElementById("countdown").innerText="Season Ended";
-return;
-}
-document.getElementById("countdown").innerText=
-`⏳ ${Math.floor(d/86400000)}d ${Math.floor(d/3600000)%24}h ${Math.floor(d/60000)%60}m`;
-},1000);
-
-/* TOP 3 */
-db.collection("players")
-.orderBy("win","desc")
-.orderBy("goalDiff","desc")
-.limit(3)
-.onSnapshot(s=>{
-["top1","top2","top3"].forEach((id,i)=>{
-if(s.docs[i])document.getElementById(id).innerText=s.docs[i].data().name;
-});
-});
-
-/* MOTIVATION */
-const lines=[
-"চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।",
-"হার মানে শেষ না, শেখার শুরু।",
-"আজ খেলো, কাল লিজেন্ড।",
-"AFN মানে স্কিলের প্রমাণ।"
+const lines = [
+  "চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।",
+  "হার মানে শেষ না, শেখার শুরু।",
+  "AFN মানে স্কিলের প্রমাণ।",
+  "মাঠে নামলে নাম নয়, খেলা কথা বলে।",
+  "আজ খেলোয়াড়, কাল লিজেন্ড।",
+  "র‍্যাঙ্ক পাওয়া যায় না—অর্জন করতে হয়।",
+  "একটা ম্যাচই তোমার পরিচয় বদলে দিতে পারে।",
+  "স্কিল চুপ থাকে না, সে নিজেই কথা বলে।",
+  "AFN তে খেলোয়াড় না, যোদ্ধা তৈরি হয়।",
+  "জয় তাদেরই হয় যারা চাপ নিতে পারে।",
+  "মাঠই শেষ বিচারক।",
+  "আজ ঘাম, কাল গৌরব।",
+  "হার মানলে শেষ, লড়লে শুরু।",
+  "Play smart. Stay elite.",
+  "AFN is not a club, it's a mindset."
 ];
-let i=0,j=0,t=document.getElementById("typingText");
+
+let i = Math.floor(Math.random() * lines.length);
+let c = 0;
+const t = document.getElementById("typingText");
+
 (function type(){
-if(j<lines[i].length){t.textContent+=lines[i][j++];setTimeout(type,80);}
-else setTimeout(()=>{t.textContent="";j=0;i=(i+1)%lines.length;type();},5000);
+  if(c < lines[i].length){
+    t.textContent += lines[i][c++];
+    setTimeout(type, 90);
+  } else {
+    setTimeout(() => {
+      t.textContent = "";
+      c = 0;
+      i = Math.floor(Math.random() * lines.length);
+      type();
+    }, 120000); // 2 minutes
+  }
 })();
 </script>
 
