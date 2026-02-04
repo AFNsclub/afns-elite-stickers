@@ -50,10 +50,9 @@ button{
 
 <div class="card">
   <p>✔ Season Control</p>
-  <button onclick="logout()">Logout</button>
+  <button id="logoutBtn">Logout</button>
 </div>
 
-<!-- 🔥 FIREBASE CONFIG -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { 
@@ -68,6 +67,7 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* 🔥 Firebase Config */
 const firebaseConfig = {
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
@@ -81,9 +81,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* 🔐 ADMIN GUARD – FINAL */
-onAuthStateChanged(auth, async (user)=>{
-  if(!user){
+/* 🔐 ADMIN GUARD */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
     location.href = "admin-login.html";
     return;
   }
@@ -91,7 +91,7 @@ onAuthStateChanged(auth, async (user)=>{
   const adminRef = doc(db, "admins", user.email);
   const snap = await getDoc(adminRef);
 
-  if(!snap.exists() || snap.data().active !== true){
+  if (!snap.exists() || snap.data().active !== true) {
     alert("You are not authorized admin");
     await signOut(auth);
     location.href = "admin-login.html";
@@ -99,10 +99,9 @@ onAuthStateChanged(auth, async (user)=>{
 });
 
 /* 🚪 Logout */
-window.logout = ()=>{
-  signOut(auth).then(()=>{
-    location.href="admin-login.html";
-  });
+document.getElementById("logoutBtn").onclick = async () => {
+  await signOut(auth);
+  location.href = "admin-login.html";
 };
 </script>
 
