@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>AFN Leaderboard</title>
+<title>Leaderboard | AFNs Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase -->
@@ -16,7 +16,6 @@
   --bg1:#02060c;
   --bg2:#0c1b2a;
 }
-
 *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
 
 body{
@@ -31,87 +30,90 @@ body{
   padding:20px;
 }
 
-h1{
+/* HEADER */
+header{
   text-align:center;
-  color:var(--gold);
-  margin-bottom:10px;
+  margin-bottom:14px;
 }
-
-.subtitle{
-  text-align:center;
-  color:var(--neon);
-  font-size:13px;
-  margin-bottom:20px;
+header img{
+  width:90px;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
 }
+h1{color:var(--gold);margin:6px 0}
+.subtitle{color:var(--neon);font-size:13px}
 
 /* MOTIVATION */
 .motive{
   background:linear-gradient(145deg,#0b1d2a,#020b13);
   border-radius:16px;
   padding:14px;
-  margin-bottom:20px;
-  box-shadow:0 0 18px rgba(0,247,255,.3);
+  margin:14px 0 18px;
+  box-shadow:0 0 18px rgba(0,247,255,.35);
   text-align:center;
-  font-weight:700;
+}
+#motiveText{
   color:var(--neon);
+  font-weight:700;
+  font-size:14px;
+  border-right:2px solid var(--neon);
+  padding-right:5px;
+  animation:blink 1s infinite;
+}
+@keyframes blink{
+  0%,100%{border-color:transparent}
+  50%{border-color:var(--neon)}
 }
 
-/* LEADERBOARD */
-.board{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.player{
-  background:rgba(255,255,255,.05);
+/* CARD */
+.card{
+  background:rgba(255,255,255,.06);
   border-radius:16px;
   padding:14px;
+  margin-bottom:12px;
+  box-shadow:0 0 16px rgba(0,247,255,.25);
+}
+.row{
   display:flex;
   align-items:center;
-  gap:12px;
-  backdrop-filter:blur(6px);
-  transition:.25s;
+  justify-content:space-between;
+  gap:8px;
 }
-
-.player:hover{
-  transform:scale(1.02);
-  box-shadow:0 0 14px rgba(0,247,255,.35);
+.left{
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
-
 .rank{
+  width:36px;
+  text-align:center;
   font-size:18px;
-  font-weight:800;
+  font-weight:900;
   color:var(--gold);
-  width:28px;
 }
-
-.avatar{
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  background:#111;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
+.name a{
   color:var(--neon);
-}
-
-.info{
-  flex:1;
-}
-
-.info a{
-  color:#fff;
+  font-weight:800;
   text-decoration:none;
-  font-weight:700;
 }
-
-.stats{
+.meta{
   font-size:12px;
-  color:#ccc;
+  color:#bbb;
 }
+.stats{
+  text-align:right;
+  font-size:13px;
+}
+.badge{
+  margin-top:6px;
+  padding:4px 10px;
+  border-radius:14px;
+  font-size:12px;
+  font-weight:900;
+  display:inline-block;
+}
+.gold{background:#ffd700;color:#000}
+.silver{background:#c0c0c0;color:#000}
+.bronze{background:#cd7f32;color:#000}
 
 /* FOOTER */
 .global-footer{
@@ -119,23 +121,14 @@ h1{
   padding:16px 0;
   text-align:center;
 }
-
 .footer-inner{
   display:flex;
   flex-direction:column;
   align-items:center;
   gap:6px;
 }
-
-.footer-logo{
-  width:50px;
-}
-
-.footer-text{
-  font-size:12px;
-  color:#aaa;
-}
-
+.footer-logo{width:42px}
+.footer-text{font-size:12px;color:#aaa}
 .footer-text a{
   color:var(--neon);
   text-decoration:none;
@@ -147,16 +140,21 @@ h1{
 <body>
 <div class="container">
 
-<h1>🏆 Leaderboard</h1>
-<div class="subtitle">Top AFN Elite Strikers</div>
+<header>
+  <img src="logo.png">
+  <h1>Leaderboard</h1>
+  <div class="subtitle">AFNs Elite Strikers</div>
+</header>
 
-<div class="motive" id="motiveText"></div>
+<div class="motive">
+  <span id="motiveText"></span>
+</div>
 
-<div class="board" id="leaderboard"></div>
+<div id="board"></div>
 
 <footer class="global-footer">
   <div class="footer-inner">
-    <img src="logo.png" class="footer-logo" alt="AFNS Logo">
+    <img src="logo.png" class="footer-logo">
     <div class="footer-text">
       AFNs Elite Striker |
       <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
@@ -175,64 +173,85 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
-
 const db = firebase.firestore();
 
-/* MOTIVATION ROTATOR */
-const motives = [
-  "র‍্যাঙ্ক পাওয়া যায় না — অর্জন করতে হয়",
-  "মাঠই শেষ বিচারক",
-  "আজ ঘাম, কাল গৌরব",
-  "AFN মানে স্কিলের প্রমাণ",
-  "হার মানে শেখার শুরু"
-  "চ্যাম্পিয়নরা চাপকে ভয় পায় না, তারা সেটাকেই শক্তি বানায়।"
-"হার মানে শেষ নয়, হার মানাই শেষ।"
-"মাঠে নামলে নাম নয়, স্কিল কথা বলে।"
-"আজকের পরিশ্রমই আগামীকালের র‍্যাঙ্ক।"
-"জয় তাদেরই হয় যারা শেষ মিনিট পর্যন্ত লড়ে।"
-"AFN-এ খেলোয়াড় তৈরি হয় না, যোদ্ধা তৈরি হয়।"
-"একটা ম্যাচ তোমার নাম বদলাতে পারে।"
-"ঘাম ঝরলে তবেই গৌরব আসে।"
-"চাপ না নিলে চ্যাম্পিয়ন হওয়া যায় না।"
-"আজ তুমি সাধারণ, কাল তুমি উদাহরণ।"
-"মাঠই শেষ সত্য, অজুহাতের জায়গা নেই।"
-"নিজেকে হারানোই আসল হার।"
-"লড়াই থামালে সেখানেই শেষ।"
-"স্কিল চুপ থাকে না, সে নিজেই পরিচয় দেয়।"
-"আজ কষ্ট, কাল ইতিহাস।"
+/* MOTIVATION LINES */
+const lines = [
+  "চ্যাম্পিয়নরা চাপকে শক্তি বানায়।",
+  "আজকের পরিশ্রমই আগামীকালের র‍্যাঙ্ক।",
+  "মাঠই শেষ বিচারক।",
+  "স্কিল চুপ থাকে না, সে নিজেই কথা বলে।",
+  "আজ কষ্ট, কাল ইতিহাস।",
+  "AFN মানে এলিট মাইন্ডসেট।",
+  "হার মানা অপশন না।",
+  "তুমি নাম না করলে লিডারবোর্ড করবে।",
+  "প্র্যাকটিসই আসল কিং বানায়।",
+  "আজ ফোকাস, কাল ট্রফি।",
+  "একটা ম্যাচ পুরো ক্যারিয়ার বদলাতে পারে।",
+  "যারা ধৈর্য ধরে তারাই টিকে থাকে।",
+  "স্কিল + ডিসিপ্লিন = লিজেন্ড।",
+  "র‍্যাঙ্ক নিজে থেকে আসে না, ছিনিয়ে নিতে হয়।",
+  "আজ ঘাম, কাল সম্মান।",
+  "তুমি খেলছো না — তুমি ইতিহাস লিখছো।",
+  "AFNs মাঠে নামলে নাম্বার নিজেই ওঠে।",
+  "ফেইল করো, শিখো, আবার আঘাত করো।",
+  "চাপ মানেই লেভেল আপ।",
+  "যে থামে না, সে হারেও না।"
 ];
-document.getElementById("motiveText").textContent =
-  motives[Math.floor(Math.random()*motives.length)];
+let i=Math.floor(Math.random()*lines.length), c=0;
+const t=document.getElementById("motiveText");
+(function type(){
+  if(c<lines[i].length){
+    t.textContent+=lines[i][c++];
+    setTimeout(type,80);
+  }else{
+    setTimeout(()=>{
+      t.textContent="";
+      c=0;i=Math.floor(Math.random()*lines.length);
+      type();
+    },6000);
+  }
+})();
 
-/* LOAD LEADERBOARD */
-const board = document.getElementById("leaderboard");
+/* LOAD LEADERBOARD (REALTIME) */
+const board=document.getElementById("board");
+db.collection("players").orderBy("rating","desc").onSnapshot(snap=>{
+  board.innerHTML="";
+  let idx=0;
+  snap.forEach(doc=>{
+    idx++;
+    const d=doc.data();
+    const rating=d.rating||0;
+    let cls="bronze", txt="Bronze";
+    if(rating>=80){cls="gold";txt="Gold"}
+    else if(rating>=60){cls="silver";txt="Silver"}
 
-db.collection("players")
-  .orderBy("rating","desc")
-  .onSnapshot(snap=>{
-    board.innerHTML="";
-    let rank=1;
-    snap.forEach(doc=>{
-      const p = doc.data();
-      const div = document.createElement("div");
-      div.className="player";
-      div.innerHTML=`
-        <div class="rank">#${rank++}</div>
-        <div class="avatar">${(p.username||"?")[0]}</div>
-        <div class="info">
-          <a href="public-profile.html?id=${doc.id}">
-            ${p.username||"Unknown"}
-          </a>
-          <div class="stats">
-            ⭐ ${p.rating||0} |
-            🏆 ${p.wins||0} |
-            ❌ ${p.losses||0}
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <div class="row">
+        <div class="left">
+          <div class="rank">#${idx}</div>
+          <div>
+            <div class="name">
+              <a href="public-profile.html?id=${doc.id}">
+                ${d.username||"Player"}
+              </a>
+            </div>
+            <div class="meta">
+              Game ID: ${d.gameId||"—"}
+            </div>
           </div>
         </div>
-      `;
-      board.appendChild(div);
-    });
+        <div class="stats">
+          ⭐ ${rating}
+          <div class="badge ${cls}">${txt}</div>
+        </div>
+      </div>
+    `;
+    board.appendChild(div);
   });
+});
 </script>
 
 </body>
