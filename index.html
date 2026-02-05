@@ -2,27 +2,25 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Club – Login</title>
+<title>AFNS Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- ===== STYLE ===== -->
 <style>
 *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
 
 body{
   margin:0;
   min-height:100vh;
-  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
   display:flex;
-  flex-direction:column;
   align-items:center;
   justify-content:center;
+  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
   color:#fff;
 }
 
-.card{
+.container{
   width:100%;
-  max-width:360px;
+  max-width:380px;
   background:rgba(255,255,255,.06);
   backdrop-filter:blur(12px);
   padding:26px;
@@ -32,25 +30,32 @@ body{
 
 h2{
   text-align:center;
+  margin-bottom:6px;
+}
+
+.sub{
+  text-align:center;
+  font-size:13px;
+  color:#a5b4fc;
   margin-bottom:18px;
 }
 
 input{
   width:100%;
   padding:12px;
-  margin-top:12px;
+  margin-bottom:12px;
   border:none;
   border-radius:8px;
   font-size:14px;
 }
 
-.password-box{
+.pass-box{
   position:relative;
 }
 
-.password-box span{
+.toggle{
   position:absolute;
-  right:12px;
+  right:10px;
   top:50%;
   transform:translateY(-50%);
   cursor:pointer;
@@ -60,55 +65,46 @@ input{
 
 button{
   width:100%;
-  margin-top:16px;
   padding:12px;
   border:none;
   border-radius:8px;
-  background:#3b82f6;
+  background:#4f8cff;
   color:#fff;
   font-weight:bold;
   cursor:pointer;
 }
 
 button:hover{
-  box-shadow:0 0 14px rgba(59,130,246,.6);
+  box-shadow:0 0 12px rgba(79,140,255,.6);
 }
 
-.link{
-  margin-top:14px;
-  text-align:center;
+.links{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
   font-size:13px;
 }
 
-.link a{
-  color:#60a5fa;
+.links a{
+  color:#a5b4fc;
   text-decoration:none;
 }
 
-.error{
-  margin-top:12px;
+.msg{
+  margin-bottom:12px;
   font-size:13px;
-  color:#ff6b6b;
   text-align:center;
+  display:none;
 }
 
-/* ===== FOOTER ===== */
-.global-footer{
-  margin-top:30px;
+.msg.error{color:#ff6b6b}
+.msg.success{color:#22c55e}
+
+footer{
   text-align:center;
   font-size:12px;
-  opacity:.8;
-}
-
-.footer-inner{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  justify-content:center;
-}
-
-.footer-logo{
-  width:28px;
+  opacity:.6;
+  margin-top:16px;
 }
 </style>
 
@@ -127,69 +123,70 @@ firebase.initializeApp({
 
 <body>
 
-<div class="card">
-  <h2>Login</h2>
+<div class="container">
+
+  <h2>Player Login</h2>
+  <div class="sub">AFNS Elite Striker</div>
+
+  <div id="msg" class="msg"></div>
 
   <input id="email" type="email" placeholder="Email">
 
-  <div class="password-box">
+  <div class="pass-box">
     <input id="password" type="password" placeholder="Password">
-    <span onclick="togglePass()">SHOW</span>
+    <span class="toggle" onclick="togglePass()">SHOW</span>
   </div>
 
   <button onclick="login()">Login</button>
 
-  <div class="link">
+  <div class="links">
     <a href="#" onclick="forgot()">Forgot password?</a>
+    <a href="register.html">Create account</a>
   </div>
 
-  <div class="link">
-    New player? <a href="register.html">Create account</a>
-  </div>
-
-  <div id="error" class="error"></div>
+  <footer>SI Shohan • AFNS Club</footer>
 </div>
 
-<!-- ===== FOOTER ===== -->
-<footer class="global-footer">
-  <div class="footer-inner">
-    <img src="logo.png" class="footer-logo">
-    <div>
-      AFNs Elite Striker |
-      <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI Shohan</a>
-    </div>
-  </div>
-</footer>
-
 <script>
+const auth=firebase.auth();
+const msg=document.getElementById("msg");
+
+function show(text,type){
+  msg.textContent=text;
+  msg.className="msg "+type;
+  msg.style.display="block";
+}
+
 function togglePass(){
-  const p = document.getElementById("password");
-  p.type = p.type === "password" ? "text" : "password";
+  const p=document.getElementById("password");
+  const t=document.querySelector(".toggle");
+  if(p.type==="password"){
+    p.type="text";t.textContent="HIDE";
+  }else{
+    p.type="password";t.textContent="SHOW";
+  }
 }
 
 function login(){
-  const email = email.value;
-  const pass = password.value;
-  error.textContent = "";
+  const email=document.getElementById("email").value.trim();
+  const pass=document.getElementById("password").value;
 
-  firebase.auth().signInWithEmailAndPassword(email,pass)
-    .then(res=>{
-      window.location.href="player.html";
-    })
-    .catch(err=>{
-      error.textContent = err.message;
-    });
+  if(!email||!pass){
+    show("Email & password required","error");return;
+  }
+
+  auth.signInWithEmailAndPassword(email,pass)
+  .then(()=>location.href="player.html")
+  .catch(e=>show(e.message,"error"));
 }
 
 function forgot(){
-  const email = document.getElementById("email").value;
-  if(!email){
-    error.textContent="Enter email first";
-    return;
-  }
-  firebase.auth().sendPasswordResetEmail(email)
-    .then(()=>alert("Password reset email sent ✅"))
-    .catch(e=>error.textContent=e.message);
+  const email=document.getElementById("email").value.trim();
+  if(!email){show("Enter email first","error");return;}
+
+  auth.sendPasswordResetEmail(email)
+  .then(()=>show("Password reset email sent","success"))
+  .catch(e=>show(e.message,"error"));
 }
 </script>
 
