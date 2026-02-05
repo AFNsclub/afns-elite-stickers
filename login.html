@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Login | AFN's Elite Strikers</title>
+<title>Player Login | AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -31,11 +31,11 @@ body{
 
 .card{
   width:100%;
-  max-width:360px;
-  padding:24px;
-  border-radius:18px;
+  max-width:380px;
   background:linear-gradient(145deg,#061726,#020c14);
-  box-shadow:0 0 30px rgba(0,247,255,.35);
+  border-radius:22px;
+  padding:24px;
+  box-shadow:0 0 35px rgba(0,247,255,.45);
 }
 
 .logo{
@@ -55,11 +55,14 @@ h2{
 
 input{
   width:100%;
-  padding:12px;
-  border-radius:10px;
+  padding:13px;
+  border-radius:14px;
   border:none;
-  margin-bottom:12px;
-  font-size:14px;
+  outline:none;
+  margin-bottom:14px;
+  background:#020c14;
+  color:#fff;
+  font-size:15px;
 }
 
 .password-box{
@@ -67,44 +70,56 @@ input{
 }
 .toggle{
   position:absolute;
-  right:12px;
+  right:14px;
   top:50%;
   transform:translateY(-50%);
-  cursor:pointer;
   font-size:13px;
   color:var(--neon);
+  cursor:pointer;
+  user-select:none;
 }
 
 button{
   width:100%;
   padding:14px;
+  border-radius:18px;
   border:none;
-  border-radius:12px;
-  background:linear-gradient(145deg,#00f7ff,#0077ff);
-  color:#000;
-  font-weight:800;
-  font-size:16px;
   cursor:pointer;
+  font-weight:900;
+  font-size:16px;
+  background:linear-gradient(145deg,#081c2c,#020c14);
+  color:var(--neon);
+  transition:.25s;
 }
-button:hover{opacity:.9;}
+button:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 16px rgba(0,247,255,.45);
+}
 
 .error{
-  font-size:13px;
   color:#ff6b6b;
-  margin-bottom:10px;
+  font-size:14px;
+  margin-bottom:12px;
   display:none;
   text-align:center;
 }
 
 .links{
   text-align:center;
-  margin-top:14px;
-  font-size:13px;
+  margin-top:16px;
+  font-size:14px;
 }
 .links a{
   color:var(--neon);
   text-decoration:none;
   font-weight:700;
+}
+
+footer{
+  text-align:center;
+  font-size:12px;
+  color:#aaa;
+  margin-top:16px;
 }
 </style>
 </head>
@@ -128,7 +143,7 @@ button:hover{opacity:.9;}
     <span class="toggle" onclick="togglePassword()">Show</span>
   </div>
 
-  <button onclick="login()">LOGIN</button>
+  <button onclick="login()">Login</button>
 
   <div class="links">
     <a href="#" onclick="forgotPassword()">Forgot Password?</a><br><br>
@@ -136,81 +151,85 @@ button:hover{opacity:.9;}
     <a href="register.html">Create Account</a>
   </div>
 
+  <footer>
+    © 2026 AFN's Elite Strikers
+  </footer>
+
 </div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub",
-  storageBucket: "afnsclub.firebasestorage.app",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+const firebaseConfig={
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub",
+  storageBucket:"afnsclub.firebasestorage.app",
+  messagingSenderId:"1088089213558",
+  appId:"1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
-
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db   = firebase.firestore();
 
-// ✅ already logged in → player profile
+const auth=firebase.auth();
+
+// ✅ already logged in → direct profile
 auth.onAuthStateChanged(user=>{
   if(user){
-    window.location.replace("player.html");
+    location.replace("player.html");
   }
 });
 
+const email=document.getElementById("email");
+const password=document.getElementById("password");
+const errorBox=document.getElementById("errorBox");
+
 function showError(msg){
-  const e=document.getElementById("errorBox");
-  e.innerText=msg;
-  e.style.display="block";
+  errorBox.innerText=msg;
+  errorBox.style.display="block";
 }
 
 function togglePassword(){
-  const p=document.getElementById("password");
-  const t=document.querySelector(".toggle");
-  if(p.type==="password"){
-    p.type="text"; t.innerText="Hide";
+  if(password.type==="password"){
+    password.type="text";
+    document.querySelector(".toggle").innerText="Hide";
   }else{
-    p.type="password"; t.innerText="Show";
+    password.type="password";
+    document.querySelector(".toggle").innerText="Show";
   }
 }
 
 function login(){
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value;
+  errorBox.style.display="none";
 
-  if(!email||!password){
-    showError("⚠️ Gmail এবং Password দিন");
+  if(!email.value || !password.value){
+    showError("⚠️ Gmail এবং Password দিতে হবে");
     return;
   }
 
-  auth.signInWithEmailAndPassword(email,password)
-    .then(()=>{
-      window.location.href="player.html";
-    })
-    .catch(err=>{
-      showError("❌ Gmail অথবা Password ভুল");
-    });
+  auth.signInWithEmailAndPassword(email.value.trim(),password.value)
+  .then(()=>{
+    location.href="player.html";
+  })
+  .catch(()=>{
+    showError("❌ Gmail অথবা Password ভুল");
+  });
 }
 
 function forgotPassword(){
-  const email=document.getElementById("email").value.trim();
-  if(!email){
+  if(!email.value){
     showError("📧 আগে Gmail লিখুন");
     return;
   }
-  auth.sendPasswordResetEmail(email)
-    .then(()=>{
-      showError("✅ Reset link Gmail এ পাঠানো হয়েছে");
-    })
-    .catch(()=>{
-      showError("❌ Gmail পাওয়া যায়নি");
-    });
+
+  auth.sendPasswordResetEmail(email.value.trim())
+  .then(()=>{
+    showError("✅ Reset link Gmail এ পাঠানো হয়েছে");
+  })
+  .catch(()=>{
+    showError("❌ Gmail পাওয়া যায়নি");
+  });
 }
 </script>
 
