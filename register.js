@@ -1,50 +1,73 @@
-const errorBox = document.getElementById("errorBox");
-const successBox = document.getElementById("successBox");
+// 🔥 Firebase Config (নিজেরটা বসাবে)
+const firebaseConfig = {
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub",
+};
 
-function showError(msg){
-  errorBox.innerText = msg;
-  errorBox.style.display = "block";
-  successBox.style.display = "none";
-}
+firebase.initializeApp(firebaseConfig);
 
-function showSuccess(msg){
-  successBox.innerText = msg;
-  successBox.style.display = "block";
-  errorBox.style.display = "none";
-}
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-function register(){
-  const name = document.getElementById("name").value.trim();
-  const mobile = document.getElementById("mobile").value.trim();
+const form = document.getElementById("registerForm");
+const msg = document.getElementById("msg");
+const btn = document.getElementById("createBtn");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  msg.innerText = "";
+  btn.innerText = "Creating...";
+  btn.disabled = true;
+
+  const username = document.getElementById("username").value.trim();
   const email = document.getElementById("email").value.trim();
-  const device = document.getElementById("device").value.trim();
-  const gameId = document.getElementById("gameId").value.trim();
+  const phone = document.getElementById("phone").value.trim();
   const facebook = document.getElementById("facebook").value.trim();
-  const password = document.getElementById("password").value;
+  const gameId = document.getElementById("gameId").value.trim();
+  const device = document.getElementById("device").value.trim();
+  const password = document.getElementById("password").value.trim();
 
-  if(!name || !mobile || !email || !password){
-    showError("সব ঘর পূরণ করতে হবে");
+  // 🇧🇩 Bangladesh number validation
+  if (!/^01[3-9]\d{8}$/.test(phone)) {
+    msg.innerText = "❌ Invalid Bangladesh number";
+    btn.innerText = "Create Account";
+    btn.disabled = false;
     return;
   }
 
-  if(!/^01[3-9]\d{8}$/.test(mobile)){
-    showError("বাংলাদেশী মোবাইল নাম্বার দিন");
-    return;
-  }
+  try {
+    // 🔐 Create Auth User
+    const userCred = await auth.createUserWithEmailAndPassword(email, password);
+    const uid = userCred.user.uid;
 
-  auth.createUserWithEmailAndPassword(email,password)
-  .then(res=>{
-    return db.collection("players").doc(res.user.uid).set({
-      name,mobile,email,device,gameId,facebook,
-      win:0,lose:0,goalsFor:0,goalsAgainst:0,
-      created:firebase.firestore.FieldValue.serverTimestamp()
+    // 💾 Save Firestore Data
+    await db.collection("players").doc(uid).set({
+      username,
+      email,
+      phone,
+      facebook,
+      gameId,
+      device,
+      win: 0,
+      lose: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-  })
-  .then(()=>{
-    showSuccess("Account created! Login করুন");
-    setTimeout(()=>location.href="login.html",1500);
-  })
-  .catch(err=>{
-    showError(err.message);
-  });
-     }
+
+    msg.style.color = "lime";
+    msg.innerText = "✅ Account Created Successfully!";
+    form.reset();
+
+  } catch (err) {
+    msg.style.color = "red";
+    msg.innerText = err.message;
+
+    // ❗ If Firestore fail → delete auth user
+    if (auth.currentUser) {
+      await auth.currentUser.delete();
+    }
+  }
+
+  btn.innerText = "Create Account";
+  btn.disabled = false;
+});
