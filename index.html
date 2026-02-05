@@ -22,8 +22,7 @@
 
 body{
   min-height:100vh;
-  background:
-    radial-gradient(circle at top,var(--bg2),var(--bg1));
+  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
   color:#fff;
   display:flex;
   justify-content:center;
@@ -36,14 +35,12 @@ body{
   text-align:center;
 }
 
-/* LOGO */
 .logo img{
   width:130px;
   filter:drop-shadow(0 0 20px rgba(255,215,0,.6));
   margin-bottom:10px;
 }
 
-/* TITLE */
 h1{
   color:var(--gold);
   font-size:30px;
@@ -56,7 +53,6 @@ h1{
   margin:6px 0 18px;
 }
 
-/* MOTIVATION */
 .motive-box{
   background:linear-gradient(145deg,#0b1d2a,#020b13);
   border-radius:18px;
@@ -79,7 +75,6 @@ h1{
   50%{border-color:var(--neon)}
 }
 
-/* ABOUT */
 .about{
   background:rgba(255,255,255,.05);
   border-radius:16px;
@@ -99,7 +94,6 @@ h1{
   color:#ddd;
 }
 
-/* MENU */
 .menu{
   display:flex;
   flex-direction:column;
@@ -114,7 +108,6 @@ h1{
   background:linear-gradient(145deg,#061726,#020c14);
   color:var(--neon);
   font-weight:700;
-  letter-spacing:.5px;
   transition:.25s;
   position:relative;
   overflow:hidden;
@@ -138,7 +131,6 @@ h1{
   transform:scale(1.04);
 }
 
-/* ADMIN PANEL */
 .admin-panel{
   margin-top:10px;
   padding:18px;
@@ -180,13 +172,11 @@ h1{
   font-weight:700;
 }
 
-/* FOOTER */
 footer{
   margin-top:20px;
   font-size:12px;
   color:#aaa;
 }
-
 footer a{
   color:var(--neon);
   text-decoration:none;
@@ -198,90 +188,88 @@ footer a{
 <body>
 <div class="container">
 
-  <div class="logo">
-    <img src="logo.png">
-  </div>
+<div class="logo"><img src="logo.png"></div>
 
-  <h1>AFN's Elite Strikers</h1>
-  <div class="tagline">
-  Play Smart. Play Elite. Play AFN.
-  </div>
-  <div class="motive-box">
-    <span id="typingText"></span>
-  </div>
+<h1>AFN's Elite Strikers</h1>
+<div class="tagline">Play Smart. Play Elite. Play AFN.</div>
 
-  <div class="about">
-    <h2>আমাদের ক্লাব সম্পর্কে</h2>
-    <p>
-      AFNs Elite Strikers হলো স্কিল, ডিসিপ্লিন এবং এলিট মাইন্ডসেটের সমন্বয়।
-      এখানে খেলোয়াড় তৈরি হয় লিজেন্ড হওয়ার জন্য।
-    </p>
-  </div>
+<div class="motive-box">
+  <span id="typingText"></span>
+</div>
 
-  <div class="menu">
-    <a href="login.html">👤 Player Login</a>
-    <a href="player.html">📄 Player Profiles</a>
-    <a href="leaderboard.html">🏆 Leaderboard</a>
-    <a href="admin-login.html">🔐 Admin Login</a>
-    <a href="match-submit.html">⚽ Match Submit (Admin)</a>
-  </div>
+<div class="about">
+  <h2>আমাদের ক্লাব সম্পর্কে</h2>
+  <p>
+    AFNs Elite Strikers হলো স্কিল, ডিসিপ্লিন এবং এলিট মাইন্ডসেটের সমন্বয়।
+    এখানে খেলোয়াড় তৈরি হয় লিজেন্ড হওয়ার জন্য।
+  </p>
+</div>
 
-  <div class="admin-panel">
-    <h2>👑 Admin Panel</h2>
-    <div class="admins">
-      <div class="admin-card"><img src="admin1.jpg"><span>Admin One</span></div>
-      <div class="admin-card"><img src="admin2.jpg"><span>Admin Two</span></div>
-      <div class="admin-card"><img src="admin3.jpg"><span>Admin Three</span></div>
-      <div class="admin-card"><img src="admin4.jpg"><span>Admin Four</span></div>
-      <div class="admin-card"><img src="admin5.jpg"><span>Admin Five</span></div>
-      <div class="admin-card"><img src="admin6.jpg"><span>Admin Six</span></div>
-    </div>
-  </div>
+<div class="menu">
+  <a href="#" onclick="goProfile()">🧑‍💼 My Profile</a>
+  <a href="login.html">👤 Player Login</a>
+  <a href="player.html">📄 Player Profiles</a>
+  <a href="leaderboard.html">🏆 Leaderboard</a>
+  <a href="stats.html">📊 Player Stats</a>
+  <a href="announcements.html">📢 Announcements</a>
+  <a href="rules.html">📜 Rules & Fair Play</a>
+  <a href="training.html">🎯 Training & Tips</a>
+  <a href="admin-login.html">🔐 Admin Login</a>
+  <a href="match-submit.html">⚽ Match Submit (Admin)</a>
+</div>
 
-  <footer>
-    © 2026 AFN's Elite Strikers |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI SHOHAN</a>
-  </footer>
+<div class="admin-panel">
+<h2>👑 Admin Panel</h2>
+<div class="admins">
+<div class="admin-card"><img src="admin1.jpg"><span>Admin One</span></div>
+<div class="admin-card"><img src="admin2.jpg"><span>Admin Two</span></div>
+<div class="admin-card"><img src="admin3.jpg"><span>Admin Three</span></div>
+<div class="admin-card"><img src="admin4.jpg"><span>Admin Four</span></div>
+<div class="admin-card"><img src="admin5.jpg"><span>Admin Five</span></div>
+<div class="admin-card"><img src="admin6.jpg"><span>Admin Six</span></div>
+</div>
+</div>
+
+<footer>
+© 2026 AFN's Elite Strikers |
+<a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI SHOHAN</a>
+</footer>
 
 </div>
 
 <script>
-const lines = [
-  "চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।",
-  "হার মানে শেষ না, শেখার শুরু।",
-  "AFN মানে স্কিলের প্রমাণ।",
-  "মাঠে নামলে নাম নয়, খেলা কথা বলে।",
-  "আজ খেলোয়াড়, কাল লিজেন্ড।",
-  "র‍্যাঙ্ক পাওয়া যায় না—অর্জন করতে হয়।",
-  "একটা ম্যাচই তোমার পরিচয় বদলে দিতে পারে।",
-  "স্কিল চুপ থাকে না, সে নিজেই কথা বলে।",
-  "AFN তে খেলোয়াড় না, যোদ্ধা তৈরি হয়।",
-  "জয় তাদেরই হয় যারা চাপ নিতে পারে।",
-  "মাঠই শেষ বিচারক।",
-  "আজ ঘাম, কাল গৌরব।",
-  "হার মানলে শেষ, লড়লে শুরু।",
-  "Play smart. Stay elite.",
-  "AFN is not a club, it's a mindset."
+function goProfile(){
+  if(localStorage.getItem("uid")){
+    location.href="player.html";
+  }else{
+    location.href="login.html";
+  }
+}
+
+const lines=[
+"চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।",
+"হার মানে শেষ না, শেখার শুরু।",
+"AFN মানে স্কিলের প্রমাণ।",
+"আজ খেলোয়াড়, কাল লিজেন্ড।",
+"Play smart. Stay elite.",
+"AFN is not a club, it's a mindset."
 ];
 
-let i = Math.floor(Math.random() * lines.length);
-let c = 0;
-const t = document.getElementById("typingText");
-
+let i=Math.floor(Math.random()*lines.length),c=0;
+const t=document.getElementById("typingText");
 (function type(){
-  if(c < lines[i].length){
-    t.textContent += lines[i][c++];
-    setTimeout(type, 90);
-  } else {
-    setTimeout(() => {
-      t.textContent = "";
-      c = 0;
-      i = Math.floor(Math.random() * lines.length);
+  if(c<lines[i].length){
+    t.textContent+=lines[i][c++];
+    setTimeout(type,90);
+  }else{
+    setTimeout(()=>{
+      t.textContent="";
+      c=0;i=Math.floor(Math.random()*lines.length);
       type();
-    }, 120000); // 2 minutes
+    },120000);
   }
 })();
 </script>
 
 </body>
-</html>
+    </html>
