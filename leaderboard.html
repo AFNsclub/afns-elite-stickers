@@ -30,7 +30,7 @@ body{
 
 .container{
   width:100%;
-  max-width:460px;
+  max-width:430px;
   padding:18px;
 }
 
@@ -45,71 +45,74 @@ header img{
 }
 header h1{
   color:var(--gold);
-  margin-top:8px;
+  margin-top:6px;
   font-size:26px;
 }
 
-/* CARD */
-.card{
-  background:linear-gradient(145deg,#061726,#020c14);
-  border-radius:18px;
-  padding:14px;
-  margin-bottom:12px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  box-shadow:0 0 20px rgba(0,247,255,.25);
-  animation:slideIn .5s ease;
+/* SEASON BANNER */
+.season{
+  background:linear-gradient(145deg,#2a1b00,#120a00);
+  border-radius:14px;
+  padding:10px;
+  text-align:center;
+  font-weight:900;
+  color:var(--gold);
+  box-shadow:0 0 18px rgba(255,215,0,.4);
+  margin-bottom:14px;
 }
-@keyframes slideIn{
-  from{opacity:0;transform:translateY(12px)}
-  to{opacity:1;transform:translateY(0)}
+
+/* TABLE */
+.board{
+  background:linear-gradient(145deg,#061726,#020c14);
+  border-radius:20px;
+  padding:14px;
+  box-shadow:0 0 25px rgba(0,247,255,.35);
+}
+
+.row{
+  display:grid;
+  grid-template-columns:42px 1fr 60px;
+  align-items:center;
+  padding:10px;
+  border-radius:12px;
+  margin-bottom:8px;
+  background:rgba(255,255,255,.05);
+  transition:.25s;
+}
+.row:hover{
+  transform:scale(1.03);
+  box-shadow:0 0 14px rgba(0,247,255,.45);
 }
 
 .rank{
-  font-size:20px;
-  font-weight:800;
+  font-weight:900;
+  text-align:center;
   color:var(--gold);
-  width:42px;
+  font-size:18px;
 }
 
-.info{
-  flex:1;
-}
-.info a{
-  color:var(--neon);
-  text-decoration:none;
+.name{
   font-weight:800;
-  font-size:15px;
-}
-.info small{
-  display:block;
-  font-size:12px;
-  opacity:.8;
+  color:var(--neon);
+  cursor:pointer;
 }
 
 .rating{
-  font-weight:800;
-  font-size:14px;
+  font-weight:900;
+  text-align:right;
 }
 
-/* BADGE */
-.badge{
-  margin-left:8px;
-  padding:6px 10px;
-  border-radius:20px;
-  font-size:12px;
-  font-weight:800;
-}
-.gold{background:#ffd400;color:#000;}
-.silver{background:#c0c0c0;color:#000;}
-.bronze{background:#cd7f32;color:#000;}
+/* TOP 3 */
+.top1{background:linear-gradient(145deg,#332600,#1a1200);}
+.top2{background:linear-gradient(145deg,#2a2a2a,#121212);}
+.top3{background:linear-gradient(145deg,#2a1800,#140c00);}
 
+/* FOOTER */
 footer{
   text-align:center;
   font-size:12px;
   color:#aaa;
-  margin-top:20px;
+  margin-top:18px;
 }
 footer a{
   color:var(--neon);
@@ -124,65 +127,75 @@ footer a{
 
 <header>
   <img src="logo.png">
-  <h1>Leaderboard</h1>
+  <h1>🏆 Leaderboard</h1>
 </header>
 
-<div id="board"></div>
+<div id="season" class="season">Loading season...</div>
+
+<div class="board" id="board">
+  <!-- rows auto -->
+</div>
 
 <footer>
 © 2026 AFN's Elite Strikers |
-<a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI SHOHAN</a>
+<a href="index.html">Home</a>
 </footer>
 
 </div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub",
-  storageBucket: "afnsclub.firebasestorage.app",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+const firebaseConfig={
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub",
+  storageBucket:"afnsclub.firebasestorage.app",
+  messagingSenderId:"1088089213558",
+  appId:"1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-const board=document.getElementById("board");
-
-// 🔥 REALTIME LEADERBOARD
-db.collection("players")
-  .orderBy("rating","desc")
-  .onSnapshot(snapshot=>{
-    board.innerHTML="";
-    let rank=1;
-
-    snapshot.forEach(doc=>{
-      const p=doc.data();
-
-      let badge="bronze", badgeText="Bronze";
-      if(p.rating>=80){badge="gold";badgeText="Gold";}
-      else if(p.rating>=60){badge="silver";badgeText="Silver";}
-
-      const div=document.createElement("div");
-      div.className="card";
-      div.innerHTML=`
-        <div class="rank">#${rank++}</div>
-        <div class="info">
-          <a href="public-profile.html?id=${doc.id}">${p.username}</a>
-          <small>${p.gameId || "AFN Player"}</small>
-        </div>
-        <div class="rating">${p.rating || 0}</div>
-        <div class="badge ${badge}">${badgeText}</div>
-      `;
-      board.appendChild(div);
-    });
+// SEASON BANNER
+db.collection("system").doc("season")
+.onSnapshot(doc=>{
+  if(doc.exists){
+    document.getElementById("season").innerText = doc.data().text;
+  }
 });
+
+// LEADERBOARD
+db.collection("players")
+.orderBy("rating","desc")
+.onSnapshot(snap=>{
+  board.innerHTML="";
+  let rank=1;
+
+  snap.forEach(doc=>{
+    const p=doc.data();
+    const row=document.createElement("div");
+    row.className="row";
+    if(rank===1)row.classList.add("top1");
+    if(rank===2)row.classList.add("top2");
+    if(rank===3)row.classList.add("top3");
+
+    row.innerHTML=`
+      <div class="rank">${rank}</div>
+      <div class="name" onclick="openProfile('${doc.id}')">${p.username}</div>
+      <div class="rating">${p.rating||0}</div>
+    `;
+    board.appendChild(row);
+    rank++;
+  });
+});
+
+function openProfile(uid){
+  location.href="public-profile.html?id="+uid;
+}
 </script>
 
 </body>
