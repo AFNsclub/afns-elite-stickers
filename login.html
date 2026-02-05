@@ -1,172 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Login | AFNs Elite Striker</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link rel="stylesheet" href="style.css">
-
-<style>
-.login-box{
-  max-width:420px;
-  margin:80px auto;
-  background:rgba(255,255,255,0.06);
-  backdrop-filter:blur(10px);
-  padding:24px;
-  border-radius:14px;
-}
-.login-box h2{
-  text-align:center;
-  margin-bottom:18px;
-}
-.login-box input{
-  width:100%;
-  padding:12px;
-  margin-top:12px;
-  border:none;
-  border-radius:8px;
-  font-size:14px;
-}
-.password-wrap{
-  position:relative;
-}
-.toggle-pass{
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  cursor:pointer;
-  font-size:13px;
-  color:#60a5fa;
-}
-.login-box button{
-  width:100%;
-  margin-top:16px;
-  padding:12px;
-  border:none;
-  border-radius:8px;
-  font-weight:bold;
-  background:#3b82f6;
-  color:#fff;
-}
-.msg{
-  margin-top:14px;
-  text-align:center;
-  font-size:14px;
-}
-.links{
-  margin-top:14px;
-  display:flex;
-  justify-content:space-between;
-  font-size:13px;
-}
-.links a{
-  color:#60a5fa;
-  text-decoration:none;
-}
-</style>
-</head>
-
-<body>
-
-<div class="login-box">
-  <h2>Login</h2>
-
-  <input type="email" id="email" placeholder="Gmail">
-
-  <div class="password-wrap">
-    <input type="password" id="password" placeholder="Password">
-    <span class="toggle-pass" onclick="togglePass()">Show</span>
-  </div>
-
-  <button onclick="login()">Login</button>
-
-  <div class="msg" id="msg"></div>
-
-  <div class="links">
-    <a href="#" onclick="forgot()">Forgot password?</a>
-    <a href="register.html">Create account</a>
-  </div>
-</div>
-
-<footer class="global-footer">
-  <div class="footer-inner">
-    <img src="logo.png" class="footer-logo">
-    <div class="footer-text">
-      AFNs Elite Striker |
-      <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
-        SI Shohan
-      </a>
-    </div>
-  </div>
-</footer>
-
-<!-- Firebase Engine -->
 <script src="firebase.js"></script>
-
 <script>
-function togglePass(){
-  const p = document.getElementById("password");
-  const t = document.querySelector(".toggle-pass");
-  if(p.type === "password"){
-    p.type = "text";
-    t.textContent = "Hide";
-  }else{
-    p.type = "password";
-    t.textContent = "Show";
-  }
-}
+auth.onAuthStateChanged(user=>{
+  if(!user) return;
 
-function login(){
-  const email = email.value.trim();
-  const pass  = password.value.trim();
-  const msg   = document.getElementById("msg");
+  db.collection("players").doc(user.uid).get().then(doc=>{
+    const d = doc.data();
 
-  msg.style.color = "#fff";
-  msg.textContent = "Logging in...";
-
-  if(!email || !pass){
-    msg.style.color="orange";
-    msg.textContent="All fields required";
-    return;
-  }
-
-  auth.signInWithEmailAndPassword(email, pass)
-  .then(res=>{
-    msg.style.color="#22c55e";
-    msg.textContent="Login successful ✅";
-    setTimeout(()=>{
+    if(d.banned){
+      if(d.banUntil && Date.now() > d.banUntil){
+        db.collection("players").doc(user.uid).update({
+          banned:false,
+          banUntil:null
+        }).then(()=>location.href="player.html");
+      }else{
+        const days = Math.ceil((d.banUntil-Date.now())/86400000);
+        alert("You are banned for "+days+" day(s)");
+        auth.signOut();
+      }
+    }else{
       location.href="player.html";
-    },800);
-  })
-  .catch(err=>{
-    msg.style.color="#ef4444";
-    msg.textContent=err.message;
+    }
   });
-}
-
-function forgot(){
-  const email = document.getElementById("email").value.trim();
-  const msg   = document.getElementById("msg");
-
-  if(!email){
-    msg.style.color="orange";
-    msg.textContent="Enter your email first";
-    return;
-  }
-
-  auth.sendPasswordResetEmail(email)
-  .then(()=>{
-    msg.style.color="#22c55e";
-    msg.textContent="Password reset email sent 📩";
-  })
-  .catch(err=>{
-    msg.style.color="#ef4444";
-    msg.textContent=err.message;
-  });
-}
+});
 </script>
-
-</body>
-</html>
