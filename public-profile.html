@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Public Player Profile</title>
+<title>Create Account</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -11,93 +11,67 @@ body{
   margin:0;
   min-height:100vh;
   background:linear-gradient(135deg,#050b1f,#0a1233);
-  color:#fff;
-}
-.container{
-  max-width:420px;
-  margin:40px auto;
-  background:rgba(255,255,255,.06);
-  backdrop-filter:blur(10px);
-  border-radius:16px;
-  padding:22px;
-  box-shadow:0 0 25px rgba(0,0,0,.6);
-}
-.header{
-  text-align:center;
-}
-.header h2{
-  margin:0;
-}
-.motivation{
-  margin:14px 0;
-  padding:10px;
-  border-radius:10px;
-  background:rgba(59,130,246,.15);
-  text-align:center;
-  font-size:14px;
-}
-.avatar{
-  width:70px;
-  height:70px;
-  border-radius:50%;
-  background:#3b82f6;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:30px;
-  font-weight:bold;
-  margin:14px auto;
+  color:#fff;
 }
-.name{
-  text-align:center;
-  font-size:20px;
-  font-weight:bold;
+.box{
+  width:100%;
+  max-width:420px;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(10px);
+  border-radius:16px;
+  padding:26px;
+  box-shadow:0 0 25px rgba(0,0,0,.6);
 }
-.rank{
-  text-align:center;
-  margin-top:6px;
-  color:#a5b4fc;
+h2{text-align:center;margin:0 0 14px}
+input{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border:none;
+  border-radius:8px;
+  outline:none;
 }
-.card{
+button{
+  width:100%;
   margin-top:16px;
-  background:rgba(255,255,255,.05);
-  padding:14px;
-  border-radius:12px;
-}
-.card p{
-  margin:6px 0;
-  font-size:14px;
-}
-.card span{
-  color:#a5b4fc;
-}
-.stats{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  margin-top:14px;
-}
-.stat{
-  background:rgba(255,255,255,.05);
-  padding:10px;
+  padding:12px;
+  border:none;
   border-radius:10px;
+  background:#22c55e;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover{opacity:.9}
+.links{
+  margin-top:12px;
+  text-align:center;
+  font-size:13px;
+}
+.links a{color:#a5b4fc;text-decoration:none}
+.msg{
+  margin-top:12px;
+  font-size:14px;
   text-align:center;
 }
-.stat b{display:block}
+.success{color:#22c55e}
+.error{color:#ef4444}
+
 footer{
   margin-top:18px;
   text-align:center;
   font-size:12px;
   opacity:.6;
 }
-footer img{
-  height:24px;
-  vertical-align:middle;
-}
+footer img{height:24px}
 footer a{color:#a5b4fc;text-decoration:none}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
@@ -111,29 +85,21 @@ firebase.initializeApp({
 
 <body>
 
-<div class="container">
-  <div class="header">
-    <h2>Player Profile</h2>
+<div class="box">
+  <h2>Create Account</h2>
+
+  <input type="text" id="name" placeholder="Player Name">
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <input type="text" id="phone" placeholder="Bangladesh Phone (01XXXXXXXXX)">
+
+  <button onclick="register()">Create Account</button>
+
+  <div class="links">
+    <a href="login.html">Already have account? Login</a>
   </div>
 
-  <div class="motivation" id="motivation"></div>
-
-  <div class="avatar" id="avatar">P</div>
-  <div class="name" id="playerName">Player</div>
-  <div class="rank" id="rankText">#–</div>
-
-  <div class="card">
-    <p>🎮 Game ID: <span id="gameIdText">—</span></p>
-    <p>📱 Device: <span id="deviceText">—</span></p>
-    <p>🔗 Facebook: <a id="fbLink" target="_blank">Profile</a></p>
-  </div>
-
-  <div class="stats">
-    <div class="stat"><b id="wins">0</b>Wins</div>
-    <div class="stat"><b id="losses">0</b>Loss</div>
-    <div class="stat"><b id="goals">0</b>Goals</div>
-    <div class="stat"><b id="gd">0</b>GD</div>
-  </div>
+  <div class="msg" id="msg"></div>
 
   <footer>
     <img src="logo.png"><br>
@@ -145,51 +111,62 @@ firebase.initializeApp({
 </div>
 
 <script>
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-/* MOTIVATION */
-const MOTIVATIONS=[
-"Train hard, win easy.",
-"No excuses, only results.",
-"Discipline beats talent.",
-"One goal can change everything.",
-"Stay calm. Finish strong.",
-"Every match matters.",
-"Respect the game.",
-"Focus. Fight. Finish."
-];
-
-function dailyMotivation(uid){
-  const d=new Date().toISOString().slice(0,10);
-  let h=0;for(let c of uid+d)h=c.charCodeAt(0)+((h<<5)-h);
-  return MOTIVATIONS[Math.abs(h)%MOTIVATIONS.length];
+function showMsg(t,type){
+  msg.innerText=t;
+  msg.className="msg "+type;
 }
 
-/* GET UID FROM URL ?uid= */
-const params=new URLSearchParams(location.search);
-const uid=params.get("uid");
+function validBDPhone(p){
+  return /^01[3-9]\d{8}$/.test(p);
+}
 
-if(!uid){
-  alert("Player not found");
-}else{
-  db.collection("players").doc(uid).get().then(doc=>{
-    if(!doc.exists)return;
-    const d=doc.data();
+function register(){
+  const n=name.value.trim();
+  const e=email.value.trim();
+  const p=password.value.trim();
+  const ph=phone.value.trim();
 
-    motivation.textContent=dailyMotivation(uid);
-    playerName.textContent=d.name||"Player";
-    avatar.textContent=(d.name||"P")[0].toUpperCase();
-    rankText.textContent="#"+(d.rank||"—");
+  if(!n||!e||!p||!ph){
+    showMsg("All fields required","error");
+    return;
+  }
 
-    gameIdText.textContent=d.gameId||"—";
-    deviceText.textContent=d.device||"—";
-    fbLink.href=d.fb||"#";
+  if(!validBDPhone(ph)){
+    showMsg("Invalid Bangladesh phone number","error");
+    return;
+  }
 
-    wins.textContent=d.wins||0;
-    losses.textContent=d.losses||0;
-    goals.textContent=d.goals||0;
-    gd.textContent=d.gd||0;
-  });
+  firebase.auth()
+    .createUserWithEmailAndPassword(e,p)
+    .then(res=>{
+      const uid=res.user.uid;
+
+      return db.collection("players").doc(uid).set({
+        uid:uid,
+        name:n,
+        email:e,
+        phone:ph,
+        gameId:"",
+        device:"",
+        fb:"",
+        wins:0,
+        losses:0,
+        goals:0,
+        gd:0,
+        banned:false,
+        banUntil:null,
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    })
+    .then(()=>{
+      showMsg("Account created successfully ✅","success");
+      setTimeout(()=>location.href="login.html",1200);
+    })
+    .catch(err=>{
+      showMsg(err.message,"error");
+    });
 }
 </script>
 
