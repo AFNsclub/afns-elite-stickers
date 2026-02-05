@@ -1,109 +1,223 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Player Profile</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<title>Player Profile | AFN's Elite Strikers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: linear-gradient(180deg, #020617, #0b1220);
-      color: white;
-    }
+<style>
+:root{
+  --neon:#00f7ff;
+  --gold:#ffd400;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
+}
 
-    .box {
-      max-width: 420px;
-      margin: auto;
-      padding: 20px;
-      animation: fadeUp 0.5s ease;
-    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',sans-serif;
+}
 
-    .card {
-      background: #0f172a;
-      border-radius: 18px;
-      padding: 20px;
-      text-align: center;
-    }
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
+  color:#fff;
+  display:flex;
+  justify-content:center;
+}
 
-    .avatar {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      background: #4f8cff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      font-weight: bold;
-      margin: auto;
-      margin-bottom: 10px;
-    }
+.container{
+  width:100%;
+  max-width:430px;
+  padding:18px;
+}
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-top: 16px;
-    }
+/* HEADER */
+header{
+  text-align:center;
+  margin-bottom:16px;
+}
+header img{
+  width:90px;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
+}
+header h1{
+  color:var(--gold);
+  margin-top:8px;
+  font-size:24px;
+}
 
-    .stat {
-      background: #020617;
-      border-radius: 14px;
-      padding: 14px;
-      text-align: center;
-    }
+/* PROFILE CARD */
+.card{
+  background:linear-gradient(145deg,#061726,#020c14);
+  border-radius:20px;
+  padding:18px;
+  box-shadow:0 0 25px rgba(0,247,255,.35);
+  animation:fadeIn .5s ease;
+}
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(14px)}
+  to{opacity:1;transform:translateY(0)}
+}
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+.avatar{
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  background:linear-gradient(145deg,#00f7ff,#004d66);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:40px;
+  font-weight:900;
+  margin:0 auto 10px;
+  color:#000;
+}
+
+.username{
+  text-align:center;
+  font-size:22px;
+  font-weight:900;
+  color:var(--neon);
+}
+
+.sub{
+  text-align:center;
+  font-size:13px;
+  opacity:.8;
+  margin-bottom:14px;
+}
+
+/* INFO */
+.info{
+  font-size:14px;
+  margin:6px 0;
+  opacity:.9;
+}
+.info a{
+  color:var(--neon);
+  text-decoration:none;
+  font-weight:700;
+}
+
+/* STATS */
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+.stat{
+  background:rgba(255,255,255,.06);
+  border-radius:14px;
+  padding:12px;
+  text-align:center;
+}
+.stat span{
+  display:block;
+  font-size:20px;
+  font-weight:900;
+  color:var(--gold);
+}
+
+/* FOOTER */
+footer{
+  text-align:center;
+  font-size:12px;
+  color:#aaa;
+  margin-top:20px;
+}
+footer a{
+  color:var(--neon);
+  text-decoration:none;
+  font-weight:700;
+}
+</style>
 </head>
 
 <body>
+<div class="container">
 
-  <div class="box">
-    <div class="card">
-      <div class="avatar" id="avatar">?</div>
-      <h2 id="name">Loading...</h2>
-      <p id="mobile"></p>
+<header>
+  <img src="logo.png">
+  <h1>Player Profile</h1>
+</header>
 
-      <div class="stats">
-        <div class="stat">Wins<br><b id="wins">0</b></div>
-        <div class="stat">Losses<br><b id="losses">0</b></div>
-        <div class="stat">Points<br><b id="points">0</b></div>
-        <div class="stat">Goal Diff<br><b id="gd">0</b></div>
-      </div>
-    </div>
+<div class="card">
+  <div id="avatar" class="avatar">?</div>
+  <div id="username" class="username">Loading...</div>
+  <div id="gameId" class="sub"></div>
+
+  <div class="info">📱 Device: <span id="device">—</span></div>
+  <div class="info">📞 Phone: <span id="phone">—</span></div>
+  <div class="info">
+    🔗 <a id="fb" target="_blank">Facebook Profile</a>
   </div>
 
-  <script type="module" src="firebase-init.js"></script>
-  <script type="module">
-    import { db } from "./firebase-init.js";
-    import { doc, getDoc } from
-      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  <div class="stats">
+    <div class="stat">Rating<span id="rating">0</span></div>
+    <div class="stat">Wins<span id="wins">0</span></div>
+    <div class="stat">Losses<span id="losses">0</span></div>
+    <div class="stat">Goals<span id="goals">0</span></div>
+  </div>
+</div>
 
-    const id = new URLSearchParams(window.location.search).get("id");
-    if (!id) location.href = "ranking.html";
+<footer>
+© 2026 AFN's Elite Strikers |
+<a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI SHOHAN</a>
+</footer>
 
-    const snap = await getDoc(doc(db, "players", id));
-    if (!snap.exists()) return;
+</div>
 
-    const p = snap.data();
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-    document.getElementById("avatar").innerText =
-      p.playerName?.charAt(0).toUpperCase() || "?";
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
 
-    document.getElementById("name").innerText = p.playerName;
-    document.getElementById("mobile").innerText = p.mobile || "";
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
 
-    wins.innerText = p.wins || 0;
-    losses.innerText = p.losses || 0;
-    points.innerText = p.points || 0;
-    gd.innerText = p.goalDifference || 0;
-  </script>
+// 🔹 GET PLAYER ID
+const params=new URLSearchParams(window.location.search);
+const uid=params.get("id");
+
+if(!uid){
+  alert("Invalid player");
+}
+
+// 🔹 LOAD PROFILE
+db.collection("players").doc(uid).get().then(doc=>{
+  if(!doc.exists){
+    alert("Player not found");
+    return;
+  }
+  const p=doc.data();
+
+  document.getElementById("username").innerText=p.username;
+  document.getElementById("avatar").innerText=p.username.charAt(0).toUpperCase();
+  document.getElementById("gameId").innerText=p.gameId || "AFN Player";
+
+  document.getElementById("device").innerText=p.device || "—";
+  document.getElementById("phone").innerText=p.phone || "—";
+  document.getElementById("fb").href=p.facebook || "#";
+
+  document.getElementById("rating").innerText=p.rating || 0;
+  document.getElementById("wins").innerText=p.wins || 0;
+  document.getElementById("losses").innerText=p.losses || 0;
+  document.getElementById("goals").innerText=p.goals || 0;
+});
+</script>
 
 </body>
 </html>
