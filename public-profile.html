@@ -180,8 +180,8 @@ footer a{
   <h1>My Profile</h1>
 </header>
 
-<div class="announce" id="announceBox">
-  🔥 Season Live! Rank up to become AFN Legend.
+<div class="announce">
+🔥 Season Live • Rank up & become AFN Legend
 </div>
 
 <div class="card" id="profileCard">
@@ -223,6 +223,7 @@ auth.onAuthStateChanged(user=>{
 
   db.collection("players").doc(user.uid).onSnapshot(doc=>{
     const p=doc.data();
+
     box.innerHTML=`
       <div class="username">${p.username}</div>
 
@@ -236,7 +237,7 @@ auth.onAuthStateChanged(user=>{
       <div class="info">
         <div><b>Email:</b> ${p.email}</div>
         <div><b>Phone:</b> ${p.phone}</div>
-        <div><b>Game ID:</b> ${p.gameId}</div>
+        <div><b>Game / Owner ID:</b> ${p.gameId}</div>
         <div><b>Device:</b> ${p.device}</div>
       </div>
 
@@ -244,9 +245,10 @@ auth.onAuthStateChanged(user=>{
 
       <form id="editForm">
         <input id="phone" value="${p.phone}">
+        <input id="gameId" value="${p.gameId}">
         <input id="facebook" value="${p.facebook||''}">
         <input id="device" value="${p.device}">
-        <button class="btn">💾 Save</button>
+        <button class="btn">💾 Save Changes</button>
       </form>
 
       <button class="btn logout" onclick="logout()">🚪 Logout</button>
@@ -256,6 +258,7 @@ auth.onAuthStateChanged(user=>{
       e.preventDefault();
       db.collection("players").doc(user.uid).update({
         phone:phone.value,
+        gameId:gameId.value,
         facebook:facebook.value,
         device:device.value
       });
@@ -266,7 +269,7 @@ auth.onAuthStateChanged(user=>{
 
 function toggleEdit(){
   const f=document.getElementById("editForm");
-  f.style.display=f.style.display==="block"?"none":"block";
+  f.style.display = f.style.display==="block" ? "none" : "block";
 }
 
 function logout(){
