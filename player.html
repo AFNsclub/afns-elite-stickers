@@ -1,274 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>My Profile | AFN's Elite Strikers</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Player Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-:root{
-  --neon:#00f7ff;
-  --gold:#ffd400;
-  --bg1:#02060c;
-  --bg2:#0c1b2a;
-}
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Segoe UI',sans-serif;
-}
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
-body{
-  min-height:100vh;
-  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
-  color:#fff;
-  display:flex;
-  justify-content:center;
-}
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
 
-.container{
-  width:100%;
-  max-width:430px;
-  padding:18px;
-}
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #0ff2, #000 70%);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
 
-/* BANNERS */
-.banner{
-  background:linear-gradient(90deg,#002b36,#004f5c);
-  padding:12px;
-  border-radius:16px;
-  text-align:center;
-  color:var(--neon);
-  font-weight:800;
-  margin-bottom:14px;
-  box-shadow:0 0 18px rgba(0,247,255,.45);
-}
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(15, 25, 35, 0.95);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 0 40px #00f6ff55;
+      animation: fadeUp 0.6s ease;
+    }
 
-.season{
-  background:linear-gradient(90deg,#3a2c00,#141000);
-  color:var(--gold);
-}
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-/* PROFILE CARD */
-.card{
-  background:linear-gradient(145deg,#061726,#020c14);
-  border-radius:22px;
-  padding:18px;
-  box-shadow:0 0 30px rgba(0,247,255,.35);
-}
+    .avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00f6ff, #0066ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      font-weight: 700;
+      margin: 0 auto 10px;
+    }
 
-.avatar{
-  width:90px;
-  height:90px;
-  border-radius:50%;
-  background:rgba(255,255,255,.1);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:36px;
-  margin:0 auto 10px;
-  color:var(--gold);
-}
+    h2 {
+      text-align: center;
+      margin: 6px 0;
+      color: #ffd700;
+    }
 
-h2{
-  text-align:center;
-  color:var(--gold);
-}
+    .gameid {
+      text-align: center;
+      color: #00f6ff;
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
 
-.id{
-  text-align:center;
-  font-size:12px;
-  color:var(--neon);
-  margin-bottom:14px;
-}
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
 
-/* STATS */
-.stats{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-bottom:14px;
-}
+    .stat {
+      flex: 1;
+      background: #0b1e2d;
+      border-radius: 14px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: inset 0 0 10px #00f6ff33;
+    }
 
-.stat{
-  background:rgba(255,255,255,.06);
-  border-radius:14px;
-  padding:10px;
-  text-align:center;
-}
+    .stat b {
+      font-size: 22px;
+      color: #00f6ff;
+    }
 
-.stat span{
-  display:block;
-  font-size:18px;
-  color:var(--gold);
-  font-weight:800;
-}
+    .info p {
+      margin: 6px 0;
+      font-size: 14px;
+    }
 
-/* INFO */
-.info{
-  font-size:14px;
-  line-height:1.6;
-  margin-bottom:14px;
-}
+    .info span {
+      color: #00f6ff;
+    }
 
-.info b{color:var(--neon);}
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      border-radius: 14px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
 
-/* BUTTONS */
-.btn{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:14px;
-  margin-bottom:10px;
-  font-size:15px;
-  font-weight:700;
-  cursor:pointer;
-}
+    .edit-btn {
+      background: linear-gradient(135deg, #00f6ff, #0066ff);
+      color: #000;
+    }
 
-.edit{background:var(--neon); color:#000;}
-.logout{background:#ff4d4d; color:#fff;}
+    .logout-btn {
+      background: #ff4d4d;
+      color: #fff;
+    }
 
-/* EDIT FORM */
-form{
-  display:none;
-  margin-top:10px;
-}
+    .edit-box {
+      display: none;
+      margin-top: 15px;
+      animation: fadeUp 0.4s ease;
+    }
 
-input{
-  width:100%;
-  padding:10px;
-  border-radius:12px;
-  border:none;
-  margin-bottom:8px;
-}
+    .edit-box input {
+      width: 100%;
+      padding: 12px;
+      margin: 6px 0;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+    }
 
-/* FOOTER */
-footer{
-  text-align:center;
-  font-size:12px;
-  color:#aaa;
-  margin-top:16px;
-}
-</style>
+    footer {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 12px;
+      color: #aaa;
+    }
+  </style>
 </head>
 
 <body>
-<div class="container">
-
-<div class="banner" id="notice">
-🔥 Live Notice: Tonight ranking update at 10 PM!
-</div>
-
-<div class="banner season">
-🏆 Season 3 Running — Perform & Rise
-</div>
 
 <div class="card">
+  <div class="avatar" id="avatar">?</div>
+  <h2 id="username">Loading...</h2>
+  <div class="gameid">Game/Owner ID: <b id="gameId">—</b></div>
 
-<div class="avatar" id="avatar">?</div>
-<h2 id="username">Loading...</h2>
-<div class="id">Game / Owner ID: <span id="gameId">---</span></div>
+  <div class="stats">
+    <div class="stat"><b id="rating">0</b><div>Rating</div></div>
+    <div class="stat"><b id="wins">0</b><div>Wins</div></div>
+    <div class="stat"><b id="losses">0</b><div>Losses</div></div>
+  </div>
 
-<div class="stats">
-  <div class="stat"><span id="rating">0</span>Rating</div>
-  <div class="stat"><span id="wins">0</span>Wins</div>
-  <div class="stat"><span id="losses">0</span>Losses</div>
+  <div class="info">
+    <p><span>Email:</span> <span id="email"></span></p>
+    <p><span>Phone:</span> <span id="phone"></span></p>
+    <p><span>Device:</span> <span id="device"></span></p>
+    <p><span>Facebook:</span> <a id="facebook" href="#" target="_blank">View</a></p>
+  </div>
+
+  <button class="edit-btn" onclick="toggleEdit()">Edit Profile</button>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+
+  <!-- EDIT SECTION -->
+  <div class="edit-box" id="editBox">
+    <input id="editPhone" placeholder="Phone">
+    <input id="editDevice" placeholder="Device">
+    <input id="editFacebook" placeholder="Facebook Link">
+    <input id="editGameId" placeholder="Game / Owner ID">
+    <button class="edit-btn" onclick="saveProfile()">Save Changes</button>
+  </div>
+
+  <footer>© 2026 AFNS Elite Strikers</footer>
 </div>
-
-<div class="info">
-<b>Email:</b> <span id="email"></span><br>
-<b>Phone:</b> <span id="phone"></span><br>
-<b>Device:</b> <span id="device"></span><br>
-<b>Facebook:</b> <a id="fb" href="#" target="_blank">View</a>
-</div>
-
-<button class="btn edit" onclick="toggleEdit()">Edit Profile</button>
-<button class="btn logout" onclick="logout()">Logout</button>
-
-<form id="editForm">
-  <input id="ePhone" placeholder="Phone">
-  <input id="eDevice" placeholder="Device">
-  <input id="eFb" placeholder="Facebook Link">
-  <button class="btn edit" type="submit">Save Changes</button>
-</form>
-
-</div>
-
-<footer>
-© 2026 AFN's Elite Strikers
-</footer>
-
-</div>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
+  // 🔥 Firebase Config (নিজেরটা বসাবে)
+  firebase.initializeApp({
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID"
+  });
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-let uid;
+  let currentUser;
 
-// AUTH CHECK
-auth.onAuthStateChanged(user=>{
-  if(!user){
-    location.href="login.html";
-    return;
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "login.html";
+    } else {
+      currentUser = user;
+      loadProfile();
+    }
+  });
+
+  function loadProfile() {
+    db.collection("players").doc(currentUser.uid).onSnapshot(doc => {
+      const d = doc.data();
+
+      document.getElementById("username").innerText = d.username;
+      document.getElementById("avatar").innerText = d.username.charAt(0).toUpperCase();
+      document.getElementById("gameId").innerText = d.gameId || "-";
+      document.getElementById("rating").innerText = d.rating || 0;
+      document.getElementById("wins").innerText = d.wins || 0;
+      document.getElementById("losses").innerText = d.losses || 0;
+      document.getElementById("email").innerText = d.email;
+      document.getElementById("phone").innerText = d.phone || "-";
+      document.getElementById("device").innerText = d.device || "-";
+      document.getElementById("facebook").href = d.facebook || "#";
+
+      editPhone.value = d.phone || "";
+      editDevice.value = d.device || "";
+      editFacebook.value = d.facebook || "";
+      editGameId.value = d.gameId || "";
+    });
   }
-  uid=user.uid;
-  loadProfile();
-});
 
-// LOAD PROFILE
-function loadProfile(){
-  db.collection("players").doc(uid).onSnapshot(doc=>{
-    const d=doc.data();
-    username.textContent=d.username;
-    avatar.textContent=d.username.charAt(0).toUpperCase();
-    gameId.textContent=d.gameId;
-    rating.textContent=d.rating||0;
-    wins.textContent=d.wins||0;
-    losses.textContent=d.losses||0;
-    email.textContent=d.email;
-    phone.textContent=d.phone;
-    device.textContent=d.device;
-    fb.href=d.facebook;
-    ePhone.value=d.phone;
-    eDevice.value=d.device;
-    eFb.value=d.facebook;
-  });
-}
+  function toggleEdit() {
+    const box = document.getElementById("editBox");
+    box.style.display = box.style.display === "block" ? "none" : "block";
+  }
 
-// EDIT
-function toggleEdit(){
-  editForm.style.display=
-    editForm.style.display==="block"?"none":"block";
-}
+  function saveProfile() {
+    db.collection("players").doc(currentUser.uid).update({
+      phone: editPhone.value,
+      device: editDevice.value,
+      facebook: editFacebook.value,
+      gameId: editGameId.value
+    });
+    toggleEdit();
+  }
 
-editForm.onsubmit=e=>{
-  e.preventDefault();
-  db.collection("players").doc(uid).update({
-    phone:ePhone.value,
-    device:eDevice.value,
-    facebook:eFb.value
-  });
-  toggleEdit();
-};
-
-// LOGOUT
-function logout(){
-  auth.signOut().then(()=>location.href="login.html");
-}
+  function logout() {
+    auth.signOut().then(() => {
+      window.location.href = "login.html";
+    });
+  }
 </script>
 
 </body>
