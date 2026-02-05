@@ -1,263 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>My Profile | AFNs Elite Strikers</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Player Profile | AFNs Elite Striker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- ✅ FINAL CSS (only this) -->
+  <link rel="stylesheet" href="style.css">
 
-<style>
-:root{
-  --bg:#071520;
-  --card:#0e2230;
-  --accent:#00f5ff;
-  --gold:#ffd700;
-  --text:#eaf6ff;
-}
+  <!-- Firebase Config (তুমি যেটা দিয়েছো) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-*{box-sizing:border-box;font-family:'Segoe UI',sans-serif}
-
-body{
-  margin:0;
-  background:radial-gradient(circle at top,#0a2a3f,#050d14);
-  color:var(--text);
-}
-
-/* ===== HEADER ===== */
-.header{
-  text-align:center;
-  padding:25px 15px 15px;
-}
-.header h1{
-  margin:0;
-  color:var(--gold);
-  font-size:32px;
-}
-.header p{
-  margin:5px 0 0;
-  color:#7de9ff;
-}
-
-/* ===== MOTIVATION ===== */
-.motivation{
-  margin:15px;
-  padding:14px;
-  background:linear-gradient(135deg,#0d3b52,#081e2b);
-  border-radius:14px;
-  text-align:center;
-  font-weight:600;
-  color:#bff6ff;
-  box-shadow:0 0 25px rgba(0,245,255,.15);
-}
-
-/* ===== CARD ===== */
-.card{
-  margin:15px;
-  background:linear-gradient(180deg,#0f2636,#091824);
-  border-radius:18px;
-  padding:18px;
-  box-shadow:0 15px 40px rgba(0,0,0,.6);
-}
-
-/* ===== PROFILE TOP ===== */
-.profile-top{
-  text-align:center;
-}
-.avatar{
-  width:90px;
-  height:90px;
-  border-radius:50%;
-  background:#123;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:38px;
-  color:var(--gold);
-  margin:0 auto 10px;
-}
-.name{
-  font-size:22px;
-  font-weight:700;
-}
-.email{
-  font-size:14px;
-  opacity:.8;
-}
-
-/* ===== INPUTS ===== */
-label{
-  font-size:13px;
-  opacity:.85;
-}
-input{
-  width:100%;
-  margin:6px 0 14px;
-  padding:14px;
-  border-radius:12px;
-  border:none;
-  outline:none;
-  background:#f8fcff;
-  font-size:15px;
-}
-
-/* ===== STATS ===== */
-.stats{
-  display:flex;
-  gap:10px;
-  margin-top:10px;
-}
-.stat{
-  flex:1;
-  background:#0a1f2c;
-  padding:12px;
-  border-radius:14px;
-  text-align:center;
-}
-.stat span{
-  display:block;
-  margin-top:5px;
-}
-
-/* ===== BUTTONS ===== */
-.btn{
-  width:100%;
-  padding:15px;
-  border:none;
-  border-radius:14px;
-  font-size:17px;
-  font-weight:700;
-  margin-top:12px;
-  cursor:pointer;
-}
-.save{
-  background:linear-gradient(135deg,#00f5ff,#00bcd4);
-}
-.logout{
-  background:#222;
-  color:#fff;
-}
-
-/* ===== FOOTER ===== */
-.global-footer{
-  margin-top:30px;
-  padding:15px 10px;
-  text-align:center;
-  background:#050d14;
-}
-.footer-logo{
-  width:45px;
-  margin-bottom:6px;
-}
-.footer-text{
-  font-size:13px;
-}
-.footer-text a{
-  color:#00f5ff;
-  text-decoration:none;
-}
-
-/* ===== RESPONSIVE ===== */
-@media(min-width:768px){
-  body{max-width:420px;margin:auto}
-}
-</style>
+  <script>
+    firebase.initializeApp({
+      apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+      authDomain:"afnsclub.firebaseapp.com",
+      projectId:"afnsclub"
+    });
+  </script>
 </head>
 
 <body>
 
-<div class="header">
-  <h1>My Profile</h1>
-  <p>AFN's Elite Strikers</p>
-</div>
+  <div class="container">
 
-<div class="motivation" id="motivationBox"></div>
+    <!-- ===== HEADER ===== -->
+    <div class="header">
+      <h2>Player Profile</h2>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
 
-<div class="card">
-  <div class="profile-top">
-    <div class="avatar" id="avatar">S</div>
-    <div class="name" id="username">Saif</div>
-    <div class="email" id="email">example@gmail.com</div>
+    <!-- ===== MOTIVATION ===== -->
+    <div class="profile-box">
+      <p><span id="motivationText">Stay focused. Win today.</span></p>
+    </div>
+
+    <!-- ===== PROFILE VIEW ===== -->
+    <div class="profile-box">
+      <p>Name: <span id="playerName">—</span></p>
+      <p>Phone: <span id="phoneText">—</span></p>
+      <p>Email: <span id="emailText">—</span></p>
+      <p>Game ID: <span id="gameIdText">—</span></p>
+      <p>Device: <span id="deviceText">—</span></p>
+      <p>Facebook: <a id="fbLink" href="#" target="_blank">Visit</a></p>
+
+      <p>Rank: <span id="rankText">—</span></p>
+      <p>Wins: <span id="wins">0</span></p>
+      <p>Losses: <span id="losses">0</span></p>
+      <p>Goals: <span id="goals">0</span></p>
+      <p>Goal Diff: <span id="gd">0</span></p>
+
+      <button class="btn-edit" onclick="toggleEdit()">Edit Profile</button>
+    </div>
+
+    <!-- ===== EDIT PROFILE ===== -->
+    <form id="editForm" style="display:none">
+      <input id="nameInput" placeholder="Player Name">
+
+      <!-- 🇧🇩 Bangladesh phone only -->
+      <input id="phoneInput"
+             placeholder="Bangladesh Phone (01XXXXXXXXX)"
+             pattern="01[0-9]{9}"
+             title="Bangladesh valid number only">
+
+      <input id="emailInput" placeholder="Email">
+      <input id="gameIdInput" placeholder="Game ID">
+      <input id="deviceInput" placeholder="Device (Android / iOS)">
+      <input id="fbInput" placeholder="Facebook Profile Link">
+
+      <button type="button" class="btn-save" onclick="saveProfile()">
+        Save Profile
+      </button>
+    </form>
+
   </div>
 
-  <label>Phone (Bangladesh)</label>
-  <input id="phone" placeholder="01XXXXXXXXX">
+  <!-- ===== FOOTER (GLOBAL) ===== -->
+  <footer class="global-footer">
+    <div class="footer-inner">
+      <img src="logo.png" class="footer-logo" alt="AFNS Logo">
+      <div class="footer-text">
+        AFNs Elite Striker |
+        <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
+          SI Shohan
+        </a>
+      </div>
+    </div>
+  </footer>
 
-  <label>Facebook Link</label>
-  <input id="facebook">
+  <!-- ===== PLAYER SCRIPT ===== -->
+  <script>
+    firebase.auth().onAuthStateChanged(user=>{
+      if(!user){
+        location.href="index.html";
+      }else{
+        window.__UID__ = user.uid;
+      }
+    });
 
-  <label>Game / Owner ID</label>
-  <input id="gameid">
+    function logout(){
+      firebase.auth().signOut().then(()=>{
+        location.href="index.html";
+      });
+    }
 
-  <label>Device Name</label>
-  <input id="device">
+    function toggleEdit(){
+      const f = document.getElementById("editForm");
+      f.style.display = f.style.display === "none" ? "block" : "none";
+    }
+  </script>
 
-  <div class="stats">
-    <div class="stat">⭐<span id="rating">0</span></div>
-    <div class="stat">🏆<span id="wins">0</span></div>
-    <div class="stat">❌<span id="losses">0</span></div>
-  </div>
-
-  <button class="btn save" onclick="saveProfile()">Save Profile</button>
-  <button class="btn logout" onclick="logout()">Logout</button>
-</div>
-
-<footer class="global-footer">
-  <img src="logo.png" class="footer-logo">
-  <div class="footer-text">
-    AFNs Elite Striker |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
-      SI Shohan
-    </a>
-  </div>
-</footer>
-
-<script>
-/* ===== FIREBASE CONFIG ===== */
-firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-/* ===== MOTIVATION ===== */
-const lines=[
- "নিজেকে হারালেই ম্যাচ হারো।",
- "ডিসিপ্লিনই এলিটদের পরিচয়।",
- "আজ ফোকাস, কাল লিডারবোর্ড।",
- "হার শেখায়, জয় প্রমাণ করে।",
- "AFNs খেলোয়াড় মানেই স্ট্যান্ডার্ড।"
-];
-document.getElementById("motivationBox").innerText =
- lines[Math.floor(Math.random()*lines.length)];
-
-/* ===== AUTH ===== */
-auth.onAuthStateChanged(user=>{
- if(!user){location.href="login.html";return;}
- document.getElementById("email").innerText=user.email;
-});
-
-/* ===== SAVE ===== */
-function saveProfile(){
- const phone=document.getElementById("phone").value;
- if(!/^01\d{9}$/.test(phone)){
-   alert("Bangladesh valid phone number দিন");
-   return;
- }
- alert("Profile Saved ✔");
-}
-
-/* ===== LOGOUT ===== */
-function logout(){
- auth.signOut().then(()=>location.href="login.html");
-}
-</script>
+  <!-- 🔥 MAIN PLAYER LOGIC (তোমার দেওয়া JS) -->
+  <script src="player.js"></script>
 
 </body>
-  </html>
+</html>
