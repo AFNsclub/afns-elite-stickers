@@ -9,6 +9,8 @@
 :root{
   --neon:#00f7ff;
   --gold:#ffd400;
+  --silver:#c0c0c0;
+  --bronze:#cd7f32;
   --bg1:#02060c;
   --bg2:#0c1b2a;
 }
@@ -37,7 +39,7 @@ body{
 /* HEADER */
 header{
   text-align:center;
-  margin-bottom:16px;
+  margin-bottom:14px;
 }
 header img{
   width:90px;
@@ -48,66 +50,61 @@ header h1{
   margin-top:6px;
   font-size:26px;
 }
-
-/* SEASON BANNER */
-.season{
-  background:linear-gradient(145deg,#2a1b00,#120a00);
-  border-radius:14px;
-  padding:10px;
-  text-align:center;
-  font-weight:900;
-  color:var(--gold);
-  box-shadow:0 0 18px rgba(255,215,0,.4);
-  margin-bottom:14px;
+header p{
+  font-size:13px;
+  color:var(--neon);
 }
 
-/* TABLE */
-.board{
+/* CARD */
+.card{
   background:linear-gradient(145deg,#061726,#020c14);
-  border-radius:20px;
+  border-radius:22px;
   padding:14px;
-  box-shadow:0 0 25px rgba(0,247,255,.35);
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 0 18px rgba(0,247,255,.35);
+  animation:fadeIn .5s ease;
 }
 
-.row{
-  display:grid;
-  grid-template-columns:42px 1fr 60px;
-  align-items:center;
-  padding:10px;
-  border-radius:12px;
-  margin-bottom:8px;
-  background:rgba(255,255,255,.05);
-  transition:.25s;
-}
-.row:hover{
-  transform:scale(1.03);
-  box-shadow:0 0 14px rgba(0,247,255,.45);
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
 }
 
 .rank{
+  font-size:20px;
   font-weight:900;
+  width:42px;
   text-align:center;
   color:var(--gold);
-  font-size:18px;
 }
 
-.name{
-  font-weight:800;
+.name a{
   color:var(--neon);
-  cursor:pointer;
+  font-weight:800;
+  text-decoration:none;
+  font-size:15px;
 }
 
 .rating{
-  font-weight:900;
-  text-align:right;
+  font-size:15px;
+  font-weight:700;
+  color:#fff;
 }
 
-/* TOP 3 */
-.top1{background:linear-gradient(145deg,#332600,#1a1200);}
-.top2{background:linear-gradient(145deg,#2a2a2a,#121212);}
-.top3{background:linear-gradient(145deg,#2a1800,#140c00);}
+.badge{
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:900;
+}
 
-/* FOOTER */
+.gold{background:var(--gold);color:#000;}
+.silver{background:var(--silver);color:#000;}
+.bronze{background:var(--bronze);color:#000;}
+
 footer{
   text-align:center;
   font-size:12px;
@@ -127,14 +124,11 @@ footer a{
 
 <header>
   <img src="logo.png">
-  <h1>🏆 Leaderboard</h1>
+  <h1>Leaderboard</h1>
+  <p>AFN's Elite Strikers</p>
 </header>
 
-<div id="season" class="season">Loading season...</div>
-
-<div class="board" id="board">
-  <!-- rows auto -->
-</div>
+<div id="board"></div>
 
 <footer>
 © 2026 AFN's Elite Strikers |
@@ -145,7 +139,6 @@ footer a{
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
@@ -158,44 +151,38 @@ const firebaseConfig={
   appId:"1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
 firebase.initializeApp(firebaseConfig);
+
 const db=firebase.firestore();
+const board=document.getElementById("board");
 
-// SEASON BANNER
-db.collection("system").doc("season")
-.onSnapshot(doc=>{
-  if(doc.exists){
-    document.getElementById("season").innerText = doc.data().text;
-  }
-});
-
-// LEADERBOARD
+// 🔥 REALTIME LEADERBOARD
 db.collection("players")
 .orderBy("rating","desc")
-.onSnapshot(snap=>{
+.onSnapshot(snapshot=>{
   board.innerHTML="";
-  let rank=1;
 
-  snap.forEach(doc=>{
+  snapshot.forEach((doc,i)=>{
     const p=doc.data();
-    const row=document.createElement("div");
-    row.className="row";
-    if(rank===1)row.classList.add("top1");
-    if(rank===2)row.classList.add("top2");
-    if(rank===3)row.classList.add("top3");
 
-    row.innerHTML=`
-      <div class="rank">${rank}</div>
-      <div class="name" onclick="openProfile('${doc.id}')">${p.username}</div>
+    let badge="bronze",cls="bronze";
+    if(p.rating>=80){badge="Gold";cls="gold";}
+    else if(p.rating>=60){badge="Silver";cls="silver";}
+
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <div class="rank">#${i+1}</div>
+      <div class="name">
+        <a href="public-profile.html?id=${doc.id}">
+          ${p.username}
+        </a>
+      </div>
       <div class="rating">${p.rating||0}</div>
+      <div class="badge ${cls}">${badge}</div>
     `;
-    board.appendChild(row);
-    rank++;
+    board.appendChild(div);
   });
 });
-
-function openProfile(uid){
-  location.href="public-profile.html?id="+uid;
-}
 </script>
 
 </body>
