@@ -1,38 +1,51 @@
-body {
-  background: #020b18;
-  color: #fff;
-  font-family: sans-serif;
+*{
+  box-sizing:border-box;
+  font-family:Segoe UI,Arial,sans-serif;
 }
-
-.container {
-  max-width: 400px;
-  margin: 40px auto;
-  text-align: center;
+body{
+  margin:0;
+  min-height:100vh;
+  background:linear-gradient(135deg,#050b1f,#0a1233);
+  color:#fff;
 }
-
-.logo {
-  width: 120px;
+.container{
+  max-width:420px;
+  margin:60px auto;
+  background:rgba(255,255,255,.05);
+  backdrop-filter:blur(12px);
+  border-radius:16px;
+  padding:22px;
+  box-shadow:0 0 30px rgba(0,0,0,.7);
 }
-
-input, button {
-  width: 100%;
-  margin: 8px 0;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
+h2{text-align:center;margin-bottom:12px}
+input,button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:8px;
+  border:none;
+  font-size:14px;
 }
-
-button {
-  background: cyan;
-  font-weight: bold;
+button{
+  background:#3b82f6;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
 }
-
-.global-footer {
-  text-align: center;
-  margin-top: 40px;
-  font-size: 14px;
+button.logout{background:#ff4d4d}
+.notice{
+  text-align:center;
+  margin-bottom:12px;
+  color:#00f7ff;
+  font-weight:bold;
 }
-
-.footer-logo {
-  width: 30px;
+.profile-box p{margin:8px 0;font-size:14px}
+.profile-box span{color:#a5b4fc;font-weight:bold}
+.global-footer{
+  text-align:center;
+  margin:30px 0 10px;
+  font-size:12px;
+  opacity:.85;
 }
+.footer-logo{width:36px;display:block;margin:0 auto 6px}
+.global-footer a{color:#00f7ff;text-decoration:none;font-weight:bold}
