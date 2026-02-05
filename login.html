@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Player Login</title>
+<title>Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -10,49 +10,38 @@
 body{
   margin:0;
   min-height:100vh;
+  background:linear-gradient(135deg,#050b1f,#0a1233);
   display:flex;
   align-items:center;
   justify-content:center;
-  background:linear-gradient(135deg,#050b1f,#0a1233);
   color:#fff;
 }
 .box{
-  width:380px;
+  width:100%;
+  max-width:420px;
   background:rgba(255,255,255,.06);
   backdrop-filter:blur(10px);
-  padding:26px;
   border-radius:16px;
+  padding:26px;
   box-shadow:0 0 25px rgba(0,0,0,.6);
 }
-.logo{
-  text-align:center;
-  margin-bottom:8px;
-}
-.logo img{
-  height:60px;
-}
-h2{
-  text-align:center;
-  margin:10px 0 16px;
-}
+h2{text-align:center;margin:0 0 14px}
 input{
   width:100%;
-  padding:11px;
-  margin-top:10px;
+  padding:12px;
+  margin-top:12px;
   border:none;
   border-radius:8px;
   outline:none;
 }
-.pass-wrap{
-  position:relative;
-}
-.pass-wrap span{
+.pass-wrap{position:relative}
+.toggle{
   position:absolute;
   right:12px;
   top:50%;
   transform:translateY(-50%);
-  font-size:12px;
   cursor:pointer;
+  font-size:13px;
   opacity:.7;
 }
 button{
@@ -66,39 +55,34 @@ button{
   font-weight:bold;
   cursor:pointer;
 }
-button:hover{
-  box-shadow:0 0 14px rgba(59,130,246,.7);
-}
+button:hover{opacity:.9}
 .links{
   margin-top:12px;
   display:flex;
   justify-content:space-between;
   font-size:13px;
 }
-.links a{
-  color:#a5b4fc;
-  text-decoration:none;
-}
-.links a:hover{text-decoration:underline}
+.links a{color:#a5b4fc;text-decoration:none}
 .msg{
-  margin-top:14px;
-  text-align:center;
+  margin-top:12px;
   font-size:14px;
+  text-align:center;
 }
-.error{color:#ff6b6b}
 .success{color:#22c55e}
+.error{color:#ef4444}
+
 footer{
   margin-top:18px;
   text-align:center;
   font-size:12px;
-  opacity:.5;
+  opacity:.6;
 }
+footer img{height:24px}
+footer a{color:#a5b4fc;text-decoration:none}
 </style>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -112,29 +96,26 @@ firebase.initializeApp({
 <body>
 
 <div class="box">
-  <div class="logo">
-    <img src="logo.png">
-  </div>
+  <h2>Login</h2>
 
-  <h2>Player Login</h2>
-
-  <input id="email" placeholder="Email">
+  <input type="email" id="email" placeholder="Email">
 
   <div class="pass-wrap">
     <input type="password" id="password" placeholder="Password">
-    <span onclick="togglePass()">SHOW</span>
+    <span class="toggle" onclick="togglePass()">Show</span>
   </div>
 
-  <button onclick="login()">LOGIN</button>
+  <button onclick="login()">Login</button>
 
   <div class="links">
-    <a href="#" onclick="forgot()">Forgot Password?</a>
-    <a href="register.html">Create Account</a>
+    <a href="#" onclick="forgot()">Forgot password?</a>
+    <a href="register.html">Create account</a>
   </div>
 
   <div class="msg" id="msg"></div>
 
   <footer>
+    <img src="logo.png"><br>
     AFNs Elite Striker |
     <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
       SI Shohan
@@ -143,83 +124,57 @@ firebase.initializeApp({
 </div>
 
 <script>
-const auth=firebase.auth();
-const db=firebase.firestore();
-const msg=document.getElementById("msg");
-
 function togglePass(){
-  const p=document.getElementById("password");
-  p.type=p.type==="password"?"text":"password";
+  const p=password;
+  if(p.type==="password"){
+    p.type="text";
+    document.querySelector(".toggle").innerText="Hide";
+  }else{
+    p.type="password";
+    document.querySelector(".toggle").innerText="Show";
+  }
+}
+
+function showMsg(text,type){
+  msg.innerText=text;
+  msg.className="msg "+type;
 }
 
 function login(){
-  const email=document.getElementById("email").value.trim();
-  const pass=document.getElementById("password").value;
+  const e=email.value.trim();
+  const p=password.value.trim();
 
-  msg.textContent="";
-  msg.className="msg";
-
-  if(!email||!pass){
-    msg.textContent="Email & password required";
-    msg.classList.add("error");
+  if(!e || !p){
+    showMsg("Email & password required","error");
     return;
   }
 
-  auth.signInWithEmailAndPassword(email,pass)
+  firebase.auth()
+    .signInWithEmailAndPassword(e,p)
     .then(res=>{
-      const uid=res.user.uid;
-
-      db.collection("players").doc(uid).get().then(doc=>{
-        if(!doc.exists){
-          msg.textContent="Player profile not found";
-          msg.classList.add("error");
-          auth.signOut();
-          return;
-        }
-
-        const d=doc.data();
-
-        if(d.banned){
-          const until=d.banUntil?.toDate();
-          msg.textContent=until
-            ? "You are banned until "+until.toLocaleDateString()
-            : "You are permanently banned";
-          msg.classList.add("error");
-          auth.signOut();
-          return;
-        }
-
-        window.__UID__=uid;
-        msg.textContent="Login successful ✓";
-        msg.classList.add("success");
-
-        setTimeout(()=>{
-          location.href="player.html";
-        },700);
-      });
+      showMsg("Login successful ✅","success");
+      setTimeout(()=>{
+        location.href="index.html";
+      },800);
     })
     .catch(err=>{
-      msg.textContent=err.message;
-      msg.classList.add("error");
+      showMsg(err.message,"error");
     });
 }
 
 function forgot(){
-  const email=document.getElementById("email").value.trim();
-  if(!email){
-    msg.textContent="Enter email first";
-    msg.classList.add("error");
+  const e=email.value.trim();
+  if(!e){
+    showMsg("Enter email first","error");
     return;
   }
-
-  auth.sendPasswordResetEmail(email)
+  firebase.auth()
+    .sendPasswordResetEmail(e)
     .then(()=>{
-      msg.textContent="Password reset email sent ✓";
-      msg.classList.add("success");
+      showMsg("Reset email sent 📩","success");
     })
     .catch(err=>{
-      msg.textContent=err.message;
-      msg.classList.add("error");
+      showMsg(err.message,"error");
     });
 }
 </script>
