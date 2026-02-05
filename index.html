@@ -2,115 +2,128 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Login</title>
+<title>AFNS Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-
 body{
   margin:0;
   min-height:100vh;
+  background:linear-gradient(135deg,#050b1f,#0a1233);
+  color:#fff;
+}
+
+/* ===== HEADER ===== */
+.header{
+  padding:14px 18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.header img{height:36px}
+.logout{
+  background:#ef4444;
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+/* ===== CONTAINER ===== */
+.container{
+  max-width:420px;
+  margin:20px auto;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(10px);
+  border-radius:16px;
+  padding:22px;
+  box-shadow:0 0 25px rgba(0,0,0,.6);
+}
+
+/* ===== MOTIVATION ===== */
+.motivation{
+  background:linear-gradient(90deg,#3b82f6,#22c55e);
+  border-radius:12px;
+  padding:12px;
+  font-weight:bold;
+  text-align:center;
+  margin-bottom:16px;
+}
+
+/* ===== AVATAR ===== */
+.avatar{
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  background:#3b82f6;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
-  color:#fff;
+  font-size:28px;
+  margin:auto;
 }
 
-.container{
-  width:100%;
-  max-width:380px;
-  background:rgba(255,255,255,.06);
-  backdrop-filter:blur(12px);
-  padding:26px;
-  border-radius:16px;
-  box-shadow:0 0 30px rgba(0,0,0,.6);
+/* ===== PROFILE ===== */
+h2{text-align:center;margin:10px 0}
+.profile p{
+  font-size:14px;
+  margin:6px 0;
 }
+.profile span{color:#a5b4fc}
 
-h2{
+/* ===== STATS ===== */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin:14px 0;
+}
+.stat{
+  background:rgba(255,255,255,.08);
+  border-radius:10px;
+  padding:10px;
   text-align:center;
-  margin-bottom:6px;
+  font-size:12px;
 }
+.stat b{display:block;font-size:18px}
 
-.sub{
-  text-align:center;
-  font-size:13px;
-  color:#a5b4fc;
-  margin-bottom:18px;
-}
-
+/* ===== FORM ===== */
+form{display:none;margin-top:14px}
 input{
   width:100%;
-  padding:12px;
-  margin-bottom:12px;
+  padding:11px;
+  margin-top:10px;
   border:none;
   border-radius:8px;
-  font-size:14px;
 }
-
-.pass-box{
-  position:relative;
-}
-
-.toggle{
-  position:absolute;
-  right:10px;
-  top:50%;
-  transform:translateY(-50%);
-  cursor:pointer;
-  font-size:13px;
-  color:#4f8cff;
-}
-
-button{
+.btn{
   width:100%;
   padding:12px;
+  margin-top:12px;
   border:none;
-  border-radius:8px;
-  background:#4f8cff;
-  color:#fff;
+  border-radius:10px;
   font-weight:bold;
   cursor:pointer;
 }
+.edit{background:#3b82f6;color:#fff}
+.save{background:#22c55e;color:#fff}
 
-button:hover{
-  box-shadow:0 0 12px rgba(79,140,255,.6);
-}
-
-.links{
-  display:flex;
-  justify-content:space-between;
-  margin-top:10px;
-  font-size:13px;
-}
-
-.links a{
-  color:#a5b4fc;
-  text-decoration:none;
-}
-
-.msg{
-  margin-bottom:12px;
-  font-size:13px;
-  text-align:center;
-  display:none;
-}
-
-.msg.error{color:#ff6b6b}
-.msg.success{color:#22c55e}
-
+/* ===== FOOTER ===== */
 footer{
+  margin:24px 0 10px;
   text-align:center;
   font-size:12px;
   opacity:.6;
-  margin-top:16px;
 }
+footer img{height:24px}
+footer a{color:#a5b4fc;text-decoration:none}
 </style>
 
-<!-- ===== FIREBASE ===== -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -123,70 +136,119 @@ firebase.initializeApp({
 
 <body>
 
+<div class="header">
+  <img src="logo.png">
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
+
 <div class="container">
 
-  <h2>Player Login</h2>
-  <div class="sub">AFNS Elite Striker</div>
+  <div class="motivation" id="motivation"></div>
 
-  <div id="msg" class="msg"></div>
+  <div class="avatar" id="avatar">P</div>
+  <h2 id="playerName">Player</h2>
 
-  <input id="email" type="email" placeholder="Email">
-
-  <div class="pass-box">
-    <input id="password" type="password" placeholder="Password">
-    <span class="toggle" onclick="togglePass()">SHOW</span>
+  <div class="profile">
+    <p>Email: <span id="email"></span></p>
+    <p>Phone: <span id="phone"></span></p>
+    <p>Device: <span id="device"></span></p>
+    <p>Facebook: <a id="fb" target="_blank">Link</a></p>
+    <p><b>Game / Owner ID:</b> <span id="gameId"></span></p>
   </div>
 
-  <button onclick="login()">Login</button>
-
-  <div class="links">
-    <a href="#" onclick="forgot()">Forgot password?</a>
-    <a href="register.html">Create account</a>
+  <div class="stats">
+    <div class="stat"><b id="wins">0</b>Wins</div>
+    <div class="stat"><b id="losses">0</b>Losses</div>
+    <div class="stat"><b id="goals">0</b>Goals</div>
+    <div class="stat"><b id="gd">0</b>GD</div>
   </div>
 
-  <footer>SI Shohan • AFNS Club</footer>
+  <button class="btn edit" onclick="toggleEdit()">Edit Profile</button>
+
+  <form id="editForm">
+    <input id="iName" placeholder="Name">
+    <input id="iPhone" placeholder="Phone (BD)">
+    <input id="iDevice" placeholder="Device">
+    <input id="iFb" placeholder="Facebook link">
+    <input id="iGame" placeholder="Game / Owner ID">
+    <button type="button" class="btn save" onclick="save()">Save</button>
+  </form>
+
 </div>
+
+<footer>
+  <img src="logo.png"><br>
+  AFNs Elite Striker |
+  <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
+    SI Shohan
+  </a>
+</footer>
 
 <script>
 const auth=firebase.auth();
-const msg=document.getElementById("msg");
+const db=firebase.firestore();
 
-function show(text,type){
-  msg.textContent=text;
-  msg.className="msg "+type;
-  msg.style.display="block";
+const MOTIVATION=[
+"Train hard, win easy",
+"No excuses, only results",
+"Every match matters",
+"Discipline beats talent",
+"Play with heart",
+"Focus. Fight. Finish",
+"Winners never quit"
+];
+
+auth.onAuthStateChanged(u=>{
+  if(!u){location.href="login.html";return;}
+
+  const uid=u.uid;
+  motivation.innerText=MOTIVATION[Math.floor(Math.random()*MOTIVATION.length)];
+
+  db.collection("players").doc(uid).onSnapshot(doc=>{
+    const d=doc.data();
+    if(!d)return;
+
+    playerName.innerText=d.name;
+    avatar.innerText=d.name.charAt(0).toUpperCase();
+    email.innerText=d.email;
+    phone.innerText=d.phone||"—";
+    device.innerText=d.device||"—";
+    gameId.innerText=d.gameId||"—";
+    fb.href=d.fb||"#";
+
+    wins.innerText=d.wins;
+    losses.innerText=d.losses;
+    goals.innerText=d.goals;
+    gd.innerText=d.gd;
+
+    iName.value=d.name||"";
+    iPhone.value=d.phone||"";
+    iDevice.value=d.device||"";
+    iFb.value=d.fb||"";
+    iGame.value=d.gameId||"";
+  });
+});
+
+function toggleEdit(){
+  editForm.style.display =
+    editForm.style.display==="block"?"none":"block";
 }
 
-function togglePass(){
-  const p=document.getElementById("password");
-  const t=document.querySelector(".toggle");
-  if(p.type==="password"){
-    p.type="text";t.textContent="HIDE";
-  }else{
-    p.type="password";t.textContent="SHOW";
-  }
+function save(){
+  const uid=auth.currentUser.uid;
+  db.collection("players").doc(uid).update({
+    name:iName.value,
+    phone:iPhone.value,
+    device:iDevice.value,
+    fb:iFb.value,
+    gameId:iGame.value
+  }).then(()=>{
+    editForm.style.display="none";
+  });
 }
 
-function login(){
-  const email=document.getElementById("email").value.trim();
-  const pass=document.getElementById("password").value;
-
-  if(!email||!pass){
-    show("Email & password required","error");return;
-  }
-
-  auth.signInWithEmailAndPassword(email,pass)
-  .then(()=>location.href="player.html")
-  .catch(e=>show(e.message,"error"));
-}
-
-function forgot(){
-  const email=document.getElementById("email").value.trim();
-  if(!email){show("Enter email first","error");return;}
-
-  auth.sendPasswordResetEmail(email)
-  .then(()=>show("Password reset email sent","success"))
-  .catch(e=>show(e.message,"error"));
+function logout(){
+  auth.signOut().then(()=>location.href="login.html");
 }
 </script>
 
