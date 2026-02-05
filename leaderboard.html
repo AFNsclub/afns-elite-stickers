@@ -1,157 +1,67 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Leaderboard | AFNs Elite Strikers</title>
+<title>Leaderboard | AFNs Elite Striker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="style.css">
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+</script>
 
 <style>
-:root{
-  --neon:#00f7ff;
-  --gold:#ffd400;
-  --bg1:#02060c;
-  --bg2:#0c1b2a;
+.list {
+  margin-top: 14px;
 }
-*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
-
-body{
-  min-height:100vh;
-  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
-  color:#fff;
-}
-
-.container{
-  max-width:460px;
-  margin:auto;
-  padding:20px;
-}
-
-/* HEADER */
-header{
-  text-align:center;
-  margin-bottom:14px;
-}
-header img{
-  width:90px;
-  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
-}
-h1{color:var(--gold);margin:6px 0}
-.subtitle{color:var(--neon);font-size:13px}
-
-/* MOTIVATION */
-.motive{
-  background:linear-gradient(145deg,#0b1d2a,#020b13);
-  border-radius:16px;
-  padding:14px;
-  margin:14px 0 18px;
-  box-shadow:0 0 18px rgba(0,247,255,.35);
-  text-align:center;
-}
-#motiveText{
-  color:var(--neon);
-  font-weight:700;
-  font-size:14px;
-  border-right:2px solid var(--neon);
-  padding-right:5px;
-  animation:blink 1s infinite;
-}
-@keyframes blink{
-  0%,100%{border-color:transparent}
-  50%{border-color:var(--neon)}
-}
-
-/* CARD */
-.card{
-  background:rgba(255,255,255,.06);
-  border-radius:16px;
-  padding:14px;
-  margin-bottom:12px;
-  box-shadow:0 0 16px rgba(0,247,255,.25);
-}
-.row{
+.row {
   display:flex;
-  align-items:center;
   justify-content:space-between;
-  gap:8px;
-}
-.left{
-  display:flex;
   align-items:center;
-  gap:10px;
+  background:rgba(255,255,255,0.06);
+  padding:10px 12px;
+  border-radius:10px;
+  margin-bottom:8px;
+  font-size:14px;
 }
-.rank{
-  width:36px;
-  text-align:center;
-  font-size:18px;
-  font-weight:900;
-  color:var(--gold);
+.rank {
+  font-weight:bold;
+  color:#a5b4fc;
 }
-.name a{
-  color:var(--neon);
-  font-weight:800;
-  text-decoration:none;
+.name {
+  flex:1;
+  margin-left:10px;
 }
-.meta{
-  font-size:12px;
-  color:#bbb;
+.stat {
+  font-weight:bold;
 }
-.stats{
-  text-align:right;
-  font-size:13px;
-}
-.badge{
-  margin-top:6px;
-  padding:4px 10px;
-  border-radius:14px;
-  font-size:12px;
-  font-weight:900;
-  display:inline-block;
-}
-.gold{background:#ffd700;color:#000}
-.silver{background:#c0c0c0;color:#000}
-.bronze{background:#cd7f32;color:#000}
-
-/* FOOTER */
-.global-footer{
-  margin-top:30px;
-  padding:16px 0;
-  text-align:center;
-}
-.footer-inner{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:6px;
-}
-.footer-logo{width:42px}
-.footer-text{font-size:12px;color:#aaa}
-.footer-text a{
-  color:var(--neon);
-  text-decoration:none;
-  font-weight:700;
-}
+.top1 { background:linear-gradient(90deg,#facc15,#ca8a04); color:#000; }
+.top2 { background:linear-gradient(90deg,#e5e7eb,#9ca3af); color:#000; }
+.top3 { background:linear-gradient(90deg,#fcd34d,#92400e); color:#000; }
 </style>
 </head>
 
 <body>
+
 <div class="container">
+  <div class="header">
+    <h2>Leaderboard</h2>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
 
-<header>
-  <img src="logo.png">
-  <h1>Leaderboard</h1>
-  <div class="subtitle">AFNs Elite Strikers</div>
-</header>
-
-<div class="motive">
-  <span id="motiveText"></span>
+  <div id="list" class="list"></div>
 </div>
 
-<div id="board"></div>
-
+<!-- FOOTER -->
 <footer class="global-footer">
   <div class="footer-inner">
     <img src="logo.png" class="footer-logo">
@@ -164,109 +74,63 @@ h1{color:var(--gold);margin:6px 0}
   </div>
 </footer>
 
-</div>
-
 <script>
-/* FIREBASE CONFIG */
-firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
-const db = firebase.firestore();
-
-/* MOTIVATION LINES */
-const lines = [
-  "চ্যাম্পিয়নরা চাপকে শক্তি বানায়।",
-  "আজকের পরিশ্রমই আগামীকালের র‍্যাঙ্ক।",
-  "মাঠই শেষ বিচারক।",
-  "স্কিল চুপ থাকে না, সে নিজেই কথা বলে।",
-  "আজ কষ্ট, কাল ইতিহাস।",
-  "AFN মানে এলিট মাইন্ডসেট।",
-  "হার মানা অপশন না।",
-  "তুমি নাম না করলে লিডারবোর্ড করবে।",
-  "প্র্যাকটিসই আসল কিং বানায়।",
-  "আজ ফোকাস, কাল ট্রফি।",
-  "একটা ম্যাচ পুরো ক্যারিয়ার বদলাতে পারে।",
-  "যারা ধৈর্য ধরে তারাই টিকে থাকে।",
-  "স্কিল + ডিসিপ্লিন = লিজেন্ড।",
-  "র‍্যাঙ্ক নিজে থেকে আসে না, ছিনিয়ে নিতে হয়।",
-  "আজ ঘাম, কাল সম্মান।",
-  "তুমি খেলছো না — তুমি ইতিহাস লিখছো।",
-  "AFNs মাঠে নামলে নাম্বার নিজেই ওঠে।",
-  "ফেইল করো, শিখো, আবার আঘাত করো।",
-  "চাপ মানেই লেভেল আপ।",
-  "যে থামে না, সে হারেও না।",
-  "নিজেকে হারালেই ম্যাচ হারো।",
-  "AFNs খেলোয়াড় মানেই আলাদা স্ট্যান্ডার্ড।",
-  "ভয় নয়, কন্ট্রোল রাখো।",
-  "আজ কমফোর্ট ছাড়ো, কাল টপে উঠো।",
-  "স্কোরবোর্ড মিথ্যা বলে না।",
-  "তুমি যতটা ভাবো, তার চেয়েও শক্তিশালী।",
-  "ডিসিপ্লিনই আসল পাওয়ার।",
-  "একটা ভালো ডিসিশন পুরো গেম বদলায়।",
-  "হার শেখায়, জয় প্রমাণ করে।",
-  "মাইন্ডসেট ঠিক থাকলে স্কিল নিজেই ফলো করে।",
-  "আজ সাইলেন্ট থাকো, কাল নাম্বার কথা বলবে।",
-  "রানিং সিজন তোমার জন্যই।",
-  "ফোকাস অন, নো এক্সকিউজ।",
-  "লিডারবোর্ডে উঠতে সাহস লাগে।",
-  "AFNs-এ খেললে এলিট হওয়াই নিয়তি।"
-];
-let i=Math.floor(Math.random()*lines.length), c=0;
-const t=document.getElementById("motiveText");
-(function type(){
-  if(c<lines[i].length){
-    t.textContent+=lines[i][c++];
-    setTimeout(type,80);
-  }else{
-    setTimeout(()=>{
-      t.textContent="";
-      c=0;i=Math.floor(Math.random()*lines.length);
-      type();
-    },6000);
+firebase.auth().onAuthStateChanged(user=>{
+  if(!user){
+    location.href="login.html";
+    return;
   }
-})();
-
-/* LOAD LEADERBOARD (REALTIME) */
-const board=document.getElementById("board");
-db.collection("players").orderBy("rating","desc").onSnapshot(snap=>{
-  board.innerHTML="";
-  let idx=0;
-  snap.forEach(doc=>{
-    idx++;
-    const d=doc.data();
-    const rating=d.rating||0;
-    let cls="bronze", txt="Bronze";
-    if(rating>=80){cls="gold";txt="Gold"}
-    else if(rating>=60){cls="silver";txt="Silver"}
-
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`
-      <div class="row">
-        <div class="left">
-          <div class="rank">#${idx}</div>
-          <div>
-            <div class="name">
-              <a href="public-profile.html?id=${doc.id}">
-                ${d.username||"Player"}
-              </a>
-            </div>
-            <div class="meta">
-              Game ID: ${d.gameId||"—"}
-            </div>
-          </div>
-        </div>
-        <div class="stats">
-          ⭐ ${rating}
-          <div class="badge ${cls}">${txt}</div>
-        </div>
-      </div>
-    `;
-    board.appendChild(div);
-  });
+  loadLeaderboard();
 });
+
+function loadLeaderboard(){
+  const players = [];
+
+  // ✅ UID based – duplicate FIX
+  for(let i=0;i<localStorage.length;i++){
+    const key = localStorage.key(i);
+    if(key.startsWith("player_")){
+      const uid = key.replace("player_","");
+      const p = JSON.parse(localStorage.getItem(key));
+      p.uid = uid;
+      players.push(p);
+    }
+  }
+
+  players.sort((a,b)=>{
+    if(b.wins !== a.wins) return b.wins - a.wins;
+    if(b.gd !== a.gd) return b.gd - a.gd;
+    return b.goals - a.goals;
+  });
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  players.forEach((p,i)=>{
+    const row = document.createElement("div");
+    row.className = "row";
+    if(i===0) row.classList.add("top1");
+    if(i===1) row.classList.add("top2");
+    if(i===2) row.classList.add("top3");
+
+    row.innerHTML = `
+      <div class="rank">#${i+1}</div>
+      <div class="name">${p.name || "Player"}</div>
+      <div class="stat">${p.wins}W</div>
+    `;
+    list.appendChild(row);
+  });
+
+  if(players.length===0){
+    list.innerHTML = "<p>No players yet</p>";
+  }
+}
+
+function logout(){
+  firebase.auth().signOut().then(()=>{
+    location.href="login.html";
+  });
+}
 </script>
 
 </body>
