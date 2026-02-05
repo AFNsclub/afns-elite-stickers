@@ -1,61 +1,197 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Register</title>
-<link rel="stylesheet" href="style.css">
+<title>AFNS Club – Register</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+}
+
+.card{
+  width:100%;
+  max-width:380px;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(12px);
+  padding:26px;
+  border-radius:16px;
+  box-shadow:0 0 30px rgba(0,0,0,.6);
+}
+
+h2{
+  text-align:center;
+  margin-bottom:18px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border:none;
+  border-radius:8px;
+  font-size:14px;
+}
+
+.password-box{
+  position:relative;
+}
+
+.password-box span{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+  font-size:13px;
+  color:#4f8cff;
+}
+
+button{
+  width:100%;
+  margin-top:18px;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  background:#22c55e;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  box-shadow:0 0 14px rgba(34,197,94,.6);
+}
+
+.link{
+  margin-top:14px;
+  text-align:center;
+  font-size:13px;
+}
+
+.link a{
+  color:#60a5fa;
+  text-decoration:none;
+}
+
+.error{
+  margin-top:12px;
+  font-size:13px;
+  color:#ff6b6b;
+  text-align:center;
+}
+
+/* footer */
+footer{
+  margin-top:28px;
+  font-size:12px;
+  opacity:.8;
+}
+</style>
+
+<!-- ===== FIREBASE ===== -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+</script>
 </head>
+
 <body>
 
-<div class="container">
-  <h2 class="title">Create Account</h2>
+<div class="card">
+  <h2>Create Account</h2>
 
-  <input id="name" placeholder="Full Name">
-  <input id="phone" placeholder="01XXXXXXXXX">
-  <input id="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
+  <input id="name" placeholder="Player Name">
+  <input id="email" type="email" placeholder="Email">
+  <input id="phone" placeholder="Mobile Number (BD)">
+  <input id="gameId" placeholder="Game / Owner ID">
 
-  <button class="btn" onclick="register()">Register</button>
-
-  <div class="link">
-    Already player? <a href="login.html">Login</a>
+  <div class="password-box">
+    <input id="password" type="password" placeholder="Password">
+    <span onclick="togglePass()">SHOW</span>
   </div>
 
-  <p id="msg"></p>
+  <button onclick="register()">Create Account</button>
+
+  <div class="link">
+    Already player? <a href="index.html">Login</a>
+  </div>
+
+  <div id="error" class="error"></div>
 </div>
 
-<script src="firebase.js"></script>
-<script>
-function register(){
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const pass = document.getElementById("password").value.trim();
-  const msg = document.getElementById("msg");
+<footer>
+  AFNs Elite Striker | SI Shohan
+</footer>
 
-  if(!/^01\d{9}$/.test(phone)){
-    msg.textContent = "Invalid phone number";
+<script>
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+function togglePass(){
+  const p = document.getElementById("password");
+  p.type = p.type === "password" ? "text" : "password";
+}
+
+function register(){
+  error.textContent="";
+
+  const name = name.value.trim();
+  const email = email.value.trim();
+  const phone = phone.value.trim();
+  const gameId = gameId.value.trim();
+  const pass = password.value;
+
+  if(!name || !email || !pass){
+    error.textContent="Fill all required fields";
     return;
   }
 
-  auth.createUserWithEmailAndPassword(email, pass)
+  auth.createUserWithEmailAndPassword(email,pass)
     .then(res=>{
-      return db.collection("players").doc(res.user.uid).set({
-        uid: res.user.uid,
+      const uid = res.user.uid;
+
+      return db.collection("players").doc(uid).set({
+        uid,
         name,
-        phone,
         email,
+        phone,
+        gameId,
+        wins:0,
+        losses:0,
+        goals:0,
+        gd:0,
         banned:false,
         banUntil:null,
-        created: Date.now()
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
       });
     })
     .then(()=>{
-      msg.textContent="Account created ✅";
-      setTimeout(()=>location.href="login.html",800);
+      alert("Account created successfully ✅");
+      window.location.href="player.html";
     })
-    .catch(e=>msg.textContent=e.message);
+    .catch(err=>{
+      error.textContent = err.message;
+    });
 }
 </script>
+
 </body>
 </html>
