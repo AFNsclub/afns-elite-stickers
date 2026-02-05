@@ -25,7 +25,7 @@ h1{
 }
 .container{
   padding:15px;
-  max-width:600px;
+  max-width:650px;
   margin:auto;
 }
 .card{
@@ -36,20 +36,17 @@ h1{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  animation:fadeIn .4s ease;
-}
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:none}
 }
 .rank{
   font-size:22px;
   font-weight:bold;
-  width:40px;
+  width:45px;
+  color:#ffd700;
 }
-.name{
-  font-weight:bold;
+.name a{
   color:#00e5ff;
+  text-decoration:none;
+  font-weight:bold;
 }
 .rating{
   font-size:16px;
@@ -76,7 +73,7 @@ footer{
 <body>
 
 <header>
-  <img src="logo.png">
+  <img src="logo.png" alt="AFN Logo">
   <h1>Leaderboard</h1>
   <p>AFN's Elite Strikers</p>
 </header>
@@ -84,7 +81,7 @@ footer{
 <div class="container" id="leaderboard"></div>
 
 <footer>
-© 2026 AFN's Elite Strikers
+  © 2026 AFN's Elite Strikers
 </footer>
 
 <!-- Firebase -->
@@ -95,7 +92,10 @@ footer{
 const firebaseConfig = {
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub"
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -103,28 +103,36 @@ const db = firebase.firestore();
 
 const board = document.getElementById("leaderboard");
 
-// 🔥 Firestore → leaderboard
+/* --------------------------------------------------
+   🔥 LOAD LEADERBOARD (USERNAME BASED)
+-------------------------------------------------- */
 db.collection("players")
-  .orderBy("rating","desc")
-  .onSnapshot(snapshot=>{
-    board.innerHTML="";
-    let rank=1;
+  .orderBy("rating", "desc")
+  .onSnapshot(snapshot => {
 
-    snapshot.forEach(doc=>{
+    board.innerHTML = "";
+    let rank = 1;
+
+    snapshot.forEach(doc => {
       const p = doc.data();
 
       let badgeClass="bronze", badgeText="Bronze";
-      if(p.rating>=80){badgeClass="gold";badgeText="Gold";}
-      else if(p.rating>=60){badgeClass="silver";badgeText="Silver";}
+      if(p.rating >= 80){ badgeClass="gold"; badgeText="Gold"; }
+      else if(p.rating >= 60){ badgeClass="silver"; badgeText="Silver"; }
 
-      const div=document.createElement("div");
-      div.className="card";
-      div.innerHTML=`
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
         <div class="rank">#${rank}</div>
-        <div class="name">${p.name}</div>
-        <div class="rating">${p.rating || 0}</div>
+        <div class="name">
+          <a href="public-profile.html?id=${doc.id}">
+            ${p.username || "Player"}
+          </a>
+        </div>
+        <div class="rating">${p.rating || 0}/100</div>
         <div class="badge ${badgeClass}">${badgeText}</div>
       `;
+
       board.appendChild(div);
       rank++;
     });
