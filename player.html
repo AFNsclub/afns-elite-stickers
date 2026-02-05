@@ -34,96 +34,163 @@ body{
   padding:18px;
 }
 
-/* LOGO */
-.logo{
+/* HEADER */
+header{
   text-align:center;
+  margin-bottom:14px;
 }
-.logo img{
+header img{
   width:90px;
   filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
 }
+header h1{
+  color:var(--gold);
+  margin-top:6px;
+  font-size:24px;
+}
 
-/* ANNOUNCEMENT */
-.notice{
-  margin:16px 0;
-  padding:14px;
+/* LIVE BANNER */
+.banner{
+  background:linear-gradient(145deg,#06202d,#021017);
   border-radius:14px;
-  background:linear-gradient(145deg,#06202d,#021016);
-  color:var(--neon);
-  font-size:14px;
+  padding:12px;
   text-align:center;
-  box-shadow:0 0 18px rgba(0,247,255,.35);
-  animation:pulse 2.5s infinite;
+  color:var(--neon);
+  font-weight:800;
+  margin-bottom:14px;
+  box-shadow:0 0 20px rgba(0,247,255,.35);
+  animation:pulse 2s infinite;
 }
 @keyframes pulse{
-  0%{box-shadow:0 0 12px rgba(0,247,255,.2)}
-  50%{box-shadow:0 0 28px rgba(0,247,255,.6)}
-  100%{box-shadow:0 0 12px rgba(0,247,255,.2)}
+  0%{box-shadow:0 0 10px rgba(0,247,255,.3)}
+  50%{box-shadow:0 0 26px rgba(0,247,255,.7)}
+  100%{box-shadow:0 0 10px rgba(0,247,255,.3)}
 }
 
-/* PROFILE CARD */
+/* CARD */
 .card{
   background:linear-gradient(145deg,#061726,#020c14);
-  border-radius:18px;
+  border-radius:20px;
   padding:18px;
-  box-shadow:0 0 30px rgba(0,247,255,.35);
-  margin-bottom:18px;
+  box-shadow:0 0 25px rgba(0,247,255,.35);
+  animation:fade .5s ease;
+}
+@keyframes fade{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
 }
 
-h2{
-  color:var(--gold);
-  margin-bottom:12px;
+.avatar{
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  background:linear-gradient(145deg,#00f7ff,#004d66);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:40px;
+  font-weight:900;
+  margin:0 auto 10px;
+  color:#000;
+}
+
+.username{
   text-align:center;
+  font-size:22px;
+  font-weight:900;
+  color:var(--neon);
 }
 
-.field{
-  font-size:14px;
-  margin:8px 0;
+.sub{
+  text-align:center;
+  font-size:13px;
+  opacity:.8;
+  margin-bottom:14px;
 }
-.field span{
+
+/* INFO */
+.info{
+  font-size:14px;
+  margin:6px 0;
+  opacity:.9;
+}
+.info a{
   color:var(--neon);
+  text-decoration:none;
   font-weight:700;
 }
 
-/* EDIT FORM */
+/* STATS */
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+.stat{
+  background:rgba(255,255,255,.06);
+  border-radius:14px;
+  padding:12px;
+  text-align:center;
+}
+.stat span{
+  display:block;
+  font-size:20px;
+  font-weight:900;
+  color:var(--gold);
+}
+
+/* EDIT */
+.toggleEdit{
+  margin-top:16px;
+  background:none;
+  border:2px solid var(--neon);
+  color:var(--neon);
+  padding:10px;
+  width:100%;
+  border-radius:14px;
+  font-weight:800;
+}
+
+form{
+  display:none;
+  margin-top:14px;
+}
 input{
   width:100%;
-  padding:10px;
+  padding:12px;
   border-radius:10px;
   border:none;
   margin-bottom:10px;
-  font-size:14px;
 }
-
-button{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:12px;
-  background:linear-gradient(145deg,#00f7ff,#0077ff);
+.save{
+  background:var(--neon);
   color:#000;
-  font-weight:800;
-  font-size:15px;
-  cursor:pointer;
-}
-button:hover{opacity:.9;}
-
-.secondary{
-  background:linear-gradient(145deg,#ffd400,#ff9900);
-  margin-top:10px;
+  font-weight:900;
+  border:none;
+  padding:12px;
+  border-radius:14px;
+  width:100%;
 }
 
+/* LOGOUT */
 .logout{
+  margin-top:16px;
   background:#ff4d4d;
+  border:none;
+  padding:12px;
+  border-radius:14px;
   color:#fff;
-  margin-top:12px;
+  font-weight:900;
+  width:100%;
 }
 
+/* FOOTER */
 footer{
   text-align:center;
   font-size:12px;
   color:#aaa;
-  margin-top:10px;
+  margin-top:20px;
 }
 footer a{
   color:var(--neon);
@@ -136,47 +203,46 @@ footer a{
 <body>
 <div class="container">
 
-  <div class="logo">
-    <img src="logo.png">
+<header>
+  <img src="logo.png">
+  <h1>My Profile</h1>
+</header>
+
+<div id="liveBanner" class="banner">Loading announcement...</div>
+
+<div class="card">
+  <div id="avatar" class="avatar">?</div>
+  <div id="username" class="username">Loading...</div>
+  <div id="gameId" class="sub"></div>
+
+  <div class="info">📱 Device: <span id="device">—</span></div>
+  <div class="info">📞 Phone: <span id="phone">—</span></div>
+  <div class="info">📧 Email: <span id="email">—</span></div>
+  <div class="info">🔗 <a id="fb" target="_blank">Facebook</a></div>
+
+  <div class="stats">
+    <div class="stat">Rating<span id="rating">0</span></div>
+    <div class="stat">Wins<span id="wins">0</span></div>
+    <div class="stat">Losses<span id="losses">0</span></div>
+    <div class="stat">Goals<span id="goals">0</span></div>
   </div>
 
-  <!-- LIVE NOTICE -->
-  <div class="notice">
-    🔔 Season is Live! Rank up to become Champion 🏆
-  </div>
+  <button class="toggleEdit" onclick="toggleEdit()">✏️ Edit Profile</button>
 
-  <!-- PROFILE VIEW -->
-  <div class="card" id="profileView">
-    <h2 id="username">Player</h2>
+  <form id="editForm">
+    <input id="f_device" placeholder="Device name">
+    <input id="f_phone" placeholder="Phone">
+    <input id="f_facebook" placeholder="Facebook link">
+    <button type="button" class="save" onclick="saveProfile()">Save Changes</button>
+  </form>
 
-    <div class="field">📧 Email: <span id="email"></span></div>
-    <div class="field">📱 Phone: <span id="phone"></span></div>
-    <div class="field">🎮 Game ID: <span id="gameId"></span></div>
-    <div class="field">📱 Device: <span id="device"></span></div>
-    <div class="field">⭐ Rating: <span id="rating">0</span></div>
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
 
-    <button onclick="showEdit()">Edit Profile</button>
-    <button class="logout" onclick="logout()">Logout</button>
-  </div>
-
-  <!-- EDIT FORM -->
-  <div class="card" id="editForm" style="display:none">
-    <h2>Edit Profile</h2>
-
-    <input id="e_username" placeholder="Username">
-    <input id="e_phone" placeholder="Phone">
-    <input id="e_gameId" placeholder="Game / Owner ID">
-    <input id="e_device" placeholder="Device Name">
-    <input id="e_facebook" placeholder="Facebook Profile URL">
-
-    <button onclick="saveProfile()">Save Changes</button>
-    <button class="secondary" onclick="cancelEdit()">Cancel</button>
-  </div>
-
-  <footer>
-    © 2026 AFN's Elite Strikers |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI SHOHAN</a>
-  </footer>
+<footer>
+© 2026 AFN's Elite Strikers |
+<a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI SHOHAN</a>
+</footer>
 
 </div>
 
@@ -186,76 +252,77 @@ footer a{
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub",
-  storageBucket: "afnsclub.firebasestorage.app",
-  messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+const firebaseConfig={
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub",
+  storageBucket:"afnsclub.firebasestorage.app",
+  messagingSenderId:"1088089213558",
+  appId:"1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
-
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db   = firebase.firestore();
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-let uid = null;
+let uid;
 
-// 🔐 auth guard
+// AUTH CHECK
 auth.onAuthStateChanged(user=>{
   if(!user){
-    window.location.replace("login.html");
+    location.replace("login.html");
     return;
   }
   uid=user.uid;
   loadProfile();
 });
 
-function loadProfile(){
-  db.collection("players").doc(uid).get().then(doc=>{
-    if(!doc.exists) return;
-    const d=doc.data();
-    document.getElementById("username").innerText=d.username;
-    document.getElementById("email").innerText=d.email;
-    document.getElementById("phone").innerText=d.phone||"-";
-    document.getElementById("gameId").innerText=d.gameId||"-";
-    document.getElementById("device").innerText=d.device||"-";
-    document.getElementById("rating").innerText=d.rating||0;
+// LIVE BANNER
+db.collection("system").doc("announcement")
+.onSnapshot(doc=>{
+  if(doc.exists){
+    document.getElementById("liveBanner").innerText=doc.data().text;
+  }
+});
 
-    e_username.value=d.username;
-    e_phone.value=d.phone||"";
-    e_gameId.value=d.gameId||"";
-    e_device.value=d.device||"";
-    e_facebook.value=d.facebook||"";
+// PROFILE LOAD
+function loadProfile(){
+  db.collection("players").doc(uid).onSnapshot(doc=>{
+    const p=doc.data();
+    document.getElementById("avatar").innerText=p.username.charAt(0).toUpperCase();
+    document.getElementById("username").innerText=p.username;
+    document.getElementById("gameId").innerText=p.gameId;
+    document.getElementById("device").innerText=p.device;
+    document.getElementById("phone").innerText=p.phone;
+    document.getElementById("email").innerText=p.email;
+    document.getElementById("fb").href=p.facebook||"#";
+    document.getElementById("rating").innerText=p.rating||0;
+    document.getElementById("wins").innerText=p.wins||0;
+    document.getElementById("losses").innerText=p.losses||0;
+    document.getElementById("goals").innerText=p.goals||0;
+
+    f_device.value=p.device||"";
+    f_phone.value=p.phone||"";
+    f_facebook.value=p.facebook||"";
   });
 }
 
-function showEdit(){
-  profileView.style.display="none";
-  editForm.style.display="block";
-}
-
-function cancelEdit(){
-  editForm.style.display="none";
-  profileView.style.display="block";
+function toggleEdit(){
+  editForm.style.display =
+    editForm.style.display==="block"?"none":"block";
 }
 
 function saveProfile(){
   db.collection("players").doc(uid).update({
-    username:e_username.value.trim(),
-    phone:e_phone.value.trim(),
-    gameId:e_gameId.value.trim(),
-    device:e_device.value.trim(),
-    facebook:e_facebook.value.trim()
-  }).then(()=>{
-    cancelEdit();
-    loadProfile();
+    device:f_device.value,
+    phone:f_phone.value,
+    facebook:f_facebook.value
   });
+  toggleEdit();
 }
 
 function logout(){
   auth.signOut().then(()=>{
-    window.location.replace("login.html");
+    location.replace("login.html");
   });
 }
 </script>
