@@ -34,16 +34,6 @@ input{
   border-radius:8px;
   outline:none;
 }
-.pass-wrap{position:relative}
-.toggle{
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  cursor:pointer;
-  font-size:13px;
-  opacity:.7;
-}
 button{
   width:100%;
   margin-top:16px;
@@ -99,15 +89,9 @@ firebase.initializeApp({
   <h2>Create Account</h2>
 
   <input type="text" id="name" placeholder="Player Name">
-
   <input type="email" id="email" placeholder="Email">
-
+  <input type="password" id="password" placeholder="Password">
   <input type="text" id="phone" placeholder="Bangladesh Phone (01XXXXXXXXX)">
-
-  <div class="pass-wrap">
-    <input type="password" id="password" placeholder="Password (min 6)">
-    <span class="toggle" onclick="togglePass()">Show</span>
-  </div>
 
   <button onclick="register()">Create Account</button>
 
@@ -127,18 +111,7 @@ firebase.initializeApp({
 </div>
 
 <script>
-const db = firebase.firestore();
-
-function togglePass(){
-  const p=password;
-  if(p.type==="password"){
-    p.type="text";
-    document.querySelector(".toggle").innerText="Hide";
-  }else{
-    p.type="password";
-    document.querySelector(".toggle").innerText="Show";
-  }
-}
+const db=firebase.firestore();
 
 function showMsg(t,type){
   msg.innerText=t;
@@ -146,7 +119,7 @@ function showMsg(t,type){
 }
 
 function validBDPhone(p){
-  return /^01[0-9]{9}$/.test(p);
+  return /^01[3-9]\d{8}$/.test(p);
 }
 
 function register(){
@@ -155,18 +128,13 @@ function register(){
   const p=password.value.trim();
   const ph=phone.value.trim();
 
-  if(!n || !e || !p || !ph){
+  if(!n||!e||!p||!ph){
     showMsg("All fields required","error");
     return;
   }
 
   if(!validBDPhone(ph)){
     showMsg("Invalid Bangladesh phone number","error");
-    return;
-  }
-
-  if(p.length<6){
-    showMsg("Password minimum 6 characters","error");
     return;
   }
 
@@ -194,9 +162,7 @@ function register(){
     })
     .then(()=>{
       showMsg("Account created successfully ✅","success");
-      setTimeout(()=>{
-        location.href="login.html";
-      },1000);
+      setTimeout(()=>location.href="login.html",1200);
     })
     .catch(err=>{
       showMsg(err.message,"error");
