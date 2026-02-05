@@ -1,90 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Create Player Account | AFN's Elite Strikers</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Create Account | AFNs Elite Strikers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<!-- Firebase (MUST load first) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
-  <style>
-    body{
-      margin:0;
-      font-family:Arial, Helvetica, sans-serif;
-      background: radial-gradient(circle at top, #0ff2, #000 70%);
-      color:#fff;
-    }
-    .container{
-      max-width:420px;
-      margin:40px auto;
-      padding:25px;
-      background:rgba(0,0,0,0.6);
-      border-radius:20px;
-      box-shadow:0 0 25px #00f6ff;
-    }
-    .logo{
-      display:block;
-      width:120px;
-      margin:0 auto 10px;
-    }
-    h2{
-      text-align:center;
-      color:#ffd700;
-      margin-bottom:20px;
-    }
-    input{
-      width:100%;
-      padding:14px;
-      margin-bottom:12px;
-      border-radius:12px;
-      border:none;
-      outline:none;
-      font-size:15px;
-    }
-    button{
-      width:100%;
-      padding:14px;
-      border:none;
-      border-radius:14px;
-      background:linear-gradient(90deg,#00f6ff,#00c3ff);
-      color:#000;
-      font-size:18px;
-      font-weight:bold;
-      cursor:pointer;
-    }
-    button:active{transform:scale(0.98)}
-    .msg{
-      text-align:center;
-      margin-top:12px;
-      font-weight:bold;
-    }
-    .success{color:#00ff9d}
-    .error{color:#ff4d4d}
+<style>
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:radial-gradient(circle at top,#0c1b2a,#02060c);
+  font-family:Segoe UI,Arial,sans-serif;
+  color:#fff;
+}
+.card{
+  width:100%;
+  max-width:420px;
+  padding:25px;
+  border-radius:20px;
+  background:rgba(0,0,0,.6);
+  box-shadow:0 0 30px rgba(0,247,255,.45);
+}
+.logo{
+  display:block;
+  width:120px;
+  margin:0 auto 10px;
+  filter:drop-shadow(0 0 15px rgba(255,215,0,.6));
+}
+h2{
+  text-align:center;
+  color:#ffd700;
+  margin-bottom:18px;
+}
+input{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  margin-bottom:12px;
+  font-size:15px;
+}
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(90deg,#00f7ff,#00c3ff);
+  color:#000;
+  font-size:18px;
+  font-weight:700;
+  cursor:pointer;
+}
+button:active{transform:scale(.98)}
+.msg{
+  margin-top:12px;
+  text-align:center;
+  font-weight:bold;
+}
+.error{color:#ff6b6b}
+.success{color:#00ff9d}
 
-    footer{
-      margin-top:30px;
-      text-align:center;
-      opacity:.8;
-      font-size:14px;
-    }
-    footer img{
-      width:40px;
-      display:block;
-      margin:0 auto 5px;
-    }
-    footer a{
-      color:#00f6ff;
-      text-decoration:none;
-    }
-  </style>
+footer{
+  margin-top:20px;
+  text-align:center;
+  font-size:13px;
+  opacity:.85;
+}
+footer img{
+  width:40px;
+  display:block;
+  margin:0 auto 5px;
+}
+footer a{
+  color:#00f7ff;
+  text-decoration:none;
+  font-weight:700;
+}
+</style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="card">
   <img src="logo.png" class="logo" alt="AFNS Logo">
   <h2>Create Player Account</h2>
 
@@ -96,7 +101,8 @@
   <input id="device" placeholder="Device Name">
   <input id="password" type="password" placeholder="Password">
 
-  <button onclick="createAccount()">Create Account</button>
+  <!-- 🔥 IMPORTANT BUTTON -->
+  <button type="button" onclick="createAccount()">Create Account</button>
 
   <div id="message" class="msg"></div>
 </div>
@@ -110,7 +116,7 @@
 </footer>
 
 <script>
-/* 🔥 Firebase Config (YOURS) */
+/* 🔥 Firebase Config (YOUR GIVEN CONFIG) */
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
@@ -120,20 +126,23 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-/* ✅ Create Account Function */
+/* ✅ MAIN FUNCTION */
 function createAccount(){
-  const username = username.value.trim();
-  const email    = email.value.trim();
-  const phone    = phone.value.trim();
-  const facebook = facebook.value.trim();
-  const gameid   = gameid.value.trim();
-  const device   = device.value.trim();
-  const password = password.value.trim();
-  const msg      = document.getElementById("message");
 
-  msg.innerHTML = "";
+  const msg = document.getElementById("message");
 
-  // Validation
+  // 🔥 TEST (এইটা না দেখলে JS লোডই হচ্ছে না)
+  msg.innerHTML = "⏳ Button clicked...";
+  msg.className = "msg";
+
+  const username = document.getElementById("username").value.trim();
+  const email    = document.getElementById("email").value.trim();
+  const phone    = document.getElementById("phone").value.trim();
+  const facebook = document.getElementById("facebook").value.trim();
+  const gameid   = document.getElementById("gameid").value.trim();
+  const device   = document.getElementById("device").value.trim();
+  const password = document.getElementById("password").value.trim();
+
   if(!username || !email || !phone || !facebook || !gameid || !device || !password){
     msg.innerHTML = "⚠️ All fields are required";
     msg.className = "msg error";
@@ -146,28 +155,27 @@ function createAccount(){
     return;
   }
 
-  msg.innerHTML = "⏳ Creating account...";
-  msg.className = "msg";
-
-  auth.createUserWithEmailAndPassword(email, password)
+  auth.createUserWithEmailAndPassword(email,password)
   .then(cred=>{
     return db.collection("players").doc(cred.user.uid).set({
-      username,
-      email,
-      phone,
-      facebook,
-      gameId: gameid,
-      device,
+      username:username,
+      email:email,
+      phone:phone,
+      facebook:facebook,
+      gameId:gameid,
+      device:device,
       rating:0,
       wins:0,
       losses:0,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
   })
   .then(()=>{
     msg.innerHTML = "✅ Account created successfully!";
     msg.className = "msg success";
-    setTimeout(()=>{ window.location.href="player.html"; },1500);
+    setTimeout(()=>{
+      window.location.href="player.html";
+    },1500);
   })
   .catch(err=>{
     msg.innerHTML = "❌ " + err.message;
