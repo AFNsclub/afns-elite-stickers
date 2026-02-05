@@ -10,84 +10,67 @@
 body{
   margin:0;
   min-height:100vh;
-  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
+  background:linear-gradient(135deg,#050b1f,#0a1233);
   color:#fff;
 }
 .container{
   max-width:520px;
   margin:40px auto;
-  padding:18px;
-}
-.title{
-  text-align:center;
-  font-size:22px;
-  margin-bottom:16px;
-}
-.motivation{
-  background:linear-gradient(135deg,#1e3a8a,#2563eb);
-  padding:12px;
-  border-radius:12px;
-  text-align:center;
-  font-weight:bold;
-  margin-bottom:16px;
-  box-shadow:0 0 16px rgba(37,99,235,.6);
-}
-.list{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-.card{
   background:rgba(255,255,255,.06);
   backdrop-filter:blur(10px);
-  border-radius:14px;
-  padding:14px;
-  display:flex;
+  border-radius:16px;
+  padding:22px;
+  box-shadow:0 0 25px rgba(0,0,0,.6);
+}
+h2{text-align:center;margin:0 0 16px}
+.motivation{
+  text-align:center;
+  font-size:14px;
+  background:rgba(59,130,246,.15);
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:14px;
+}
+.list{margin-top:10px}
+.row{
+  display:grid;
+  grid-template-columns:36px 1fr 60px;
   align-items:center;
-  justify-content:space-between;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  margin-bottom:8px;
+  background:rgba(255,255,255,.05);
   cursor:pointer;
   transition:.2s;
 }
-.card:hover{
-  transform:scale(1.02);
-  box-shadow:0 0 20px rgba(79,140,255,.4);
-}
-.left{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-.avatar{
-  width:44px;height:44px;
-  border-radius:50%;
-  background:#4f8cff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-}
-.name{font-size:15px;font-weight:bold}
-.sub{font-size:12px;color:#a5b4fc}
-
+.row:hover{background:rgba(255,255,255,.1)}
 .rank{
-  font-size:18px;
   font-weight:bold;
+  text-align:center;
 }
-.gold{color:#facc15}
-.silver{color:#e5e7eb}
-.bronze{color:#f97316}
-
+.name{
+  font-size:14px;
+}
+.points{
+  text-align:right;
+  font-weight:bold;
+  color:#a5b4fc;
+}
+.t1{color:#ffd700}
+.t2{color:#c0c0c0}
+.t3{color:#cd7f32}
 footer{
+  margin-top:18px;
   text-align:center;
   font-size:12px;
   opacity:.6;
-  margin:22px 0;
 }
+footer img{height:24px;vertical-align:middle}
+footer a{color:#a5b4fc;text-decoration:none}
 </style>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
@@ -102,44 +85,40 @@ firebase.initializeApp({
 <body>
 
 <div class="container">
-
-  <div class="title">🏆 Leaderboard</div>
+  <h2>Leaderboard</h2>
 
   <div class="motivation" id="motivation"></div>
 
   <div class="list" id="list"></div>
 
   <footer>
-    <img src="logo.png" height="24"><br>
+    <img src="logo.png"><br>
     AFNs Elite Striker |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI Shohan</a>
+    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
+      SI Shohan
+    </a>
   </footer>
-
 </div>
 
 <script>
-const db=firebase.firestore();
+const db = firebase.firestore();
 
+/* MOTIVATION */
 const MOTIVATIONS=[
-"Fight for the top.",
-"Every win counts.",
-"Climb the ranks.",
-"Play like a champion.",
-"Consistency is power.",
-"Earn your place."
+"Every match matters.",
+"Discipline beats talent.",
+"Focus. Fight. Finish.",
+"Winners never quit.",
+"Train hard, win easy."
 ];
-
 motivation.textContent =
   MOTIVATIONS[Math.floor(Math.random()*MOTIVATIONS.length)];
 
-db.collection("players")
-.where("banned","!=",true)
-.onSnapshot(snap=>{
-  const players=[];
-  snap.forEach(doc=>{
-    const d=doc.data();
-    d.uid=doc.id;
-    players.push(d);
+/* LOAD PLAYERS */
+db.collection("players").onSnapshot(snap=>{
+  let players=[];
+  snap.forEach(d=>{
+    players.push({uid:d.id,...d.data()});
   });
 
   players.sort((a,b)=>{
@@ -150,29 +129,32 @@ db.collection("players")
 
   list.innerHTML="";
   players.forEach((p,i)=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.onclick=()=>location.href=
+    const r=i+1;
+    const row=document.createElement("div");
+    row.className="row";
+    row.onclick=()=>location.href=
       "public-profile.html?uid="+p.uid;
 
-    let rank=i+1, cls="", icon="#"+rank;
-    if(rank===1){cls="gold";icon="🥇";}
-    else if(rank===2){cls="silver";icon="🥈";}
-    else if(rank===3){cls="bronze";icon="🥉";}
+    const rank=document.createElement("div");
+    rank.className="rank";
+    rank.textContent="#"+r;
+    if(r===1)rank.classList.add("t1");
+    if(r===2)rank.classList.add("t2");
+    if(r===3)rank.classList.add("t3");
 
-    div.innerHTML=`
-      <div class="left">
-        <div class="avatar">${(p.name||"P")[0]}</div>
-        <div>
-          <div class="name">${p.name||"Player"}</div>
-          <div class="sub">
-            W:${p.wins||0} • GD:${p.gd||0} • G:${p.goals||0}
-          </div>
-        </div>
-      </div>
-      <div class="rank ${cls}">${icon}</div>
-    `;
-    list.appendChild(div);
+    const name=document.createElement("div");
+    name.className="name";
+    name.textContent=p.name||"Player";
+
+    const pts=document.createElement("div");
+    pts.className="points";
+    pts.textContent=(p.wins||0)+"W";
+
+    row.append(rank,name,pts);
+    list.appendChild(row);
+
+    // save rank back (optional, safe)
+    db.collection("players").doc(p.uid).update({rank:r});
   });
 });
 </script>
