@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>My Profile</title>
+<title>Player Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -10,94 +10,88 @@
 body{
   margin:0;
   min-height:100vh;
-  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
-  color:#fff;
-}
-.container{
-  max-width:420px;
-  margin:40px auto;
-  background:rgba(255,255,255,.06);
-  backdrop-filter:blur(12px);
-  border-radius:18px;
-  padding:22px;
-  box-shadow:0 0 30px rgba(0,0,0,.6);
-}
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.header h2{margin:0;font-size:20px}
-.logout{
-  background:none;
-  border:1px solid #ff6b6b;
-  color:#ff6b6b;
-  padding:6px 12px;
-  border-radius:8px;
-  cursor:pointer;
-}
-.motivation{
-  margin:16px 0;
-  padding:12px;
-  border-radius:10px;
-  background:linear-gradient(135deg,#1e3a8a,#2563eb);
-  font-weight:bold;
-  text-align:center;
-  box-shadow:0 0 15px rgba(37,99,235,.6);
-}
-.avatar{
-  width:60px;height:60px;
-  border-radius:50%;
-  background:#4f8cff;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:26px;
-  font-weight:bold;
-  margin:10px auto;
+  background:linear-gradient(135deg,#050b1f,#0a1233);
+  color:#fff;
 }
-.name{text-align:center;font-size:18px;font-weight:bold}
-.rank{text-align:center;color:#a5b4fc;margin-bottom:12px}
-
-.card p{margin:8px 0;font-size:14px}
-.card span{color:#a5b4fc;font-weight:bold}
-
-button{
+.box{
+  width:380px;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(10px);
+  padding:26px;
+  border-radius:16px;
+  box-shadow:0 0 25px rgba(0,0,0,.6);
+}
+.logo{
+  text-align:center;
+  margin-bottom:8px;
+}
+.logo img{
+  height:60px;
+}
+h2{
+  text-align:center;
+  margin:10px 0 16px;
+}
+input{
   width:100%;
-  margin-top:12px;
   padding:11px;
+  margin-top:10px;
   border:none;
   border-radius:8px;
-  background:#4f8cff;
+  outline:none;
+}
+.pass-wrap{
+  position:relative;
+}
+.pass-wrap span{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:12px;
+  cursor:pointer;
+  opacity:.7;
+}
+button{
+  width:100%;
+  margin-top:16px;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#3b82f6;
   color:#fff;
   font-weight:bold;
   cursor:pointer;
 }
-button.save{background:#22c55e}
-.hidden{display:none}
-
-input{
-  width:100%;
-  padding:11px;
-  margin-top:8px;
-  border-radius:8px;
-  border:none;
+button:hover{
+  box-shadow:0 0 14px rgba(59,130,246,.7);
 }
-
-.ban{
-  background:#7f1d1d;
-  padding:12px;
-  border-radius:10px;
+.links{
+  margin-top:12px;
+  display:flex;
+  justify-content:space-between;
+  font-size:13px;
+}
+.links a{
+  color:#a5b4fc;
+  text-decoration:none;
+}
+.links a:hover{text-decoration:underline}
+.msg{
+  margin-top:14px;
   text-align:center;
-  margin-bottom:12px;
-  box-shadow:0 0 20px rgba(220,38,38,.6);
+  font-size:14px;
 }
-
+.error{color:#ff6b6b}
+.success{color:#22c55e}
 footer{
+  margin-top:18px;
   text-align:center;
   font-size:12px;
-  opacity:.6;
-  margin-top:18px;
+  opacity:.5;
 }
 </style>
 
@@ -117,137 +111,118 @@ firebase.initializeApp({
 
 <body>
 
-<div class="container">
-
-  <div class="header">
-    <h2>My Profile</h2>
-    <button class="logout" onclick="logout()">Logout</button>
+<div class="box">
+  <div class="logo">
+    <img src="logo.png">
   </div>
 
-  <div id="banBox" class="ban hidden"></div>
+  <h2>Player Login</h2>
 
-  <div class="motivation" id="motivation"></div>
+  <input id="email" placeholder="Email">
 
-  <div class="avatar" id="avatar">P</div>
-  <div class="name" id="playerName">Player</div>
-  <div class="rank" id="rankText">#—</div>
-
-  <div class="card" id="viewBox">
-    <p>Phone: <span id="vPhone"></span></p>
-    <p>Email: <span id="vEmail"></span></p>
-    <p>Game ID: <span id="vGame"></span></p>
-    <p>Device: <span id="vDevice"></span></p>
-    <p>Facebook: <a id="vFb" target="_blank">Link</a></p>
-    <button onclick="edit()">Edit Profile</button>
+  <div class="pass-wrap">
+    <input type="password" id="password" placeholder="Password">
+    <span onclick="togglePass()">SHOW</span>
   </div>
 
-  <div class="card hidden" id="editBox">
-    <input id="eName" placeholder="Name">
-    <input id="ePhone" placeholder="BD Phone">
-    <input id="eGame" placeholder="Game / Owner ID">
-    <input id="eDevice" placeholder="Device">
-    <input id="eFb" placeholder="Facebook link">
-    <button class="save" onclick="save()">Save</button>
+  <button onclick="login()">LOGIN</button>
+
+  <div class="links">
+    <a href="#" onclick="forgot()">Forgot Password?</a>
+    <a href="register.html">Create Account</a>
   </div>
+
+  <div class="msg" id="msg"></div>
 
   <footer>
-    <img src="logo.png" height="26"><br>
     AFNs Elite Striker |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI Shohan</a>
+    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
+      SI Shohan
+    </a>
   </footer>
-
 </div>
 
 <script>
 const auth=firebase.auth();
 const db=firebase.firestore();
+const msg=document.getElementById("msg");
 
-const MOTIVATIONS=[
-"Train hard, win easy.",
-"No excuses, only results.",
-"Every match matters.",
-"Discipline beats talent.",
-"One goal can change everything.",
-"Winners never quit.",
-"Stay calm. Finish strong."
-];
-
-auth.onAuthStateChanged(user=>{
-  if(!user){location.href="index.html";return;}
-  const uid=user.uid;
-
-  db.collection("players").doc(uid).onSnapshot(doc=>{
-    if(!doc.exists) return;
-    const d=doc.data();
-
-    // BAN
-    if(d.banned && d.banUntil){
-      const until=d.banUntil.toDate();
-      banBox.classList.remove("hidden");
-      tickBan(until);
-    }
-
-    playerName.textContent=d.name;
-    avatar.textContent=d.name.charAt(0).toUpperCase();
-    vPhone.textContent=d.phone||"—";
-    vEmail.textContent=d.email||"—";
-    vGame.textContent=d.gameId||"—";
-    vDevice.textContent=d.device||"—";
-    vFb.href=d.fb||"#";
-
-    eName.value=d.name||"";
-    ePhone.value=d.phone||"";
-    eGame.value=d.gameId||"";
-    eDevice.value=d.device||"";
-    eFb.value=d.fb||"";
-
-    motivation.textContent=MOTIVATIONS[
-      Math.floor(Math.random()*MOTIVATIONS.length)
-    ];
-  });
-});
-
-function tickBan(until){
-  setInterval(()=>{
-    const diff=until-new Date();
-    if(diff<=0){banBox.textContent="Ban expired";return;}
-    const h=Math.floor(diff/36e5);
-    const m=Math.floor(diff%36e5/6e4);
-    const s=Math.floor(diff%6e4/1e3);
-    banBox.textContent=`BANNED ⛔ Remaining ${h}h ${m}m ${s}s`;
-  },1000);
+function togglePass(){
+  const p=document.getElementById("password");
+  p.type=p.type==="password"?"text":"password";
 }
 
-function edit(){
-  viewBox.classList.add("hidden");
-  editBox.classList.remove("hidden");
-}
+function login(){
+  const email=document.getElementById("email").value.trim();
+  const pass=document.getElementById("password").value;
 
-function validBD(p){
-  return /^(\+8801|01)[0-9]{9}$/.test(p);
-}
+  msg.textContent="";
+  msg.className="msg";
 
-function save(){
-  if(!validBD(ePhone.value)){
-    alert("Invalid Bangladesh phone");return;
+  if(!email||!pass){
+    msg.textContent="Email & password required";
+    msg.classList.add("error");
+    return;
   }
-  const uid=auth.currentUser.uid;
-  db.collection("players").doc(uid).update({
-    name:eName.value,
-    phone:ePhone.value,
-    gameId:eGame.value,
-    device:eDevice.value,
-    fb:eFb.value
-  }).then(()=>{
-    viewBox.classList.remove("hidden");
-    editBox.classList.add("hidden");
-  });
+
+  auth.signInWithEmailAndPassword(email,pass)
+    .then(res=>{
+      const uid=res.user.uid;
+
+      db.collection("players").doc(uid).get().then(doc=>{
+        if(!doc.exists){
+          msg.textContent="Player profile not found";
+          msg.classList.add("error");
+          auth.signOut();
+          return;
+        }
+
+        const d=doc.data();
+
+        if(d.banned){
+          const until=d.banUntil?.toDate();
+          msg.textContent=until
+            ? "You are banned until "+until.toLocaleDateString()
+            : "You are permanently banned";
+          msg.classList.add("error");
+          auth.signOut();
+          return;
+        }
+
+        window.__UID__=uid;
+        msg.textContent="Login successful ✓";
+        msg.classList.add("success");
+
+        setTimeout(()=>{
+          location.href="player.html";
+        },700);
+      });
+    })
+    .catch(err=>{
+      msg.textContent=err.message;
+      msg.classList.add("error");
+    });
 }
 
-function logout(){
-  auth.signOut().then(()=>location.href="index.html");
+function forgot(){
+  const email=document.getElementById("email").value.trim();
+  if(!email){
+    msg.textContent="Enter email first";
+    msg.classList.add("error");
+    return;
+  }
+
+  auth.sendPasswordResetEmail(email)
+    .then(()=>{
+      msg.textContent="Password reset email sent ✓";
+      msg.classList.add("success");
+    })
+    .catch(err=>{
+      msg.textContent=err.message;
+      msg.classList.add("error");
+    });
 }
 </script>
 
 </body>
-      </html>
+</html>
