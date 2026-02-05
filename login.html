@@ -2,234 +2,131 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Player Login | AFN's Elite Strikers</title>
+<title>Login | AFNs Elite Striker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-:root{
-  --neon:#00f7ff;
-  --gold:#ffd400;
-  --bg1:#02060c;
-  --bg2:#0c1b2a;
-}
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Segoe UI',sans-serif;
-}
-
-body{
-  min-height:100vh;
-  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
-  color:#fff;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-.card{
-  width:100%;
-  max-width:380px;
-  background:linear-gradient(145deg,#061726,#020c14);
-  border-radius:22px;
-  padding:24px;
-  box-shadow:0 0 35px rgba(0,247,255,.45);
-}
-
-.logo{
-  text-align:center;
-  margin-bottom:10px;
-}
-.logo img{
-  width:90px;
-  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
-}
-
-h2{
-  text-align:center;
-  color:var(--gold);
-  margin-bottom:18px;
-}
-
-input{
-  width:100%;
-  padding:13px;
-  border-radius:14px;
-  border:none;
-  outline:none;
-  margin-bottom:14px;
-  background:#020c14;
-  color:#fff;
-  font-size:15px;
-}
-
-.password-box{
-  position:relative;
-}
-.toggle{
-  position:absolute;
-  right:14px;
-  top:50%;
-  transform:translateY(-50%);
-  font-size:13px;
-  color:var(--neon);
-  cursor:pointer;
-  user-select:none;
-}
-
-button{
-  width:100%;
-  padding:14px;
-  border-radius:18px;
-  border:none;
-  cursor:pointer;
-  font-weight:900;
-  font-size:16px;
-  background:linear-gradient(145deg,#081c2c,#020c14);
-  color:var(--neon);
-  transition:.25s;
-}
-button:hover{
-  transform:scale(1.05);
-  box-shadow:0 0 16px rgba(0,247,255,.45);
-}
-
-.error{
-  color:#ff6b6b;
-  font-size:14px;
-  margin-bottom:12px;
-  display:none;
-  text-align:center;
-}
-
-.links{
-  text-align:center;
-  margin-top:16px;
-  font-size:14px;
-}
-.links a{
-  color:var(--neon);
-  text-decoration:none;
-  font-weight:700;
-}
-
-footer{
-  text-align:center;
-  font-size:12px;
-  color:#aaa;
-  margin-top:16px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="card">
-
-  <div class="logo">
-    <img src="logo.png">
-  </div>
-
-  <h2>Player Login</h2>
-
-  <div id="errorBox" class="error"></div>
-
-  <input type="email" id="email" placeholder="Gmail">
-
-  <div class="password-box">
-    <input type="password" id="password" placeholder="Password">
-    <span class="toggle" onclick="togglePassword()">Show</span>
-  </div>
-
-  <button onclick="login()">Login</button>
-
-  <div class="links">
-    <a href="#" onclick="forgotPassword()">Forgot Password?</a><br><br>
-    New player?
-    <a href="register.html">Create Account</a>
-  </div>
-
-  <footer>
-    © 2026 AFN's Elite Strikers
-  </footer>
-
-</div>
+<link rel="stylesheet" href="style.css">
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-const firebaseConfig={
+firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub",
-  storageBucket:"afnsclub.firebasestorage.app",
-  messagingSenderId:"1088089213558",
-  appId:"1:1088089213558:web:bd5e01caaeecaa46bcad57"
-};
-firebase.initializeApp(firebaseConfig);
+  projectId:"afnsclub"
+});
+</script>
 
-const auth=firebase.auth();
+<style>
+.notice{
+  margin-top:12px;
+  padding:10px;
+  border-radius:8px;
+  font-size:14px;
+  display:none;
+}
+.notice.loading{background:#2563eb;}
+.notice.error{background:#dc2626;}
+.notice.success{background:#16a34a;}
+.links{
+  text-align:center;
+  margin-top:14px;
+  font-size:14px;
+}
+.links a{
+  color:#60a5fa;
+  text-decoration:none;
+}
+</style>
+</head>
 
-// ✅ already logged in → direct profile
-auth.onAuthStateChanged(user=>{
+<body>
+
+<div class="container">
+  <h2 class="title">Player Login</h2>
+
+  <form onsubmit="event.preventDefault(); login();">
+    <input id="email" type="email" placeholder="Email" required>
+    <input id="password" type="password" placeholder="Password" required>
+
+    <button class="btn-save" id="btnLogin">
+      Login
+    </button>
+  </form>
+
+  <div id="notice" class="notice"></div>
+
+  <div class="links">
+    New player?
+    <a href="register.html">Create Account</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="global-footer">
+  <div class="footer-inner">
+    <img src="logo.png" class="footer-logo">
+    <div class="footer-text">
+      AFNs Elite Striker |
+      <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
+        SI Shohan
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const notice = document.getElementById("notice");
+const btn = document.getElementById("btnLogin");
+
+function show(msg,type){
+  notice.textContent = msg;
+  notice.className = "notice " + type;
+  notice.style.display = "block";
+}
+
+firebase.auth().onAuthStateChanged(user=>{
   if(user){
-    location.replace("player.html");
+    location.href="player.html";
   }
 });
 
-const email=document.getElementById("email");
-const password=document.getElementById("password");
-const errorBox=document.getElementById("errorBox");
-
-function showError(msg){
-  errorBox.innerText=msg;
-  errorBox.style.display="block";
-}
-
-function togglePassword(){
-  if(password.type==="password"){
-    password.type="text";
-    document.querySelector(".toggle").innerText="Hide";
-  }else{
-    password.type="password";
-    document.querySelector(".toggle").innerText="Show";
-  }
-}
-
 function login(){
-  errorBox.style.display="none";
+  const email = document.getElementById("email").value.trim();
+  const pass  = document.getElementById("password").value;
 
-  if(!email.value || !password.value){
-    showError("⚠️ Gmail এবং Password দিতে হবে");
+  if(!email || !pass){
+    show("Email & Password required ❌","error");
     return;
   }
 
-  auth.signInWithEmailAndPassword(email.value.trim(),password.value)
-  .then(()=>{
-    location.href="player.html";
-  })
-  .catch(()=>{
-    showError("❌ Gmail অথবা Password ভুল");
-  });
-}
+  btn.disabled = true;
+  show("Logging in...","loading");
 
-function forgotPassword(){
-  if(!email.value){
-    showError("📧 আগে Gmail লিখুন");
-    return;
-  }
+  firebase.auth()
+    .signInWithEmailAndPassword(email,pass)
+    .then(()=>{
+      show("Login successful ✅","success");
+      setTimeout(()=>{
+        location.href="player.html";
+      },800);
+    })
+    .catch(err=>{
+      btn.disabled = false;
 
-  auth.sendPasswordResetEmail(email.value.trim())
-  .then(()=>{
-    showError("✅ Reset link Gmail এ পাঠানো হয়েছে");
-  })
-  .catch(()=>{
-    showError("❌ Gmail পাওয়া যায়নি");
-  });
+      if(err.code==="auth/user-not-found" ||
+         err.code==="auth/wrong-password"){
+        show("Wrong email or password ❌","error");
+      }
+      else if(err.code==="auth/invalid-email"){
+        show("Invalid email ❌","error");
+      }
+      else{
+        show(err.message,"error");
+      }
+    });
 }
 </script>
 
