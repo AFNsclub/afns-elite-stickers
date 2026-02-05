@@ -2,49 +2,111 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Create Account</title>
+<title>Register | AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
+:root{
+  --neon:#00f7ff;
+  --gold:#ffd400;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
+  --glass:rgba(255,255,255,0.08);
+}
+
+*{
   margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',sans-serif;
+}
+
+body{
   min-height:100vh;
+  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
+  color:#fff;
   display:flex;
   justify-content:center;
   align-items:center;
-  background:linear-gradient(135deg,#050b18,#0b1d3a);
-  font-family:Arial;
 }
+
 .card{
-  background:#0b1622;
-  padding:22px;
   width:100%;
   max-width:380px;
-  border-radius:14px;
+  padding:22px;
+  border-radius:18px;
+  background:linear-gradient(145deg,#061726,#020c14);
+  box-shadow:0 0 30px rgba(0,247,255,.35);
 }
-h2{color:#fff;text-align:center;}
+
+.logo{
+  text-align:center;
+  margin-bottom:10px;
+}
+.logo img{
+  width:90px;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
+}
+
+h2{
+  text-align:center;
+  color:var(--gold);
+  margin-bottom:16px;
+}
+
 input{
   width:100%;
-  padding:11px;
-  margin-top:10px;
-  border-radius:8px;
+  padding:12px;
+  border-radius:10px;
   border:none;
+  margin-bottom:10px;
   font-size:14px;
 }
+
+.password-box{
+  position:relative;
+}
+.toggle{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+  font-size:13px;
+  color:var(--neon);
+}
+
 button{
   width:100%;
-  padding:12px;
-  margin-top:15px;
+  padding:14px;
   border:none;
-  border-radius:8px;
-  background:#4f8cff;
-  color:#fff;
+  border-radius:12px;
+  background:linear-gradient(145deg,#00f7ff,#0077ff);
+  color:#000;
+  font-weight:800;
   font-size:16px;
+  cursor:pointer;
+  margin-top:6px;
 }
+button:hover{opacity:.9;}
+
 .error{
+  font-size:13px;
   color:#ff6b6b;
-  font-size:14px;
-  margin-top:10px;
+  margin-bottom:8px;
+  display:none;
+  text-align:center;
+}
+
+.links{
+  text-align:center;
+  margin-top:14px;
+  font-size:13px;
+}
+.links a{
+  color:var(--neon);
+  text-decoration:none;
+  font-weight:700;
 }
 </style>
 </head>
@@ -52,21 +114,37 @@ button{
 <body>
 
 <div class="card">
-<h2>Create Account</h2>
 
-<div class="error" id="error"></div>
+  <div class="logo">
+    <img src="logo.png">
+  </div>
 
-<input id="username" placeholder="Player Name">
-<input id="email" type="email" placeholder="Gmail">
-<input id="facebook" placeholder="Facebook Profile Link">
-<input id="gameId" placeholder="Game / Owner ID">
-<input id="device" placeholder="Device Name">
-<input id="phone" placeholder="Mobile Number">
-<input id="password" type="password" placeholder="Password">
+  <h2>Create Player Account</h2>
 
-<button onclick="register()">Create Account</button>
+  <div id="errorBox" class="error"></div>
+
+  <input id="username" placeholder="Player Username">
+  <input id="email" type="email" placeholder="Gmail">
+  <input id="phone" placeholder="Mobile Number">
+  <input id="facebook" placeholder="Facebook Profile Link">
+  <input id="gameId" placeholder="Game / Owner ID">
+  <input id="device" placeholder="Device Name">
+
+  <div class="password-box">
+    <input type="password" id="password" placeholder="Password">
+    <span class="toggle" onclick="togglePassword()">Show</span>
+  </div>
+
+  <button onclick="register()">REGISTER</button>
+
+  <div class="links">
+    Already have account?
+    <a href="login.html">Login</a>
+  </div>
+
 </div>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -83,50 +161,71 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db   = firebase.firestore();
+
+// already logged in → profile
+auth.onAuthStateChanged(user=>{
+  if(user){
+    window.location.replace("player.html");
+  }
+});
+
+function showError(msg){
+  const e=document.getElementById("errorBox");
+  e.innerText=msg;
+  e.style.display="block";
+}
+
+function togglePassword(){
+  const p=document.getElementById("password");
+  const t=document.querySelector(".toggle");
+  if(p.type==="password"){
+    p.type="text"; t.innerText="Hide";
+  }else{
+    p.type="password"; t.innerText="Show";
+  }
+}
 
 function register(){
   const username = document.getElementById("username").value.trim();
-  const email = document.getElementById("email").value.trim();
+  const email    = document.getElementById("email").value.trim();
+  const phone    = document.getElementById("phone").value.trim();
   const facebook = document.getElementById("facebook").value.trim();
-  const gameId = document.getElementById("gameId").value.trim();
-  const device = document.getElementById("device").value.trim();
-  const phone = document.getElementById("phone").value.trim();
+  const gameId   = document.getElementById("gameId").value.trim();
+  const device   = document.getElementById("device").value.trim();
   const password = document.getElementById("password").value;
 
-  if(!username || !email || !facebook || !gameId || !device || !phone || !password){
-    error.innerText = "⚠️ সব ফিল্ড পূরণ করা বাধ্যতামূলক";
+  if(!username||!email||!phone||!password){
+    showError("⚠️ সব প্রয়োজনীয় তথ্য পূরণ করুন");
     return;
   }
 
   auth.createUserWithEmailAndPassword(email,password)
-  .then(res=>{
-    const user = res.user;
+    .then(res=>{
+      const uid = res.user.uid;
 
-    // username = displayName
-    user.updateProfile({ displayName: username });
-
-    return db.collection("players").doc(user.uid).set({
-      username,
-      email,
-      facebook,
-      gameId,
-      device,
-      phone,
-      rating: 50,
-      wins: 0,
-      losses: 0,
-      goals: 0,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      return db.collection("players").doc(uid).set({
+        username,
+        email,
+        phone,
+        facebook,
+        gameId,
+        device,
+        rating:0,
+        wins:0,
+        losses:0,
+        goals:0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    })
+    .then(()=>{
+      window.location.href="player.html";
+    })
+    .catch(err=>{
+      showError("❌ Account create failed");
     });
-  })
-  .then(()=>{
-    window.location.href = "player.html";
-  })
-  .catch(err=>{
-    error.innerText = err.message;
-  });
 }
 </script>
+
 </body>
 </html>
