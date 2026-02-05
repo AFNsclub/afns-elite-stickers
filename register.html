@@ -11,44 +11,50 @@
   <h2 class="title">Create Account</h2>
 
   <input id="name" placeholder="Full Name">
-  <input id="phone" placeholder="Bangladesh Phone (01XXXXXXXXX)">
+  <input id="phone" placeholder="01XXXXXXXXX">
   <input id="email" placeholder="Email">
   <input id="password" type="password" placeholder="Password">
 
-  <button class="btn-save" onclick="register()">Register</button>
+  <button class="btn" onclick="register()">Register</button>
+
+  <div class="link">
+    Already player? <a href="login.html">Login</a>
+  </div>
+
   <p id="msg"></p>
 </div>
 
 <script src="firebase.js"></script>
 <script>
 function register(){
-  const name = name.value.trim();
-  const phone = phone.value.trim();
-  const email = email.value.trim();
-  const pass = password.value.trim();
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const pass = document.getElementById("password").value.trim();
   const msg = document.getElementById("msg");
 
   if(!/^01\d{9}$/.test(phone)){
-    msg.textContent="Invalid BD phone number";
+    msg.textContent = "Invalid phone number";
     return;
   }
 
-  auth.createUserWithEmailAndPassword(email,pass)
-  .then(res=>{
-    return db.collection("players").doc(res.user.uid).set({
-      uid:res.user.uid,
-      name, phone, email,
-      created:Date.now(),
-      banned:false,
-      banUntil:null,
-      wins:0, losses:0, goals:0, gd:0
-    });
-  })
-  .then(()=>{
-    msg.textContent="Account created ✅";
-    setTimeout(()=>location.href="login.html",800);
-  })
-  .catch(err=>msg.textContent=err.message);
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then(res=>{
+      return db.collection("players").doc(res.user.uid).set({
+        uid: res.user.uid,
+        name,
+        phone,
+        email,
+        banned:false,
+        banUntil:null,
+        created: Date.now()
+      });
+    })
+    .then(()=>{
+      msg.textContent="Account created ✅";
+      setTimeout(()=>location.href="login.html",800);
+    })
+    .catch(e=>msg.textContent=e.message);
 }
 </script>
 </body>
