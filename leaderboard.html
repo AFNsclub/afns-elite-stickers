@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Leaderboard | AFN's Elite Strikers</title>
+<title>My Profile | AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -16,43 +16,37 @@ header{
   text-align:center;
   padding:20px;
 }
-header img{
-  width:90px;
-}
-h1{
-  color:#ffd700;
-  margin:10px 0;
-}
-.container{
-  padding:15px;
-  max-width:650px;
-  margin:auto;
-}
+header img{width:90px;}
+h1{color:#00e5ff;margin:10px 0;}
+
 .card{
+  max-width:430px;
+  margin:20px auto;
   background:rgba(255,255,255,0.08);
-  border-radius:14px;
-  padding:15px;
-  margin-bottom:12px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+  padding:20px;
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
 }
-.rank{
-  font-size:22px;
-  font-weight:bold;
-  width:45px;
-  color:#ffd700;
+
+.row{margin-bottom:14px;}
+label{
+  font-size:13px;
+  opacity:.7;
+  display:block;
+  margin-bottom:4px;
 }
-.name a{
-  color:#00e5ff;
-  text-decoration:none;
-  font-weight:bold;
+input{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  font-size:15px;
 }
-.rating{
-  font-size:16px;
-}
+input:disabled{opacity:.7;}
+
 .badge{
-  padding:6px 10px;
+  display:inline-block;
+  padding:6px 14px;
   border-radius:20px;
   font-size:13px;
   font-weight:bold;
@@ -60,6 +54,23 @@ h1{
 .gold{background:#ffd700;color:#000;}
 .silver{background:#c0c0c0;color:#000;}
 .bronze{background:#cd7f32;color:#000;}
+
+.buttons{
+  display:flex;
+  gap:10px;
+  margin-top:15px;
+}
+button{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-size:15px;
+  cursor:pointer;
+}
+.edit{background:#4f8cff;color:#fff;}
+.save{background:#00c853;color:#fff;display:none;}
+.logout{background:#ff5252;color:#fff;margin-top:15px;width:100%;}
 
 footer{
   text-align:center;
@@ -73,19 +84,57 @@ footer{
 <body>
 
 <header>
-  <img src="logo.png" alt="AFN Logo">
-  <h1>Leaderboard</h1>
-  <p>AFN's Elite Strikers</p>
+  <img src="logo.png">
+  <h1 id="usernameTitle">My Profile</h1>
 </header>
 
-<div class="container" id="leaderboard"></div>
+<div class="card">
+
+  <div class="row">
+    <label>Username</label>
+    <input id="username" disabled>
+  </div>
+
+  <div class="row">
+    <label>Facebook Link</label>
+    <input id="facebook" disabled>
+  </div>
+
+  <div class="row">
+    <label>Game / Owner ID</label>
+    <input id="gameId" disabled>
+  </div>
+
+  <div class="row">
+    <label>Device Name</label>
+    <input id="device" disabled>
+  </div>
+
+  <div class="row">
+    <label>Rating</label>
+    <div id="rating">0/100</div>
+  </div>
+
+  <div class="row">
+    <label>Rank Tier</label>
+    <span id="badge" class="badge bronze">Bronze</span>
+  </div>
+
+  <div class="buttons">
+    <button class="edit" onclick="enableEdit()">Edit Profile</button>
+    <button class="save" onclick="saveProfile()">Save</button>
+  </div>
+
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
 
 <footer>
-  © 2026 AFN's Elite Strikers
+© 2026 AFN's Elite Strikers
 </footer>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
@@ -99,44 +148,72 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.firestore();
 
-const board = document.getElementById("leaderboard");
+let uid = null;
 
-/* --------------------------------------------------
-   🔥 LOAD LEADERBOARD (USERNAME BASED)
--------------------------------------------------- */
-db.collection("players")
-  .orderBy("rating", "desc")
-  .onSnapshot(snapshot => {
+// 🔐 Auth check
+auth.onAuthStateChanged(user=>{
+  if(!user){
+    window.location.href="login.html";
+    return;
+  }
+  uid = user.uid;
+  loadProfile();
+});
 
-    board.innerHTML = "";
-    let rank = 1;
+// 🔹 Load profile
+function loadProfile(){
+  db.collection("players").doc(uid).onSnapshot(doc=>{
+    if(!doc.exists) return;
+    const p = doc.data();
 
-    snapshot.forEach(doc => {
-      const p = doc.data();
+    username.value = p.username || "";
+    facebook.value = p.facebook || "";
+    gameId.value = p.gameId || "";
+    device.value = p.device || "";
+    rating.innerText = (p.rating||0)+"/100";
+    usernameTitle.innerText = p.username;
 
-      let badgeClass="bronze", badgeText="Bronze";
-      if(p.rating >= 80){ badgeClass="gold"; badgeText="Gold"; }
-      else if(p.rating >= 60){ badgeClass="silver"; badgeText="Silver"; }
-
-      const div = document.createElement("div");
-      div.className = "card";
-      div.innerHTML = `
-        <div class="rank">#${rank}</div>
-        <div class="name">
-          <a href="public-profile.html?id=${doc.id}">
-            ${p.username || "Player"}
-          </a>
-        </div>
-        <div class="rating">${p.rating || 0}/100</div>
-        <div class="badge ${badgeClass}">${badgeText}</div>
-      `;
-
-      board.appendChild(div);
-      rank++;
-    });
+    let badge="bronze", text="Bronze";
+    if(p.rating>=80){badge="gold";text="Gold";}
+    else if(p.rating>=60){badge="silver";text="Silver";}
+    badgeEl.className="badge "+badge;
+    badgeEl.innerText=text;
   });
+}
+
+const badgeEl = document.getElementById("badge");
+
+// ✏️ Enable edit
+function enableEdit(){
+  document.querySelectorAll("input").forEach(i=>i.disabled=false);
+  document.querySelector(".edit").style.display="none";
+  document.querySelector(".save").style.display="block";
+}
+
+// 💾 Save profile
+function saveProfile(){
+  db.collection("players").doc(uid).update({
+    username: username.value.trim(),
+    facebook: facebook.value.trim(),
+    gameId: gameId.value.trim(),
+    device: device.value.trim()
+  }).then(()=>{
+    document.querySelectorAll("input").forEach(i=>i.disabled=true);
+    document.querySelector(".edit").style.display="block";
+    document.querySelector(".save").style.display="none";
+    alert("✅ Profile updated");
+  });
+}
+
+// 🚪 Logout
+function logout(){
+  auth.signOut().then(()=>{
+    window.location.href="login.html";
+  });
+}
 </script>
 
 </body>
