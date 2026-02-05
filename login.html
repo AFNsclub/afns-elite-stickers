@@ -1,25 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <h2 class="title">Login</h2>
+
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+
+  <button class="btn" onclick="login()">Login</button>
+
+  <div class="link">
+    New player? <a href="register.html">Create account</a>
+  </div>
+
+  <p id="msg"></p>
+</div>
+
 <script src="firebase.js"></script>
 <script>
-auth.onAuthStateChanged(user=>{
-  if(!user) return;
+function login(){
+  const email=email.value;
+  const pass=password.value;
+  const msg=document.getElementById("msg");
 
-  db.collection("players").doc(user.uid).get().then(doc=>{
-    const d = doc.data();
-
+  auth.signInWithEmailAndPassword(email,pass)
+  .then(res=>{
+    return db.collection("players").doc(res.user.uid).get();
+  })
+  .then(doc=>{
+    const d=doc.data();
     if(d.banned){
-      if(d.banUntil && Date.now() > d.banUntil){
-        db.collection("players").doc(user.uid).update({
+      if(d.banUntil && Date.now()<d.banUntil){
+        const days=Math.ceil((d.banUntil-Date.now())/86400000);
+        msg.textContent="Banned for "+days+" day(s)";
+        auth.signOut();
+      }else{
+        db.collection("players").doc(auth.currentUser.uid).update({
           banned:false,
           banUntil:null
         }).then(()=>location.href="player.html");
-      }else{
-        const days = Math.ceil((d.banUntil-Date.now())/86400000);
-        alert("You are banned for "+days+" day(s)");
-        auth.signOut();
       }
     }else{
       location.href="player.html";
     }
-  });
-});
+  })
+  .catch(e=>msg.textContent=e.message);
+}
 </script>
+</body>
+</html>
