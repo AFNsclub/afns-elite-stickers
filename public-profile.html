@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>My Profile | AFN's Elite Strikers</title>
+<title>Player Profile | AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -25,179 +25,132 @@ body{
   background:radial-gradient(circle at top,var(--bg2),var(--bg1));
   color:#fff;
   display:flex;
-  justify-content:center;
+  flex-direction:column;
+  align-items:center;
 }
 
-.container{
-  width:100%;
-  max-width:430px;
-  padding:18px;
-}
-
-/* HEADER */
-header{
-  text-align:center;
-  margin-bottom:14px;
-}
-header img{
-  width:90px;
-  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
-}
-header h1{
-  color:var(--gold);
-  margin-top:6px;
-  font-size:24px;
-}
-
-/* ANNOUNCEMENT */
-.announce{
-  background:linear-gradient(145deg,#082030,#020c14);
-  border-radius:18px;
-  padding:14px;
-  text-align:center;
-  font-size:14px;
-  color:var(--neon);
-  box-shadow:0 0 20px rgba(0,247,255,.35);
-  margin-bottom:14px;
-}
-
-/* CARD */
 .card{
+  width:100%;
+  max-width:420px;
   background:linear-gradient(145deg,#061726,#020c14);
-  border-radius:22px;
-  padding:18px;
-  box-shadow:0 0 28px rgba(0,247,255,.4);
+  border-radius:26px;
+  padding:24px;
+  margin-top:30px;
+  box-shadow:0 0 40px rgba(0,247,255,.45);
 }
 
-/* USERNAME */
-.username{
-  text-align:center;
-  font-size:22px;
+.avatar{
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  margin:0 auto 10px;
+  background:linear-gradient(145deg,#0ff,#004);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:38px;
   font-weight:900;
-  color:var(--neon);
+  color:#000;
+}
+
+h2{
+  text-align:center;
+  color:var(--gold);
   margin-bottom:6px;
 }
 
-/* STATS */
+.sub{
+  text-align:center;
+  font-size:14px;
+  color:#aaa;
+  margin-bottom:14px;
+}
+
 .stats{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   gap:12px;
-  margin-bottom:16px;
+  margin-top:16px;
 }
+
 .stat{
-  background:rgba(255,255,255,.06);
-  border-radius:14px;
-  padding:12px;
-  text-align:center;
-}
-.stat span{
-  display:block;
-  font-size:13px;
-  color:#ccc;
-}
-.stat strong{
-  font-size:20px;
-  color:var(--gold);
-}
-
-/* INFO */
-.info{
-  background:rgba(255,255,255,.05);
-  border-radius:14px;
-  padding:14px;
-  font-size:14px;
-}
-.info div{
-  margin-bottom:8px;
-}
-.info b{
-  color:var(--neon);
-}
-
-/* FORM */
-form{
-  margin-top:14px;
-  display:none;
-}
-input{
-  width:100%;
-  padding:12px;
-  margin-bottom:10px;
-  border-radius:12px;
-  border:none;
-  outline:none;
   background:#020c14;
-  color:#fff;
-}
-
-/* BUTTONS */
-.btn{
-  display:block;
-  margin-top:14px;
   padding:14px;
   border-radius:16px;
   text-align:center;
-  font-weight:800;
-  text-decoration:none;
-  background:linear-gradient(145deg,#081c2c,#020c14);
+  box-shadow:inset 0 0 12px rgba(0,247,255,.25);
+}
+
+.stat span{
+  display:block;
+  font-size:20px;
+  font-weight:900;
   color:var(--neon);
-  border:none;
-  width:100%;
-  cursor:pointer;
-  transition:.25s;
-}
-.btn:hover{
-  transform:scale(1.05);
-  box-shadow:0 0 16px rgba(0,247,255,.45);
 }
 
-.logout{
-  background:linear-gradient(145deg,#2c0808,#140202);
-  color:#ff7777;
+.info{
+  margin-top:16px;
+  font-size:14px;
+  line-height:1.7;
 }
 
-/* FOOTER */
-footer{
-  text-align:center;
-  font-size:12px;
-  color:#aaa;
-  margin-top:18px;
-}
-footer a{
+.info a{
   color:var(--neon);
   text-decoration:none;
   font-weight:700;
+}
+
+footer{
+  margin-top:auto;
+  padding:14px;
+  font-size:12px;
+  color:#aaa;
 }
 </style>
 </head>
 
 <body>
-<div class="container">
 
-<header>
-  <img src="logo.png">
-  <h1>My Profile</h1>
-</header>
+<div class="card">
 
-<div class="announce">
-🔥 Season Live • Rank up & become AFN Legend
-</div>
+  <div class="avatar" id="avatar">?</div>
 
-<div class="card" id="profileCard">
-  Loading...
+  <h2 id="username">Loading...</h2>
+  <div class="sub">Public Player Profile</div>
+
+  <div class="stats">
+    <div class="stat">
+      Rating
+      <span id="rating">0</span>
+    </div>
+    <div class="stat">
+      Wins
+      <span id="wins">0</span>
+    </div>
+    <div class="stat">
+      Losses
+      <span id="losses">0</span>
+    </div>
+    <div class="stat">
+      Goals
+      <span id="goals">0</span>
+    </div>
+  </div>
+
+  <div class="info">
+    📱 <b>Device:</b> <span id="device"></span><br>
+    🎮 <b>Game / Owner ID:</b> <span id="gameId"></span><br>
+    🔗 <b>Facebook:</b> <a id="fb" href="#" target="_blank">Visit</a>
+  </div>
+
 </div>
 
 <footer>
-© 2026 AFN's Elite Strikers |
-<a href="leaderboard.html">Leaderboard</a>
+  © 2026 AFN's Elite Strikers
 </footer>
-
-</div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
@@ -210,72 +163,41 @@ const firebaseConfig={
   appId:"1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
 firebase.initializeApp(firebaseConfig);
-
-const auth=firebase.auth();
 const db=firebase.firestore();
-const box=document.getElementById("profileCard");
 
-auth.onAuthStateChanged(user=>{
-  if(!user){
-    location.href="login.html";
+// GET UID FROM URL
+const params=new URLSearchParams(window.location.search);
+const uid=params.get("id");
+
+if(!uid){
+  document.body.innerHTML="Invalid Profile";
+}
+
+db.collection("players").doc(uid).get()
+.then(doc=>{
+  if(!doc.exists){
+    document.body.innerHTML="Player not found";
     return;
   }
+  const p=doc.data();
 
-  db.collection("players").doc(user.uid).onSnapshot(doc=>{
-    const p=doc.data();
+  username.innerText=p.username;
+  avatar.innerText=p.username.charAt(0).toUpperCase();
+  rating.innerText=p.rating||0;
+  wins.innerText=p.wins||0;
+  losses.innerText=p.losses||0;
+  goals.innerText=p.goals||0;
+  device.innerText=p.device||"N/A";
+  gameId.innerText=p.gameId||"N/A";
 
-    box.innerHTML=`
-      <div class="username">${p.username}</div>
-
-      <div class="stats">
-        <div class="stat"><span>Rating</span><strong>${p.rating||0}</strong></div>
-        <div class="stat"><span>Wins</span><strong>${p.wins||0}</strong></div>
-        <div class="stat"><span>Losses</span><strong>${p.losses||0}</strong></div>
-        <div class="stat"><span>Goals</span><strong>${p.goals||0}</strong></div>
-      </div>
-
-      <div class="info">
-        <div><b>Email:</b> ${p.email}</div>
-        <div><b>Phone:</b> ${p.phone}</div>
-        <div><b>Game / Owner ID:</b> ${p.gameId}</div>
-        <div><b>Device:</b> ${p.device}</div>
-      </div>
-
-      <button class="btn" onclick="toggleEdit()">✏️ Edit Profile</button>
-
-      <form id="editForm">
-        <input id="phone" value="${p.phone}">
-        <input id="gameId" value="${p.gameId}">
-        <input id="facebook" value="${p.facebook||''}">
-        <input id="device" value="${p.device}">
-        <button class="btn">💾 Save Changes</button>
-      </form>
-
-      <button class="btn logout" onclick="logout()">🚪 Logout</button>
-    `;
-
-    document.getElementById("editForm").onsubmit=e=>{
-      e.preventDefault();
-      db.collection("players").doc(user.uid).update({
-        phone:phone.value,
-        gameId:gameId.value,
-        facebook:facebook.value,
-        device:device.value
-      });
-      toggleEdit();
-    };
-  });
+  if(p.facebook){
+    fb.href=p.facebook;
+  }else{
+    fb.innerText="Not linked";
+    fb.removeAttribute("href");
+  }
 });
-
-function toggleEdit(){
-  const f=document.getElementById("editForm");
-  f.style.display = f.style.display==="block" ? "none" : "block";
-}
-
-function logout(){
-  auth.signOut().then(()=>location.href="login.html");
-}
 </script>
 
 </body>
-</html>
+  </html>
