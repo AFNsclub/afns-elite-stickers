@@ -1,176 +1,264 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Player Profile</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>My Profile | AFN's Elite Strikers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body{
-      margin:0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(180deg,#050b1e,#020617);
-      color:#fff;
-    }
-    .container{
-      max-width:420px;
-      margin:auto;
-      padding:16px;
-    }
-    .card{
-      background:rgba(255,255,255,.05);
-      border-radius:18px;
-      padding:18px;
-      margin-bottom:16px;
-      box-shadow:0 10px 25px rgba(0,0,0,.4);
-    }
-    .center{text-align:center;}
-    .avatar{
-      width:90px;height:90px;
-      border-radius:50%;
-      background:#4f8cff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:42px;
-      font-weight:bold;
-      margin:10px auto;
-    }
-    .motivation{
-      font-size:14px;
-      opacity:.85;
-      margin-bottom:6px;
-    }
-    h2{margin:6px 0;}
-    .info{
-      font-size:14px;
-      opacity:.9;
-      margin:6px 0;
-    }
-    .info a{color:#4f8cff;text-decoration:none;}
-    .stats{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-      margin-top:12px;
-    }
-    .stat{
-      background:rgba(0,0,0,.35);
-      border-radius:14px;
-      padding:14px;
-      text-align:center;
-    }
-    .stat span{
-      display:block;
-      font-size:20px;
-      font-weight:bold;
-    }
-    input{
-      width:100%;
-      padding:14px;
-      border-radius:14px;
-      border:none;
-      margin-bottom:12px;
-      background:#0b122c;
-      color:#fff;
-      font-size:15px;
-    }
-    button{
-      width:100%;
-      padding:14px;
-      border:none;
-      border-radius:16px;
-      background:#4f8cff;
-      color:#fff;
-      font-size:16px;
-      font-weight:bold;
-      cursor:pointer;
-    }
-    .logout{
-      background:#ff4f4f;
-      margin-top:10px;
-    }
-  </style>
+<style>
+:root{
+  --neon:#00f7ff;
+  --gold:#ffd400;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',sans-serif;
+}
+
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
+  color:#fff;
+  display:flex;
+  justify-content:center;
+}
+
+.container{
+  width:100%;
+  max-width:430px;
+  padding:18px;
+}
+
+/* LOGO */
+.logo{
+  text-align:center;
+}
+.logo img{
+  width:90px;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
+}
+
+/* ANNOUNCEMENT */
+.notice{
+  margin:16px 0;
+  padding:14px;
+  border-radius:14px;
+  background:linear-gradient(145deg,#06202d,#021016);
+  color:var(--neon);
+  font-size:14px;
+  text-align:center;
+  box-shadow:0 0 18px rgba(0,247,255,.35);
+  animation:pulse 2.5s infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 12px rgba(0,247,255,.2)}
+  50%{box-shadow:0 0 28px rgba(0,247,255,.6)}
+  100%{box-shadow:0 0 12px rgba(0,247,255,.2)}
+}
+
+/* PROFILE CARD */
+.card{
+  background:linear-gradient(145deg,#061726,#020c14);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 0 30px rgba(0,247,255,.35);
+  margin-bottom:18px;
+}
+
+h2{
+  color:var(--gold);
+  margin-bottom:12px;
+  text-align:center;
+}
+
+.field{
+  font-size:14px;
+  margin:8px 0;
+}
+.field span{
+  color:var(--neon);
+  font-weight:700;
+}
+
+/* EDIT FORM */
+input{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  margin-bottom:10px;
+  font-size:14px;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(145deg,#00f7ff,#0077ff);
+  color:#000;
+  font-weight:800;
+  font-size:15px;
+  cursor:pointer;
+}
+button:hover{opacity:.9;}
+
+.secondary{
+  background:linear-gradient(145deg,#ffd400,#ff9900);
+  margin-top:10px;
+}
+
+.logout{
+  background:#ff4d4d;
+  color:#fff;
+  margin-top:12px;
+}
+
+footer{
+  text-align:center;
+  font-size:12px;
+  color:#aaa;
+  margin-top:10px;
+}
+footer a{
+  color:var(--neon);
+  text-decoration:none;
+  font-weight:700;
+}
+</style>
 </head>
 
 <body>
 <div class="container">
 
-  <!-- PROFILE CARD -->
-  <div class="card center">
-    <div id="motivationText" class="motivation">Loading...</div>
-    <div id="avatar" class="avatar">?</div>
-    <h2 id="playerName">Player</h2>
+  <div class="logo">
+    <img src="logo.png">
+  </div>
 
-    <div style="margin:8px 0;">
-      <div style="font-size:13px;opacity:.7;">Current Rank</div>
-      <div id="rankText" style="font-size:22px;font-weight:bold;">Loading...</div>
-    </div>
+  <!-- LIVE NOTICE -->
+  <div class="notice">
+    🔔 Season is Live! Rank up to become Champion 🏆
+  </div>
 
-    <div class="info">📞 <span id="phoneText"></span></div>
-    <div class="info">✉️ <span id="emailText"></span></div>
-    <div class="info">🎮 Game ID: <span id="gameIdText"></span></div>
-    <div class="info">📱 Device: <span id="deviceText"></span></div>
-    <div class="info">🔗 <a id="fbLink" target="_blank">Facebook Profile</a></div>
+  <!-- PROFILE VIEW -->
+  <div class="card" id="profileView">
+    <h2 id="username">Player</h2>
 
-    <div class="stats">
-      <div class="stat">Wins <span id="wins">0</span></div>
-      <div class="stat">Losses <span id="losses">0</span></div>
-      <div class="stat">Goals <span id="goals">0</span></div>
-      <div class="stat">Goal Diff <span id="gd">0</span></div>
-    </div>
+    <div class="field">📧 Email: <span id="email"></span></div>
+    <div class="field">📱 Phone: <span id="phone"></span></div>
+    <div class="field">🎮 Game ID: <span id="gameId"></span></div>
+    <div class="field">📱 Device: <span id="device"></span></div>
+    <div class="field">⭐ Rating: <span id="rating">0</span></div>
 
+    <button onclick="showEdit()">Edit Profile</button>
     <button class="logout" onclick="logout()">Logout</button>
   </div>
 
-  <!-- EDIT CARD -->
-  <div class="card">
-    <h3>Edit Profile</h3>
+  <!-- EDIT FORM -->
+  <div class="card" id="editForm" style="display:none">
+    <h2>Edit Profile</h2>
 
-    <input id="nameInput" placeholder="Player name">
-    <input id="phoneInput" placeholder="Phone number">
-    <input id="emailInput" placeholder="Email">
-    <input id="gameIdInput" placeholder="Game ID">
-    <input id="deviceInput" placeholder="Device name">
-    <input id="fbInput" placeholder="Facebook profile link">
+    <input id="e_username" placeholder="Username">
+    <input id="e_phone" placeholder="Phone">
+    <input id="e_gameId" placeholder="Game / Owner ID">
+    <input id="e_device" placeholder="Device Name">
+    <input id="e_facebook" placeholder="Facebook Profile URL">
 
     <button onclick="saveProfile()">Save Changes</button>
+    <button class="secondary" onclick="cancelEdit()">Cancel</button>
   </div>
+
+  <footer>
+    © 2026 AFN's Elite Strikers |
+    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI SHOHAN</a>
+  </footer>
+
 </div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-    authDomain: "afnsclub.firebaseapp.com",
-    projectId: "afnsclub",
-    storageBucket: "afnsclub.firebasestorage.app",
-    messagingSenderId: "1088089213558",
-    appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
 
-  // 🔒 AUTH GUARD
-  auth.onAuthStateChanged(user=>{
-    if(!user){
-      window.location.replace("login.html");
-    }else{
-      window.__UID__ = user.uid;
-    }
-  });
+let uid = null;
 
-  function logout(){
-    auth.signOut().then(()=>{
-      window.location.replace("login.html");
-    });
+// 🔐 auth guard
+auth.onAuthStateChanged(user=>{
+  if(!user){
+    window.location.replace("login.html");
+    return;
   }
+  uid=user.uid;
+  loadProfile();
+});
+
+function loadProfile(){
+  db.collection("players").doc(uid).get().then(doc=>{
+    if(!doc.exists) return;
+    const d=doc.data();
+    document.getElementById("username").innerText=d.username;
+    document.getElementById("email").innerText=d.email;
+    document.getElementById("phone").innerText=d.phone||"-";
+    document.getElementById("gameId").innerText=d.gameId||"-";
+    document.getElementById("device").innerText=d.device||"-";
+    document.getElementById("rating").innerText=d.rating||0;
+
+    e_username.value=d.username;
+    e_phone.value=d.phone||"";
+    e_gameId.value=d.gameId||"";
+    e_device.value=d.device||"";
+    e_facebook.value=d.facebook||"";
+  });
+}
+
+function showEdit(){
+  profileView.style.display="none";
+  editForm.style.display="block";
+}
+
+function cancelEdit(){
+  editForm.style.display="none";
+  profileView.style.display="block";
+}
+
+function saveProfile(){
+  db.collection("players").doc(uid).update({
+    username:e_username.value.trim(),
+    phone:e_phone.value.trim(),
+    gameId:e_gameId.value.trim(),
+    device:e_device.value.trim(),
+    facebook:e_facebook.value.trim()
+  }).then(()=>{
+    cancelEdit();
+    loadProfile();
+  });
+}
+
+function logout(){
+  auth.signOut().then(()=>{
+    window.location.replace("login.html");
+  });
+}
 </script>
 
-<script src="player.js"></script>
 </body>
 </html>
