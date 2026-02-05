@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Club – Register</title>
+<title>Create Account</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -11,17 +11,16 @@
 body{
   margin:0;
   min-height:100vh;
-  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
   display:flex;
-  flex-direction:column;
   align-items:center;
   justify-content:center;
+  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
   color:#fff;
 }
 
-.card{
+.container{
   width:100%;
-  max-width:380px;
+  max-width:400px;
   background:rgba(255,255,255,.06);
   backdrop-filter:blur(12px);
   padding:26px;
@@ -29,27 +28,22 @@ body{
   box-shadow:0 0 30px rgba(0,0,0,.6);
 }
 
-h2{
-  text-align:center;
-  margin-bottom:18px;
-}
+h2{text-align:center;margin-bottom:6px}
+.sub{text-align:center;font-size:13px;color:#a5b4fc;margin-bottom:18px}
 
 input{
   width:100%;
   padding:12px;
-  margin-top:12px;
+  margin-bottom:12px;
   border:none;
   border-radius:8px;
   font-size:14px;
 }
 
-.password-box{
-  position:relative;
-}
-
-.password-box span{
+.pass-box{position:relative}
+.toggle{
   position:absolute;
-  right:12px;
+  right:10px;
   top:50%;
   transform:translateY(-50%);
   cursor:pointer;
@@ -59,43 +53,38 @@ input{
 
 button{
   width:100%;
-  margin-top:18px;
   padding:12px;
   border:none;
   border-radius:8px;
-  background:#22c55e;
+  background:#4f8cff;
   color:#fff;
   font-weight:bold;
   cursor:pointer;
 }
 
-button:hover{
-  box-shadow:0 0 14px rgba(34,197,94,.6);
-}
+button:hover{box-shadow:0 0 12px rgba(79,140,255,.6)}
 
-.link{
-  margin-top:14px;
+.msg{
+  margin-bottom:12px;
+  font-size:13px;
   text-align:center;
+  display:none;
+}
+.msg.error{color:#ff6b6b}
+.msg.success{color:#22c55e}
+
+.links{
+  text-align:center;
+  margin-top:10px;
   font-size:13px;
 }
+.links a{color:#a5b4fc;text-decoration:none}
 
-.link a{
-  color:#60a5fa;
-  text-decoration:none;
-}
-
-.error{
-  margin-top:12px;
-  font-size:13px;
-  color:#ff6b6b;
-  text-align:center;
-}
-
-/* footer */
 footer{
-  margin-top:28px;
+  text-align:center;
   font-size:12px;
-  opacity:.8;
+  opacity:.6;
+  margin-top:16px;
 }
 </style>
 
@@ -115,81 +104,88 @@ firebase.initializeApp({
 
 <body>
 
-<div class="card">
+<div class="container">
+
   <h2>Create Account</h2>
+  <div class="sub">Join AFNS Elite Striker</div>
 
-  <input id="name" placeholder="Player Name">
+  <div id="msg" class="msg"></div>
+
+  <input id="name" placeholder="Full Name">
+  <input id="phone" placeholder="Bangladesh Phone (+8801XXXXXXXXX)">
   <input id="email" type="email" placeholder="Email">
-  <input id="phone" placeholder="Mobile Number (BD)">
-  <input id="gameId" placeholder="Game / Owner ID">
 
-  <div class="password-box">
-    <input id="password" type="password" placeholder="Password">
-    <span onclick="togglePass()">SHOW</span>
+  <div class="pass-box">
+    <input id="password" type="password" placeholder="Password (min 6)">
+    <span class="toggle" onclick="togglePass()">SHOW</span>
   </div>
 
   <button onclick="register()">Create Account</button>
 
-  <div class="link">
-    Already player? <a href="index.html">Login</a>
+  <div class="links">
+    Already have an account? <a href="index.html">Login</a>
   </div>
 
-  <div id="error" class="error"></div>
+  <footer>SI Shohan • AFNS Club</footer>
 </div>
 
-<footer>
-  AFNs Elite Striker | SI Shohan
-</footer>
-
 <script>
-const auth = firebase.auth();
-const db = firebase.firestore();
+const auth=firebase.auth();
+const db=firebase.firestore();
+const msg=document.getElementById("msg");
+
+function show(text,type){
+  msg.textContent=text;
+  msg.className="msg "+type;
+  msg.style.display="block";
+}
 
 function togglePass(){
-  const p = document.getElementById("password");
-  p.type = p.type === "password" ? "text" : "password";
+  const p=document.getElementById("password");
+  const t=document.querySelector(".toggle");
+  if(p.type==="password"){p.type="text";t.textContent="HIDE"}
+  else{p.type="password";t.textContent="SHOW"}
+}
+
+function validBD(phone){
+  return /^(\+8801|01)[0-9]{9}$/.test(phone);
 }
 
 function register(){
-  error.textContent="";
+  const name=nameInput.value=name.value.trim();
+  const phoneVal=phone.value.trim();
+  const emailVal=email.value.trim();
+  const passVal=password.value;
 
-  const name = name.value.trim();
-  const email = email.value.trim();
-  const phone = phone.value.trim();
-  const gameId = gameId.value.trim();
-  const pass = password.value;
-
-  if(!name || !email || !pass){
-    error.textContent="Fill all required fields";
-    return;
+  if(!name||!phoneVal||!emailVal||!passVal){
+    show("All fields required","error");return;
+  }
+  if(!validBD(phoneVal)){
+    show("Invalid Bangladesh phone number","error");return;
+  }
+  if(passVal.length<6){
+    show("Password minimum 6 characters","error");return;
   }
 
-  auth.createUserWithEmailAndPassword(email,pass)
-    .then(res=>{
-      const uid = res.user.uid;
-
-      return db.collection("players").doc(uid).set({
-        uid,
-        name,
-        email,
-        phone,
-        gameId,
-        wins:0,
-        losses:0,
-        goals:0,
-        gd:0,
-        banned:false,
-        banUntil:null,
-        createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-    })
-    .then(()=>{
-      alert("Account created successfully ✅");
-      window.location.href="player.html";
-    })
-    .catch(err=>{
-      error.textContent = err.message;
+  auth.createUserWithEmailAndPassword(emailVal,passVal)
+  .then(res=>{
+    const uid=res.user.uid;
+    return db.collection("players").doc(uid).set({
+      uid,
+      name,
+      phone:phoneVal,
+      email:emailVal,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      banned:false,
+      banUntil:null,
+      wins:0,losses:0,goals:0,gd:0
     });
+  })
+  .then(()=>{
+    show("Account created successfully","success");
+    setTimeout(()=>location.href="player.html",1200);
+  })
+  .catch(e=>show(e.message,"error"));
 }
 </script>
 
