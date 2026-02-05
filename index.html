@@ -1,220 +1,196 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFN's Elite Strikers</title>
+<title>AFNS Club – Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- ===== STYLE ===== -->
 <style>
-:root{
-  --neon:#00f7ff;
-  --gold:#ffd400;
-  --bg1:#02060c;
-  --bg2:#0c1b2a;
-  --glass:rgba(255,255,255,0.08);
-}
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Segoe UI',sans-serif;
-}
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
 
 body{
+  margin:0;
   min-height:100vh;
-  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
-  color:#fff;
+  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
   display:flex;
+  flex-direction:column;
+  align-items:center;
   justify-content:center;
+  color:#fff;
 }
 
-.container{
+.card{
   width:100%;
-  max-width:430px;
-  padding:18px;
+  max-width:360px;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(12px);
+  padding:26px;
+  border-radius:16px;
+  box-shadow:0 0 30px rgba(0,0,0,.6);
+}
+
+h2{
+  text-align:center;
+  margin-bottom:18px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border:none;
+  border-radius:8px;
+  font-size:14px;
+}
+
+.password-box{
+  position:relative;
+}
+
+.password-box span{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+  font-size:13px;
+  color:#4f8cff;
+}
+
+button{
+  width:100%;
+  margin-top:16px;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  background:#3b82f6;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  box-shadow:0 0 14px rgba(59,130,246,.6);
+}
+
+.link{
+  margin-top:14px;
+  text-align:center;
+  font-size:13px;
+}
+
+.link a{
+  color:#60a5fa;
+  text-decoration:none;
+}
+
+.error{
+  margin-top:12px;
+  font-size:13px;
+  color:#ff6b6b;
   text-align:center;
 }
 
-/* LOGO */
-.logo img{
-  width:130px;
-  margin:12px 0;
-  filter:drop-shadow(0 0 25px rgba(255,215,0,.7));
-}
-
-/* TITLE */
-h1{
-  color:var(--gold);
-  font-size:30px;
-  letter-spacing:1px;
-}
-.tagline{
-  color:var(--neon);
-  font-size:14px;
-  margin:6px 0 16px;
-}
-
-/* LIVE NOTICE */
-.notice{
-  background:linear-gradient(145deg,#061b2a,#021019);
-  border-radius:16px;
-  padding:14px;
-  margin-bottom:14px;
-  box-shadow:0 0 20px rgba(0,247,255,.35);
-  animation:pulse 3s infinite;
-}
-.notice span{
-  color:var(--neon);
-  font-weight:700;
-  font-size:14px;
-}
-@keyframes pulse{
-  0%,100%{box-shadow:0 0 16px rgba(0,247,255,.3)}
-  50%{box-shadow:0 0 30px rgba(0,247,255,.6)}
-}
-
-/* SEASON */
-.season{
-  background:linear-gradient(145deg,#1a1405,#0b0702);
-  border-radius:16px;
-  padding:12px;
-  margin-bottom:18px;
-  box-shadow:0 0 20px rgba(255,212,0,.35);
-  color:var(--gold);
-  font-weight:700;
-  font-size:14px;
-}
-
-/* ABOUT */
-.about{
-  background:var(--glass);
-  border-radius:16px;
-  padding:16px;
-  margin-bottom:20px;
-  backdrop-filter:blur(6px);
-}
-.about h2{
-  font-size:18px;
-  margin-bottom:8px;
-}
-.about p{
-  font-size:14px;
-  line-height:1.6;
-  color:#ddd;
-}
-
-/* MENU */
-.menu{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-.menu a{
-  text-decoration:none;
-  padding:15px;
-  border-radius:18px;
-  background:linear-gradient(145deg,#061726,#020c14);
-  color:var(--neon);
-  font-weight:700;
-  letter-spacing:.4px;
-  position:relative;
-  overflow:hidden;
-  transition:.25s;
-}
-.menu a::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(120deg,transparent,rgba(0,247,255,.25),transparent);
-  transform:translateX(-100%);
-}
-.menu a:hover::after{
-  transform:translateX(100%);
-  transition:.6s;
-}
-.menu a:hover{
-  transform:scale(1.05);
-  box-shadow:0 0 20px rgba(0,247,255,.5);
-}
-
-/* FOOTER */
-footer{
-  margin-top:24px;
+/* ===== FOOTER ===== */
+.global-footer{
+  margin-top:30px;
+  text-align:center;
   font-size:12px;
-  color:#aaa;
+  opacity:.8;
 }
-footer a{
-  color:var(--neon);
-  text-decoration:none;
-  font-weight:700;
+
+.footer-inner{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  justify-content:center;
+}
+
+.footer-logo{
+  width:28px;
 }
 </style>
+
+<!-- ===== FIREBASE ===== -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+</script>
 </head>
 
 <body>
-<div class="container">
 
-  <!-- LOGO -->
-  <div class="logo">
-    <img src="logo.png" alt="AFN Logo">
+<div class="card">
+  <h2>Login</h2>
+
+  <input id="email" type="email" placeholder="Email">
+
+  <div class="password-box">
+    <input id="password" type="password" placeholder="Password">
+    <span onclick="togglePass()">SHOW</span>
   </div>
 
-  <h1>AFN's Elite Strikers</h1>
-  <div class="tagline">Play Smart. Play Elite. Play AFN.</div>
+  <button onclick="login()">Login</button>
 
-  <!-- LIVE NOTICE -->
-  <div class="notice">
-    <span id="noticeText">🔥 Season 2026 Live • Registration Open Now</span>
+  <div class="link">
+    <a href="#" onclick="forgot()">Forgot password?</a>
   </div>
 
-  <!-- SEASON STATUS -->
-  <div class="season">
-    🏟️ Season 2026 • Ongoing • Rankings Live
+  <div class="link">
+    New player? <a href="register.html">Create account</a>
   </div>
 
-  <!-- ABOUT -->
-  <div class="about">
-    <h2>আমাদের ক্লাব</h2>
-    <p>
-      AFN's Elite Strikers শুধুই একটি ক্লাব না — এটা একটি mindset।
-      এখানে খেলোয়াড় তৈরি হয় চ্যাম্পিয়ন হওয়ার জন্য।
-    </p>
-  </div>
-
-  <!-- MENU -->
-  <div class="menu">
-    <a href="login.html">👤 Player Login / Profile</a>
-    <a href="leaderboard.html">🏆 Leaderboard</a>
-    <a href="admin-login.html">🔐 Admin Panel</a>
-  </div>
-
-  <!-- FOOTER -->
-  <footer>
-    © 2026 AFN's Elite Strikers |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
-      SI SHOHAN
-    </a>
-  </footer>
-
+  <div id="error" class="error"></div>
 </div>
 
-<script>
-/* Live Notice Rotation (future Firestore replaceable) */
-const notices = [
-  "🔥 Season 2026 Live • Registration Open",
-  "🏆 PvP Rankings Updating Live",
-  "⚠️ Tonight: Knockout Matches",
-  "👑 Champion Certificate Available",
-  "🚀 New Players Joined AFN"
-];
+<!-- ===== FOOTER ===== -->
+<footer class="global-footer">
+  <div class="footer-inner">
+    <img src="logo.png" class="footer-logo">
+    <div>
+      AFNs Elite Striker |
+      <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI Shohan</a>
+    </div>
+  </div>
+</footer>
 
-let n=0;
-const box=document.getElementById("noticeText");
-setInterval(()=>{
-  n=(n+1)%notices.length;
-  box.textContent=notices[n];
-},8000);
+<script>
+function togglePass(){
+  const p = document.getElementById("password");
+  p.type = p.type === "password" ? "text" : "password";
+}
+
+function login(){
+  const email = email.value;
+  const pass = password.value;
+  error.textContent = "";
+
+  firebase.auth().signInWithEmailAndPassword(email,pass)
+    .then(res=>{
+      window.location.href="player.html";
+    })
+    .catch(err=>{
+      error.textContent = err.message;
+    });
+}
+
+function forgot(){
+  const email = document.getElementById("email").value;
+  if(!email){
+    error.textContent="Enter email first";
+    return;
+  }
+  firebase.auth().sendPasswordResetEmail(email)
+    .then(()=>alert("Password reset email sent ✅"))
+    .catch(e=>error.textContent=e.message);
+}
 </script>
 
 </body>
