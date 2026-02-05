@@ -1,76 +1,267 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>My Profile</title>
-<link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Player Profile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
+  color:#fff;
+}
+
+.container{
+  max-width:420px;
+  margin:40px auto;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(12px);
+  padding:22px;
+  border-radius:16px;
+  box-shadow:0 0 30px rgba(0,0,0,.6);
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.avatar{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:#4f8cff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  font-weight:bold;
+}
+
+.logout{
+  background:none;
+  border:1px solid #4f8cff;
+  color:#4f8cff;
+  padding:6px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+h2{
+  margin:14px 0 4px;
+}
+
+.motivation{
+  font-size:14px;
+  color:#a5b4fc;
+  margin-bottom:14px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.stat{
+  background:rgba(255,255,255,.06);
+  border-radius:12px;
+  padding:12px;
+  text-align:center;
+}
+
+.stat span{
+  display:block;
+  font-size:20px;
+  color:#4f8cff;
+  font-weight:bold;
+}
+
+.profile p{
+  font-size:14px;
+  margin:6px 0;
+}
+
+.profile span{
+  color:#a5b4fc;
+}
+
+.edit{
+  margin-top:14px;
+}
+
+.edit input{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border:none;
+  border-radius:8px;
+}
+
+button.save{
+  width:100%;
+  margin-top:14px;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  background:#22c55e;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.ban{
+  margin-bottom:12px;
+  padding:10px;
+  background:#ff4d4d;
+  border-radius:10px;
+  text-align:center;
+  font-size:14px;
+}
+
+footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.8;
+  margin:20px 0;
+}
+</style>
+
+<!-- ===== FIREBASE ===== -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+</script>
 </head>
+
 <body>
 
 <div class="container">
-<div class="notice" id="motivation"></div>
 
-<h2 id="name"></h2>
+  <div id="banBox" class="ban" style="display:none"></div>
 
-<div class="profile-box">
-<p>Email: <span id="email"></span></p>
-<p>Phone: <span id="phone"></span></p>
-<p>Game ID: <span id="gameId"></span></p>
-<p>Device: <span id="device"></span></p>
+  <div class="header">
+    <div class="avatar" id="avatar">P</div>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+
+  <h2 id="playerName">Player</h2>
+  <div class="motivation" id="motivation"></div>
+
+  <div class="stats">
+    <div class="stat"><span id="wins">0</span>Wins</div>
+    <div class="stat"><span id="losses">0</span>Losses</div>
+    <div class="stat"><span id="goals">0</span>Goals</div>
+    <div class="stat"><span id="gd">0</span>GD</div>
+  </div>
+
+  <div class="profile">
+    <p>📧 <span id="email">—</span></p>
+    <p>📱 <span id="phone">—</span></p>
+    <p>🎮 <span id="gameId">—</span></p>
+  </div>
+
+  <div class="edit">
+    <input id="nameInput" placeholder="Player Name">
+    <input id="phoneInput" placeholder="Mobile Number">
+    <input id="gameIdInput" placeholder="Game ID">
+    <button class="save" onclick="save()">Save Profile</button>
+  </div>
+
 </div>
 
-<h2>Edit Profile</h2>
-<input id="e_name" placeholder="Username">
-<input id="e_phone" placeholder="Phone">
-<input id="e_fb" placeholder="Facebook">
-<input id="e_game" placeholder="Game ID">
-<input id="e_device" placeholder="Device">
-<button onclick="save()">Save</button>
-<button class="logout" onclick="auth.signOut()">Logout</button>
-</div>
-
-<footer class="global-footer">
-<img src="logo.png" class="footer-logo">
-AFNs Elite Striker |
-<a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI Shohan</a>
+<footer>
+  AFNs Elite Striker | SI Shohan
 </footer>
 
-<script src="firebase.js"></script>
 <script>
-const quotes=[
-"Discipline beats talent.",
-"One match can change everything.",
-"Play smart. Stay elite."
-];
-motivation.innerText=quotes[Math.floor(Math.random()*quotes.length)];
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-auth.onAuthStateChanged(u=>{
- if(!u){location.href="login.html";return;}
- db.collection("players").doc(u.uid).onSnapshot(d=>{
-  const p=d.data();
-  name.innerText=p.username;
-  email.innerText=p.email;
-  phone.innerText=p.phone;
-  gameId.innerText=p.gameId;
-  device.innerText=p.device;
-  e_name.value=p.username;
-  e_phone.value=p.phone;
-  e_fb.value=p.facebook;
-  e_game.value=p.gameId;
-  e_device.value=p.device;
- });
+/* ===== MOTIVATION ===== */
+const MOTIVATIONS=[
+  "Train hard, win easy.",
+  "No excuses, only results.",
+  "Play with heart.",
+  "Discipline beats talent.",
+  "Every match matters.",
+  "Winners never quit."
+];
+
+function todayMotivation(uid){
+  const d=new Date().toISOString().slice(0,10);
+  let h=0;const k=uid+d;
+  for(let i=0;i<k.length;i++)h=k.charCodeAt(i)+((h<<5)-h);
+  return MOTIVATIONS[Math.abs(h)%MOTIVATIONS.length];
+}
+
+auth.onAuthStateChanged(user=>{
+  if(!user){location.href="index.html";return;}
+
+  const uid=user.uid;
+  db.collection("players").doc(uid).onSnapshot(doc=>{
+    if(!doc.exists)return;
+    const d=doc.data();
+
+    /* BAN */
+    if(d.banned){
+      banBox.style.display="block";
+      if(d.banUntil){
+        const end=d.banUntil.toDate();
+        const t=Math.max(0,Math.floor((end-Date.now())/1000));
+        banBox.textContent="You are banned. Remaining: "+t+"s";
+      }else{
+        banBox.textContent="You are permanently banned";
+      }
+    }
+
+    playerName.textContent=d.name;
+    avatar.textContent=d.name.charAt(0).toUpperCase();
+    motivation.textContent=todayMotivation(uid);
+
+    wins.textContent=d.wins;
+    losses.textContent=d.losses;
+    goals.textContent=d.goals;
+    gd.textContent=d.gd;
+
+    email.textContent=d.email;
+    phone.textContent=d.phone||"—";
+    gameId.textContent=d.gameId||"—";
+
+    nameInput.value=d.name;
+    phoneInput.value=d.phone||"";
+    gameIdInput.value=d.gameId||"";
+  });
 });
+
 function save(){
- auth.currentUser && db.collection("players")
- .doc(auth.currentUser.uid)
- .update({
-  username:e_name.value,
-  phone:e_phone.value,
-  facebook:e_fb.value,
-  gameId:e_game.value,
-  device:e_device.value
- });
- alert("Saved");
+  const user=auth.currentUser;
+  if(!user)return;
+
+  db.collection("players").doc(user.uid).update({
+    name:nameInput.value||"Player",
+    phone:phoneInput.value,
+    gameId:gameIdInput.value
+  }).then(()=>alert("Profile saved ✅"));
+}
+
+function logout(){
+  auth.signOut().then(()=>location.href="index.html");
 }
 </script>
+
 </body>
 </html>
