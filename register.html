@@ -1,211 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Create Account | AFN's Elite Strikers</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Create Player Account | AFN's Elite Strikers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-:root{
-  --neon:#00f7ff;
-  --gold:#ffd400;
-  --bg1:#02060c;
-  --bg2:#0c1b2a;
-}
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Segoe UI',sans-serif;
-}
+  <style>
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle at top, #0ff2, #000 70%);
+      color:#fff;
+    }
+    .container{
+      max-width:420px;
+      margin:40px auto;
+      padding:25px;
+      background:rgba(0,0,0,0.6);
+      border-radius:20px;
+      box-shadow:0 0 25px #00f6ff;
+    }
+    .logo{
+      display:block;
+      width:120px;
+      margin:0 auto 10px;
+    }
+    h2{
+      text-align:center;
+      color:#ffd700;
+      margin-bottom:20px;
+    }
+    input{
+      width:100%;
+      padding:14px;
+      margin-bottom:12px;
+      border-radius:12px;
+      border:none;
+      outline:none;
+      font-size:15px;
+    }
+    button{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:14px;
+      background:linear-gradient(90deg,#00f6ff,#00c3ff);
+      color:#000;
+      font-size:18px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+    button:active{transform:scale(0.98)}
+    .msg{
+      text-align:center;
+      margin-top:12px;
+      font-weight:bold;
+    }
+    .success{color:#00ff9d}
+    .error{color:#ff4d4d}
 
-body{
-  min-height:100vh;
-  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
-  color:#fff;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-.card{
-  width:100%;
-  max-width:400px;
-  background:linear-gradient(145deg,#061726,#020c14);
-  border-radius:24px;
-  padding:22px;
-  box-shadow:0 0 35px rgba(0,247,255,.45);
-}
-
-.logo{
-  text-align:center;
-  margin-bottom:10px;
-}
-.logo img{
-  width:90px;
-  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
-}
-
-h2{
-  text-align:center;
-  color:var(--gold);
-  margin-bottom:14px;
-}
-
-input{
-  width:100%;
-  padding:12px;
-  margin-bottom:10px;
-  border-radius:14px;
-  border:none;
-  outline:none;
-  background:#020c14;
-  color:#fff;
-  font-size:14px;
-}
-
-button{
-  width:100%;
-  padding:14px;
-  border-radius:18px;
-  border:none;
-  cursor:pointer;
-  font-weight:900;
-  font-size:16px;
-  background:linear-gradient(145deg,#081c2c,#020c14);
-  color:var(--neon);
-  transition:.25s;
-}
-button:hover{
-  transform:scale(1.05);
-  box-shadow:0 0 16px rgba(0,247,255,.45);
-}
-
-.error{
-  display:none;
-  text-align:center;
-  color:#ff6b6b;
-  font-size:14px;
-  margin-bottom:10px;
-}
-
-.links{
-  text-align:center;
-  margin-top:14px;
-  font-size:14px;
-}
-.links a{
-  color:var(--neon);
-  text-decoration:none;
-  font-weight:700;
-}
-
-footer{
-  text-align:center;
-  font-size:12px;
-  color:#aaa;
-  margin-top:14px;
-}
-</style>
+    footer{
+      margin-top:30px;
+      text-align:center;
+      opacity:.8;
+      font-size:14px;
+    }
+    footer img{
+      width:40px;
+      display:block;
+      margin:0 auto 5px;
+    }
+    footer a{
+      color:#00f6ff;
+      text-decoration:none;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="card">
-
-  <div class="logo">
-    <img src="logo.png">
-  </div>
-
+<div class="container">
+  <img src="logo.png" class="logo" alt="AFNS Logo">
   <h2>Create Player Account</h2>
 
-  <div id="errorBox" class="error"></div>
-
-  <input id="username" placeholder="Player Username" required>
-  <input id="email" type="email" placeholder="Gmail" required>
-  <input id="phone" placeholder="Mobile Number" required>
+  <input id="username" placeholder="Player Username">
+  <input id="email" type="email" placeholder="Gmail">
+  <input id="phone" placeholder="Mobile Number (Bangladesh)">
   <input id="facebook" placeholder="Facebook Profile Link">
-  <input id="gameId" placeholder="Game / Owner ID" required>
-  <input id="device" placeholder="Device Name" required>
-  <input id="password" type="password" placeholder="Password" required>
+  <input id="gameid" placeholder="Game / Owner ID">
+  <input id="device" placeholder="Device Name">
+  <input id="password" type="password" placeholder="Password">
 
-  <button onclick="register()">Create Account</button>
+  <button onclick="createAccount()">Create Account</button>
 
-  <div class="links">
-    Already player?
-    <a href="login.html">Login</a>
-  </div>
-
-  <footer>
-    © 2026 AFN's Elite Strikers
-  </footer>
-
+  <div id="message" class="msg"></div>
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<footer class="global-footer">
+  <img src="logo.png" alt="AFNS Logo">
+  AFNs Elite Striker |
+  <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
+    SI Shohan
+  </a>
+</footer>
 
 <script>
-const firebaseConfig={
+/* 🔥 Firebase Config (YOURS) */
+firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub",
-  storageBucket:"afnsclub.firebasestorage.app",
-  messagingSenderId:"1088089213558",
-  appId:"1:1088089213558:web:bd5e01caaeecaa46bcad57"
-};
-firebase.initializeApp(firebaseConfig);
+  projectId:"afnsclub"
+});
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db   = firebase.firestore();
 
-const errorBox=document.getElementById("errorBox");
+/* ✅ Create Account Function */
+function createAccount(){
+  const username = username.value.trim();
+  const email    = email.value.trim();
+  const phone    = phone.value.trim();
+  const facebook = facebook.value.trim();
+  const gameid   = gameid.value.trim();
+  const device   = device.value.trim();
+  const password = password.value.trim();
+  const msg      = document.getElementById("message");
 
-function showError(msg){
-  errorBox.innerText=msg;
-  errorBox.style.display="block";
-}
+  msg.innerHTML = "";
 
-function register(){
-  errorBox.style.display="none";
-
-  const username=usernameEl.value=username.value.trim();
-  const email=emailEl.value=email.value.trim();
-  const phoneVal=phone.value.trim();
-  const fb=facebook.value.trim();
-  const gid=gameId.value.trim();
-  const dev=device.value.trim();
-  const pass=password.value;
-
-  if(!username||!email||!phoneVal||!gid||!dev||!pass){
-    showError("⚠️ সব প্রয়োজনীয় তথ্য পূরণ করুন");
+  // Validation
+  if(!username || !email || !phone || !facebook || !gameid || !device || !password){
+    msg.innerHTML = "⚠️ All fields are required";
+    msg.className = "msg error";
     return;
   }
 
-  auth.createUserWithEmailAndPassword(email,pass)
-  .then(res=>{
-    return db.collection("players").doc(res.user.uid).set({
-      username:username,
-      email:email,
-      phone:phoneVal,
-      facebook:fb,
-      gameId:gid,
-      device:dev,
+  if(!/^01[3-9]\d{8}$/.test(phone)){
+    msg.innerHTML = "⚠️ Invalid Bangladesh phone number";
+    msg.className = "msg error";
+    return;
+  }
+
+  msg.innerHTML = "⏳ Creating account...";
+  msg.className = "msg";
+
+  auth.createUserWithEmailAndPassword(email, password)
+  .then(cred=>{
+    return db.collection("players").doc(cred.user.uid).set({
+      username,
+      email,
+      phone,
+      facebook,
+      gameId: gameid,
+      device,
       rating:0,
       wins:0,
       losses:0,
-      goals:0,
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   })
   .then(()=>{
-    location.href="player.html";
+    msg.innerHTML = "✅ Account created successfully!";
+    msg.className = "msg success";
+    setTimeout(()=>{ window.location.href="player.html"; },1500);
   })
   .catch(err=>{
-    showError("❌ Account create failed");
+    msg.innerHTML = "❌ " + err.message;
+    msg.className = "msg error";
   });
 }
 </script>
