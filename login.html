@@ -2,40 +2,66 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Login</title>
+<title>Login | AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
+:root{
+  --neon:#00f7ff;
+  --gold:#ffd400;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
+}
+
+*{
   margin:0;
-  height:100vh;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',sans-serif;
+}
+
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
+  color:#fff;
   display:flex;
   justify-content:center;
   align-items:center;
-  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-  font-family:Arial, sans-serif;
 }
+
 .card{
-  background:#0b1622;
-  padding:25px;
   width:100%;
   max-width:360px;
-  border-radius:14px;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
+  padding:24px;
+  border-radius:18px;
+  background:linear-gradient(145deg,#061726,#020c14);
+  box-shadow:0 0 30px rgba(0,247,255,.35);
 }
-h2{
-  color:#fff;
+
+.logo{
   text-align:center;
-  margin-bottom:20px;
+  margin-bottom:10px;
 }
+.logo img{
+  width:90px;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
+}
+
+h2{
+  text-align:center;
+  color:var(--gold);
+  margin-bottom:18px;
+}
+
 input{
   width:100%;
   padding:12px;
-  border-radius:8px;
+  border-radius:10px;
   border:none;
   margin-bottom:12px;
-  font-size:15px;
+  font-size:14px;
 }
+
 .password-box{
   position:relative;
 }
@@ -45,35 +71,40 @@ input{
   top:50%;
   transform:translateY(-50%);
   cursor:pointer;
-  font-size:14px;
-  color:#4f8cff;
-  user-select:none;
+  font-size:13px;
+  color:var(--neon);
 }
+
 button{
   width:100%;
-  padding:12px;
+  padding:14px;
   border:none;
-  border-radius:8px;
-  background:#4f8cff;
-  color:#fff;
+  border-radius:12px;
+  background:linear-gradient(145deg,#00f7ff,#0077ff);
+  color:#000;
+  font-weight:800;
   font-size:16px;
   cursor:pointer;
 }
 button:hover{opacity:.9;}
+
 .error{
+  font-size:13px;
   color:#ff6b6b;
-  font-size:14px;
   margin-bottom:10px;
   display:none;
+  text-align:center;
 }
+
 .links{
   text-align:center;
-  margin-top:15px;
-  font-size:14px;
+  margin-top:14px;
+  font-size:13px;
 }
 .links a{
-  color:#4f8cff;
+  color:var(--neon);
   text-decoration:none;
+  font-weight:700;
 }
 </style>
 </head>
@@ -81,7 +112,12 @@ button:hover{opacity:.9;}
 <body>
 
 <div class="card">
-  <h2>Login</h2>
+
+  <div class="logo">
+    <img src="logo.png">
+  </div>
+
+  <h2>Player Login</h2>
 
   <div id="errorBox" class="error"></div>
 
@@ -92,13 +128,14 @@ button:hover{opacity:.9;}
     <span class="toggle" onclick="togglePassword()">Show</span>
   </div>
 
-  <button onclick="login()">Login</button>
+  <button onclick="login()">LOGIN</button>
 
   <div class="links">
     <a href="#" onclick="forgotPassword()">Forgot Password?</a><br><br>
     New player?
     <a href="register.html">Create Account</a>
   </div>
+
 </div>
 
 <!-- Firebase -->
@@ -113,43 +150,69 @@ const firebaseConfig = {
   projectId: "afnsclub",
   storageBucket: "afnsclub.firebasestorage.app",
   messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57",
-  measurementId: "G-WT4XY15N6Y"
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-/* --------------------------------------------------
-   ✅ AUTO PLAYER CREATE LOGIC (SAFE)
--------------------------------------------------- */
+// ✅ already logged in → player profile
 auth.onAuthStateChanged(user=>{
   if(user){
-    const ref = db.collection("players").doc(user.uid);
-
-    ref.get().then(doc=>{
-      if(!doc.exists){
-        ref.set({
-          username: user.displayName || "Player",
-          email: user.email,
-          facebook: "",
-          gameId: "",
-          device: "",
-          phone: "",
-          rating: 50,
-          wins: 0,
-          losses: 0,
-          goals: 0,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
-      window.location.replace("player.html");
-    });
+    window.location.replace("player.html");
   }
 });
+
+function showError(msg){
+  const e=document.getElementById("errorBox");
+  e.innerText=msg;
+  e.style.display="block";
+}
+
+function togglePassword(){
+  const p=document.getElementById("password");
+  const t=document.querySelector(".toggle");
+  if(p.type==="password"){
+    p.type="text"; t.innerText="Hide";
+  }else{
+    p.type="password"; t.innerText="Show";
+  }
+}
+
+function login(){
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+
+  if(!email||!password){
+    showError("⚠️ Gmail এবং Password দিন");
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(email,password)
+    .then(()=>{
+      window.location.href="player.html";
+    })
+    .catch(err=>{
+      showError("❌ Gmail অথবা Password ভুল");
+    });
+}
+
+function forgotPassword(){
+  const email=document.getElementById("email").value.trim();
+  if(!email){
+    showError("📧 আগে Gmail লিখুন");
+    return;
+  }
+  auth.sendPasswordResetEmail(email)
+    .then(()=>{
+      showError("✅ Reset link Gmail এ পাঠানো হয়েছে");
+    })
+    .catch(()=>{
+      showError("❌ Gmail পাওয়া যায়নি");
+    });
+}
 </script>
 
-<script src="login.js"></script>
 </body>
 </html>
