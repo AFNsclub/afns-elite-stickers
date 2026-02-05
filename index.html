@@ -1,256 +1,239 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-<meta charset="UTF-8">
-<title>AFNS Player</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AFN's Elite Strikers</title>
 
-<style>
-*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-body{
-  margin:0;
-  min-height:100vh;
-  background:linear-gradient(135deg,#050b1f,#0a1233);
-  color:#fff;
-}
+  <!-- FONT -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
-/* ===== HEADER ===== */
-.header{
-  padding:14px 18px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.header img{height:36px}
-.logout{
-  background:#ef4444;
-  border:none;
-  color:#fff;
-  padding:8px 14px;
-  border-radius:8px;
-  cursor:pointer;
-}
+  <!-- ICONS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-/* ===== CONTAINER ===== */
-.container{
-  max-width:420px;
-  margin:20px auto;
-  background:rgba(255,255,255,.06);
-  backdrop-filter:blur(10px);
-  border-radius:16px;
-  padding:22px;
-  box-shadow:0 0 25px rgba(0,0,0,.6);
-}
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
 
-/* ===== MOTIVATION ===== */
-.motivation{
-  background:linear-gradient(90deg,#3b82f6,#22c55e);
-  border-radius:12px;
-  padding:12px;
-  font-weight:bold;
-  text-align:center;
-  margin-bottom:16px;
-}
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #0b1a2f, #040816);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+    }
 
-/* ===== AVATAR ===== */
-.avatar{
-  width:64px;
-  height:64px;
-  border-radius:50%;
-  background:#3b82f6;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:28px;
-  margin:auto;
-}
+    .wrapper {
+      width: 100%;
+      max-width: 430px;
+      padding: 24px 16px 40px;
+    }
 
-/* ===== PROFILE ===== */
-h2{text-align:center;margin:10px 0}
-.profile p{
-  font-size:14px;
-  margin:6px 0;
-}
-.profile span{color:#a5b4fc}
+    .logo {
+      text-align: center;
+      margin-top: 10px;
+    }
 
-/* ===== STATS ===== */
-.stats{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  margin:14px 0;
-}
-.stat{
-  background:rgba(255,255,255,.08);
-  border-radius:10px;
-  padding:10px;
-  text-align:center;
-  font-size:12px;
-}
-.stat b{display:block;font-size:18px}
+    .logo h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffd700;
+    }
 
-/* ===== FORM ===== */
-form{display:none;margin-top:14px}
-input{
-  width:100%;
-  padding:11px;
-  margin-top:10px;
-  border:none;
-  border-radius:8px;
-}
-.btn{
-  width:100%;
-  padding:12px;
-  margin-top:12px;
-  border:none;
-  border-radius:10px;
-  font-weight:bold;
-  cursor:pointer;
-}
-.edit{background:#3b82f6;color:#fff}
-.save{background:#22c55e;color:#fff}
+    .logo p {
+      margin-top: 6px;
+      color: #3ddcff;
+      font-size: 14px;
+    }
 
-/* ===== FOOTER ===== */
-footer{
-  margin:24px 0 10px;
-  text-align:center;
-  font-size:12px;
-  opacity:.6;
-}
-footer img{height:24px}
-footer a{color:#a5b4fc;text-decoration:none}
-</style>
+    .quote {
+      margin: 18px auto;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(0,255,255,0.08);
+      text-align: center;
+      font-size: 14px;
+    }
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    .about {
+      margin-top: 16px;
+      padding: 18px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 16px;
+    }
 
-<script>
-firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
-</script>
+    .about h3 {
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .about p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #dbeafe;
+    }
+
+    .menu {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .menu a {
+      text-decoration: none;
+      color: #00eaff;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    .menu a:hover {
+      background: rgba(0,234,255,0.15);
+    }
+
+    .admin-panel {
+      margin-top: 26px;
+      padding: 18px;
+      background: rgba(255,215,0,0.08);
+      border-radius: 16px;
+    }
+
+    .admin-panel h3 {
+      color: #ffd700;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .admin-card {
+      background: rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 12px;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .admin-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid #00eaff;
+      margin: 0 auto 8px;
+    }
+
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    footer span {
+      color: #00eaff;
+      font-weight: 600;
+    }
+  </style>
 </head>
 
 <body>
+  <div class="wrapper">
 
-<div class="header">
-  <img src="logo.png">
-  <button class="logout" onclick="logout()">Logout</button>
-</div>
+    <!-- HEADER -->
+    <div class="logo">
+      <h1>AFN's Elite Strikers</h1>
+      <p>Play Smart. Play Elite. Play AFN.</p>
+    </div>
 
-<div class="container">
+    <div class="quote">
+      চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।
+    </div>
 
-  <div class="motivation" id="motivation"></div>
+    <!-- ABOUT -->
+    <div class="about">
+      <h3>আমাদের ক্লাব সম্পর্কে</h3>
+      <p>
+        AFNs Elite Strikers হলো স্কিল, ডিসিপ্লিন এবং এলিট মাইন্ডসেটের সমন্বয়।
+        এখানে খেলোয়াড় তৈরি হয় লিজেন্ড হওয়ার জন্য।
+      </p>
+    </div>
 
-  <div class="avatar" id="avatar">P</div>
-  <h2 id="playerName">Player</h2>
+    <!-- MENU -->
+    <div class="menu">
+      <a href="login.html"><i class="fa-solid fa-user"></i> Player Login</a>
+      <a href="players.html"><i class="fa-solid fa-id-card"></i> Player Profiles</a>
+      <a href="leaderboard.html"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
+      <a href="admin-login.html"><i class="fa-solid fa-lock"></i> Admin Login</a>
+      <a href="match-submit.html"><i class="fa-solid fa-futbol"></i> Match Submit (Admin)</a>
+    </div>
 
-  <div class="profile">
-    <p>Email: <span id="email"></span></p>
-    <p>Phone: <span id="phone"></span></p>
-    <p>Device: <span id="device"></span></p>
-    <p>Facebook: <a id="fb" target="_blank">Link</a></p>
-    <p><b>Game / Owner ID:</b> <span id="gameId"></span></p>
+    <!-- ADMIN PANEL -->
+    <div class="admin-panel">
+      <h3>👑 Admin Panel</h3>
+      <div class="admin-grid">
+        <div class="admin-card">
+          <div class="admin-avatar"></div>
+          Admin One
+        </div>
+        <div class="admin-card">
+          <div class="admin-avatar"></div>
+          Admin Two
+        </div>
+        <div class="admin-card">
+          <div class="admin-avatar"></div>
+          Admin Three
+        </div>
+        <div class="admin-card">
+          <div class="admin-avatar"></div>
+          Admin Four
+        </div>
+        <div class="admin-card">
+          <div class="admin-avatar"></div>
+          Admin Five
+        </div>
+        <div class="admin-card">
+          <div class="admin-avatar"></div>
+          Admin Six
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      © 2026 AFN's Elite Strikers | <span>SI SHOHAN</span>
+    </footer>
+
   </div>
 
-  <div class="stats">
-    <div class="stat"><b id="wins">0</b>Wins</div>
-    <div class="stat"><b id="losses">0</b>Losses</div>
-    <div class="stat"><b id="goals">0</b>Goals</div>
-    <div class="stat"><b id="gd">0</b>GD</div>
-  </div>
+  <!-- 🔥 FIREBASE LOGIC (UI TOUCH করবে না) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  <button class="btn edit" onclick="toggleEdit()">Edit Profile</button>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-  <form id="editForm">
-    <input id="iName" placeholder="Name">
-    <input id="iPhone" placeholder="Phone (BD)">
-    <input id="iDevice" placeholder="Device">
-    <input id="iFb" placeholder="Facebook link">
-    <input id="iGame" placeholder="Game / Owner ID">
-    <button type="button" class="btn save" onclick="save()">Save</button>
-  </form>
-
-</div>
-
-<footer>
-  <img src="logo.png"><br>
-  AFNs Elite Striker |
-  <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
-    SI Shohan
-  </a>
-</footer>
-
-<script>
-const auth=firebase.auth();
-const db=firebase.firestore();
-
-const MOTIVATION=[
-"Train hard, win easy",
-"No excuses, only results",
-"Every match matters",
-"Discipline beats talent",
-"Play with heart",
-"Focus. Fight. Finish",
-"Winners never quit"
-];
-
-auth.onAuthStateChanged(u=>{
-  if(!u){location.href="login.html";return;}
-
-  const uid=u.uid;
-  motivation.innerText=MOTIVATION[Math.floor(Math.random()*MOTIVATION.length)];
-
-  db.collection("players").doc(uid).onSnapshot(doc=>{
-    const d=doc.data();
-    if(!d)return;
-
-    playerName.innerText=d.name;
-    avatar.innerText=d.name.charAt(0).toUpperCase();
-    email.innerText=d.email;
-    phone.innerText=d.phone||"—";
-    device.innerText=d.device||"—";
-    gameId.innerText=d.gameId||"—";
-    fb.href=d.fb||"#";
-
-    wins.innerText=d.wins;
-    losses.innerText=d.losses;
-    goals.innerText=d.goals;
-    gd.innerText=d.gd;
-
-    iName.value=d.name||"";
-    iPhone.value=d.phone||"";
-    iDevice.value=d.device||"";
-    iFb.value=d.fb||"";
-    iGame.value=d.gameId||"";
-  });
-});
-
-function toggleEdit(){
-  editForm.style.display =
-    editForm.style.display==="block"?"none":"block";
-}
-
-function save(){
-  const uid=auth.currentUser.uid;
-  db.collection("players").doc(uid).update({
-    name:iName.value,
-    phone:iPhone.value,
-    device:iDevice.value,
-    fb:iFb.value,
-    gameId:iGame.value
-  }).then(()=>{
-    editForm.style.display="none";
-  });
-}
-
-function logout(){
-  auth.signOut().then(()=>location.href="login.html");
-}
-</script>
+    initializeApp(firebaseConfig);
+    getAuth();
+  </script>
 
 </body>
 </html>
