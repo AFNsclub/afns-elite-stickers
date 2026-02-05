@@ -1,38 +1,215 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>Public Profile</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
+  color:#fff;
+}
+.container{
+  max-width:420px;
+  margin:50px auto;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(12px);
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 0 30px rgba(0,0,0,.6);
+}
+.center{text-align:center}
+.avatar{
+  width:90px;height:90px;
+  border-radius:50%;
+  background:#4f8cff;
+  margin:10px auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:36px;
+  font-weight:bold;
+  box-shadow:0 0 18px rgba(79,140,255,.6);
+}
+.name{
+  font-size:22px;
+  font-weight:bold;
+  margin-top:8px;
+}
+.gameid{
+  font-size:14px;
+  color:#a5b4fc;
+  margin-top:4px;
+}
+.motivation{
+  margin:16px 0;
+  padding:12px;
+  border-radius:12px;
+  background:linear-gradient(135deg,#1e3a8a,#2563eb);
+  font-weight:bold;
+  box-shadow:0 0 16px rgba(37,99,235,.6);
+}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin-top:14px;
+}
+.stat{
+  background:rgba(255,255,255,.08);
+  padding:14px;
+  border-radius:14px;
+  text-align:center;
+}
+.stat span{
+  display:block;
+  font-size:22px;
+  font-weight:bold;
+  color:#4f8cff;
+}
+.info{
+  margin-top:16px;
+  font-size:14px;
+}
+.info p{margin:6px 0}
+.info b{color:#a5b4fc}
+.ban{
+  margin-top:16px;
+  padding:14px;
+  border-radius:14px;
+  background:#7f1d1d;
+  color:#fee2e2;
+  font-weight:bold;
+  display:none;
+}
+footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.6;
+  margin-top:22px;
+}
+footer img{height:22px;margin-bottom:4px}
+a{color:#93c5fd;text-decoration:none}
+</style>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+</script>
 </head>
+
 <body>
 
 <div class="container">
-<h2 id="name"></h2>
-<div class="profile-box">
-<p>Email: <span id="email"></span></p>
-<p>Phone: <span id="phone"></span></p>
-<p>Game ID: <span id="gameId"></span></p>
-<p>Device: <span id="device"></span></p>
-</div>
+
+  <div class="center">
+    <div class="avatar" id="avatar">P</div>
+    <div class="name" id="name">Player</div>
+    <div class="gameid" id="gameId">Game ID —</div>
+  </div>
+
+  <div class="motivation" id="motivation"></div>
+
+  <div class="stats">
+    <div class="stat"><span id="wins">0</span>Wins</div>
+    <div class="stat"><span id="losses">0</span>Losses</div>
+    <div class="stat"><span id="goals">0</span>Goals</div>
+    <div class="stat"><span id="gd">0</span>GD</div>
+  </div>
+
+  <div class="info">
+    <p><b>Device:</b> <span id="device">—</span></p>
+    <p><b>Phone:</b> <span id="phone">—</span></p>
+    <p><b>Facebook:</b> <a id="fb" href="#" target="_blank">Profile</a></p>
+  </div>
+
+  <div class="ban" id="banBox"></div>
+
+  <footer>
+    <img src="logo.png"><br>
+    AFNs Elite Striker |
+    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
+      SI Shohan
+    </a>
+  </footer>
+
 </div>
 
-<footer class="global-footer">
-<img src="logo.png" class="footer-logo">
-AFNs Elite Striker |
-<a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI Shohan</a>
-</footer>
-
-<script src="firebase.js"></script>
 <script>
-const id=new URLSearchParams(location.search).get("id");
-db.collection("players").doc(id).get().then(d=>{
- const p=d.data();
- name.innerText=p.username;
- email.innerText=p.email;
- phone.innerText=p.phone;
- gameId.innerText=p.gameId;
- device.innerText=p.device;
+const db=firebase.firestore();
+
+const MOTIVATIONS=[
+"Play with honor.",
+"Earn respect on the field.",
+"Consistency creates legends.",
+"Every match is a lesson.",
+"Stay sharp. Stay focused.",
+"Greatness is earned."
+];
+
+motivation.textContent =
+  MOTIVATIONS[Math.floor(Math.random()*MOTIVATIONS.length)];
+
+const uid=new URLSearchParams(location.search).get("uid");
+if(!uid){
+  alert("Invalid player");
+  location.href="index.html";
+}
+
+db.collection("players").doc(uid).onSnapshot(doc=>{
+  if(!doc.exists){
+    alert("Player not found");
+    return;
+  }
+  const d=doc.data();
+
+  avatar.textContent=(d.name||"P")[0];
+  name.textContent=d.name||"Player";
+  gameId.textContent=d.gameId||"—";
+
+  wins.textContent=d.wins||0;
+  losses.textContent=d.losses||0;
+  goals.textContent=d.goals||0;
+  gd.textContent=d.gd||0;
+
+  device.textContent=d.device||"—";
+
+  phone.textContent =
+    d.phone && /^01\d{9}$/.test(d.phone) ? d.phone : "—";
+
+  if(d.fb){
+    fb.href=d.fb;
+    fb.textContent="Facebook";
+  }else{
+    fb.textContent="—";
+    fb.removeAttribute("href");
+  }
+
+  if(d.banned){
+    const until=d.banUntil?.toDate();
+    let msg="🚫 This player is banned";
+    if(until){
+      const diff=Math.max(0,Math.floor((until-new Date())/86400000));
+      msg+=` (${diff} days left)`;
+    }
+    banBox.textContent=msg;
+    banBox.style.display="block";
+  }else{
+    banBox.style.display="none";
+  }
 });
 </script>
+
 </body>
 </html>
