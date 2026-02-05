@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Player Login</title>
+<title>Player Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -10,92 +10,120 @@
 body{
   margin:0;
   min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
   background:linear-gradient(135deg,#050b1f,#0a1233);
   color:#fff;
 }
-.box{
-  width:380px;
+.container{
+  max-width:420px;
+  margin:40px auto;
   background:rgba(255,255,255,.06);
   backdrop-filter:blur(10px);
-  padding:26px;
   border-radius:16px;
+  padding:22px;
   box-shadow:0 0 25px rgba(0,0,0,.6);
 }
-.logo{
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.header h2{margin:0}
+.logout{
+  background:#ff4d4d;
+  border:none;
+  color:#fff;
+  padding:6px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.motivation{
+  margin:14px 0;
+  padding:10px;
+  border-radius:10px;
+  background:rgba(59,130,246,.15);
   text-align:center;
-  margin-bottom:8px;
+  font-size:14px;
 }
-.logo img{
-  height:60px;
+.avatar{
+  width:70px;
+  height:70px;
+  border-radius:50%;
+  background:#3b82f6;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+  font-weight:bold;
+  margin:10px auto;
 }
-h2{
+.name{
   text-align:center;
-  margin:10px 0 16px;
+  font-size:20px;
+  font-weight:bold;
 }
-input{
+.rank{
+  text-align:center;
+  margin-top:6px;
+  color:#a5b4fc;
+}
+.card{
+  margin-top:16px;
+  background:rgba(255,255,255,.05);
+  padding:14px;
+  border-radius:12px;
+}
+.card p{
+  margin:6px 0;
+  font-size:14px;
+}
+.card span{
+  color:#a5b4fc;
+}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+.stat{
+  background:rgba(255,255,255,.05);
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+}
+.stat b{display:block}
+button{
+  width:100%;
+  margin-top:14px;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#22c55e;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover{box-shadow:0 0 14px rgba(34,197,94,.6)}
+form input{
   width:100%;
   padding:11px;
   margin-top:10px;
   border:none;
   border-radius:8px;
-  outline:none;
 }
-.pass-wrap{
-  position:relative;
-}
-.pass-wrap span{
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  font-size:12px;
-  cursor:pointer;
-  opacity:.7;
-}
-button{
-  width:100%;
-  margin-top:16px;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  background:#3b82f6;
-  color:#fff;
-  font-weight:bold;
-  cursor:pointer;
-}
-button:hover{
-  box-shadow:0 0 14px rgba(59,130,246,.7);
-}
-.links{
-  margin-top:12px;
-  display:flex;
-  justify-content:space-between;
-  font-size:13px;
-}
-.links a{
-  color:#a5b4fc;
-  text-decoration:none;
-}
-.links a:hover{text-decoration:underline}
-.msg{
-  margin-top:14px;
-  text-align:center;
-  font-size:14px;
-}
-.error{color:#ff6b6b}
-.success{color:#22c55e}
 footer{
   margin-top:18px;
   text-align:center;
   font-size:12px;
-  opacity:.5;
+  opacity:.6;
 }
+footer img{
+  height:24px;
+  vertical-align:middle;
+}
+footer a{color:#a5b4fc;text-decoration:none}
 </style>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -111,30 +139,46 @@ firebase.initializeApp({
 
 <body>
 
-<div class="box">
-  <div class="logo">
-    <img src="logo.png">
+<div class="container">
+  <div class="header">
+    <h2>Player Profile</h2>
+    <button class="logout" onclick="logout()">Logout</button>
   </div>
 
-  <h2>Player Login</h2>
+  <div class="motivation" id="motivation"></div>
 
-  <input id="email" placeholder="Email">
+  <div class="avatar" id="avatar">P</div>
+  <div class="name" id="playerName">Player</div>
+  <div class="rank" id="rankText">#–</div>
 
-  <div class="pass-wrap">
-    <input type="password" id="password" placeholder="Password">
-    <span onclick="togglePass()">SHOW</span>
+  <div class="card">
+    <p>📞 Phone: <span id="phoneText">—</span></p>
+    <p>📧 Email: <span id="emailText">—</span></p>
+    <p>🎮 Game ID: <span id="gameIdText">—</span></p>
+    <p>📱 Device: <span id="deviceText">—</span></p>
+    <p>🔗 Facebook: <a id="fbLink" target="_blank">Profile</a></p>
   </div>
 
-  <button onclick="login()">LOGIN</button>
-
-  <div class="links">
-    <a href="#" onclick="forgot()">Forgot Password?</a>
-    <a href="register.html">Create Account</a>
+  <div class="stats">
+    <div class="stat"><b id="wins">0</b>Wins</div>
+    <div class="stat"><b id="losses">0</b>Loss</div>
+    <div class="stat"><b id="goals">0</b>Goals</div>
+    <div class="stat"><b id="gd">0</b>GD</div>
   </div>
 
-  <div class="msg" id="msg"></div>
+  <button onclick="editMode()">Edit Profile</button>
+
+  <form id="editForm" style="display:none">
+    <input id="nameInput" placeholder="Name">
+    <input id="phoneInput" placeholder="Bangladesh Phone (+880...)">
+    <input id="gameIdInput" placeholder="Game ID">
+    <input id="deviceInput" placeholder="Device">
+    <input id="fbInput" placeholder="Facebook link">
+    <button type="button" onclick="save()">Save Profile</button>
+  </form>
 
   <footer>
+    <img src="logo.png"> <br>
     AFNs Elite Striker |
     <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
       SI Shohan
@@ -145,82 +189,74 @@ firebase.initializeApp({
 <script>
 const auth=firebase.auth();
 const db=firebase.firestore();
-const msg=document.getElementById("msg");
 
-function togglePass(){
-  const p=document.getElementById("password");
-  p.type=p.type==="password"?"text":"password";
+/* MOTIVATION */
+const MOTIVATIONS=[
+"Train hard, win easy.",
+"No excuses, only results.",
+"Discipline beats talent.",
+"One goal can change everything.",
+"Stay calm. Finish strong.",
+"Every match matters.",
+"Respect the game.",
+"Focus. Fight. Finish."
+];
+
+function dailyMotivation(uid){
+  const d=new Date().toISOString().slice(0,10);
+  let h=0;for(let c of uid+d)h=c.charCodeAt(0)+((h<<5)-h);
+  return MOTIVATIONS[Math.abs(h)%MOTIVATIONS.length];
 }
 
-function login(){
-  const email=document.getElementById("email").value.trim();
-  const pass=document.getElementById("password").value;
+auth.onAuthStateChanged(user=>{
+  if(!user){location.href="login.html";return;}
+  const uid=user.uid;
 
-  msg.textContent="";
-  msg.className="msg";
+  db.collection("players").doc(uid).get().then(doc=>{
+    if(!doc.exists)return;
+    const d=doc.data();
 
-  if(!email||!pass){
-    msg.textContent="Email & password required";
-    msg.classList.add("error");
-    return;
-  }
+    motivation.textContent=dailyMotivation(uid);
+    playerName.textContent=d.name||"Player";
+    avatar.textContent=(d.name||"P")[0].toUpperCase();
+    rankText.textContent="#"+(d.rank||"—");
 
-  auth.signInWithEmailAndPassword(email,pass)
-    .then(res=>{
-      const uid=res.user.uid;
+    phoneText.textContent=d.phone||"—";
+    emailText.textContent=user.email;
+    gameIdText.textContent=d.gameId||"—";
+    deviceText.textContent=d.device||"—";
+    fbLink.href=d.fb||"#";
 
-      db.collection("players").doc(uid).get().then(doc=>{
-        if(!doc.exists){
-          msg.textContent="Player profile not found";
-          msg.classList.add("error");
-          auth.signOut();
-          return;
-        }
+    wins.textContent=d.wins||0;
+    losses.textContent=d.losses||0;
+    goals.textContent=d.goals||0;
+    gd.textContent=d.gd||0;
 
-        const d=doc.data();
+    nameInput.value=d.name||"";
+    phoneInput.value=d.phone||"";
+    gameIdInput.value=d.gameId||"";
+    deviceInput.value=d.device||"";
+    fbInput.value=d.fb||"";
+  });
+});
 
-        if(d.banned){
-          const until=d.banUntil?.toDate();
-          msg.textContent=until
-            ? "You are banned until "+until.toLocaleDateString()
-            : "You are permanently banned";
-          msg.classList.add("error");
-          auth.signOut();
-          return;
-        }
-
-        window.__UID__=uid;
-        msg.textContent="Login successful ✓";
-        msg.classList.add("success");
-
-        setTimeout(()=>{
-          location.href="player.html";
-        },700);
-      });
-    })
-    .catch(err=>{
-      msg.textContent=err.message;
-      msg.classList.add("error");
-    });
+function editMode(){
+  editForm.style.display="block";
 }
 
-function forgot(){
-  const email=document.getElementById("email").value.trim();
-  if(!email){
-    msg.textContent="Enter email first";
-    msg.classList.add("error");
-    return;
-  }
+function save(){
+  const uid=auth.currentUser.uid;
+  db.collection("players").doc(uid).update({
+    name:nameInput.value,
+    phone:phoneInput.value,
+    gameId:gameIdInput.value,
+    device:deviceInput.value,
+    fb:fbInput.value
+  }).then(()=>location.reload());
+}
 
-  auth.sendPasswordResetEmail(email)
-    .then(()=>{
-      msg.textContent="Password reset email sent ✓";
-      msg.classList.add("success");
-    })
-    .catch(err=>{
-      msg.textContent=err.message;
-      msg.classList.add("error");
-    });
+function logout(){
+  auth.signOut().then(()=>location.href="login.html");
 }
 </script>
 
