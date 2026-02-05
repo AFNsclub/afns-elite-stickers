@@ -1,37 +1,181 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>Leaderboard</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
+  color:#fff;
+}
+.container{
+  max-width:520px;
+  margin:40px auto;
+  padding:18px;
+}
+.title{
+  text-align:center;
+  font-size:22px;
+  margin-bottom:16px;
+}
+.motivation{
+  background:linear-gradient(135deg,#1e3a8a,#2563eb);
+  padding:12px;
+  border-radius:12px;
+  text-align:center;
+  font-weight:bold;
+  margin-bottom:16px;
+  box-shadow:0 0 16px rgba(37,99,235,.6);
+}
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.card{
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(10px);
+  border-radius:14px;
+  padding:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  transition:.2s;
+}
+.card:hover{
+  transform:scale(1.02);
+  box-shadow:0 0 20px rgba(79,140,255,.4);
+}
+.left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.avatar{
+  width:44px;height:44px;
+  border-radius:50%;
+  background:#4f8cff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+}
+.name{font-size:15px;font-weight:bold}
+.sub{font-size:12px;color:#a5b4fc}
+
+.rank{
+  font-size:18px;
+  font-weight:bold;
+}
+.gold{color:#facc15}
+.silver{color:#e5e7eb}
+.bronze{color:#f97316}
+
+footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.6;
+  margin:22px 0;
+}
+</style>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+</script>
 </head>
+
 <body>
 
 <div class="container">
-<h2>Leaderboard</h2>
-<div id="list"></div>
+
+  <div class="title">🏆 Leaderboard</div>
+
+  <div class="motivation" id="motivation"></div>
+
+  <div class="list" id="list"></div>
+
+  <footer>
+    <img src="logo.png" height="24"><br>
+    AFNs Elite Striker |
+    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI Shohan</a>
+  </footer>
+
 </div>
 
-<footer class="global-footer">
-<img src="logo.png" class="footer-logo">
-AFNs Elite Striker |
-<a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI Shohan</a>
-</footer>
-
-<script src="firebase.js"></script>
 <script>
+const db=firebase.firestore();
+
+const MOTIVATIONS=[
+"Fight for the top.",
+"Every win counts.",
+"Climb the ranks.",
+"Play like a champion.",
+"Consistency is power.",
+"Earn your place."
+];
+
+motivation.textContent =
+  MOTIVATIONS[Math.floor(Math.random()*MOTIVATIONS.length)];
+
 db.collection("players")
-.orderBy("wins","desc")
-.onSnapshot(s=>{
- list.innerHTML="";
- let r=1;
- s.forEach(d=>{
-  const p=d.data();
-  list.innerHTML+=`
-   <p>#${r++}
-   <a href="public-profile.html?id=${d.id}">
-   ${p.username}</a> (${p.wins}W)</p>`;
- });
+.where("banned","!=",true)
+.onSnapshot(snap=>{
+  const players=[];
+  snap.forEach(doc=>{
+    const d=doc.data();
+    d.uid=doc.id;
+    players.push(d);
+  });
+
+  players.sort((a,b)=>{
+    if((b.wins||0)!==(a.wins||0)) return (b.wins||0)-(a.wins||0);
+    if((b.gd||0)!==(a.gd||0)) return (b.gd||0)-(a.gd||0);
+    return (b.goals||0)-(a.goals||0);
+  });
+
+  list.innerHTML="";
+  players.forEach((p,i)=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.onclick=()=>location.href=
+      "public-profile.html?uid="+p.uid;
+
+    let rank=i+1, cls="", icon="#"+rank;
+    if(rank===1){cls="gold";icon="🥇";}
+    else if(rank===2){cls="silver";icon="🥈";}
+    else if(rank===3){cls="bronze";icon="🥉";}
+
+    div.innerHTML=`
+      <div class="left">
+        <div class="avatar">${(p.name||"P")[0]}</div>
+        <div>
+          <div class="name">${p.name||"Player"}</div>
+          <div class="sub">
+            W:${p.wins||0} • GD:${p.gd||0} • G:${p.goals||0}
+          </div>
+        </div>
+      </div>
+      <div class="rank ${cls}">${icon}</div>
+    `;
+    list.appendChild(div);
+  });
 });
 </script>
+
 </body>
 </html>
