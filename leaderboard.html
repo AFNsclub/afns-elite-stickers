@@ -31,70 +31,88 @@ body{
 .container{
   width:100%;
   max-width:430px;
-  padding:20px;
+  padding:18px;
 }
 
-/* HEADER */
 h1{
   text-align:center;
   color:var(--gold);
-  margin-bottom:10px;
+  margin-bottom:14px;
 }
 
-.sub{
+/* ANNOUNCEMENT */
+.notice{
+  background:linear-gradient(145deg,#0b1d2a,#020b13);
+  border-radius:16px;
+  padding:12px;
   text-align:center;
   color:var(--neon);
   font-size:13px;
-  margin-bottom:18px;
+  box-shadow:0 0 18px rgba(0,247,255,.35);
+  margin-bottom:16px;
 }
 
-/* TABLE */
-.board{
-  background:linear-gradient(145deg,#061726,#020c14);
-  border-radius:22px;
-  box-shadow:0 0 35px rgba(0,247,255,.45);
-  overflow:hidden;
+/* LIST */
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 
-.row{
-  display:grid;
-  grid-template-columns:50px 1fr 70px;
-  padding:12px 14px;
+.card{
+  display:flex;
   align-items:center;
-  border-bottom:1px solid rgba(255,255,255,.08);
+  justify-content:space-between;
+  background:linear-gradient(145deg,#061726,#020c14);
+  padding:14px;
+  border-radius:18px;
+  box-shadow:0 0 18px rgba(0,247,255,.25);
 }
 
-.row.header{
-  background:rgba(255,255,255,.06);
-  font-weight:800;
-  color:var(--gold);
+.left{
+  display:flex;
+  align-items:center;
+  gap:12px;
 }
 
 .rank{
-  text-align:center;
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  background:var(--gold);
+  color:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   font-weight:900;
 }
 
-.name a{
+.avatar{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  background:rgba(255,255,255,.1);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--gold);
+  font-weight:900;
+}
+
+.name{
   color:var(--neon);
-  text-decoration:none;
   font-weight:700;
+  text-decoration:none;
 }
 
-.name a:hover{
-  text-decoration:underline;
-}
-
-.rating{
+.right{
   text-align:right;
-  font-weight:800;
+  font-size:13px;
+}
+
+.right b{
   color:var(--gold);
 }
-
-/* TOP 3 */
-.row.top1{background:linear-gradient(90deg,#3a2c00,#141000);}
-.row.top2{background:linear-gradient(90deg,#1f1f1f,#0a0a0a);}
-.row.top3{background:linear-gradient(90deg,#2a1600,#120800);}
 
 /* FOOTER */
 footer{
@@ -103,12 +121,6 @@ footer{
   color:#aaa;
   margin-top:18px;
 }
-
-footer a{
-  color:var(--neon);
-  text-decoration:none;
-  font-weight:700;
-}
 </style>
 </head>
 
@@ -116,19 +128,17 @@ footer a{
 <div class="container">
 
 <h1>🏆 Leaderboard</h1>
-<div class="sub">Top Ranked AFN Players</div>
 
-<div class="board" id="board">
-  <div class="row header">
-    <div class="rank">#</div>
-    <div class="name">Username</div>
-    <div class="rating">Rating</div>
-  </div>
+<div class="notice" id="notice">
+🔥 Live Season Running — Rankings update automatically
+</div>
+
+<div id="list" class="list">
+  <!-- players -->
 </div>
 
 <footer>
-© 2026 AFN's Elite Strikers |
-<a href="index.html">Home</a>
+© 2026 AFN's Elite Strikers
 </footer>
 
 </div>
@@ -138,49 +148,46 @@ footer a{
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig={
+firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub",
-};
-firebase.initializeApp(firebaseConfig);
+  projectId:"afnsclub"
+});
 
-const db=firebase.firestore();
-const board=document.getElementById("board");
+const db = firebase.firestore();
+const list = document.getElementById("list");
 
 // REAL-TIME LEADERBOARD
 db.collection("players")
   .orderBy("rating","desc")
   .onSnapshot(snap=>{
-    // clear old rows
-    board.querySelectorAll(".data").forEach(e=>e.remove());
-
+    list.innerHTML="";
     let rank=1;
 
     snap.forEach(doc=>{
-      const p=doc.data();
+      const d = doc.data();
 
-      const row=document.createElement("div");
-      row.className="row data";
+      const card = document.createElement("div");
+      card.className="card";
 
-      if(rank===1) row.classList.add("top1");
-      if(rank===2) row.classList.add("top2");
-      if(rank===3) row.classList.add("top3");
-
-      row.innerHTML=`
-        <div class="rank">${rank}</div>
-        <div class="name">
-          <a href="public-profile.html?id=${doc.id}">
-            ${p.username || "Unknown"}
+      card.innerHTML=`
+        <div class="left">
+          <div class="rank">${rank}</div>
+          <div class="avatar">${d.username.charAt(0).toUpperCase()}</div>
+          <a class="name" href="public-profile.html?id=${doc.id}">
+            ${d.username}
           </a>
         </div>
-        <div class="rating">${p.rating || 0}</div>
+        <div class="right">
+          <b>${d.rating || 0}</b><br>
+          pts
+        </div>
       `;
 
-      board.appendChild(row);
+      list.appendChild(card);
       rank++;
     });
-  });
+});
 </script>
 
 </body>
