@@ -121,10 +121,31 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-// ✅ আগেই login থাকলে → player.html
+/* --------------------------------------------------
+   ✅ AUTO PLAYER CREATE LOGIC (SAFE)
+-------------------------------------------------- */
 auth.onAuthStateChanged(user=>{
   if(user){
-    window.location.replace("player.html");
+    const ref = db.collection("players").doc(user.uid);
+
+    ref.get().then(doc=>{
+      if(!doc.exists){
+        ref.set({
+          username: user.displayName || "Player",
+          email: user.email,
+          facebook: "",
+          gameId: "",
+          device: "",
+          phone: "",
+          rating: 50,
+          wins: 0,
+          losses: 0,
+          goals: 0,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      window.location.replace("player.html");
+    });
   }
 });
 </script>
