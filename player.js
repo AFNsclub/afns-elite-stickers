@@ -1,15 +1,15 @@
 let uid = null;
 
-// Firebase auth থেকে UID নেবে
-const waitForUID = setInterval(()=>{
-  if(window.__UID__){
-    uid = window.__UID__;
-    clearInterval(waitForUID);
+// 🔐 Firebase Auth UID
+firebase.auth().onAuthStateChanged(async (user)=>{
+  if(user){
+    uid = user.uid;
     initPlayer();
   }
-},50);
+});
 
-function initPlayer(){
+/* ================= INIT PLAYER ================= */
+async function initPlayer(){
 
 /* ---------- MOTIVATION ---------- */
 const MOTIVATIONS = [
@@ -35,81 +35,87 @@ function getTodayMotivation(uid){
   return MOTIVATIONS[Math.abs(hash)%MOTIVATIONS.length];
 }
 
-const key = "player_"+uid;
-const data = JSON.parse(localStorage.getItem(key)) || {
-  name:"Player",
-  phone:"",
-  email:"",
-  gameId:"",
-  device:"",
-  fb:"",
-  wins:0,
-  losses:0,
-  goals:0,
-  gd:0
-};
+/* ---------- FIRESTORE LOAD ---------- */
+const ref = firebase.firestore().collection("players").doc(uid);
+let snap = await ref.get();
 
+// ❗ যদি Auth আছে কিন্তু DB নাই → AUTO CREATE
+if(!snap.exists){
+  await ref.set({
+    name: "Player",
+    phone: "",
+    email: firebase.auth().currentUser.email || "",
+    gameId: "",
+    device: "",
+    facebook: "",
+    win: 0,
+    lose: 0,
+    goals: 0,
+    gd: 0,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  snap = await ref.get();
+}
+
+const data = snap.data();
+
+/* ---------- UI BIND ---------- */
 motivationText.textContent = getTodayMotivation(uid);
-playerName.textContent = data.name;
-avatar.textContent = data.name.charAt(0).toUpperCase();
+playerName.textContent = data.name || "Player";
+avatar.textContent = (data.name||"P")[0].toUpperCase();
 
 phoneText.textContent = data.phone || "—";
 emailText.textContent = data.email || "—";
 gameIdText.textContent = data.gameId || "—";
 deviceText.textContent = data.device || "—";
-fbLink.href = data.fb || "#";
+fbLink.href = data.facebook || "#";
 
-wins.textContent = data.wins;
-losses.textContent = data.losses;
-goals.textContent = data.goals;
-gd.textContent = data.gd;
+wins.textContent = data.win || 0;
+losses.textContent = data.lose || 0;
+goals.textContent = data.goals || 0;
+gd.textContent = data.gd || 0;
 
-nameInput.value = data.name;
-phoneInput.value = data.phone;
-emailInput.value = data.email;
-gameIdInput.value = data.gameId;
-deviceInput.value = data.device;
-fbInput.value = data.fb;
+/* ---------- FORM FILL ---------- */
+nameInput.value = data.name || "";
+phoneInput.value = data.phone || "";
+emailInput.value = data.email || "";
+gameIdInput.value = data.gameId || "";
+deviceInput.value = data.device || "";
+fbInput.value = data.facebook || "";
 
-window.saveProfile = function(){
-  data.name = nameInput.value || "Player";
-  data.phone = phoneInput.value;
-  data.email = emailInput.value;
-  data.gameId = gameIdInput.value;
-  data.device = deviceInput.value;
-  data.fb = fbInput.value;
-
-  localStorage.setItem(key, JSON.stringify(data));
-  alert("Profile Saved ✅");
+/* ---------- SAVE PROFILE ---------- */
+window.saveProfile = async function(){
+  await ref.update({
+    name: nameInput.value || "Player",
+    phone: phoneInput.value,
+    email: emailInput.value,
+    gameId: gameIdInput.value,
+    device: deviceInput.value,
+    facebook: fbInput.value
+  });
+  alert("Profile Updated ✅");
   location.reload();
 };
 
-/* ---------- RANK ---------- */
-function calculateRank(){
-  let players = [];
-  for(let i=0;i<localStorage.length;i++){
-    const k = localStorage.key(i);
-    if(k.startsWith("player_")){
-      players.push(JSON.parse(localStorage.getItem(k)));
-    }
-  }
+/* ---------- RANK (GLOBAL) ---------- */
+const qs = await firebase.firestore().collection("players").get();
+let players = [];
+qs.forEach(d => players.push(d.data()));
 
-  players.sort((a,b)=>{
-    if(b.wins !== a.wins) return b.wins - a.wins;
-    if(b.gd !== a.gd) return b.gd - a.gd;
-    return b.goals - a.goals;
-  });
+players.sort((a,b)=>{
+  if((b.win||0) !== (a.win||0)) return (b.win||0)-(a.win||0);
+  if((b.gd||0) !== (a.gd||0)) return (b.gd||0)-(a.gd||0);
+  return (b.goals||0)-(a.goals||0);
+});
 
-  const index = players.findIndex(p => p.name === data.name);
-  const rank = index + 1;
+const index = players.findIndex(p => p.email === data.email);
+const rank = index + 1;
 
-  let trophy = "";
-  if(rank === 1) trophy=" 🥇";
-  else if(rank === 2) trophy=" 🥈";
-  else if(rank === 3) trophy=" 🥉";
+let trophy="";
+if(rank===1) trophy=" 🥇";
+else if(rank===2) trophy=" 🥈";
+else if(rank===3) trophy=" 🥉";
 
-  rankText.textContent = "#" + rank + trophy;
-}
+rankText.textContent = "#"+rank+trophy;
 
-calculateRank();
 }
