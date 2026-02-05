@@ -1,238 +1,275 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AFN's Elite Strikers</title>
+<meta charset="UTF-8">
+<title>AFN's Elite Strikers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- FONT -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --neon:#00f7ff;
+  --gold:#ffd400;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
+}
 
-  <!-- ICONS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',sans-serif;
+}
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
+  color:#fff;
+  display:flex;
+  justify-content:center;
+}
 
-    body {
-      min-height: 100vh;
-      background: radial-gradient(circle at top, #0b1a2f, #040816);
-      color: #fff;
-      display: flex;
-      justify-content: center;
-    }
+.container{
+  width:100%;
+  max-width:430px;
+  padding:20px;
+  text-align:center;
+}
 
-    .wrapper {
-      width: 100%;
-      max-width: 430px;
-      padding: 24px 16px 40px;
-    }
+.logo img{
+  width:130px;
+  filter:drop-shadow(0 0 20px rgba(255,215,0,.6));
+  margin-bottom:10px;
+}
 
-    .logo {
-      text-align: center;
-      margin-top: 10px;
-    }
+h1{
+  color:var(--gold);
+  font-size:30px;
+  letter-spacing:1px;
+}
 
-    .logo h1 {
-      font-size: 28px;
-      font-weight: 700;
-      color: #ffd700;
-    }
+.tagline{
+  color:var(--neon);
+  font-size:14px;
+  margin:6px 0 18px;
+}
 
-    .logo p {
-      margin-top: 6px;
-      color: #3ddcff;
-      font-size: 14px;
-    }
+.motive-box{
+  background:linear-gradient(145deg,#0b1d2a,#020b13);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 0 20px rgba(0,247,255,.35);
+  margin-bottom:22px;
+}
 
-    .quote {
-      margin: 18px auto;
-      padding: 14px;
-      border-radius: 14px;
-      background: rgba(0,255,255,0.08);
-      text-align: center;
-      font-size: 14px;
-    }
+#typingText{
+  color:var(--neon);
+  font-weight:700;
+  font-size:15px;
+  border-right:2px solid var(--neon);
+  padding-right:5px;
+  animation:blink 1s infinite;
+}
 
-    .about {
-      margin-top: 16px;
-      padding: 18px;
-      background: rgba(255,255,255,0.06);
-      border-radius: 16px;
-    }
+@keyframes blink{
+  0%,100%{border-color:transparent}
+  50%{border-color:var(--neon)}
+}
 
-    .about h3 {
-      margin-bottom: 10px;
-      font-size: 16px;
-    }
+.about{
+  background:rgba(255,255,255,.05);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:22px;
+  backdrop-filter:blur(6px);
+}
 
-    .about p {
-      font-size: 13px;
-      line-height: 1.6;
-      color: #dbeafe;
-    }
+.about h2{
+  font-size:18px;
+  margin-bottom:8px;
+}
 
-    .menu {
-      margin-top: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
+.about p{
+  font-size:14px;
+  line-height:1.6;
+  color:#ddd;
+}
 
-    .menu a {
-      text-decoration: none;
-      color: #00eaff;
-      padding: 14px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.06);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 600;
-      transition: 0.2s;
-    }
+.menu{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-bottom:24px;
+}
 
-    .menu a:hover {
-      background: rgba(0,234,255,0.15);
-    }
+.menu a{
+  text-decoration:none;
+  padding:14px;
+  border-radius:16px;
+  background:linear-gradient(145deg,#061726,#020c14);
+  color:var(--neon);
+  font-weight:700;
+  transition:.25s;
+  position:relative;
+  overflow:hidden;
+}
 
-    .admin-panel {
-      margin-top: 26px;
-      padding: 18px;
-      background: rgba(255,215,0,0.08);
-      border-radius: 16px;
-    }
+.menu a::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg,transparent,rgba(0,247,255,.2),transparent);
+  transform:translateX(-100%);
+}
 
-    .admin-panel h3 {
-      color: #ffd700;
-      margin-bottom: 14px;
-      text-align: center;
-    }
+.menu a:hover::after{
+  transform:translateX(100%);
+  transition:.6s;
+}
 
-    .admin-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
+.menu a:hover{
+  box-shadow:0 0 16px rgba(0,247,255,.45);
+  transform:scale(1.04);
+}
 
-    .admin-card {
-      background: rgba(255,255,255,0.08);
-      border-radius: 14px;
-      padding: 12px;
-      text-align: center;
-      font-size: 12px;
-    }
+.admin-panel{
+  margin-top:10px;
+  padding:18px;
+  border-radius:20px;
+  background:linear-gradient(145deg,#091a27,#020a12);
+  box-shadow:0 0 25px rgba(255,215,0,.2);
+}
 
-    .admin-avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: 2px solid #00eaff;
-      margin: 0 auto 8px;
-    }
+.admin-panel h2{
+  color:var(--gold);
+  margin-bottom:16px;
+  font-size:18px;
+}
 
-    footer {
-      margin-top: 40px;
-      text-align: center;
-      font-size: 12px;
-      opacity: 0.7;
-    }
+.admins{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
 
-    footer span {
-      color: #00eaff;
-      font-weight: 600;
-    }
-  </style>
+.admin-card{
+  background:rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:10px;
+}
+
+.admin-card img{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid var(--neon);
+  margin-bottom:6px;
+}
+
+.admin-card span{
+  font-size:12px;
+  color:var(--neon);
+  font-weight:700;
+}
+
+footer{
+  margin-top:20px;
+  font-size:12px;
+  color:#aaa;
+}
+footer a{
+  color:var(--neon);
+  text-decoration:none;
+  font-weight:700;
+}
+</style>
 </head>
 
 <body>
-  <div class="wrapper">
+<div class="container">
 
-    <!-- HEADER -->
-    <div class="logo">
-      <h1>AFN's Elite Strikers</h1>
-      <p>Play Smart. Play Elite. Play AFN.</p>
-    </div>
+<div class="logo"><img src="logo.png"></div>
 
-    <div class="quote">
-      চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।
-    </div>
+<h1>AFN's Elite Strikers</h1>
+<div class="tagline">Play Smart. Play Elite. Play AFN.</div>
 
-    <!-- ABOUT -->
-    <div class="about">
-      <h3>আমাদের ক্লাব সম্পর্কে</h3>
-      <p>
-        AFNs Elite Strikers হলো স্কিল, ডিসিপ্লিন এবং এলিট মাইন্ডসেটের সমন্বয়।
-        এখানে খেলোয়াড় তৈরি হয় লিজেন্ড হওয়ার জন্য।
-      </p>
-    </div>
+<div class="motive-box">
+  <span id="typingText"></span>
+</div>
 
-    <!-- MENU -->
-    <div class="menu">
-      <a href="login.html"><i class="fa-solid fa-user"></i> Player Login</a>
-      <a href="players.html"><i class="fa-solid fa-id-card"></i> Player Profiles</a>
-      <a href="leaderboard.html"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
-      <a href="admin-login.html"><i class="fa-solid fa-lock"></i> Admin Login</a>
-      <a href="match-submit.html"><i class="fa-solid fa-futbol"></i> Match Submit (Admin)</a>
-    </div>
+<div class="about">
+  <h2>আমাদের ক্লাব সম্পর্কে</h2>
+  <p>
+    AFNs Elite Strikers হলো স্কিল, ডিসিপ্লিন এবং এলিট মাইন্ডসেটের সমন্বয়।
+    এখানে খেলোয়াড় তৈরি হয় লিজেন্ড হওয়ার জন্য।
+  </p>
+</div>
 
-    <!-- ADMIN PANEL -->
-    <div class="admin-panel">
-      <h3>👑 Admin Panel</h3>
-      <div class="admin-grid">
-        <div class="admin-card">
-          <div class="admin-avatar"></div>
-          Admin One
-        </div>
-        <div class="admin-card">
-          <div class="admin-avatar"></div>
-          Admin Two
-        </div>
-        <div class="admin-card">
-          <div class="admin-avatar"></div>
-          Admin Three
-        </div>
-        <div class="admin-card">
-          <div class="admin-avatar"></div>
-          Admin Four
-        </div>
-        <div class="admin-card">
-          <div class="admin-avatar"></div>
-          Admin Five
-        </div>
-        <div class="admin-card">
-          <div class="admin-avatar"></div>
-          Admin Six
-        </div>
-      </div>
-    </div>
+<div class="menu">
+  <a href="#" onclick="goProfile()">🧑‍💼 My Profile</a>
+  <a href="login.html">👤 Player Login</a>
+  <a href="player.html">📄 Player Profiles</a>
+  <a href="leaderboard.html">🏆 Leaderboard</a>
+  <a href="stats.html">📊 Player Stats</a>
+  <a href="announcements.html">📢 Announcements</a>
+  <a href="rules.html">📜 Rules & Fair Play</a>
+  <a href="training.html">🎯 Training & Tips</a>
+  <a href="admin-login.html">🔐 Admin Login</a>
+  <a href="match-submit.html">⚽ Match Submit (Admin)</a>
+</div>
 
-    <!-- FOOTER -->
-    <footer>
-      © 2026 AFN's Elite Strikers | <span>SI SHOHAN</span>
-    </footer>
+<div class="admin-panel">
+<h2>👑 Admin Panel</h2>
+<div class="admins">
+<div class="admin-card"><img src="admin1.jpg"><span>Admin One</span></div>
+<div class="admin-card"><img src="admin2.jpg"><span>Admin Two</span></div>
+<div class="admin-card"><img src="admin3.jpg"><span>Admin Three</span></div>
+<div class="admin-card"><img src="admin4.jpg"><span>Admin Four</span></div>
+<div class="admin-card"><img src="admin5.jpg"><span>Admin Five</span></div>
+<div class="admin-card"><img src="admin6.jpg"><span>Admin Six</span></div>
+</div>
+</div>
 
-  </div>
+<footer>
+© 2026 AFN's Elite Strikers |
+<a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI SHOHAN</a>
+</footer>
 
-  <!-- 🔥 FIREBASE LOGIC (UI TOUCH করবে না) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+</div>
 
-    firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
+<script>
+function goProfile(){
+  if(localStorage.getItem("uid")){
+    location.href="player.html";
+  }else{
+    location.href="login.html";
+  }
+}
 
-    initializeApp(firebaseConfig);
-    getAuth();
-  </script>
+const lines=[
+"চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।",
+"হার মানে শেষ না, শেখার শুরু।",
+"AFN মানে স্কিলের প্রমাণ।",
+"আজ খেলোয়াড়, কাল লিজেন্ড।",
+"Play smart. Stay elite.",
+"AFN is not a club, it's a mindset."
+];
+
+let i=Math.floor(Math.random()*lines.length),c=0;
+const t=document.getElementById("typingText");
+(function type(){
+  if(c<lines[i].length){
+    t.textContent+=lines[i][c++];
+    setTimeout(type,90);
+  }else{
+    setTimeout(()=>{
+      t.textContent="";
+      c=0;i=Math.floor(Math.random()*lines.length);
+      type();
+    },120000);
+  }
+})();
+</script>
 
 </body>
 </html>
