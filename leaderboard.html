@@ -1,137 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Leaderboard | AFNs Elite Striker</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Leaderboard</title>
 <link rel="stylesheet" href="style.css">
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
-<script>
-firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
-</script>
-
-<style>
-.list {
-  margin-top: 14px;
-}
-.row {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:rgba(255,255,255,0.06);
-  padding:10px 12px;
-  border-radius:10px;
-  margin-bottom:8px;
-  font-size:14px;
-}
-.rank {
-  font-weight:bold;
-  color:#a5b4fc;
-}
-.name {
-  flex:1;
-  margin-left:10px;
-}
-.stat {
-  font-weight:bold;
-}
-.top1 { background:linear-gradient(90deg,#facc15,#ca8a04); color:#000; }
-.top2 { background:linear-gradient(90deg,#e5e7eb,#9ca3af); color:#000; }
-.top3 { background:linear-gradient(90deg,#fcd34d,#92400e); color:#000; }
-</style>
 </head>
-
 <body>
 
 <div class="container">
-  <div class="header">
-    <h2>Leaderboard</h2>
-    <button class="btn-logout" onclick="logout()">Logout</button>
-  </div>
-
-  <div id="list" class="list"></div>
+<h2>Leaderboard</h2>
+<div id="list"></div>
 </div>
 
-<!-- FOOTER -->
 <footer class="global-footer">
-  <div class="footer-inner">
-    <img src="logo.png" class="footer-logo">
-    <div class="footer-text">
-      AFNs Elite Striker |
-      <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
-        SI Shohan
-      </a>
-    </div>
-  </div>
+<img src="logo.png" class="footer-logo">
+AFNs Elite Striker |
+<a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI Shohan</a>
 </footer>
 
+<script src="firebase.js"></script>
 <script>
-firebase.auth().onAuthStateChanged(user=>{
-  if(!user){
-    location.href="login.html";
-    return;
-  }
-  loadLeaderboard();
+db.collection("players")
+.orderBy("wins","desc")
+.onSnapshot(s=>{
+ list.innerHTML="";
+ let r=1;
+ s.forEach(d=>{
+  const p=d.data();
+  list.innerHTML+=`
+   <p>#${r++}
+   <a href="public-profile.html?id=${d.id}">
+   ${p.username}</a> (${p.wins}W)</p>`;
+ });
 });
-
-function loadLeaderboard(){
-  const players = [];
-
-  // ✅ UID based – duplicate FIX
-  for(let i=0;i<localStorage.length;i++){
-    const key = localStorage.key(i);
-    if(key.startsWith("player_")){
-      const uid = key.replace("player_","");
-      const p = JSON.parse(localStorage.getItem(key));
-      p.uid = uid;
-      players.push(p);
-    }
-  }
-
-  players.sort((a,b)=>{
-    if(b.wins !== a.wins) return b.wins - a.wins;
-    if(b.gd !== a.gd) return b.gd - a.gd;
-    return b.goals - a.goals;
-  });
-
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  players.forEach((p,i)=>{
-    const row = document.createElement("div");
-    row.className = "row";
-    if(i===0) row.classList.add("top1");
-    if(i===1) row.classList.add("top2");
-    if(i===2) row.classList.add("top3");
-
-    row.innerHTML = `
-      <div class="rank">#${i+1}</div>
-      <div class="name">${p.name || "Player"}</div>
-      <div class="stat">${p.wins}W</div>
-    `;
-    list.appendChild(row);
-  });
-
-  if(players.length===0){
-    list.innerHTML = "<p>No players yet</p>";
-  }
-}
-
-function logout(){
-  firebase.auth().signOut().then(()=>{
-    location.href="login.html";
-  });
-}
 </script>
-
 </body>
 </html>
