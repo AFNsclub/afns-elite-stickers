@@ -31,42 +31,51 @@ body{
 .container{
   width:100%;
   max-width:430px;
-  padding:18px;
+  padding:20px;
+}
+
+/* HEADER */
+header{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+header img{
+  width:90px;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
 }
 
 h1{
-  text-align:center;
   color:var(--gold);
-  margin-bottom:14px;
+  margin:10px 0 4px;
 }
 
-/* ANNOUNCEMENT */
-.notice{
-  background:linear-gradient(145deg,#0b1d2a,#020b13);
-  border-radius:16px;
-  padding:12px;
-  text-align:center;
+header p{
   color:var(--neon);
-  font-size:13px;
-  box-shadow:0 0 18px rgba(0,247,255,.35);
-  margin-bottom:16px;
+  font-size:14px;
 }
 
-/* LIST */
-.list{
+/* LEADERBOARD */
+.board{
   display:flex;
   flex-direction:column;
   gap:12px;
 }
 
 .card{
+  background:linear-gradient(145deg,#081724,#020a12);
+  border-radius:18px;
+  padding:14px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  background:linear-gradient(145deg,#061726,#020c14);
-  padding:14px;
-  border-radius:18px;
-  box-shadow:0 0 18px rgba(0,247,255,.25);
+  box-shadow:0 0 18px rgba(0,247,255,.18);
+  transition:.25s;
+}
+
+.card:hover{
+  transform:scale(1.03);
+  box-shadow:0 0 25px rgba(0,247,255,.45);
 }
 
 .left{
@@ -76,50 +85,65 @@ h1{
 }
 
 .rank{
-  width:32px;
-  height:32px;
-  border-radius:50%;
-  background:var(--gold);
-  color:#000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  font-size:20px;
   font-weight:900;
+  color:var(--gold);
+  width:36px;
+  text-align:center;
 }
 
 .avatar{
-  width:38px;
-  height:38px;
+  width:42px;
+  height:42px;
   border-radius:50%;
-  background:rgba(255,255,255,.1);
+  background:rgba(255,255,255,.08);
+  border:2px solid var(--neon);
   display:flex;
   align-items:center;
   justify-content:center;
-  color:var(--gold);
   font-weight:900;
+  color:var(--gold);
 }
 
-.name{
+.name a{
   color:var(--neon);
-  font-weight:700;
   text-decoration:none;
+  font-weight:700;
 }
 
 .right{
   text-align:right;
-  font-size:13px;
 }
 
-.right b{
-  color:var(--gold);
+.rating{
+  font-size:16px;
+  font-weight:700;
 }
+
+.badge{
+  font-size:12px;
+  margin-top:2px;
+  padding:4px 8px;
+  border-radius:12px;
+  font-weight:700;
+  display:inline-block;
+}
+
+.gold{background:#ffd700;color:#000;}
+.silver{background:#c0c0c0;color:#000;}
+.bronze{background:#cd7f32;color:#000;}
 
 /* FOOTER */
 footer{
+  margin-top:22px;
   text-align:center;
   font-size:12px;
   color:#aaa;
-  margin-top:18px;
+}
+footer a{
+  color:var(--neon);
+  text-decoration:none;
+  font-weight:700;
 }
 </style>
 </head>
@@ -127,18 +151,19 @@ footer{
 <body>
 <div class="container">
 
-<h1>🏆 Leaderboard</h1>
+<header>
+  <img src="logo.png">
+  <h1>Leaderboard</h1>
+  <p>AFN's Elite Strikers</p>
+</header>
 
-<div class="notice" id="notice">
-🔥 Live Season Running — Rankings update automatically
-</div>
-
-<div id="list" class="list">
-  <!-- players -->
+<div class="board" id="board">
+  <!-- Players load here -->
 </div>
 
 <footer>
-© 2026 AFN's Elite Strikers
+  © 2026 AFN's Elite Strikers |
+  <a href="index.html">Home</a>
 </footer>
 
 </div>
@@ -155,38 +180,40 @@ firebase.initializeApp({
 });
 
 const db = firebase.firestore();
-const list = document.getElementById("list");
+const board = document.getElementById("board");
 
-// REAL-TIME LEADERBOARD
 db.collection("players")
-  .orderBy("rating","desc")
-  .onSnapshot(snap=>{
-    list.innerHTML="";
-    let rank=1;
+.orderBy("rating","desc")
+.onSnapshot(snapshot=>{
+  board.innerHTML="";
+  let rank=1;
 
-    snap.forEach(doc=>{
-      const d = doc.data();
+  snapshot.forEach(doc=>{
+    const d = doc.data();
 
-      const card = document.createElement("div");
-      card.className="card";
+    let badgeClass="bronze", badgeText="Bronze";
+    if((d.rating||0)>=80){badgeClass="gold";badgeText="Gold";}
+    else if((d.rating||0)>=60){badgeClass="silver";badgeText="Silver";}
 
-      card.innerHTML=`
-        <div class="left">
-          <div class="rank">${rank}</div>
-          <div class="avatar">${d.username.charAt(0).toUpperCase()}</div>
-          <a class="name" href="public-profile.html?id=${doc.id}">
-            ${d.username}
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <div class="left">
+        <div class="rank">#${rank++}</div>
+        <div class="avatar">${d.username ? d.username.charAt(0).toUpperCase() : "?"}</div>
+        <div class="name">
+          <a href="public-profile.html?id=${doc.id}">
+            ${d.username || "Unknown"}
           </a>
         </div>
-        <div class="right">
-          <b>${d.rating || 0}</b><br>
-          pts
-        </div>
-      `;
-
-      list.appendChild(card);
-      rank++;
-    });
+      </div>
+      <div class="right">
+        <div class="rating">${d.rating || 0}</div>
+        <div class="badge ${badgeClass}">${badgeText}</div>
+      </div>
+    `;
+    board.appendChild(div);
+  });
 });
 </script>
 
