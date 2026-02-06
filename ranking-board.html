@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Top 10 Ranking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  background:#050b1e;
+  color:#fff;
+  font-family:Segoe UI,sans-serif;
+}
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:20px;
+}
+h2{text-align:center;color:#ffd369}
+.card{
+  background:#0b1622;
+  border-radius:14px;
+  padding:14px;
+  margin-top:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  animation:slide .5s ease;
+}
+@keyframes slide{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.pos{
+  font-size:18px;
+  font-weight:800;
+  color:#ffd369;
+}
+.name{font-weight:700}
+.rating{color:#4cff8f;font-weight:700}
+.rank{font-size:12px;color:#aaa}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h2>🏆 Top 10 Ranking</h2>
+<div id="list"></div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
+const db=firebase.firestore();
+
+/* ===============================
+   LOAD ACTIVE SEASON
+=============================== */
+async function loadRanking(){
+  const s=await db.collection("seasons")
+    .where("active","==",true)
+    .limit(1).get();
+
+  if(s.empty) return;
+
+  const seasonId=s.docs[0].id;
+
+  db.collection("players")
+    .where("seasonId","==",seasonId)
+    .orderBy("rating","desc")
+    .limit(10)
+    .onSnapshot(snap=>{
+      list.innerHTML="";
+      let i=1;
+      snap.forEach(d=>{
+        const p=d.data();
+        list.innerHTML+=`
+          <div class="card">
+            <div>
+              <div class="pos">#${i++}</div>
+              <div class="name">${p.username || "Player"}</div>
+              <div class="rank">${p.rank}</div>
+            </div>
+            <div class="rating">${p.rating}</div>
+          </div>
+        `;
+      });
+    });
+}
+
+loadRanking();
+</script>
+</body>
+</html>
