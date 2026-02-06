@@ -50,79 +50,112 @@ function getRank(r){
   if(r>=200) return "Legend 🔥";
   if(r>=150) return "Platinum 🔵";
   if(r>=100) return "Gold 🟡";
-  if(r>=50) return "Silver ⚪";
+  if(r>=50)  return "Silver ⚪";
   return "Bronze 🟤";
 }
 
 /* ===============================
-   CURRENT SEASON (AUTO)
+   CURRENT ACTIVE SEASON
 =============================== */
 async function getCurrentSeason(){
-  const q=await db.collection("seasons").where("active","==",true).limit(1).get();
-  if(!q.empty) return {id:q.docs[0].id,...q.docs[0].data()};
+  const q=await db.collection("seasons")
+    .where("active","==",true)
+    .limit(1)
+    .get();
 
-  const now=new Date();
-  const seasonId=`${now.getFullYear()}-S1`;
+  if(!q.empty){
+    return {id:q.docs[0].id,...q.docs[0].data()};
+  }
 
-  await db.collection("seasons").doc(seasonId).set({
-    name:`${now.getFullYear()} Season 1`,
-    start:firebase.firestore.Timestamp.now(),
-    active:true
+  // fallback (should not normally happen)
+  const year=new Date().getFullYear();
+  const id=`${year}-S1`;
+
+  await db.collection("seasons").doc(id).set({
+    name:`${year} Season 1`,
+    active:true,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  return {id:seasonId};
+  return {id};
 }
 
 /* ===============================
-   ADD MATCH + ROLLBACK DATA
+   ADD MATCH (ROLLBACK SAFE)
 =============================== */
 async function addMatch(){
   msg.innerHTML="";
   const uid=playerId.value.trim();
-  if(!uid) return msg.innerHTML="<div class='error'>Player UID required</div>";
 
-  const season=await getCurrentSeason();
-  const ref=db.collection("players").doc(uid);
+  if(!uid){
+    msg.innerHTML="<div class='error'>Player UID required</div>";
+    return;
+  }
 
   try{
+    const season=await getCurrentSeason();
+    const playerRef=db.collection("players").doc(uid);
+
     await db.runTransaction(async(t)=>{
-      const snap=await t.get(ref);
+      const snap=await t.get(playerRef);
       if(!snap.exists) throw "Player not found";
 
       const d=snap.data();
+
+      /* BEFORE STATE (for rollback) */
       const before={
-        rating:d.rating||50,
-        wins:d.wins||0,
-        losses:d.losses||0,
-        rank:d.rank||"Bronze"
+        rating: d.rating ?? 50,
+        wins: d.wins ?? 0,
+        losses: d.losses ?? 0,
+        rank: d.rank ?? "Bronze 🟤"
       };
 
-      let rating=before.rating;
-      let wins=before.wins;
-      let losses=before.losses;
+      let rating = before.rating;
+      let wins   = before.wins;
+      let losses = before.losses;
 
-      if(result.value==="win"){rating+=10;wins++;}
-      else{rating=Math.max(50,rating-5);losses++;}
+      if(result.value==="win"){
+        rating += 10;
+        wins++;
+      }else{
+        rating = Math.max(50, rating-5);
+        losses++;
+      }
 
-      t.update(ref,{
-        rating,wins,losses,
-        rank:getRank(rating),
-        seasonId:season.id
+      const newRank = getRank(rating);
+
+      /* UPDATE PLAYER */
+      t.update(playerRef,{
+        rating,
+        wins,
+        losses,
+        rank:newRank,
+        seasonId:season.id,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       });
 
+      /* SAVE MATCH (rollback ready) */
       t.set(db.collection("matches").doc(),{
-        playerId:uid,
-        opponent:opponent.value,
-        result:result.value,
-        score:score.value,
-        seasonId:season.id,
-        time:firebase.firestore.FieldValue.serverTimestamp(),
-        before,
-        editable:true
+        playerId: uid,
+        opponent: opponent.value,
+        result: result.value,
+        score: score.value,
+        seasonId: season.id,
+
+        ratingBefore: before.rating,
+        winsBefore: before.wins,
+        lossesBefore: before.losses,
+        rankBefore: before.rank,
+
+        ratingAfter: rating,
+        rankAfter: newRank,
+
+        editable: true,
+        time: firebase.firestore.FieldValue.serverTimestamp()
       });
     });
 
-    msg.innerHTML="<div class='success'>✅ Match added + rollback safe</div>";
+    msg.innerHTML="<div class='success'>✅ Match added (Rollback safe)</div>";
   }catch(e){
     msg.innerHTML="<div class='error'>❌ "+e+"</div>";
   }
