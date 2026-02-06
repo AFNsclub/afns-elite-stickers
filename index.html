@@ -11,6 +11,7 @@
   --gold:#ffd400;
   --bg1:#02060c;
   --bg2:#0c1b2a;
+  --glass:rgba(255,255,255,0.08);
 }
 
 *{
@@ -31,149 +32,115 @@ body{
 .container{
   width:100%;
   max-width:430px;
-  padding:20px;
+  padding:18px;
   text-align:center;
 }
 
+/* LOGO */
 .logo img{
   width:130px;
-  filter:drop-shadow(0 0 20px rgba(255,215,0,.6));
-  margin-bottom:10px;
+  margin:12px 0;
+  filter:drop-shadow(0 0 25px rgba(255,215,0,.7));
 }
 
+/* TITLE */
 h1{
   color:var(--gold);
   font-size:30px;
   letter-spacing:1px;
 }
-
 .tagline{
   color:var(--neon);
   font-size:14px;
-  margin:6px 0 18px;
+  margin:6px 0 16px;
 }
 
-.motive-box{
-  background:linear-gradient(145deg,#0b1d2a,#020b13);
-  border-radius:18px;
-  padding:18px;
+/* LIVE NOTICE */
+.notice{
+  background:linear-gradient(145deg,#061b2a,#021019);
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:14px;
   box-shadow:0 0 20px rgba(0,247,255,.35);
-  margin-bottom:22px;
+  animation:pulse 3s infinite;
 }
-
-#typingText{
+.notice span{
   color:var(--neon);
   font-weight:700;
-  font-size:15px;
-  border-right:2px solid var(--neon);
-  padding-right:5px;
-  animation:blink 1s infinite;
+  font-size:14px;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 16px rgba(0,247,255,.3)}
+  50%{box-shadow:0 0 30px rgba(0,247,255,.6)}
 }
 
-@keyframes blink{
-  0%,100%{border-color:transparent}
-  50%{border-color:var(--neon)}
+/* SEASON */
+.season{
+  background:linear-gradient(145deg,#1a1405,#0b0702);
+  border-radius:16px;
+  padding:12px;
+  margin-bottom:18px;
+  box-shadow:0 0 20px rgba(255,212,0,.35);
+  color:var(--gold);
+  font-weight:700;
+  font-size:14px;
 }
 
+/* ABOUT */
 .about{
-  background:rgba(255,255,255,.05);
+  background:var(--glass);
   border-radius:16px;
   padding:16px;
-  margin-bottom:22px;
+  margin-bottom:20px;
   backdrop-filter:blur(6px);
 }
-
 .about h2{
   font-size:18px;
   margin-bottom:8px;
 }
-
 .about p{
   font-size:14px;
   line-height:1.6;
   color:#ddd;
 }
 
+/* MENU */
 .menu{
   display:flex;
   flex-direction:column;
   gap:12px;
-  margin-bottom:24px;
 }
-
 .menu a{
   text-decoration:none;
-  padding:14px;
-  border-radius:16px;
+  padding:15px;
+  border-radius:18px;
   background:linear-gradient(145deg,#061726,#020c14);
   color:var(--neon);
   font-weight:700;
-  transition:.25s;
+  letter-spacing:.4px;
   position:relative;
   overflow:hidden;
+  transition:.25s;
 }
-
 .menu a::after{
   content:"";
   position:absolute;
   inset:0;
-  background:linear-gradient(120deg,transparent,rgba(0,247,255,.2),transparent);
+  background:linear-gradient(120deg,transparent,rgba(0,247,255,.25),transparent);
   transform:translateX(-100%);
 }
-
 .menu a:hover::after{
   transform:translateX(100%);
   transition:.6s;
 }
-
 .menu a:hover{
-  box-shadow:0 0 16px rgba(0,247,255,.45);
-  transform:scale(1.04);
+  transform:scale(1.05);
+  box-shadow:0 0 20px rgba(0,247,255,.5);
 }
 
-.admin-panel{
-  margin-top:10px;
-  padding:18px;
-  border-radius:20px;
-  background:linear-gradient(145deg,#091a27,#020a12);
-  box-shadow:0 0 25px rgba(255,215,0,.2);
-}
-
-.admin-panel h2{
-  color:var(--gold);
-  margin-bottom:16px;
-  font-size:18px;
-}
-
-.admins{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-}
-
-.admin-card{
-  background:rgba(255,255,255,.06);
-  border-radius:16px;
-  padding:10px;
-}
-
-.admin-card img{
-  width:62px;
-  height:62px;
-  border-radius:50%;
-  object-fit:cover;
-  border:2px solid var(--neon);
-  margin-bottom:6px;
-}
-
-.admin-card span{
-  font-size:12px;
-  color:var(--neon);
-  font-weight:700;
-}
-
+/* FOOTER */
 footer{
-  margin-top:20px;
+  margin-top:24px;
   font-size:12px;
   color:#aaa;
 }
@@ -188,87 +155,66 @@ footer a{
 <body>
 <div class="container">
 
-<div class="logo"><img src="logo.png"></div>
+  <!-- LOGO -->
+  <div class="logo">
+    <img src="logo.png" alt="AFN Logo">
+  </div>
 
-<h1>AFN's Elite Strikers</h1>
-<div class="tagline">Play Smart. Play Elite. Play AFN.</div>
+  <h1>AFN's Elite Strikers</h1>
+  <div class="tagline">Play Smart. Play Elite. Play AFN.</div>
 
-<div class="motive-box">
-  <span id="typingText"></span>
-</div>
+  <!-- LIVE NOTICE -->
+  <div class="notice">
+    <span id="noticeText">🔥 Season 2026 Live • Registration Open Now</span>
+  </div>
 
-<div class="about">
-  <h2>আমাদের ক্লাব সম্পর্কে</h2>
-  <p>
-    AFNs Elite Strikers হলো স্কিল, ডিসিপ্লিন এবং এলিট মাইন্ডসেটের সমন্বয়।
-    এখানে খেলোয়াড় তৈরি হয় লিজেন্ড হওয়ার জন্য।
-  </p>
-</div>
+  <!-- SEASON STATUS -->
+  <div class="season">
+    🏟️ Season 2026 • Ongoing • Rankings Live
+  </div>
 
-<div class="menu">
-  <a href="#" onclick="goProfile()">🧑‍💼 My Profile</a>
-  <a href="login.html">👤 Player Login</a>
-  <a href="player.html">📄 Player Profiles</a>
-  <a href="leaderboard.html">🏆 Leaderboard</a>
-  <a href="stats.html">📊 Player Stats</a>
-  <a href="announcements.html">📢 Announcements</a>
-  <a href="rules.html">📜 Rules & Fair Play</a>
-  <a href="training.html">🎯 Training & Tips</a>
-  <a href="admin-login.html">🔐 Admin Login</a>
-  <a href="match-submit.html">⚽ Match Submit (Admin)</a>
-</div>
+  <!-- ABOUT -->
+  <div class="about">
+    <h2>আমাদের ক্লাব</h2>
+    <p>
+      AFN's Elite Strikers শুধুই একটি ক্লাব না — এটা একটি mindset।
+      এখানে খেলোয়াড় তৈরি হয় চ্যাম্পিয়ন হওয়ার জন্য।
+    </p>
+  </div>
 
-<div class="admin-panel">
-<h2>👑 Admin Panel</h2>
-<div class="admins">
-<div class="admin-card"><img src="admin1.jpg"><span>Admin One</span></div>
-<div class="admin-card"><img src="admin2.jpg"><span>Admin Two</span></div>
-<div class="admin-card"><img src="admin3.jpg"><span>Admin Three</span></div>
-<div class="admin-card"><img src="admin4.jpg"><span>Admin Four</span></div>
-<div class="admin-card"><img src="admin5.jpg"><span>Admin Five</span></div>
-<div class="admin-card"><img src="admin6.jpg"><span>Admin Six</span></div>
-</div>
-</div>
+  <!-- MENU -->
+  <div class="menu">
+    <a href="login.html">👤 Player Login / Profile</a>
+    <a href="leaderboard.html">🏆 Leaderboard</a>
+    <a href="admin-login.html">🔐 Admin Panel</a>
+  </div>
 
-<footer>
-© 2026 AFN's Elite Strikers |
-<a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI SHOHAN</a>
-</footer>
+  <!-- FOOTER -->
+  <footer>
+    © 2026 AFN's Elite Strikers |
+    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
+      SI SHOHAN
+    </a>
+  </footer>
 
 </div>
 
 <script>
-function goProfile(){
-  if(localStorage.getItem("uid")){
-    location.href="player.html";
-  }else{
-    location.href="login.html";
-  }
-}
-
-const lines=[
-"চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।",
-"হার মানে শেষ না, শেখার শুরু।",
-"AFN মানে স্কিলের প্রমাণ।",
-"আজ খেলোয়াড়, কাল লিজেন্ড।",
-"Play smart. Stay elite.",
-"AFN is not a club, it's a mindset."
+/* Live Notice Rotation (future Firestore replaceable) */
+const notices = [
+  "🔥 Season 2026 Live • Registration Open",
+  "🏆 PvP Rankings Updating Live",
+  "⚠️ Tonight: Knockout Matches",
+  "👑 Champion Certificate Available",
+  "🚀 New Players Joined AFN"
 ];
 
-let i=Math.floor(Math.random()*lines.length),c=0;
-const t=document.getElementById("typingText");
-(function type(){
-  if(c<lines[i].length){
-    t.textContent+=lines[i][c++];
-    setTimeout(type,90);
-  }else{
-    setTimeout(()=>{
-      t.textContent="";
-      c=0;i=Math.floor(Math.random()*lines.length);
-      type();
-    },120000);
-  }
-})();
+let n=0;
+const box=document.getElementById("noticeText");
+setInterval(()=>{
+  n=(n+1)%notices.length;
+  box.textContent=notices[n];
+},8000);
 </script>
 
 </body>
