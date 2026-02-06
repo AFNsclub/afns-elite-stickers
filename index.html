@@ -107,7 +107,7 @@ footer a{color:var(--neon);text-decoration:none;font-weight:700}
     <img src="logo.png" alt="AFN Logo">
   </div>
 
-  <h1 id="clubName">AFN</h1>
+  <h1 id="clubName">AFN Elite stickers-AFN</h1>
   <div class="tagline" id="tagline"></div>
 
   <div class="notice">
@@ -139,6 +139,10 @@ footer a{color:var(--neon);text-decoration:none;font-weight:700}
 
 </div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
@@ -148,16 +152,21 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 
-db.collection("siteConfig").doc("home")
-.onSnapshot(doc=>{
-  if(!doc.exists) return;
-  const d = doc.data();
+/* 🔴 INDEX PAGE LIVE CONTROL */
+db.collection("siteConfig").doc("main")
+.onSnapshot(snap=>{
+  if(!snap.exists) return;
+  const d = snap.data();
 
-  clubName.textContent = d.clubName;
-  tagline.textContent = d.tagline;
-  noticeText.textContent = d.notice;
-  seasonText.textContent = d.seasonText;
-  year.textContent = d.year;
+  // Live notice
+  if(document.getElementById("noticeText"))
+    document.getElementById("noticeText").textContent = d.notice || "";
+
+  // Season text
+  const seasonBox = document.querySelector(".season");
+  if(seasonBox)
+    seasonBox.textContent = d.seasonText || "";
+
 });
 </script>
 
