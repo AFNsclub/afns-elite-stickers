@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Player Directory | AFN</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI,sans-serif;
+  background:radial-gradient(circle at top,#0c1b2a,#02060c);
+  color:#fff;
+}
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:18px;
+}
+h1{
+  text-align:center;
+  color:#00f7ff;
+}
+.search{
+  margin:14px 0;
+}
+.search input{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:none;
+  background:#061726;
+  color:#fff;
+  font-size:15px;
+}
+.player{
+  background:rgba(255,255,255,.06);
+  border-radius:18px;
+  padding:14px;
+  margin-bottom:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  cursor:pointer;
+  transition:.25s;
+}
+.player:hover{
+  box-shadow:0 0 16px rgba(0,247,255,.4);
+  transform:scale(1.02);
+}
+.badge{
+  font-size:12px;
+  color:#ffd400;
+}
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+.modal-box{
+  background:#0b1622;
+  border-radius:18px;
+  padding:20px;
+  width:90%;
+  max-width:360px;
+}
+.close{
+  text-align:right;
+  cursor:pointer;
+  color:#ff6b6b;
+}
+.stat{
+  margin:6px 0;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h1>👥 Player Directory</h1>
+
+<div class="search">
+  <input id="search" placeholder="Search by name or UID">
+</div>
+
+<div id="list"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="close" onclick="closeModal()">✖</div>
+    <h3 id="mName"></h3>
+    <div class="stat">UID: <span id="mUid"></span></div>
+    <div class="stat">Rating: <span id="mRating"></span></div>
+    <div class="stat">Rank: <span id="mRank"></span></div>
+    <div class="stat">Wins: <span id="mWins"></span></div>
+    <div class="stat">Losses: <span id="mLosses"></span></div>
+    <div class="stat">Season: <span id="mSeason"></span></div>
+  </div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  projectId:"afnsclub"
+});
+const db=firebase.firestore();
+const list=document.getElementById("list");
+let players=[];
+
+/* LOAD PLAYERS */
+db.collection("players").onSnapshot(snap=>{
+  players=[];
+  snap.forEach(d=>players.push({id:d.id,...d.data()}));
+  render(players);
+});
+
+/* SEARCH */
+search.oninput=()=>{
+  const q=search.value.toLowerCase();
+  render(players.filter(p=>
+    p.name.toLowerCase().includes(q) || p.uid.includes(q)
+  ));
+};
+
+/* RENDER */
+function render(arr){
+  list.innerHTML="";
+  arr.forEach(p=>{
+    const d=document.createElement("div");
+    d.className="player";
+    d.innerHTML=`
+      <div>
+        <b>${p.name}</b><br>
+        <span class="badge">${p.rank}</span>
+      </div>
+      <div>${p.rating}</div>
+    `;
+    d.onclick=()=>openModal(p);
+    list.appendChild(d);
+  });
+}
+
+/* MODAL */
+function openModal(p){
+  modal.style.display="flex";
+  mName.innerText=p.name;
+  mUid.innerText=p.uid;
+  mRating.innerText=p.rating;
+  mRank.innerText=p.rank;
+  mWins.innerText=p.wins;
+  mLosses.innerText=p.losses;
+  mSeason.innerText=p.seasonId || "-";
+}
+function closeModal(){modal.style.display="none"}
+</script>
+</body>
+</html>
