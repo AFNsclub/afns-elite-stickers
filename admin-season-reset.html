@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Season Reset | Admin</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{background:#050b1e;color:#fff;font-family:Segoe UI}
+.box{max-width:420px;margin:40px auto;padding:20px;background:#0b1622;border-radius:16px}
+button{width:100%;padding:14px;border-radius:10px;border:none;background:#ff6b6b;font-weight:700}
+.info{font-size:13px;color:#aaa;margin-top:10px}
+</style>
+</head>
+
+<body>
+<div class="box">
+<h2>♻️ Season Reset</h2>
+<p class="info">
+• Rating reset to 50<br>
+• Wins/Losses reset<br>
+• Match history SAFE<br>
+</p>
+<button onclick="resetSeason()">RESET SEASON</button>
+<div id="msg"></div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
+const db=firebase.firestore();
+
+async function resetSeason(){
+  if(!confirm("Are you sure? This will reset all players for new season.")) return;
+
+  msg.innerHTML="Processing...";
+
+  const seasonId=await getAutoSeason();
+
+  const players=await db.collection("players").get();
+  const batch=db.batch();
+
+  players.forEach(doc=>{
+    batch.update(doc.ref,{
+      rating:50,
+      wins:0,
+      losses:0,
+      rank:"Bronze 🟤",
+      seasonId
+    });
+  });
+
+  await batch.commit();
+  msg.innerHTML="✅ Season reset completed";
+}
+
+/* AUTO SEASON FUNCTION */
+async function getAutoSeason(){
+  const now=new Date();
+  const y=now.getFullYear();
+  const m=now.getMonth()+1;
+
+  let sid="";
+  if(m<=4) sid=`${y}-S1`;
+  else if(m<=8) sid=`${y}-S2`;
+  else sid=`${y}-S3`;
+
+  const ref=db.collection("seasons").doc(sid);
+  if(!(await ref.get()).exists){
+    const old=await db.collection("seasons").where("active","==",true).get();
+    old.forEach(d=>d.ref.update({active:false}));
+
+    await ref.set({active:true});
+  }
+  return sid;
+}
+</script>
+</body>
+</html>
