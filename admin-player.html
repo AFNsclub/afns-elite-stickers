@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Player Inspector</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{background:#050b1e;color:#fff;font-family:Arial}
+.card{background:#0b1622;padding:16px;border-radius:14px}
+</style>
+</head>
+<body>
+
+<h2>👤 Player Inspector</h2>
+<input id="uid" placeholder="Player UID">
+<button onclick="load()">Load</button>
+
+<div id="box"></div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  projectId:"afnsclub"
+});
+const db=firebase.firestore();
+
+async function load(){
+  const u=uid.value;
+  const p=await db.collection("players").doc(u).get();
+  if(!p.exists){box.innerText="Not found";return;}
+  const d=p.data();
+  box.innerHTML=`
+    <div class="card">
+      Name: ${d.name}<br>
+      Rating: ${d.rating}<br>
+      Season Rating: ${d.seasonRating}<br>
+      Matches: ${d.matches||0}
+    </div>`;
+}
+</script>
+</body>
+</html>
