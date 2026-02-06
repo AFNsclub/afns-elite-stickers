@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Edit Match | Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{background:#050b1e;color:#fff;font-family:Segoe UI,sans-serif}
+.container{max-width:760px;margin:auto;padding:20px}
+.card{
+  background:#0b1622;
+  border-radius:14px;
+  padding:14px;
+  margin-top:12px;
+}
+.win{border-left:5px solid #4cff8f}
+.loss{border-left:5px solid #ff6b6b}
+button{
+  margin-top:8px;
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:700;
+}
+.edit{background:#4f8cff;color:#fff}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h2 style="text-align:center;color:#4f8cff">✏️ Edit Match Result</h2>
+<div id="list"></div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
+const db=firebase.firestore();
+
+/* ===============================
+   LOAD MATCHES
+=============================== */
+db.collection("matches")
+.orderBy("time","desc")
+.onSnapshot(snap=>{
+  list.innerHTML="";
+  snap.forEach(doc=>{
+    const m=doc.data();
+    list.innerHTML+=`
+      <div class="card ${m.result}">
+        <b>${m.result.toUpperCase()}</b> vs ${m.opponent}<br>
+        Player UID: ${m.playerId}<br>
+        Score: ${m.score}<br>
+        <button class="edit" onclick="editMatch('${doc.id}')">
+          Switch Result
+        </button>
+      </div>
+    `;
+  });
+});
+
+/* ===============================
+   EDIT MATCH (SWITCH RESULT)
+=============================== */
+async function editMatch(id){
+  if(!confirm("Change match result?")) return;
+
+  const ref=db.collection("matches").doc(id);
+
+  await db.runTransaction(async(t)=>{
+    const mSnap=await t.get(ref);
+    if(!mSnap.exists) throw "Match missing";
+
+    const m=mSnap.data();
+    const playerRef=db.collection("players").doc(m.playerId);
+    const pSnap=await t.get(playerRef);
+    if(!pSnap.exists) throw "Player missing";
+
+    let p=pSnap.data();
+
+    // Undo old result
+    if(m.result==="win"){
+      p.rating=Math.max(50,p.rating-10);
+      p.wins--;
+      p.losses++;
+      m.result="loss";
+    }else{
+      p.rating+=10;
+      p.losses--;
+      p.wins++;
+      m.result="win";
+    }
+
+    t.update(playerRef,{
+      rating:p.rating,
+      wins:p.wins,
+      losses:p.losses,
+      rank:p.rank
+    });
+
+    t.update(ref,{
+      result:m.result,
+      editedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
+
+  alert("✅ Match updated");
+}
+</script>
+</body>
+</html>
