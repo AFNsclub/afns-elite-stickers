@@ -5,39 +5,105 @@
 <title>All Matches | Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
 body{
+  margin:0;
   background:#050b1e;
   color:#fff;
   font-family:Segoe UI,sans-serif;
 }
-.container{
-  max-width:720px;
-  margin:auto;
-  padding:20px;
+header{
+  padding:14px;
+  background:#0b1622;
+  text-align:center;
+  font-size:18px;
+  color:#4f8cff;
 }
-.card{
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:16px;
+}
+select{
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  margin-bottom:14px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
   background:#0b1622;
   border-radius:14px;
-  padding:14px;
-  margin-top:12px;
-  box-shadow:0 0 10px rgba(0,0,0,.4);
+  overflow:hidden;
 }
-.win{border-left:5px solid #4cff8f}
-.loss{border-left:5px solid #ff6b6b}
-.small{font-size:12px;color:#aaa}
-.uid{font-size:11px;color:#4f8cff}
-h2{text-align:center;color:#4f8cff}
+th,td{
+  padding:10px;
+  text-align:left;
+  font-size:13px;
+}
+th{
+  background:#081020;
+  color:#4f8cff;
+}
+tr:nth-child(even){background:rgba(255,255,255,.03)}
+.badge{
+  padding:4px 8px;
+  border-radius:8px;
+  font-size:11px;
+  font-weight:700;
+}
+.win{background:#1f8f5f}
+.loss{background:#8f1f1f}
+button{
+  background:#ff4f4f;
+  border:none;
+  color:#fff;
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+}
+button:hover{opacity:.8}
+.empty{
+  text-align:center;
+  opacity:.6;
+  padding:20px;
+}
 </style>
 </head>
 
 <body>
+
+<header>🧾 All Player Match History (Admin)</header>
+
 <div class="container">
-<h2>📊 All Players Match History</h2>
-<div id="list"></div>
+
+<select id="seasonFilter" onchange="loadMatches()">
+  <option value="all">All Seasons</option>
+</select>
+
+<table>
+<thead>
+<tr>
+  <th>Time</th>
+  <th>Player UID</th>
+  <th>Opponent</th>
+  <th>Result</th>
+  <th>Score</th>
+  <th>Season</th>
+  <th>Action</th>
+</tr>
+</thead>
+<tbody id="list"></tbody>
+</table>
+
+<div id="empty" class="empty" style="display:none">No matches found</div>
+
 </div>
 
 <script>
@@ -49,22 +115,87 @@ firebase.initializeApp({
 
 const db=firebase.firestore();
 
-db.collection("matches")
-  .orderBy("time","desc")
-  .onSnapshot(snap=>{
-    list.innerHTML="";
-    snap.forEach(doc=>{
-      const m=doc.data();
-      list.innerHTML+=`
-        <div class="card ${m.result}">
-          <b>${m.result.toUpperCase()}</b> — ${m.opponent}<br>
-          Score: ${m.score}<br>
-          <span class="uid">Player UID: ${m.playerId}</span><br>
-          <span class="small">${m.time?.toDate().toLocaleString()}</span>
-        </div>
-      `;
-    });
+/* ===============================
+   LOAD SEASONS
+=============================== */
+async function loadSeasons(){
+  const snap=await db.collection("seasons").orderBy("start","desc").get();
+  snap.forEach(d=>{
+    const o=document.createElement("option");
+    o.value=d.id;
+    o.textContent=d.data().name || d.id;
+    seasonFilter.appendChild(o);
   });
+}
+loadSeasons();
+
+/* ===============================
+   LOAD MATCHES
+=============================== */
+async function loadMatches(){
+  list.innerHTML="";
+  empty.style.display="none";
+
+  let q=db.collection("matches").orderBy("time","desc");
+  if(seasonFilter.value!=="all"){
+    q=q.where("seasonId","==",seasonFilter.value);
+  }
+
+  const snap=await q.get();
+  if(snap.empty){
+    empty.style.display="block";
+    return;
+  }
+
+  snap.forEach(doc=>{
+    const m=doc.data();
+    const tr=document.createElement("tr");
+
+    const time=m.time ? m.time.toDate().toLocaleString() : "-";
+    const resultClass=m.result==="win"?"win":"loss";
+
+    tr.innerHTML=`
+      <td>${time}</td>
+      <td>${m.playerId}</td>
+      <td>${m.opponent||"-"} </td>
+      <td><span class="badge ${resultClass}">${m.result.toUpperCase()}</span></td>
+      <td>${m.score||"-"}</td>
+      <td>${m.seasonId||"-"}</td>
+      <td>
+        ${m.editable!==false
+          ? `<button onclick="rollback('${doc.id}')">Rollback</button>`
+          : "-"
+        }
+      </td>
+    `;
+    list.appendChild(tr);
+  });
+}
+
+loadMatches();
+
+/* ===============================
+   ROLLBACK MATCH
+=============================== */
+async function rollback(matchId){
+  if(!confirm("Rollback this match?")) return;
+
+  const ref=db.collection("matches").doc(matchId);
+  const snap=await ref.get();
+  if(!snap.exists) return alert("Match not found");
+
+  const m=snap.data();
+  const pRef=db.collection("players").doc(m.playerId);
+
+  await db.runTransaction(async(t)=>{
+    t.update(pRef,m.before);
+    t.delete(ref);
+  });
+
+  alert("✅ Match rolled back");
+  loadMatches();
+}
 </script>
+
 </body>
 </html>
