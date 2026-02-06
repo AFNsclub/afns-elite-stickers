@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Notice Control</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  background:#050b1e;
+  color:#fff;
+  font-family:Segoe UI,sans-serif;
+}
+.container{
+  max-width:420px;
+  margin:50px auto;
+  background:#0b1622;
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 0 20px rgba(0,247,255,.3);
+}
+h2{
+  text-align:center;
+  color:#00f7ff;
+}
+textarea{
+  width:100%;
+  height:100px;
+  margin-top:14px;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  outline:none;
+  font-size:14px;
+}
+button{
+  width:100%;
+  margin-top:14px;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  background:#00f7ff;
+  font-weight:700;
+  cursor:pointer;
+}
+.success{color:#4cff8f;margin-top:10px}
+.error{color:#ff6b6b;margin-top:10px}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h2>🔔 Home Page Notice</h2>
+
+  <textarea id="noticeText" placeholder="Write notice here..."></textarea>
+  <button onclick="saveNotice()">Save Notice</button>
+
+  <div id="msg"></div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
+const db = firebase.firestore();
+const ref = db.collection("notices").doc("home");
+
+// Load existing notice
+ref.get().then(doc=>{
+  if(doc.exists){
+    noticeText.value = doc.data().text;
+  }
+});
+
+function saveNotice(){
+  const text = noticeText.value.trim();
+  if(!text){
+    msg.innerHTML="<div class='error'>Notice empty ❌</div>";
+    return;
+  }
+
+  ref.set({
+    text,
+    updated: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>{
+    msg.innerHTML="<div class='success'>✅ Notice Updated</div>";
+  });
+}
+</script>
+</body>
+  </html>
