@@ -25,17 +25,23 @@ body{
   padding:14px;
   border-radius:14px;
   margin-top:12px;
+  box-shadow:0 0 10px rgba(0,0,0,.4);
 }
 .win{border-left:5px solid #4cff8f}
 .loss{border-left:5px solid #ff6b6b}
-.small{font-size:12px;color:#aaa}
+.small{font-size:12px;color:#aaa;margin-top:4px}
+.empty{
+  text-align:center;
+  opacity:.6;
+  margin-top:40px;
+}
 </style>
 </head>
 
 <body>
 <div class="container">
-<h2>📜 Match History</h2>
-<div id="list"></div>
+  <h2>📜 Match History</h2>
+  <div id="list"></div>
 </div>
 
 <script>
@@ -45,31 +51,40 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const auth=firebase.auth(),db=firebase.firestore();
+const auth=firebase.auth(), db=firebase.firestore();
 
 auth.onAuthStateChanged(user=>{
-  if(!user){location.href="login.html";return;}
-  loadMatches(user.uid);
-});
+  if(!user){
+    location.href="login.html";
+    return;
+  }
 
-function loadMatches(uid){
   db.collection("matches")
-    .where("playerId","==",uid)
+    .where("playerId","==",user.uid)
     .orderBy("time","desc")
     .onSnapshot(snap=>{
       list.innerHTML="";
+
+      if(snap.empty){
+        list.innerHTML=`<div class="empty">No matches played yet</div>`;
+        return;
+      }
+
       snap.forEach(d=>{
         const m=d.data();
         list.innerHTML+=`
           <div class="card ${m.result}">
             <b>${m.result.toUpperCase()}</b> vs ${m.opponent}<br>
-            Score: ${m.score}<br>
-            <span class="small">${m.time?.toDate().toLocaleString()}</span>
+            Score: ${m.score}
+            ${m.season ? `<div class="small">Season: ${m.season}</div>` : ``}
+            <div class="small">
+              ${m.time?.toDate().toLocaleString()}
+            </div>
           </div>
         `;
       });
     });
-}
+});
 </script>
 </body>
 </html>
