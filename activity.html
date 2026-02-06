@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Activity Log</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{background:#050b1e;color:#fff;font-family:Arial}
+.log{background:#0b1622;padding:12px;margin:8px;border-radius:10px}
+</style>
+</head>
+<body>
+
+<h2>🧾 Activity Log</h2>
+<div id="logs"></div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  projectId:"afnsclub"
+});
+const db=firebase.firestore();
+
+db.collection("activity").orderBy("time","desc").onSnapshot(s=>{
+  logs.innerHTML="";
+  s.forEach(d=>{
+    const a=d.data();
+    logs.innerHTML+=`
+      <div class="log">
+        ${a.text}<br>
+        <small>${new Date(a.time).toLocaleString()}</small>
+      </div>`;
+  });
+});
+</script>
+</body>
+</html>
