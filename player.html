@@ -32,6 +32,7 @@ header{text-align:center;margin-bottom:26px}
 header img{width:90px;filter:drop-shadow(0 0 18px rgba(255,215,0,.6))}
 #profileTitle{color:var(--gold);font-size:26px;margin-top:12px}
 .subtitle{color:var(--neon);font-size:13px}
+
 .card{
   background:var(--card-bg);
   border-radius:18px;
@@ -39,6 +40,7 @@ header img{width:90px;filter:drop-shadow(0 0 18px rgba(255,215,0,.6))}
   backdrop-filter:blur(8px);
   box-shadow:0 0 22px rgba(0,234,255,.18);
 }
+
 .info-row{
   background:rgba(255,255,255,.05);
   border-radius:14px;
@@ -52,6 +54,37 @@ header img{width:90px;filter:drop-shadow(0 0 18px rgba(255,215,0,.6))}
 .info-text{display:flex;flex-direction:column}
 .info-label{font-size:11px;color:#9aa}
 .info-value{font-size:15px;font-weight:700}
+
+/* NAME + RANK */
+.player-name-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* RANK BADGE */
+.rank-badge{
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:900;
+  animation:rankPulse 2s infinite;
+}
+.rank-bronze{background:#6d4c41}
+.rank-silver{background:#b0bec5;color:#000}
+.rank-gold{background:#ffd400;color:#000}
+.rank-platinum{background:#4fc3f7;color:#001}
+.rank-legend{
+  background:linear-gradient(145deg,#ff1744,#ff9100);
+  box-shadow:0 0 12px rgba(255,87,34,.9);
+}
+
+@keyframes rankPulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.08)}
+  100%{transform:scale(1)}
+}
+
 .fb-row{margin-top:12px}
 .fb-btn{
   width:100%;
@@ -67,7 +100,14 @@ header img{width:90px;filter:drop-shadow(0 0 18px rgba(255,215,0,.6))}
   gap:12px;
   cursor:pointer;
 }
-.stats{display:flex;justify-content:space-between;margin:18px 4px 6px;font-size:14px}
+
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin:18px 4px 6px;
+  font-size:14px;
+}
+
 button{
   width:100%;
   padding:14px;
@@ -78,8 +118,14 @@ button{
   font-weight:900;
   cursor:pointer;
 }
-button.secondary{background:#1b1f26;color:#fff}
-input{width:100%;padding:12px;border-radius:10px;border:none;font-size:15px}
+button.secondary{background:#1b1f26}
+
+input{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+}
 .hidden{display:none}
 .error{color:#ff6b6b;font-size:13px;margin-top:10px}
 .success{color:#4cff8f;font-size:13px;margin-top:10px}
@@ -96,14 +142,16 @@ input{width:100%;padding:12px;border-radius:10px;border:none;font-size:15px}
 </header>
 
 <div class="card">
-
 <div id="viewBox">
 
   <div class="info-row">
     <div class="info-icon">👤</div>
     <div class="info-text">
       <span class="info-label">Player Name</span>
-      <span class="info-value" id="v_username"></span>
+      <div class="player-name-row">
+        <span class="info-value" id="v_username"></span>
+        <span id="rankBadge" class="rank-badge hidden"></span>
+      </div>
     </div>
   </div>
 
@@ -130,16 +178,8 @@ input{width:100%;padding:12px;border-radius:10px;border:none;font-size:15px}
   <div class="info-row">
     <div class="info-icon">🎮</div>
     <div class="info-text">
-      <span class="info-label">Game / Owner ID</span>
+      <span class="info-label">Game ID</span>
       <span class="info-value" id="v_gameId"></span>
-    </div>
-  </div>
-
-  <div class="info-row">
-    <div class="info-icon">📱</div>
-    <div class="info-text">
-      <span class="info-label">Device</span>
-      <span class="info-value" id="v_device"></span>
     </div>
   </div>
 
@@ -149,17 +189,16 @@ input{width:100%;padding:12px;border-radius:10px;border:none;font-size:15px}
     <div>❌ <span id="losses">0</span></div>
   </div>
 
-  <button onclick="location.href='match-history.html'">📜 View Match History</button>
+  <button onclick="location.href='match-history.html'">📜 Match History</button>
   <button onclick="toggleEdit(true)">✏️ Edit Profile</button>
   <button class="secondary" onclick="logout()">Logout</button>
 </div>
 
 <div id="editBox" class="hidden">
-  <div class="info-row"><input id="phone" placeholder="Phone"></div>
-  <div class="info-row"><input id="facebook" placeholder="Facebook link"></div>
-  <div class="info-row"><input id="gameId" placeholder="Game ID"></div>
-  <div class="info-row"><input id="device" placeholder="Device"></div>
-  <button onclick="saveProfile()">Save Changes</button>
+  <input id="phone" placeholder="Phone">
+  <input id="facebook" placeholder="Facebook link">
+  <input id="gameId" placeholder="Game ID">
+  <button onclick="saveProfile()">Save</button>
   <button class="secondary" onclick="toggleEdit(false)">Cancel</button>
 </div>
 
@@ -173,32 +212,16 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const auth=firebase.auth(), db=firebase.firestore();
-let uid, fbLink="";
+const auth=firebase.auth(),db=firebase.firestore();
+let uid,fbLink="";
 
-/* ===============================
-   AUTO RATING + RANK SYSTEM
-=============================== */
 function getRank(r){
-  if(r >= 200) return "Legend 🔥";
-  if(r >= 150) return "Platinum 🔵";
-  if(r >= 100) return "Gold 🟡";
-  if(r >= 50)  return "Silver ⚪";
-  return "Bronze 🟤";
+  if(r>=200) return {n:"LEGEND",c:"rank-legend",i:"🔥"};
+  if(r>=150) return {n:"PLATINUM",c:"rank-platinum",i:"🔵"};
+  if(r>=100) return {n:"GOLD",c:"rank-gold",i:"🟡"};
+  if(r>=50) return {n:"SILVER",c:"rank-silver",i:"⚪"};
+  return {n:"BRONZE",c:"rank-bronze",i:"🟤"};
 }
-
-function applyResult(uid,result){
-  const ref=db.collection("players").doc(uid);
-  db.runTransaction(async(t)=>{
-    const s=await t.get(ref);
-    const d=s.data();
-    let rating=d.rating||0,wins=d.wins||0,losses=d.losses||0;
-    if(result==="win"){rating+=10;wins++;}
-    else{rating=Math.max(0,rating-5);losses++;}
-    t.update(ref,{rating,wins,losses,rank:getRank(rating)});
-  });
-}
-/* =============================== */
 
 auth.onAuthStateChanged(user=>{
   if(!user){location.replace("login.html");return;}
@@ -206,35 +229,34 @@ auth.onAuthStateChanged(user=>{
   v_email.innerText=user.email;
 
   db.collection("players").doc(uid).onSnapshot(doc=>{
-    if(!doc.exists) return;
     const d=doc.data();
-    profileTitle.innerText=(d.username||"My")+"’s Profile";
     v_username.innerText=d.username||"—";
     v_phone.innerText=d.phone||"—";
     v_gameId.innerText=d.gameId||"—";
-    v_device.innerText=d.device||"—";
-    fbLink=d.facebook||"";
-    fbBtn.style.display=fbLink?"flex":"none";
     rating.innerText=d.rating||0;
     wins.innerText=d.wins||0;
     losses.innerText=d.losses||0;
+
+    const r=getRank(d.rating||0);
+    rankBadge.className="rank-badge "+r.c;
+    rankBadge.innerText=`${r.i} ${r.n}`;
+    rankBadge.classList.remove("hidden");
+
+    fbLink=d.facebook||"";
+    fbBtn.style.display=fbLink?"flex":"none";
   });
 });
 
-function openFacebook(){if(fbLink)window.open(fbLink,"_blank");}
-function toggleEdit(e){viewBox.classList.toggle("hidden",e);editBox.classList.toggle("hidden",!e);}
+function openFacebook(){if(fbLink)window.open(fbLink,"_blank")}
+function toggleEdit(e){viewBox.classList.toggle("hidden",e);editBox.classList.toggle("hidden",!e)}
 function saveProfile(){
-  if(!/^(\+8801|01)[0-9]{9}$/.test(phone.value.trim())){
-    msg.innerHTML='<div class="error">❌ ভ্যালিড বাংলাদেশ নাম্বার দিন</div>';return;
-  }
   db.collection("players").doc(uid).update({
-    phone:phone.value.trim(),
-    facebook:facebook.value.trim(),
-    gameId:gameId.value.trim(),
-    device:device.value.trim()
-  }).then(()=>{msg.innerHTML='<div class="success">✅ Profile updated</div>';toggleEdit(false);});
+    phone:phone.value,
+    facebook:facebook.value,
+    gameId:gameId.value
+  }).then(()=>msg.innerHTML="<div class='success'>Updated</div>");
 }
-function logout(){auth.signOut().then(()=>location.replace("login.html"));}
+function logout(){auth.signOut().then(()=>location.replace("login.html"))}
 </script>
 
 </body>
