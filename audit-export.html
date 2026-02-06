@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Audit Export</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body{background:#050b1e;color:#fff;font-family:Segoe UI}
+.box{max-width:520px;margin:40px auto;background:#0b1622;padding:20px;border-radius:16px}
+button{width:100%;padding:14px;background:#4f8cff;border:none;border-radius:10px}
+</style>
+</head>
+
+<body>
+<div class="box">
+<h2>📄 Audit PDF Export</h2>
+<button onclick="exportPDF()">Generate PDF</button>
+</div>
+
+<script>
+firebase.initializeApp({
+ apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+ authDomain:"afnsclub.firebaseapp.com",
+ projectId:"afnsclub"
+});
+const db=firebase.firestore();
+
+async function exportPDF(){
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF();
+
+  let y=10;
+  pdf.text("AFNS ADMIN AUDIT REPORT",10,y); y+=10;
+
+  const logs=await db.collection("activity")
+    .orderBy("time","desc").limit(50).get();
+
+  logs.forEach(d=>{
+    const a=d.data();
+    pdf.text(
+      `${a.type} | ${a.admin} | ${a.details}`,
+      10,y
+    );
+    y+=8;
+  });
+
+  pdf.save("AFNS_AUDIT_REPORT.pdf");
+}
+</script>
+</body>
+</html>
