@@ -2,74 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin – Player Control</title>
+<title>Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-body{
-  margin:0;
-  background:radial-gradient(circle at top,#0a1a4a,#050b1e 70%);
-  color:#fff;
-}
-.header{
-  padding:14px 18px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:linear-gradient(180deg,#070f2a,#050b1e);
-}
-.header img{height:34px}
-.header button{
-  background:#ff4d4d;
-  border:none;
-  color:#fff;
-  padding:8px 16px;
-  border-radius:8px;
-  cursor:pointer;
-}
-.container{
-  max-width:1100px;
-  margin:auto;
-  padding:18px;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:rgba(255,255,255,.05);
-  border-radius:14px;
-  overflow:hidden;
-}
-th,td{
-  padding:12px;
-  font-size:14px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-  text-align:center;
-}
-th{background:rgba(255,255,255,.08)}
-tr:hover{background:rgba(255,255,255,.06)}
-button.action{
-  padding:6px 10px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:13px;
-}
-.ban{background:#f59e0b;color:#000}
-.unban{background:#22c55e;color:#000}
-.del{background:#ef4444;color:#fff}
-footer{
-  text-align:center;
-  font-size:12px;
-  opacity:.5;
-  margin:24px 0 12px;
-}
-</style>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- ===== FIREBASE ===== -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -77,117 +16,192 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
+const auth = firebase.auth();
+const db   = firebase.firestore();
 </script>
+
+<style>
+/* ===== SAME UI (UNCHANGED) ===== */
+:root{
+  --bg:#050b1e;
+  --card:#0b1622;
+  --accent:#4f8cff;
+  --accent-glow:0 0 12px rgba(79,140,255,.6);
+  --text:#ffffff;
+  --muted:rgba(255,255,255,.6);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:radial-gradient(circle at top,#0a1a4a 0%,#050b1e 60%);
+  color:var(--text);
+}
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 16px;
+  background:linear-gradient(180deg,#070f2a,#050b1e);
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{height:36px}
+.logout{
+  border:1px solid var(--accent);
+  background:none;
+  color:var(--accent);
+  padding:6px 14px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.container{max-width:1100px;margin:auto;padding:18px}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:16px;
+}
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 12px 30px rgba(0,0,0,.5);
+  cursor:pointer;
+}
+.stats{
+  margin-top:22px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:14px;
+}
+.stat{
+  background:rgba(255,255,255,.05);
+  border-radius:16px;
+  padding:16px;
+  text-align:center;
+}
+.stat span{
+  display:block;
+  font-size:24px;
+  font-weight:bold;
+  color:var(--accent);
+}
+.footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.5;
+  margin:26px 0 12px;
+}
+
+/* ===== PLAYER CONTROL ===== */
+.players{
+  margin-top:30px;
+}
+.player{
+  background:rgba(255,255,255,.04);
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:12px;
+}
+.player b{color:#60a5fa}
+.player button{
+  margin-top:8px;
+  margin-right:6px;
+  padding:6px 10px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+.ban{background:#f59e0b}
+.del{background:#ef4444;color:#fff}
+</style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-  <div>
-    <img src="logo.png"> Admin Control
+  <div class="brand">
+    <img src="logo.png">
+    <span>Admin Dashboard</span>
   </div>
-  <button onclick="logout()">Logout</button>
+  <button class="logout" onclick="logout()">Logout</button>
 </div>
 
 <div class="container">
-  <h2>Players</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Game ID</th>
-        <th>Wins</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="rows"></tbody>
-  </table>
+  <!-- DASHBOARD -->
+  <div class="grid">
+    <div class="card">🏆 Tournament</div>
+    <div class="card">⚔️ PvP Match</div>
+    <div class="card">📊 Ranking</div>
+    <div class="card">👑 Champion</div>
+  </div>
 
-  <footer>
-    AFNs Elite Striker |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
-      SI Shohan
-    </a>
-  </footer>
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat"><span id="playersCount">0</span>Players</div>
+    <div class="stat"><span>OK</span>System</div>
+  </div>
+
+  <!-- ===== PLAYER MANAGEMENT (ADDED) ===== -->
+  <div class="players">
+    <h3>Player Control</h3>
+    <div id="playerList"></div>
+  </div>
+
+  <div class="footer">
+    AFNs Elite Striker | <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI Shohan</a>
+  </div>
+
 </div>
 
 <script>
-const auth=firebase.auth();
-const db=firebase.firestore();
-const rows=document.getElementById("rows");
+const ADMIN_EMAIL = "admin@gmail.com";
 
-/* ===== AUTH PROTECT ===== */
-auth.onAuthStateChanged(u=>{
-  if(!u) location.href="admin-login.html";
-});
+auth.onAuthStateChanged(user=>{
+  if(!user || user.email !== ADMIN_EMAIL){
+    location.href="login.html";
+    return;
+  }
 
-/* ===== LOAD PLAYERS ===== */
-db.collection("players").onSnapshot(snap=>{
-  rows.innerHTML="";
-  snap.forEach(doc=>{
-    const d=doc.data();
-    const tr=document.createElement("tr");
+  db.collection("players").onSnapshot(snap=>{
+    playerList.innerHTML="";
+    playersCount.innerText = snap.size;
 
-    let status="Active";
-    if(d.banned){
-      if(d.banUntil){
-        const days=Math.max(
-          0,
-          Math.floor((d.banUntil.toDate()-new Date())/86400000)
-        );
-        status=`Banned (${days}d)`;
-      }else status="Banned";
-    }
+    snap.forEach(doc=>{
+      const p = doc.data();
+      let banInfo = "";
+      if(p.banned && p.banUntil){
+        const days = Math.ceil((p.banUntil - Date.now())/86400000);
+        banInfo = `<br>⛔ Banned (${days} day left)`;
+      }
 
-    tr.innerHTML=`
-      <td>${d.name||"Player"}</td>
-      <td>${d.gameId||"—"}</td>
-      <td>${d.wins||0}</td>
-      <td>${status}</td>
-      <td>
-        ${
-          d.banned
-          ? `<button class="action unban" onclick="unban('${doc.id}')">Unban</button>`
-          : `<button class="action ban" onclick="ban('${doc.id}')">Ban</button>`
-        }
-        <button class="action del" onclick="delPlayer('${doc.id}')">Delete</button>
-      </td>
-    `;
-    rows.appendChild(tr);
+      playerList.innerHTML += `
+      <div class="player">
+        <b>${p.name}</b><br>${p.email}${banInfo}<br>
+        <button class="ban" onclick="ban('${p.uid}',7)">Ban 7d</button>
+        <button class="ban" onclick="ban('${p.uid}',30)">Ban 30d</button>
+        <button class="del" onclick="del('${p.uid}')">Delete</button>
+      </div>`;
+    });
   });
 });
 
-/* ===== ACTIONS ===== */
-function ban(uid){
-  const days=parseInt(prompt("Ban for how many days?", "3"));
-  if(!days||days<=0) return;
-  const until=new Date();
-  until.setDate(until.getDate()+days);
+function ban(uid,days){
   db.collection("players").doc(uid).update({
     banned:true,
-    banUntil:firebase.firestore.Timestamp.fromDate(until)
+    banUntil:Date.now() + days*86400000
   });
 }
 
-function unban(uid){
-  if(!confirm("Unban this player?")) return;
-  db.collection("players").doc(uid).update({
-    banned:false,
-    banUntil:null
-  });
-}
-
-function delPlayer(uid){
-  if(!confirm("DELETE player permanently?")) return;
-  db.collection("players").doc(uid).delete();
+function del(uid){
+  if(confirm("Delete player permanently?")){
+    db.collection("players").doc(uid).delete();
+  }
 }
 
 function logout(){
-  auth.signOut().then(()=>{
-    location.href="admin-login.html";
-  });
+  auth.signOut().then(()=>location.href="login.html");
 }
 </script>
 
