@@ -5,7 +5,6 @@
 <title>AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -25,62 +24,55 @@ body{
   display:flex;
   justify-content:center;
 }
-.container{width:100%;max-width:430px;padding:18px;text-align:center}
+.container{
+  width:100%;
+  max-width:430px;
+  padding:18px;
+  text-align:center;
+}
 .logo img{
-  width:130px;margin:12px 0;
+  width:130px;
+  margin:12px 0;
   filter:drop-shadow(0 0 25px rgba(255,215,0,.7));
 }
-h1{color:var(--gold);font-size:30px}
+h1{color:var(--gold);font-size:30px;letter-spacing:1px}
 .tagline{color:var(--neon);font-size:14px;margin:6px 0 16px}
 
-/* NOTICE */
 .notice{
   background:linear-gradient(145deg,#061b2a,#021019);
   border-radius:16px;
   padding:14px;
   margin-bottom:14px;
   box-shadow:0 0 20px rgba(0,247,255,.35);
+  animation:pulse 3s infinite;
 }
 .notice span{color:var(--neon);font-weight:700;font-size:14px}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 16px rgba(0,247,255,.3)}
+  50%{box-shadow:0 0 30px rgba(0,247,255,.6)}
+}
 
-/* SEASON */
 .season{
   background:linear-gradient(145deg,#1a1405,#0b0702);
   border-radius:16px;
   padding:12px;
-  margin-bottom:16px;
+  margin-bottom:18px;
   box-shadow:0 0 20px rgba(255,212,0,.35);
   color:var(--gold);
   font-weight:700;
   font-size:14px;
 }
 
-/* TOP 3 */
-.top{
-  background:var(--glass);
-  border-radius:16px;
-  padding:14px;
-  margin-bottom:18px;
-}
-.top h3{margin-bottom:10px;color:var(--gold)}
-.player{
-  font-size:14px;
-  padding:6px;
-  border-bottom:1px solid rgba(255,255,255,.1);
-}
-.player:last-child{border:none}
-
-/* ABOUT */
 .about{
   background:var(--glass);
   border-radius:16px;
   padding:16px;
   margin-bottom:20px;
+  backdrop-filter:blur(6px);
 }
 .about h2{font-size:18px;margin-bottom:8px}
 .about p{font-size:14px;line-height:1.6;color:#ddd}
 
-/* MENU */
 .menu{display:flex;flex-direction:column;gap:12px}
 .menu a{
   text-decoration:none;
@@ -89,14 +81,21 @@ h1{color:var(--gold);font-size:30px}
   background:linear-gradient(145deg,#061726,#020c14);
   color:var(--neon);
   font-weight:700;
+  letter-spacing:.4px;
+  position:relative;
+  overflow:hidden;
+  transition:.25s;
 }
 .menu a:hover{
   transform:scale(1.05);
   box-shadow:0 0 20px rgba(0,247,255,.5);
 }
 
-/* FOOTER */
-footer{margin-top:24px;font-size:12px;color:#aaa}
+footer{
+  margin-top:24px;
+  font-size:12px;
+  color:#aaa;
+}
 footer a{color:var(--neon);text-decoration:none;font-weight:700}
 </style>
 </head>
@@ -108,27 +107,20 @@ footer a{color:var(--neon);text-decoration:none;font-weight:700}
     <img src="logo.png" alt="AFN Logo">
   </div>
 
-  <h1>AFN's Elite Strikers</h1>
-  <div class="tagline">Play Smart. Play Elite. Play AFN.</div>
+  <h1 id="clubName">AFN</h1>
+  <div class="tagline" id="tagline"></div>
 
   <div class="notice">
-    <span id="noticeText">Loading notice...</span>
+    <span id="noticeText">Loading...</span>
   </div>
 
-  <div class="season" id="seasonBox">
-    Loading season...
-  </div>
-
-  <div class="top">
-    <h3>🏆 Top 3 Players</h3>
-    <div id="topPlayers">Loading...</div>
-  </div>
+  <div class="season" id="seasonText"></div>
 
   <div class="about">
     <h2>আমাদের ক্লাব</h2>
     <p>
-      AFN's Elite Strikers শুধুই একটি ক্লাব না — এটা একটি mindset।
-      এখানে খেলোয়াড় তৈরি হয় চ্যাম্পিয়ন হওয়ার জন্য।
+      AFN's Elite Strikers শুধুই একটি ক্লাব না —
+      এটা একটি mindset। এখানে খেলোয়াড় তৈরি হয় চ্যাম্পিয়ন হওয়ার জন্য।
     </p>
   </div>
 
@@ -139,49 +131,34 @@ footer a{color:var(--neon);text-decoration:none;font-weight:700}
   </div>
 
   <footer>
-    © 2026 AFN's Elite Strikers |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI SHOHAN</a>
+    © <span id="year"></span> AFN's Elite Strikers |
+    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
+      SI SHOHAN
+    </a>
   </footer>
 
 </div>
 
 <script>
-/* 🔥 Firebase Init */
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
-const db=firebase.firestore();
 
-/* 🔔 Live Notice */
-db.collection("notices").doc("home").onSnapshot(d=>{
-  if(d.exists) noticeText.textContent=d.data().text;
+const db = firebase.firestore();
+
+db.collection("siteConfig").doc("home")
+.onSnapshot(doc=>{
+  if(!doc.exists) return;
+  const d = doc.data();
+
+  clubName.textContent = d.clubName;
+  tagline.textContent = d.tagline;
+  noticeText.textContent = d.notice;
+  seasonText.textContent = d.seasonText;
+  year.textContent = d.year;
 });
-
-/* 🏟️ Active Season */
-db.collection("seasons").where("active","==",true).limit(1)
-.onSnapshot(s=>{
-  if(!s.empty){
-    const d=s.docs[0].data();
-    seasonBox.textContent=`🏟️ ${d.name} • Ongoing • Rankings Live`;
-  }
-});
-
-/* 🏆 Top 3 Players */
-db.collection("players")
-  .orderBy("rating","desc")
-  .limit(3)
-  .onSnapshot(s=>{
-    topPlayers.innerHTML="";
-    s.forEach((d,i)=>{
-      const p=d.data();
-      topPlayers.innerHTML+=`
-        <div class="player">
-          ${i+1}. ${p.name||"Player"} — ⭐ ${p.rating}
-        </div>`;
-    });
-  });
 </script>
 
 </body>
