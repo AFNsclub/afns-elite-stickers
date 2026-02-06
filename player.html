@@ -50,7 +50,7 @@ header img{
   box-shadow:0 0 18px rgba(0,247,255,.25);
 }
 
-/* INFO DESIGN */
+/* INFO ROW */
 .info-row{
   background:rgba(255,255,255,.05);
   border-radius:14px;
@@ -68,14 +68,20 @@ header img{
   font-size:15px;
   font-weight:700;
 }
-.info-link{
+
+/* FACEBOOK BUTTON */
+.fb-btn{
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:12px;
+  background:linear-gradient(135deg,#1877f2,#0a58ca);
+  color:#fff;
   font-size:14px;
   font-weight:700;
-  color:var(--neon);
   text-decoration:none;
-  word-break:break-all;
+  width:max-content;
 }
-.info-link:hover{text-decoration:underline}
+.fb-btn:hover{opacity:.85}
 
 .stats{
   display:flex;
@@ -89,7 +95,6 @@ input{
   padding:12px;
   border-radius:10px;
   border:none;
-  margin-top:6px;
   font-size:15px;
 }
 
@@ -126,6 +131,11 @@ button.secondary{background:#222;color:#fff}
 <div id="viewBox">
 
   <div class="info-row">
+    <span class="info-label">Player Name</span>
+    <span class="info-value" id="v_username"></span>
+  </div>
+
+  <div class="info-row">
     <span class="info-label">Email</span>
     <span class="info-value" id="v_email"></span>
   </div>
@@ -137,7 +147,9 @@ button.secondary{background:#222;color:#fff}
 
   <div class="info-row">
     <span class="info-label">Facebook</span>
-    <a id="v_facebook" class="info-link" target="_blank">—</a>
+    <a id="v_facebook" class="fb-btn" target="_blank">
+      🔵 View Facebook Profile
+    </a>
   </div>
 
   <div class="info-row">
@@ -162,6 +174,7 @@ button.secondary{background:#222;color:#fff}
 
 <!-- EDIT MODE -->
 <div id="editBox" class="hidden">
+
   <div class="info-row">
     <span class="info-label">Phone</span>
     <input id="phone">
@@ -208,28 +221,28 @@ auth.onAuthStateChanged(user=>{
   db.collection("players").doc(uid).onSnapshot(doc=>{
     const d=doc.data(); if(!d)return;
 
-    profileTitle.innerText=(d.username||"My")+"’s Profile";
+    v_username.innerText = d.username || "—";
+    profileTitle.innerText = (d.username || "Player") + "’s Profile";
 
-    v_phone.innerText=d.phone||"—";
-    v_gameId.innerText=d.gameId||"—";
-    v_device.innerText=d.device||"—";
+    v_phone.innerText = d.phone || "—";
+    v_gameId.innerText = d.gameId || "—";
+    v_device.innerText = d.device || "—";
 
     if(d.facebook){
-      v_facebook.innerText=d.facebook;
-      v_facebook.href=d.facebook;
+      v_facebook.href = d.facebook;
+      v_facebook.style.display="inline-block";
     }else{
-      v_facebook.innerText="—";
-      v_facebook.removeAttribute("href");
+      v_facebook.style.display="none";
     }
 
-    phone.value=d.phone||"";
-    facebook.value=d.facebook||"";
-    gameId.value=d.gameId||"";
-    device.value=d.device||"";
+    phone.value = d.phone || "";
+    facebook.value = d.facebook || "";
+    gameId.value = d.gameId || "";
+    device.value = d.device || "";
 
-    rating.innerText=d.rating||0;
-    wins.innerText=d.wins||0;
-    losses.innerText=d.losses||0;
+    rating.innerText = d.rating || 0;
+    wins.innerText = d.wins || 0;
+    losses.innerText = d.losses || 0;
   });
 });
 
