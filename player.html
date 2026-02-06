@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>My Profile | AFNs Elite Strikers</title>
+<title>Player Profile | AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase -->
@@ -12,211 +12,164 @@
 
 <style>
 :root{
-  --bg:#071520;
-  --card:#0e2230;
-  --accent:#00f5ff;
-  --gold:#ffd700;
-  --text:#eaf6ff;
+  --neon:#00f7ff;
+  --gold:#ffd400;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
 }
-
-*{box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
 
 body{
-  margin:0;
-  background:radial-gradient(circle at top,#0a2a3f,#050d14);
-  color:var(--text);
+  min-height:100vh;
+  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
+  color:#fff;
 }
 
-/* ===== HEADER ===== */
-.header{
+.container{
+  max-width:460px;
+  margin:auto;
+  padding:20px;
+}
+
+header{
   text-align:center;
-  padding:25px 15px 15px;
-}
-.header h1{
-  margin:0;
-  color:var(--gold);
-  font-size:32px;
-}
-.header p{
-  margin:5px 0 0;
-  color:#7de9ff;
+  margin-bottom:20px;
 }
 
-/* ===== MOTIVATION ===== */
-.motivation{
-  margin:15px;
-  padding:14px;
-  background:linear-gradient(135deg,#0d3b52,#081e2b);
-  border-radius:14px;
-  text-align:center;
-  font-weight:600;
-  color:#bff6ff;
-  box-shadow:0 0 25px rgba(0,245,255,.15);
+header img{
+  width:90px;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
 }
 
-/* ===== CARD ===== */
+h1{color:var(--gold);margin:8px 0}
+.subtitle{color:var(--neon);font-size:13px}
+
 .card{
-  margin:15px;
-  background:linear-gradient(180deg,#0f2636,#091824);
+  background:rgba(255,255,255,.06);
   border-radius:18px;
   padding:18px;
-  box-shadow:0 15px 40px rgba(0,0,0,.6);
+  margin-bottom:18px;
+  backdrop-filter:blur(6px);
+  box-shadow:0 0 18px rgba(0,247,255,.25);
 }
 
-/* ===== PROFILE TOP ===== */
-.profile-top{
-  text-align:center;
-}
-.avatar{
-  width:90px;
-  height:90px;
-  border-radius:50%;
-  background:#123;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:38px;
-  color:var(--gold);
-  margin:0 auto 10px;
-}
-.name{
-  font-size:22px;
-  font-weight:700;
-}
-.email{
-  font-size:14px;
-  opacity:.8;
-}
+.label{font-size:12px;color:#aaa;margin-top:12px}
+.value{font-size:15px;font-weight:700;color:#fff}
 
-/* ===== INPUTS ===== */
-label{
-  font-size:13px;
-  opacity:.85;
-}
 input{
   width:100%;
-  margin:6px 0 14px;
-  padding:14px;
-  border-radius:12px;
+  padding:12px;
+  border-radius:10px;
   border:none;
-  outline:none;
-  background:#f8fcff;
+  margin-top:6px;
   font-size:15px;
 }
 
-/* ===== STATS ===== */
-.stats{
-  display:flex;
-  gap:10px;
-  margin-top:10px;
-}
-.stat{
-  flex:1;
-  background:#0a1f2c;
-  padding:12px;
-  border-radius:14px;
-  text-align:center;
-}
-.stat span{
-  display:block;
-  margin-top:5px;
-}
-
-/* ===== BUTTONS ===== */
-.btn{
+button{
   width:100%;
-  padding:15px;
+  padding:14px;
+  margin-top:16px;
   border:none;
-  border-radius:14px;
-  font-size:17px;
-  font-weight:700;
-  margin-top:12px;
+  border-radius:12px;
+  background:linear-gradient(145deg,#00f7ff,#008cff);
+  color:#000;
+  font-weight:900;
   cursor:pointer;
 }
-.save{
-  background:linear-gradient(135deg,#00f5ff,#00bcd4);
-}
-.logout{
+
+button.secondary{
   background:#222;
   color:#fff;
 }
 
-/* ===== FOOTER ===== */
-.global-footer{
-  margin-top:30px;
-  padding:15px 10px;
-  text-align:center;
-  background:#050d14;
-}
-.footer-logo{
-  width:45px;
-  margin-bottom:6px;
-}
-.footer-text{
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:14px;
   font-size:13px;
 }
-.footer-text a{
-  color:#00f5ff;
-  text-decoration:none;
-}
 
-/* ===== RESPONSIVE ===== */
-@media(min-width:768px){
-  body{max-width:420px;margin:auto}
+.error{color:#ff6b6b;font-size:13px;margin-top:10px}
+.success{color:#4cff8f;font-size:13px;margin-top:10px}
+
+/* FOOTER */
+.global-footer{
+  margin-top:30px;
+  padding:16px 0;
+  text-align:center;
+}
+.footer-inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+.footer-logo{width:42px}
+.footer-text{font-size:12px;color:#aaa}
+.footer-text a{
+  color:var(--neon);
+  text-decoration:none;
+  font-weight:700;
 }
 </style>
 </head>
 
 <body>
+<div class="container">
 
-<div class="header">
+<header>
+  <img src="logo.png">
   <h1>My Profile</h1>
-  <p>AFN's Elite Strikers</p>
-</div>
-
-<div class="motivation" id="motivationBox"></div>
+  <div class="subtitle">AFN's Elite Strikers</div>
+</header>
 
 <div class="card">
-  <div class="profile-top">
-    <div class="avatar" id="avatar">S</div>
-    <div class="name" id="username">Saif</div>
-    <div class="email" id="email">example@gmail.com</div>
-  </div>
+  <div class="label">Username</div>
+  <div class="value" id="v_username"></div>
 
-  <label>Phone (Bangladesh)</label>
-  <input id="phone" placeholder="01XXXXXXXXX">
+  <div class="label">Email</div>
+  <div class="value" id="v_email"></div>
 
-  <label>Facebook Link</label>
+  <div class="label">Phone (Bangladesh)</div>
+  <input id="phone">
+
+  <div class="label">Facebook Link</div>
   <input id="facebook">
 
-  <label>Game / Owner ID</label>
-  <input id="gameid">
+  <div class="label">Game / Owner ID</div>
+  <input id="gameId">
 
-  <label>Device Name</label>
+  <div class="label">Device Name</div>
   <input id="device">
 
   <div class="stats">
-    <div class="stat">⭐<span id="rating">0</span></div>
-    <div class="stat">🏆<span id="wins">0</span></div>
-    <div class="stat">❌<span id="losses">0</span></div>
+    <div>⭐ Rating: <span id="rating"></span></div>
+    <div>🏆 Wins: <span id="wins"></span></div>
+    <div>❌ Losses: <span id="losses"></span></div>
   </div>
 
-  <button class="btn save" onclick="saveProfile()">Save Profile</button>
-  <button class="btn logout" onclick="logout()">Logout</button>
+  <button onclick="saveProfile()">Save Profile</button>
+  <button class="secondary" onclick="logout()">Logout</button>
+
+  <div id="msg"></div>
 </div>
 
 <footer class="global-footer">
-  <img src="logo.png" class="footer-logo">
-  <div class="footer-text">
-    AFNs Elite Striker |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
-      SI Shohan
-    </a>
+  <div class="footer-inner">
+    <img src="logo.png" class="footer-logo">
+    <div class="footer-text">
+      AFNs Elite Striker |
+      <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
+        SI Shohan
+      </a>
+    </div>
   </div>
 </footer>
 
+</div>
+
 <script>
-/* ===== FIREBASE CONFIG ===== */
+/* FIREBASE CONFIG */
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
@@ -224,40 +177,64 @@ firebase.initializeApp({
 });
 
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db   = firebase.firestore();
+const msg  = document.getElementById("msg");
 
-/* ===== MOTIVATION ===== */
-const lines=[
- "নিজেকে হারালেই ম্যাচ হারো।",
- "ডিসিপ্লিনই এলিটদের পরিচয়।",
- "আজ ফোকাস, কাল লিডারবোর্ড।",
- "হার শেখায়, জয় প্রমাণ করে।",
- "AFNs খেলোয়াড় মানেই স্ট্যান্ডার্ড।"
-];
-document.getElementById("motivationBox").innerText =
- lines[Math.floor(Math.random()*lines.length)];
+let uid;
 
-/* ===== AUTH ===== */
+/* AUTH CHECK */
 auth.onAuthStateChanged(user=>{
- if(!user){location.href="login.html";return;}
- document.getElementById("email").innerText=user.email;
+  if(!user){
+    location.replace("login.html");
+    return;
+  }
+  uid = user.uid;
+  document.getElementById("v_email").innerText = user.email;
+
+  db.collection("players").doc(uid).onSnapshot(doc=>{
+    const d = doc.data();
+    if(!d) return;
+
+    document.getElementById("v_username").innerText = d.username || "";
+    document.getElementById("phone").value = d.phone || "";
+    document.getElementById("facebook").value = d.facebook || "";
+    document.getElementById("gameId").value = d.gameId || "";
+    document.getElementById("device").value = d.device || "";
+    document.getElementById("rating").innerText = d.rating || 0;
+    document.getElementById("wins").innerText = d.wins || 0;
+    document.getElementById("losses").innerText = d.losses || 0;
+  });
 });
 
-/* ===== SAVE ===== */
+/* SAVE PROFILE */
 function saveProfile(){
- const phone=document.getElementById("phone").value;
- if(!/^01\d{9}$/.test(phone)){
-   alert("Bangladesh valid phone number দিন");
-   return;
- }
- alert("Profile Saved ✔");
+  msg.innerHTML="";
+
+  const phone = document.getElementById("phone").value.trim();
+
+  // 🇧🇩 Bangladesh number validation
+  if(!/^(\+8801|01)[0-9]{9}$/.test(phone)){
+    msg.innerHTML='<div class="error">❌ বাংলাদেশ ভ্যালিড ফোন নাম্বার দিন</div>';
+    return;
+  }
+
+  db.collection("players").doc(uid).update({
+    phone,
+    facebook:document.getElementById("facebook").value.trim(),
+    gameId:document.getElementById("gameId").value.trim(),
+    device:document.getElementById("device").value.trim()
+  }).then(()=>{
+    msg.innerHTML='<div class="success">✅ Profile updated</div>';
+  });
 }
 
-/* ===== LOGOUT ===== */
+/* LOGOUT */
 function logout(){
- auth.signOut().then(()=>location.href="login.html");
+  auth.signOut().then(()=>{
+    location.replace("login.html");
+  });
 }
 </script>
 
 </body>
-</html>
+    </html>
