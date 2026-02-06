@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>All Matches | Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  background:#050b1e;
+  color:#fff;
+  font-family:Segoe UI,sans-serif;
+}
+.container{
+  max-width:720px;
+  margin:auto;
+  padding:20px;
+}
+.card{
+  background:#0b1622;
+  border-radius:14px;
+  padding:14px;
+  margin-top:12px;
+  box-shadow:0 0 10px rgba(0,0,0,.4);
+}
+.win{border-left:5px solid #4cff8f}
+.loss{border-left:5px solid #ff6b6b}
+.small{font-size:12px;color:#aaa}
+.uid{font-size:11px;color:#4f8cff}
+h2{text-align:center;color:#4f8cff}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h2>📊 All Players Match History</h2>
+<div id="list"></div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
+const db=firebase.firestore();
+
+db.collection("matches")
+  .orderBy("time","desc")
+  .onSnapshot(snap=>{
+    list.innerHTML="";
+    snap.forEach(doc=>{
+      const m=doc.data();
+      list.innerHTML+=`
+        <div class="card ${m.result}">
+          <b>${m.result.toUpperCase()}</b> — ${m.opponent}<br>
+          Score: ${m.score}<br>
+          <span class="uid">Player UID: ${m.playerId}</span><br>
+          <span class="small">${m.time?.toDate().toLocaleString()}</span>
+        </div>
+      `;
+    });
+  });
+</script>
+</body>
+</html>
