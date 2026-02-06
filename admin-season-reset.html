@@ -24,10 +24,7 @@ body{
   border-radius:18px;
   box-shadow:0 0 20px rgba(0,0,0,.4);
 }
-h2{
-  text-align:center;
-  color:#4f8cff;
-}
+h2{text-align:center;color:#4f8cff}
 button{
   width:100%;
   padding:14px;
@@ -39,19 +36,13 @@ button{
   font-size:15px;
   cursor:pointer;
 }
-button:hover{
-  opacity:.9;
-}
 .info{
   font-size:13px;
   color:#aaa;
   margin-top:10px;
   line-height:1.6;
 }
-#msg{
-  margin-top:14px;
-  font-size:14px;
-}
+#msg{margin-top:14px;font-size:14px}
 .success{color:#4cff8f}
 .error{color:#ff6b6b}
 </style>
@@ -87,9 +78,7 @@ const msg  = document.getElementById("msg");
 
 /* 🔐 ADMIN AUTH CHECK */
 auth.onAuthStateChanged(user=>{
-  if(!user){
-    location.href="admin-login.html";
-  }
+  if(!user) location.href="admin-login.html";
 });
 
 /* ♻️ RESET SEASON */
@@ -102,6 +91,9 @@ async function resetSeason(){
     const seasonId = await getAutoSeason();
 
     const playersSnap = await db.collection("players").get();
+    const matchesSnap = await db.collection("matches")
+      .where("seasonId","==",seasonId).get();
+
     const batch = db.batch();
 
     playersSnap.forEach(doc=>{
@@ -114,13 +106,27 @@ async function resetSeason(){
       });
     });
 
+    /* 🔄 APPLY RESET */
     await batch.commit();
+
+    /* 📊 SEASON SUMMARY SNAPSHOT (🔥 NEW PART) */
+    await db.collection("season_snapshots").doc(seasonId).set({
+      seasonId: seasonId,
+      totalPlayers: playersSnap.size,
+      totalMatches: matchesSnap.size,
+      avgRating: 50,
+      suspiciousCount: (
+        await db.collection("players")
+        .where("suspicious","==",true).get()
+      ).size,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
     /* 🧾 ACTIVITY LOG */
     await db.collection("activity").add({
-      type:"season_reset",
-      text:`Season reset executed (${seasonId})`,
+      type:"SEASON_RESET",
       seasonId:seasonId,
+      text:`Season reset executed (${seasonId})`,
       time:firebase.firestore.FieldValue.serverTimestamp()
     });
 
@@ -146,11 +152,9 @@ async function getAutoSeason(){
   const snap = await seasonRef.get();
 
   if(!snap.exists){
-    /* deactivate old seasons */
     const old = await db.collection("seasons").where("active","==",true).get();
     old.forEach(d=>d.ref.update({active:false}));
 
-    /* create new season */
     await seasonRef.set({
       name:seasonId,
       year:year,
