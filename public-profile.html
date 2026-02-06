@@ -1,173 +1,202 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Create Account</title>
+<title>Player Profile | AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-body{
-  margin:0;
-  min-height:100vh;
-  background:linear-gradient(135deg,#050b1f,#0a1233);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-}
-.box{
-  width:100%;
-  max-width:420px;
-  background:rgba(255,255,255,.06);
-  backdrop-filter:blur(10px);
-  border-radius:16px;
-  padding:26px;
-  box-shadow:0 0 25px rgba(0,0,0,.6);
-}
-h2{text-align:center;margin:0 0 14px}
-input{
-  width:100%;
-  padding:12px;
-  margin-top:12px;
-  border:none;
-  border-radius:8px;
-  outline:none;
-}
-button{
-  width:100%;
-  margin-top:16px;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  background:#22c55e;
-  color:#fff;
-  font-weight:bold;
-  cursor:pointer;
-}
-button:hover{opacity:.9}
-.links{
-  margin-top:12px;
-  text-align:center;
-  font-size:13px;
-}
-.links a{color:#a5b4fc;text-decoration:none}
-.msg{
-  margin-top:12px;
-  font-size:14px;
-  text-align:center;
-}
-.success{color:#22c55e}
-.error{color:#ef4444}
-
-footer{
-  margin-top:18px;
-  text-align:center;
-  font-size:12px;
-  opacity:.6;
-}
-footer img{height:24px}
-footer a{color:#a5b4fc;text-decoration:none}
-</style>
-
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<style>
+:root{
+  --neon:#00f7ff;
+  --gold:#ffd400;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
+
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
+  color:#fff;
+}
+
+.container{
+  max-width:460px;
+  margin:auto;
+  padding:20px;
+}
+
+header{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+header img{
+  width:90px;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
+}
+
+h1{color:var(--gold);margin:8px 0}
+.subtitle{color:var(--neon);font-size:13px}
+
+.card{
+  background:rgba(255,255,255,.06);
+  border-radius:18px;
+  padding:18px;
+  backdrop-filter:blur(6px);
+  box-shadow:0 0 18px rgba(0,247,255,.25);
+}
+
+.row{
+  margin-bottom:12px;
+}
+
+.label{
+  font-size:12px;
+  color:#aaa;
+}
+
+.value{
+  font-size:15px;
+  font-weight:700;
+}
+
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:14px;
+  font-size:13px;
+}
+
+a.link{
+  color:var(--neon);
+  font-weight:700;
+  text-decoration:none;
+}
+
+/* FOOTER */
+.global-footer{
+  margin-top:30px;
+  padding:16px 0;
+  text-align:center;
+}
+.footer-inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+.footer-logo{width:42px}
+.footer-text{font-size:12px;color:#aaa}
+.footer-text a{
+  color:var(--neon);
+  text-decoration:none;
+  font-weight:700;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <img src="logo.png">
+  <h1 id="username">Player</h1>
+  <div class="subtitle">AFN's Elite Strikers</div>
+</header>
+
+<div class="card">
+
+  <div class="row">
+    <div class="label">Email</div>
+    <div class="value" id="email">—</div>
+  </div>
+
+  <div class="row">
+    <div class="label">Phone</div>
+    <div class="value" id="phone">—</div>
+  </div>
+
+  <div class="row">
+    <div class="label">Game / Owner ID</div>
+    <div class="value" id="gameId">—</div>
+  </div>
+
+  <div class="row">
+    <div class="label">Device</div>
+    <div class="value" id="device">—</div>
+  </div>
+
+  <div class="row">
+    <div class="label">Facebook</div>
+    <div class="value">
+      <a id="facebook" class="link" target="_blank"></a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div>⭐ Rating: <span id="rating">0</span></div>
+    <div>🏆 Wins: <span id="wins">0</span></div>
+    <div>❌ Losses: <span id="losses">0</span></div>
+  </div>
+
+</div>
+
+<footer class="global-footer">
+  <div class="footer-inner">
+    <img src="logo.png" class="footer-logo">
+    <div class="footer-text">
+      AFNs Elite Striker |
+      <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
+        SI Shohan
+      </a>
+    </div>
+  </div>
+</footer>
+
+</div>
+
 <script>
+/* FIREBASE CONFIG */
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
-</script>
-</head>
 
-<body>
+const db = firebase.firestore();
 
-<div class="box">
-  <h2>Create Account</h2>
-
-  <input type="text" id="name" placeholder="Player Name">
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <input type="text" id="phone" placeholder="Bangladesh Phone (01XXXXXXXXX)">
-
-  <button onclick="register()">Create Account</button>
-
-  <div class="links">
-    <a href="login.html">Already have account? Login</a>
-  </div>
-
-  <div class="msg" id="msg"></div>
-
-  <footer>
-    <img src="logo.png"><br>
-    AFNs Elite Striker |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
-      SI Shohan
-    </a>
-  </footer>
-</div>
-
-<script>
-const db=firebase.firestore();
-
-function showMsg(t,type){
-  msg.innerText=t;
-  msg.className="msg "+type;
+/* GET USER ID */
+const params = new URLSearchParams(location.search);
+const uid = params.get("id");
+if(!uid){
+  document.body.innerHTML="Invalid profile";
 }
 
-function validBDPhone(p){
-  return /^01[3-9]\d{8}$/.test(p);
-}
+/* LOAD PLAYER */
+db.collection("players").doc(uid).get().then(doc=>{
+  if(!doc.exists) return;
+  const d = doc.data();
 
-function register(){
-  const n=name.value.trim();
-  const e=email.value.trim();
-  const p=password.value.trim();
-  const ph=phone.value.trim();
+  document.getElementById("username").innerText = d.username || "Player";
+  document.getElementById("email").innerText = d.email || "—";
+  document.getElementById("phone").innerText = d.phone || "—";
+  document.getElementById("gameId").innerText = d.gameId || "—";
+  document.getElementById("device").innerText = d.device || "—";
+  document.getElementById("rating").innerText = d.rating || 0;
+  document.getElementById("wins").innerText = d.wins || 0;
+  document.getElementById("losses").innerText = d.losses || 0;
 
-  if(!n||!e||!p||!ph){
-    showMsg("All fields required","error");
-    return;
+  if(d.facebook){
+    const fb = document.getElementById("facebook");
+    fb.href = d.facebook;
+    fb.innerText = "View Facebook Profile";
   }
-
-  if(!validBDPhone(ph)){
-    showMsg("Invalid Bangladesh phone number","error");
-    return;
-  }
-
-  firebase.auth()
-    .createUserWithEmailAndPassword(e,p)
-    .then(res=>{
-      const uid=res.user.uid;
-
-      return db.collection("players").doc(uid).set({
-        uid:uid,
-        name:n,
-        email:e,
-        phone:ph,
-        gameId:"",
-        device:"",
-        fb:"",
-        wins:0,
-        losses:0,
-        goals:0,
-        gd:0,
-        banned:false,
-        banUntil:null,
-        createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-    })
-    .then(()=>{
-      showMsg("Account created successfully ✅","success");
-      setTimeout(()=>location.href="login.html",1200);
-    })
-    .catch(err=>{
-      showMsg(err.message,"error");
-    });
-}
+});
 </script>
 
 </body>
