@@ -27,19 +27,9 @@ body{
 
 .container{max-width:460px;margin:auto;padding:20px}
 
-header{
-  text-align:center;
-  margin-bottom:26px;
-}
-header img{
-  width:90px;
-  filter:drop-shadow(0 0 18px rgba(255,215,0,.6))
-}
-#profileTitle{
-  color:var(--gold);
-  font-size:26px;
-  margin-top:12px;
-}
+header{text-align:center;margin-bottom:26px}
+header img{width:90px;filter:drop-shadow(0 0 18px rgba(255,215,0,.6))}
+#profileTitle{color:var(--gold);font-size:26px;margin-top:12px}
 .subtitle{color:var(--neon);font-size:13px}
 
 .card{
@@ -50,15 +40,26 @@ header img{
   box-shadow:0 0 18px rgba(0,247,255,.25);
 }
 
-/* INFO ROW */
+/* INFO CARD */
 .info-row{
-  background:rgba(255,255,255,.05);
-  border-radius:14px;
-  padding:12px 14px;
-  margin-top:12px;
+  background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border-radius:16px;
+  padding:14px 16px;
+  margin-top:14px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.info-icon{
+  font-size:22px;
+  width:36px;
+  text-align:center;
+}
+
+.info-text{
   display:flex;
   flex-direction:column;
-  gap:4px;
 }
 .info-label{
   font-size:11px;
@@ -71,22 +72,25 @@ header img{
 
 /* FACEBOOK BUTTON */
 .fb-btn{
-  display:inline-block;
-  padding:10px 14px;
-  border-radius:12px;
+  margin-top:6px;
+  padding:12px 16px;
+  border-radius:14px;
   background:linear-gradient(135deg,#1877f2,#0a58ca);
   color:#fff;
+  font-weight:800;
   font-size:14px;
-  font-weight:700;
   text-decoration:none;
-  width:max-content;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  box-shadow:0 0 12px rgba(24,119,242,.6);
 }
-.fb-btn:hover{opacity:.85}
+.fb-btn:hover{opacity:.9}
 
 .stats{
   display:flex;
   justify-content:space-between;
-  margin-top:16px;
+  margin-top:18px;
   font-size:13px;
 }
 
@@ -110,9 +114,9 @@ button{
 }
 button.secondary{background:#222;color:#fff}
 
+.hidden{display:none}
 .error{color:#ff6b6b;font-size:13px;margin-top:10px}
 .success{color:#4cff8f;font-size:13px;margin-top:10px}
-.hidden{display:none}
 </style>
 </head>
 
@@ -131,35 +135,53 @@ button.secondary{background:#222;color:#fff}
 <div id="viewBox">
 
   <div class="info-row">
-    <span class="info-label">Player Name</span>
-    <span class="info-value" id="v_username"></span>
+    <div class="info-icon">👤</div>
+    <div class="info-text">
+      <span class="info-label">Player Name</span>
+      <span class="info-value" id="v_username"></span>
+    </div>
   </div>
 
   <div class="info-row">
-    <span class="info-label">Email</span>
-    <span class="info-value" id="v_email"></span>
+    <div class="info-icon">📧</div>
+    <div class="info-text">
+      <span class="info-label">Email</span>
+      <span class="info-value" id="v_email"></span>
+    </div>
   </div>
 
   <div class="info-row">
-    <span class="info-label">Phone</span>
-    <span class="info-value" id="v_phone"></span>
+    <div class="info-icon">📱</div>
+    <div class="info-text">
+      <span class="info-label">Phone</span>
+      <span class="info-value" id="v_phone"></span>
+    </div>
   </div>
 
   <div class="info-row">
-    <span class="info-label">Facebook</span>
-    <a id="v_facebook" class="fb-btn" target="_blank">
-      🔵 View Facebook Profile
-    </a>
+    <div class="info-icon">🌐</div>
+    <div class="info-text">
+      <span class="info-label">Facebook</span>
+      <a id="v_facebook" class="fb-btn" target="_blank">
+        🔵 View Facebook Profile
+      </a>
+    </div>
   </div>
 
   <div class="info-row">
-    <span class="info-label">Game / Owner ID</span>
-    <span class="info-value" id="v_gameId"></span>
+    <div class="info-icon">🎮</div>
+    <div class="info-text">
+      <span class="info-label">Game / Owner ID</span>
+      <span class="info-value" id="v_gameId"></span>
+    </div>
   </div>
 
   <div class="info-row">
-    <span class="info-label">Device</span>
-    <span class="info-value" id="v_device"></span>
+    <div class="info-icon">📱</div>
+    <div class="info-text">
+      <span class="info-label">Device</span>
+      <span class="info-value" id="v_device"></span>
+    </div>
   </div>
 
   <div class="stats">
@@ -172,7 +194,7 @@ button.secondary{background:#222;color:#fff}
   <button class="secondary" onclick="logout()">Logout</button>
 </div>
 
-<!-- EDIT MODE -->
+<!-- EDIT MODE (UNCHANGED) -->
 <div id="editBox" class="hidden">
 
   <div class="info-row">
@@ -221,28 +243,28 @@ auth.onAuthStateChanged(user=>{
   db.collection("players").doc(uid).onSnapshot(doc=>{
     const d=doc.data(); if(!d)return;
 
-    v_username.innerText = d.username || "—";
-    profileTitle.innerText = (d.username || "Player") + "’s Profile";
+    v_username.innerText=d.username||"—";
+    profileTitle.innerText=(d.username||"Player")+"’s Profile";
 
-    v_phone.innerText = d.phone || "—";
-    v_gameId.innerText = d.gameId || "—";
-    v_device.innerText = d.device || "—";
+    v_phone.innerText=d.phone||"—";
+    v_gameId.innerText=d.gameId||"—";
+    v_device.innerText=d.device||"—";
 
     if(d.facebook){
-      v_facebook.href = d.facebook;
-      v_facebook.style.display="inline-block";
+      v_facebook.href=d.facebook;
+      v_facebook.style.display="inline-flex";
     }else{
       v_facebook.style.display="none";
     }
 
-    phone.value = d.phone || "";
-    facebook.value = d.facebook || "";
-    gameId.value = d.gameId || "";
-    device.value = d.device || "";
+    phone.value=d.phone||"";
+    facebook.value=d.facebook||"";
+    gameId.value=d.gameId||"";
+    device.value=d.device||"";
 
-    rating.innerText = d.rating || 0;
-    wins.innerText = d.wins || 0;
-    losses.innerText = d.losses || 0;
+    rating.innerText=d.rating||0;
+    wins.innerText=d.wins||0;
+    losses.innerText=d.losses||0;
   });
 });
 
