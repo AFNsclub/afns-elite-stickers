@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Add Match | Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  background:#050b1e;
+  color:#fff;
+  font-family:Segoe UI,sans-serif;
+}
+.container{
+  max-width:420px;
+  margin:40px auto;
+  padding:20px;
+  background:#0b1622;
+  border-radius:16px;
+}
+h2{text-align:center;color:#4f8cff}
+input,select,button{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border-radius:10px;
+  border:none;
+}
+button{
+  background:#4f8cff;
+  font-weight:700;
+  cursor:pointer;
+}
+.success{color:#4cff8f;margin-top:10px}
+.error{color:#ff6b6b;margin-top:10px}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h2>⚔️ Add Match Result</h2>
+
+<input id="playerId" placeholder="Player UID">
+<select id="result">
+  <option value="win">Win</option>
+  <option value="loss">Loss</option>
+</select>
+
+<input id="opponent" placeholder="Opponent name">
+<input id="score" placeholder="Score (ex: 3-1)">
+<button onclick="addMatch()">Add Match</button>
+
+<div id="msg"></div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
+const db=firebase.firestore();
+
+function getRank(r){
+  if(r>=200) return "Legend";
+  if(r>=150) return "Platinum";
+  if(r>=100) return "Gold";
+  if(r>=50) return "Silver";
+  return "Bronze";
+}
+
+async function addMatch(){
+  const uid=playerId.value.trim();
+  const res=result.value;
+
+  if(!uid){
+    msg.innerHTML="<div class='error'>Player UID required</div>";
+    return;
+  }
+
+  const playerRef=db.collection("players").doc(uid);
+
+  await db.runTransaction(async(t)=>{
+    const snap=await t.get(playerRef);
+    if(!snap.exists) throw "Player not found";
+
+    let d=snap.data();
+    let rating=d.rating||0,wins=d.wins||0,losses=d.losses||0;
+
+    if(res==="win"){rating+=10;wins++;}
+    else{rating=Math.max(0,rating-5);losses++;}
+
+    t.update(playerRef,{
+      rating,wins,losses,rank:getRank(rating)
+    });
+
+    t.set(db.collection("matches").doc(),{
+      playerId:uid,
+      opponent:opponent.value,
+      result:res,
+      score:score.value,
+      time:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
+
+  msg.innerHTML="<div class='success'>✅ Match added & rating updated</div>";
+}
+</script>
+</body>
+</html>
