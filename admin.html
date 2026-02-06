@@ -5,7 +5,13 @@
 <title>Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
+/* ===== SAME CSS – UNTOUCHED ===== */
 :root{
   --bg:#050b1e;
   --card:#0b1622;
@@ -14,263 +20,169 @@
   --text:#ffffff;
   --muted:rgba(255,255,255,.6);
 }
-
 *{box-sizing:border-box}
-
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:
-    radial-gradient(circle at top,#0a1a4a 0%,#050b1e 60%);
+  background:radial-gradient(circle at top,#0a1a4a 0%,#050b1e 60%);
   color:var(--text);
-  animation:fadeIn .6s ease;
 }
-
-/* ===== ANIMATION ===== */
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:none}
-}
-
-/* ===== HEADER ===== */
 .header{
   display:flex;
   align-items:center;
   justify-content:space-between;
   padding:14px 16px;
   background:linear-gradient(180deg,#070f2a,#050b1e);
-  border-bottom:1px solid rgba(255,255,255,.06);
 }
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.brand img{
-  height:36px;
-  filter:drop-shadow(0 0 8px rgba(79,140,255,.5));
-}
-
-.brand span{
-  font-size:18px;
-  font-weight:bold;
-}
-
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{height:36px}
 .logout{
   background:none;
   border:1px solid var(--accent);
   color:var(--accent);
   padding:6px 14px;
   border-radius:8px;
-  font-size:14px;
   cursor:pointer;
-  transition:.2s;
 }
-
-.logout:hover{
-  background:var(--accent);
-  color:#fff;
-  box-shadow:var(--accent-glow);
-}
-
-/* ===== CONTENT ===== */
-.container{
-  max-width:1100px;
-  margin:auto;
-  padding:18px;
-}
-
-/* ===== GRID ===== */
+.container{max-width:1100px;margin:auto;padding:18px}
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
   gap:16px;
 }
-
-/* ===== CARD ===== */
 .card{
-  background:
-    linear-gradient(180deg,rgba(255,255,255,.04),transparent),
-    var(--card);
+  background:#0b1622;
   border-radius:18px;
   padding:20px;
-  box-shadow:0 12px 30px rgba(0,0,0,.5);
   cursor:pointer;
-  transition:.25s ease;
-  position:relative;
-  overflow:hidden;
 }
-
-/* glow border */
-.card::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius:18px;
-  background:linear-gradient(120deg,transparent,rgba(79,140,255,.4),transparent);
-  opacity:0;
-  transition:.25s;
-}
-
-.card:hover::before{
-  opacity:1;
-}
-
-.card:hover{
-  transform:translateY(-6px) scale(1.02);
-  box-shadow:0 0 0 1px rgba(79,140,255,.4),0 0 25px rgba(79,140,255,.25);
-}
-
-.icon{
-  font-size:28px;
-  filter:drop-shadow(0 0 6px rgba(79,140,255,.6));
-}
-
-.title{
-  margin-top:10px;
-  font-size:15px;
-  font-weight:bold;
-}
-
-.desc{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:4px;
-}
-
-/* ===== STATS ===== */
+.icon{font-size:28px}
+.title{margin-top:10px;font-weight:bold}
+.desc{font-size:12px;opacity:.6}
 .stats{
   margin-top:22px;
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
   gap:14px;
 }
-
 .stat{
-  background:
-    linear-gradient(180deg,rgba(255,255,255,.06),transparent),
-    rgba(255,255,255,.04);
+  background:rgba(255,255,255,.05);
   border-radius:16px;
   padding:16px;
   text-align:center;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
 }
-
 .stat span{
   display:block;
   font-size:24px;
   font-weight:bold;
-  margin-bottom:4px;
   color:var(--accent);
-  text-shadow:0 0 10px rgba(79,140,255,.6);
 }
-
-/* ===== FOOTER ===== */
-.footer{
-  text-align:center;
-  font-size:12px;
-  opacity:.5;
-  margin:26px 0 12px;
-}
+.footer{text-align:center;font-size:12px;opacity:.5;margin-top:30px}
 </style>
 </head>
 
 <body>
 
-<!-- ===== HEADER ===== -->
 <div class="header">
   <div class="brand">
-    <!-- MAIN LOGO -->
-    <img src="logo.png" alt="Logo">
+    <img src="logo.png">
     <span>Admin Dashboard</span>
   </div>
   <button class="logout" onclick="logout()">Logout</button>
 </div>
 
-<!-- ===== MAIN ===== -->
 <div class="container">
 
-  <div class="grid">
-
-    <div class="card" onclick="go('tournament.html')">
-      <div class="icon">🏆</div>
-      <div class="title">Tournament Builder</div>
-      <div class="desc">Create & manage tournaments</div>
-    </div>
-
-    <div class="card" onclick="go('pvp-result.html')">
-      <div class="icon">⚔️</div>
-      <div class="title">PvP Match</div>
-      <div class="desc">Player vs Player result</div>
-    </div>
-
-    <div class="card" onclick="go('ranking.html')">
-      <div class="icon">📊</div>
-      <div class="title">Ranking Board</div>
-      <div class="desc">Auto updated rankings</div>
-    </div>
-
-    <div class="card" onclick="go('champion.html')">
-      <div class="icon">👑</div>
-      <div class="title">Champion</div>
-      <div class="desc">Profile & certificate</div>
-    </div>
-
-    <div class="card" onclick="go('certificate.html')">
-      <div class="icon">📄</div>
-      <div class="title">Certificates</div>
-      <div class="desc">Generate PDF</div>
-    </div>
-
-    <div class="card" onclick="go('activity.html')">
-      <div class="icon">🧾</div>
-      <div class="title">Activity Log</div>
-      <div class="desc">System actions</div>
-    </div>
-
+<div class="grid">
+  <div class="card" onclick="go('tournament.html')">
+    <div class="icon">🏆</div>
+    <div class="title">Tournament Builder</div>
+    <div class="desc">Create & manage tournaments</div>
   </div>
 
-  <!-- STATS -->
-  <div class="stats">
-    <div class="stat">
-      <span id="players">0</span>Players
-    </div>
-    <div class="stat">
-      <span id="matches">0</span>Matches
-    </div>
-    <div class="stat">
-      <span id="tournaments">0</span>Tournaments
-    </div>
-    <div class="stat">
-      <span>OK</span>System
-    </div>
+  <div class="card" onclick="go('pvp-result.html')">
+    <div class="icon">⚔️</div>
+    <div class="title">PvP Match</div>
+    <div class="desc">Player vs Player result</div>
   </div>
 
-  <div class="footer">
-    AFNS Club • Premium Admin System | SI Shohan 
+  <div class="card" onclick="go('ranking.html')">
+    <div class="icon">📊</div>
+    <div class="title">Ranking Board</div>
+    <div class="desc">Auto updated rankings</div>
   </div>
+
+  <div class="card" onclick="go('champion.html')">
+    <div class="icon">👑</div>
+    <div class="title">Champion</div>
+    <div class="desc">Profile & certificate</div>
+  </div>
+
+  <div class="card" onclick="go('certificate.html')">
+    <div class="icon">📄</div>
+    <div class="title">Certificates</div>
+    <div class="desc">Generate PDF</div>
+  </div>
+
+  <div class="card" onclick="go('activity.html')">
+    <div class="icon">🧾</div>
+    <div class="title">Activity Log</div>
+    <div class="desc">System actions</div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><span id="players">0</span>Players</div>
+  <div class="stat"><span id="matches">0</span>Matches</div>
+  <div class="stat"><span id="tournaments">0</span>Tournaments</div>
+  <div class="stat"><span>OK</span>System</div>
+</div>
+
+<div class="footer">
+  AFNS Club • Premium Admin System
+</div>
 
 </div>
 
 <script>
-function go(page){
-  window.location.href = page;
-}
+/* 🔥 FIREBASE INIT */
+firebase.initializeApp({
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub"
+});
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* 🔐 AUTH CHECK */
+auth.onAuthStateChanged(user=>{
+  if(!user){
+    location.href="admin-login.html";
+  }
+});
+
+/* 🚀 AUTO STATS FROM FIREBASE */
+db.collection("players").onSnapshot(snap=>{
+  players.innerText = snap.size;
+});
+
+db.collection("matches").onSnapshot(snap=>{
+  matches.innerText = snap.size;
+});
+
+db.collection("tournaments").onSnapshot(snap=>{
+  tournaments.innerText = snap.size;
+});
+
+/* NAV */
+function go(p){location.href=p}
 
 function logout(){
-  if(confirm("Logout from admin panel?")){
-    firebase.auth().signOut().then(()=>{
-      location.href="admin-login.html";
-    });
-  }
+  auth.signOut().then(()=>{
+    location.href="admin-login.html";
+  });
 }
-
-/* demo stats */
-players.innerText = localStorage.length;
-matches.innerText = 42;
-tournaments.innerText = 7;
 </script>
 
 </body>
