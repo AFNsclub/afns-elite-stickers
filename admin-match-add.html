@@ -9,31 +9,11 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  background:#050b1e;
-  color:#fff;
-  font-family:Segoe UI,sans-serif;
-}
-.container{
-  max-width:420px;
-  margin:40px auto;
-  padding:20px;
-  background:#0b1622;
-  border-radius:16px;
-}
+body{background:#050b1e;color:#fff;font-family:Segoe UI,sans-serif}
+.container{max-width:440px;margin:40px auto;padding:20px;background:#0b1622;border-radius:16px}
 h2{text-align:center;color:#4f8cff}
-input,select,button{
-  width:100%;
-  padding:12px;
-  margin-top:12px;
-  border-radius:10px;
-  border:none;
-}
-button{
-  background:#4f8cff;
-  font-weight:700;
-  cursor:pointer;
-}
+input,select,button{width:100%;padding:12px;margin-top:12px;border-radius:10px;border:none}
+button{background:#4f8cff;font-weight:700;cursor:pointer}
 .success{color:#4cff8f;margin-top:10px}
 .error{color:#ff6b6b;margin-top:10px}
 </style>
@@ -48,11 +28,9 @@ button{
   <option value="win">Win</option>
   <option value="loss">Loss</option>
 </select>
-
-<input id="opponent" placeholder="Opponent name">
+<input id="opponent" placeholder="Opponent">
 <input id="score" placeholder="Score (ex: 3-1)">
 <button onclick="addMatch()">Add Match</button>
-
 <div id="msg"></div>
 </div>
 
@@ -65,49 +43,89 @@ firebase.initializeApp({
 
 const db=firebase.firestore();
 
+/* ===============================
+   RANK SYSTEM
+=============================== */
 function getRank(r){
-  if(r>=200) return "Legend";
-  if(r>=150) return "Platinum";
-  if(r>=100) return "Gold";
-  if(r>=50) return "Silver";
-  return "Bronze";
+  if(r>=200) return "Legend 🔥";
+  if(r>=150) return "Platinum 🔵";
+  if(r>=100) return "Gold 🟡";
+  if(r>=50) return "Silver ⚪";
+  return "Bronze 🟤";
 }
 
-async function addMatch(){
-  const uid=playerId.value.trim();
-  const res=result.value;
+/* ===============================
+   CURRENT SEASON (AUTO)
+=============================== */
+async function getCurrentSeason(){
+  const q=await db.collection("seasons").where("active","==",true).limit(1).get();
+  if(!q.empty) return {id:q.docs[0].id,...q.docs[0].data()};
 
-  if(!uid){
-    msg.innerHTML="<div class='error'>Player UID required</div>";
-    return;
-  }
+  const now=new Date();
+  const seasonId=`${now.getFullYear()}-S1`;
 
-  const playerRef=db.collection("players").doc(uid);
-
-  await db.runTransaction(async(t)=>{
-    const snap=await t.get(playerRef);
-    if(!snap.exists) throw "Player not found";
-
-    let d=snap.data();
-    let rating=d.rating||0,wins=d.wins||0,losses=d.losses||0;
-
-    if(res==="win"){rating+=10;wins++;}
-    else{rating=Math.max(0,rating-5);losses++;}
-
-    t.update(playerRef,{
-      rating,wins,losses,rank:getRank(rating)
-    });
-
-    t.set(db.collection("matches").doc(),{
-      playerId:uid,
-      opponent:opponent.value,
-      result:res,
-      score:score.value,
-      time:firebase.firestore.FieldValue.serverTimestamp()
-    });
+  await db.collection("seasons").doc(seasonId).set({
+    name:`${now.getFullYear()} Season 1`,
+    start:firebase.firestore.Timestamp.now(),
+    active:true
   });
 
-  msg.innerHTML="<div class='success'>✅ Match added & rating updated</div>";
+  return {id:seasonId};
+}
+
+/* ===============================
+   ADD MATCH + ROLLBACK DATA
+=============================== */
+async function addMatch(){
+  msg.innerHTML="";
+  const uid=playerId.value.trim();
+  if(!uid) return msg.innerHTML="<div class='error'>Player UID required</div>";
+
+  const season=await getCurrentSeason();
+  const ref=db.collection("players").doc(uid);
+
+  try{
+    await db.runTransaction(async(t)=>{
+      const snap=await t.get(ref);
+      if(!snap.exists) throw "Player not found";
+
+      const d=snap.data();
+      const before={
+        rating:d.rating||50,
+        wins:d.wins||0,
+        losses:d.losses||0,
+        rank:d.rank||"Bronze"
+      };
+
+      let rating=before.rating;
+      let wins=before.wins;
+      let losses=before.losses;
+
+      if(result.value==="win"){rating+=10;wins++;}
+      else{rating=Math.max(50,rating-5);losses++;}
+
+      t.update(ref,{
+        rating,wins,losses,
+        rank:getRank(rating),
+        seasonId:season.id
+      });
+
+      t.set(db.collection("matches").doc(),{
+        playerId:uid,
+        opponent:opponent.value,
+        result:result.value,
+        score:score.value,
+        seasonId:season.id,
+        time:firebase.firestore.FieldValue.serverTimestamp(),
+        before,
+        editable:true
+      });
+    });
+
+    msg.innerHTML="<div class='success'>✅ Match added + rollback safe</div>";
+  }catch(e){
+    msg.innerHTML="<div class='error'>❌ "+e+"</div>";
+  }
 }
 </script>
 </body>
