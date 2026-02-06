@@ -2,118 +2,131 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Login</title>
+<title>Player Login | AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-body{
-  margin:0;
-  min-height:100vh;
-  background:linear-gradient(135deg,#050b1f,#0a1233);
-  color:#fff;
+:root{
+  --neon:#00f7ff;
+  --gold:#ffd400;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
 }
 
-/* ===== CONTAINER ===== */
-.container{
-  max-width:400px;
-  margin:80px auto;
-  background:rgba(255,255,255,.06);
-  backdrop-filter:blur(10px);
-  border-radius:16px;
-  padding:22px;
-  box-shadow:0 0 25px rgba(0,0,0,.6);
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',sans-serif;
+}
+
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
+  color:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.card{
+  width:100%;
+  max-width:380px;
+  background:linear-gradient(145deg,#061726,#020c14);
+  border-radius:22px;
+  padding:24px;
+  box-shadow:0 0 35px rgba(0,247,255,.45);
 }
 
 .logo{
   text-align:center;
+  margin-bottom:10px;
 }
-.logo img{height:48px;margin-bottom:10px}
+.logo img{
+  width:90px;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
+}
 
-h2{text-align:center;margin-bottom:16px}
+h2{
+  text-align:center;
+  color:var(--gold);
+  margin-bottom:18px;
+}
 
-/* ===== INPUT ===== */
 input{
   width:100%;
-  padding:12px;
-  margin-top:10px;
+  padding:13px;
+  border-radius:14px;
   border:none;
-  border-radius:8px;
-  font-size:14px;
+  outline:none;
+  margin-bottom:14px;
+  background:#020c14;
+  color:#fff;
+  font-size:15px;
 }
 
-.pass-box{
+.password-box{
   position:relative;
 }
-.pass-box span{
+.toggle{
   position:absolute;
-  right:12px;
+  right:14px;
   top:50%;
   transform:translateY(-50%);
-  cursor:pointer;
   font-size:13px;
-  color:#a5b4fc;
+  color:var(--neon);
+  cursor:pointer;
+  user-select:none;
 }
 
-/* ===== BUTTON ===== */
 button{
   width:100%;
-  padding:12px;
-  margin-top:14px;
+  padding:14px;
+  border-radius:18px;
   border:none;
-  border-radius:10px;
-  font-weight:bold;
   cursor:pointer;
-  background:#3b82f6;
-  color:#fff;
+  font-weight:900;
+  font-size:16px;
+  background:linear-gradient(145deg,#081c2c,#020c14);
+  color:var(--neon);
+  transition:.25s;
+}
+button:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 16px rgba(0,247,255,.45);
 }
 
-/* ===== LINKS ===== */
+.error{
+  color:#ff6b6b;
+  font-size:14px;
+  margin-bottom:12px;
+  display:none;
+  text-align:center;
+}
+
 .links{
   text-align:center;
-  margin-top:12px;
-  font-size:13px;
-}
-.links a{
-  color:#a5b4fc;
-  text-decoration:none;
-}
-
-/* ===== MESSAGE ===== */
-.msg{
-  margin-top:12px;
-  text-align:center;
+  margin-top:16px;
   font-size:14px;
 }
-.error{color:#f87171}
-.success{color:#4ade80}
+.links a{
+  color:var(--neon);
+  text-decoration:none;
+  font-weight:700;
+}
 
-/* ===== FOOTER ===== */
 footer{
-  margin-top:30px;
   text-align:center;
   font-size:12px;
-  opacity:.6;
+  color:#aaa;
+  margin-top:16px;
 }
-footer img{height:24px}
-footer a{color:#a5b4fc;text-decoration:none}
 </style>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script>
-firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
-</script>
 </head>
 
 <body>
 
-<div class="container">
+<div class="card">
 
   <div class="logo">
     <img src="logo.png">
@@ -121,86 +134,104 @@ firebase.initializeApp({
 
   <h2>Player Login</h2>
 
-  <input type="email" id="email" placeholder="Email">
+  <div id="errorBox" class="error"></div>
 
-  <div class="pass-box">
+  <input type="email" id="email" placeholder="Gmail">
+
+  <div class="password-box">
     <input type="password" id="password" placeholder="Password">
-    <span onclick="togglePass()">Show</span>
+    <span class="toggle" onclick="togglePassword()">Show</span>
   </div>
 
   <button onclick="login()">Login</button>
 
-  <div class="msg" id="msg"></div>
-
   <div class="links">
-    <a href="#" onclick="forgot()">Forgot password?</a><br><br>
-    Don’t have account?
-    <a href="register.html">Create account</a>
+    <a href="#" onclick="forgotPassword()">Forgot Password?</a><br><br>
+    New player?
+    <a href="register.html">Create Account</a>
   </div>
+
+  <footer>
+    © 2026 AFN's Elite Strikers
+  </footer>
 
 </div>
 
-<footer>
-  <img src="logo.png"><br>
-  AFNs Elite Striker |
-  <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
-    SI Shohan
-  </a>
-</footer>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-const auth = firebase.auth();
+const firebaseConfig={
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub",
+  storageBucket:"afnsclub.firebasestorage.app",
+  messagingSenderId:"1088089213558",
+  appId:"1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+firebase.initializeApp(firebaseConfig);
 
-auth.onAuthStateChanged(u=>{
-  if(u){
-    location.href="index.html";
+const auth=firebase.auth();
+
+// ✅ already logged in → direct profile
+auth.onAuthStateChanged(user=>{
+  if(user){
+    location.replace("player.html");
   }
 });
 
-function togglePass(){
-  const p = document.getElementById("password");
-  p.type = p.type==="password"?"text":"password";
+const email=document.getElementById("email");
+const password=document.getElementById("password");
+const errorBox=document.getElementById("errorBox");
+
+function showError(msg){
+  errorBox.innerText=msg;
+  errorBox.style.display="block";
+}
+
+function togglePassword(){
+  if(password.type==="password"){
+    password.type="text";
+    document.querySelector(".toggle").innerText="Hide";
+  }else{
+    password.type="password";
+    document.querySelector(".toggle").innerText="Show";
+  }
 }
 
 function login(){
-  msg.innerText="";
-  const e=email.value.trim();
-  const p=password.value.trim();
+  errorBox.style.display="none";
 
-  if(!e || !p){
-    msg.innerText="Please enter email & password";
-    msg.className="msg error";
+  if(!email.value || !password.value){
+    showError("⚠️ Gmail এবং Password দিতে হবে");
     return;
   }
 
-  auth.signInWithEmailAndPassword(e,p)
-    .then(()=>{
-      msg.innerText="Login successful ✔";
-      msg.className="msg success";
-      setTimeout(()=>location.href="index.html",800);
-    })
-    .catch(err=>{
-      msg.innerText=err.message;
-      msg.className="msg error";
-    });
+  auth.signInWithEmailAndPassword(email.value.trim(),password.value)
+  .then(()=>{
+    location.href="player.html";
+  })
+  .catch(()=>{
+    showError("❌ Gmail অথবা Password ভুল");
+  });
 }
 
-function forgot(){
-  const e=email.value.trim();
-  if(!e){
-    msg.innerText="Enter email first";
-    msg.className="msg error";
+function forgotPassword(){
+  if(!email.value){
+    showError("📧 আগে Gmail লিখুন");
     return;
   }
-  auth.sendPasswordResetEmail(e).then(()=>{
-    msg.innerText="Password reset email sent ✔";
-    msg.className="msg success";
-  }).catch(err=>{
-    msg.innerText=err.message;
-    msg.className="msg error";
+
+  auth.sendPasswordResetEmail(email.value.trim())
+  .then(()=>{
+    showError("✅ Reset link Gmail এ পাঠানো হয়েছে");
+  })
+  .catch(()=>{
+    showError("❌ Gmail পাওয়া যায়নি");
   });
 }
 </script>
 
 </body>
-</html>
+  </html>
