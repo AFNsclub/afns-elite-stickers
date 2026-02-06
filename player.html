@@ -27,9 +27,19 @@ body{
 
 .container{max-width:460px;margin:auto;padding:20px}
 
-header{text-align:center;margin-bottom:20px}
-header img{width:90px;filter:drop-shadow(0 0 18px rgba(255,215,0,.6))}
-h1{color:var(--gold);margin:8px 0}
+header{
+  text-align:center;
+  margin-bottom:26px;
+}
+header img{
+  width:90px;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.6))
+}
+#profileTitle{
+  color:var(--gold);
+  font-size:26px;
+  margin-top:12px;
+}
 .subtitle{color:var(--neon);font-size:13px}
 
 .card{
@@ -40,8 +50,39 @@ h1{color:var(--gold);margin:8px 0}
   box-shadow:0 0 18px rgba(0,247,255,.25);
 }
 
-.label{font-size:12px;color:#aaa;margin-top:14px}
-.value{font-size:15px;font-weight:700;margin-top:4px}
+/* INFO DESIGN */
+.info-row{
+  background:rgba(255,255,255,.05);
+  border-radius:14px;
+  padding:12px 14px;
+  margin-top:12px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.info-label{
+  font-size:11px;
+  color:#9aa;
+}
+.info-value{
+  font-size:15px;
+  font-weight:700;
+}
+.info-link{
+  font-size:14px;
+  font-weight:700;
+  color:var(--neon);
+  text-decoration:none;
+  word-break:break-all;
+}
+.info-link:hover{text-decoration:underline}
+
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:16px;
+  font-size:13px;
+}
 
 input{
   width:100%;
@@ -62,15 +103,7 @@ button{
   font-weight:900;
   cursor:pointer;
 }
-
 button.secondary{background:#222;color:#fff}
-
-.stats{
-  display:flex;
-  justify-content:space-between;
-  margin-top:14px;
-  font-size:13px;
-}
 
 .error{color:#ff6b6b;font-size:13px;margin-top:10px}
 .success{color:#4cff8f;font-size:13px;margin-top:10px}
@@ -83,7 +116,7 @@ button.secondary{background:#222;color:#fff}
 
 <header>
   <img src="logo.png">
-  <h1>My Profile</h1>
+  <h1 id="profileTitle">My Profile</h1>
   <div class="subtitle">AFN's Elite Strikers</div>
 </header>
 
@@ -91,23 +124,31 @@ button.secondary{background:#222;color:#fff}
 
 <!-- VIEW MODE -->
 <div id="viewBox">
-  <div class="label">Username</div>
-  <div class="value" id="v_username"></div>
 
-  <div class="label">Email</div>
-  <div class="value" id="v_email"></div>
+  <div class="info-row">
+    <span class="info-label">Email</span>
+    <span class="info-value" id="v_email"></span>
+  </div>
 
-  <div class="label">Phone</div>
-  <div class="value" id="v_phone"></div>
+  <div class="info-row">
+    <span class="info-label">Phone</span>
+    <span class="info-value" id="v_phone"></span>
+  </div>
 
-  <div class="label">Facebook</div>
-  <div class="value" id="v_facebook"></div>
+  <div class="info-row">
+    <span class="info-label">Facebook</span>
+    <a id="v_facebook" class="info-link" target="_blank">—</a>
+  </div>
 
-  <div class="label">Game / Owner ID</div>
-  <div class="value" id="v_gameId"></div>
+  <div class="info-row">
+    <span class="info-label">Game / Owner ID</span>
+    <span class="info-value" id="v_gameId"></span>
+  </div>
 
-  <div class="label">Device</div>
-  <div class="value" id="v_device"></div>
+  <div class="info-row">
+    <span class="info-label">Device</span>
+    <span class="info-value" id="v_device"></span>
+  </div>
 
   <div class="stats">
     <div>⭐ <span id="rating"></span></div>
@@ -121,17 +162,25 @@ button.secondary{background:#222;color:#fff}
 
 <!-- EDIT MODE -->
 <div id="editBox" class="hidden">
-  <div class="label">Phone</div>
-  <input id="phone">
+  <div class="info-row">
+    <span class="info-label">Phone</span>
+    <input id="phone">
+  </div>
 
-  <div class="label">Facebook Link</div>
-  <input id="facebook">
+  <div class="info-row">
+    <span class="info-label">Facebook Link</span>
+    <input id="facebook">
+  </div>
 
-  <div class="label">Game / Owner ID</div>
-  <input id="gameId">
+  <div class="info-row">
+    <span class="info-label">Game / Owner ID</span>
+    <input id="gameId">
+  </div>
 
-  <div class="label">Device Name</div>
-  <input id="device">
+  <div class="info-row">
+    <span class="info-label">Device Name</span>
+    <input id="device">
+  </div>
 
   <button onclick="saveProfile()">Save Changes</button>
   <button class="secondary" onclick="toggleEdit(false)">Cancel</button>
@@ -159,11 +208,19 @@ auth.onAuthStateChanged(user=>{
   db.collection("players").doc(uid).onSnapshot(doc=>{
     const d=doc.data(); if(!d)return;
 
-    v_username.innerText=d.username||"";
+    profileTitle.innerText=(d.username||"My")+"’s Profile";
+
     v_phone.innerText=d.phone||"—";
-    v_facebook.innerText=d.facebook||"—";
     v_gameId.innerText=d.gameId||"—";
     v_device.innerText=d.device||"—";
+
+    if(d.facebook){
+      v_facebook.innerText=d.facebook;
+      v_facebook.href=d.facebook;
+    }else{
+      v_facebook.innerText="—";
+      v_facebook.removeAttribute("href");
+    }
 
     phone.value=d.phone||"";
     facebook.value=d.facebook||"";
