@@ -40,59 +40,63 @@ header img{width:90px;filter:drop-shadow(0 0 18px rgba(255,215,0,.6))}
   box-shadow:0 0 18px rgba(0,247,255,.25);
 }
 
-/* INFO CARD */
+/* INFO ROW */
 .info-row{
-  background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-  border-radius:16px;
-  padding:14px 16px;
-  margin-top:14px;
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
-
-.info-icon{
-  font-size:22px;
-  width:36px;
-  text-align:center;
-}
-
-.info-text{
-  display:flex;
-  flex-direction:column;
-}
-.info-label{
-  font-size:11px;
-  color:#9aa;
-}
-.info-value{
-  font-size:15px;
-  font-weight:700;
-}
-
-/* FACEBOOK BUTTON */
-.fb-btn{
-  margin-top:6px;
-  padding:12px 16px;
+  background:rgba(255,255,255,.05);
   border-radius:14px;
-  background:linear-gradient(135deg,#1877f2,#0a58ca);
-  color:#fff;
-  font-weight:800;
-  font-size:14px;
-  text-decoration:none;
-  display:inline-flex;
+  padding:14px;
+  margin-top:12px;
+  display:flex;
   align-items:center;
-  gap:8px;
-  box-shadow:0 0 12px rgba(24,119,242,.6);
+  gap:12px;
 }
-.fb-btn:hover{opacity:.9}
+.info-icon{font-size:22px}
+.info-text{display:flex;flex-direction:column}
+.info-label{font-size:11px;color:#9aa}
+.info-value{font-size:15px;font-weight:700}
+
+/* FACEBOOK SPECIAL (NO BG) */
+.fb-row{
+  background:none;
+  padding:0;
+  margin-top:16px;
+}
+
+.fb-btn{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:none;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+  background:linear-gradient(145deg,#1da1f2,#1877f2);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  box-shadow:0 0 16px rgba(29,161,242,.5);
+}
 
 .stats{
   display:flex;
   justify-content:space-between;
-  margin-top:18px;
-  font-size:13px;
+  margin:18px 4px 6px;
+  font-size:14px;
 }
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:16px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(145deg,#00f7ff,#008cff);
+  font-weight:900;
+  cursor:pointer;
+}
+button.secondary{background:#222;color:#fff}
 
 input{
   width:100%;
@@ -101,18 +105,6 @@ input{
   border:none;
   font-size:15px;
 }
-
-button{
-  width:100%;
-  padding:14px;
-  margin-top:16px;
-  border:none;
-  border-radius:12px;
-  background:linear-gradient(145deg,#00f7ff,#008cff);
-  font-weight:900;
-  cursor:pointer;
-}
-button.secondary{background:#222;color:#fff}
 
 .hidden{display:none}
 .error{color:#ff6b6b;font-size:13px;margin-top:10px}
@@ -158,14 +150,10 @@ button.secondary{background:#222;color:#fff}
     </div>
   </div>
 
-  <div class="info-row">
-    <div class="info-icon">🌐</div>
-    <div class="info-text">
-      <span class="info-label">Facebook</span>
-      <a id="v_facebook" class="fb-btn" target="_blank">
-        🔵 View Facebook Profile
-      </a>
-    </div>
+  <div class="fb-row">
+    <button class="fb-btn" id="fbBtn" onclick="openFacebook()">
+      🌐 View Facebook Profile
+    </button>
   </div>
 
   <div class="info-row">
@@ -194,7 +182,7 @@ button.secondary{background:#222;color:#fff}
   <button class="secondary" onclick="logout()">Logout</button>
 </div>
 
-<!-- EDIT MODE (UNCHANGED) -->
+<!-- EDIT MODE -->
 <div id="editBox" class="hidden">
 
   <div class="info-row">
@@ -208,12 +196,12 @@ button.secondary{background:#222;color:#fff}
   </div>
 
   <div class="info-row">
-    <span class="info-label">Game / Owner ID</span>
+    <span class="info-label">Game/Owner ID</span>
     <input id="gameId">
   </div>
 
   <div class="info-row">
-    <span class="info-label">Device Name</span>
+    <span class="info-label">Device</span>
     <input id="device">
   </div>
 
@@ -222,7 +210,6 @@ button.secondary{background:#222;color:#fff}
 </div>
 
 <div id="msg"></div>
-</div>
 </div>
 
 <script>
@@ -233,7 +220,7 @@ firebase.initializeApp({
 });
 
 const auth=firebase.auth(),db=firebase.firestore();
-let uid;
+let uid, fbLink="";
 
 auth.onAuthStateChanged(user=>{
   if(!user){location.replace("login.html");return;}
@@ -243,19 +230,14 @@ auth.onAuthStateChanged(user=>{
   db.collection("players").doc(uid).onSnapshot(doc=>{
     const d=doc.data(); if(!d)return;
 
+    profileTitle.innerText=(d.username||"My")+"’s Profile";
     v_username.innerText=d.username||"—";
-    profileTitle.innerText=(d.username||"Player")+"’s Profile";
-
     v_phone.innerText=d.phone||"—";
     v_gameId.innerText=d.gameId||"—";
     v_device.innerText=d.device||"—";
 
-    if(d.facebook){
-      v_facebook.href=d.facebook;
-      v_facebook.style.display="inline-flex";
-    }else{
-      v_facebook.style.display="none";
-    }
+    fbLink=d.facebook||"";
+    fbBtn.style.display=fbLink?"flex":"none";
 
     phone.value=d.phone||"";
     facebook.value=d.facebook||"";
@@ -268,20 +250,22 @@ auth.onAuthStateChanged(user=>{
   });
 });
 
-function toggleEdit(edit){
-  viewBox.classList.toggle("hidden",edit);
-  editBox.classList.toggle("hidden",!edit);
-  msg.innerHTML="";
+function openFacebook(){
+  if(fbLink) window.open(fbLink,"_blank");
+}
+
+function toggleEdit(e){
+  viewBox.classList.toggle("hidden",e);
+  editBox.classList.toggle("hidden",!e);
 }
 
 function saveProfile(){
-  const phoneVal=phone.value.trim();
-  if(!/^(\+8801|01)[0-9]{9}$/.test(phoneVal)){
+  if(!/^(\+8801|01)[0-9]{9}$/.test(phone.value.trim())){
     msg.innerHTML='<div class="error">❌ ভ্যালিড বাংলাদেশ নাম্বার দিন</div>';
     return;
   }
   db.collection("players").doc(uid).update({
-    phone:phoneVal,
+    phone:phone.value.trim(),
     facebook:facebook.value.trim(),
     gameId:gameId.value.trim(),
     device:device.value.trim()
