@@ -5,6 +5,10 @@
 <title>AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
 :root{
   --neon:#00f7ff;
@@ -13,14 +17,7 @@
   --bg2:#0c1b2a;
   --glass:rgba(255,255,255,0.08);
 }
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Segoe UI',sans-serif;
-}
-
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
 body{
   min-height:100vh;
   background:radial-gradient(circle at top,var(--bg2),var(--bg1));
@@ -28,63 +25,50 @@ body{
   display:flex;
   justify-content:center;
 }
-
-.container{
-  width:100%;
-  max-width:430px;
-  padding:18px;
-  text-align:center;
-}
-
-/* LOGO */
+.container{width:100%;max-width:430px;padding:18px;text-align:center}
 .logo img{
-  width:130px;
-  margin:12px 0;
+  width:130px;margin:12px 0;
   filter:drop-shadow(0 0 25px rgba(255,215,0,.7));
 }
+h1{color:var(--gold);font-size:30px}
+.tagline{color:var(--neon);font-size:14px;margin:6px 0 16px}
 
-/* TITLE */
-h1{
-  color:var(--gold);
-  font-size:30px;
-  letter-spacing:1px;
-}
-.tagline{
-  color:var(--neon);
-  font-size:14px;
-  margin:6px 0 16px;
-}
-
-/* LIVE NOTICE */
+/* NOTICE */
 .notice{
   background:linear-gradient(145deg,#061b2a,#021019);
   border-radius:16px;
   padding:14px;
   margin-bottom:14px;
   box-shadow:0 0 20px rgba(0,247,255,.35);
-  animation:pulse 3s infinite;
 }
-.notice span{
-  color:var(--neon);
-  font-weight:700;
-  font-size:14px;
-}
-@keyframes pulse{
-  0%,100%{box-shadow:0 0 16px rgba(0,247,255,.3)}
-  50%{box-shadow:0 0 30px rgba(0,247,255,.6)}
-}
+.notice span{color:var(--neon);font-weight:700;font-size:14px}
 
 /* SEASON */
 .season{
   background:linear-gradient(145deg,#1a1405,#0b0702);
   border-radius:16px;
   padding:12px;
-  margin-bottom:18px;
+  margin-bottom:16px;
   box-shadow:0 0 20px rgba(255,212,0,.35);
   color:var(--gold);
   font-weight:700;
   font-size:14px;
 }
+
+/* TOP 3 */
+.top{
+  background:var(--glass);
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:18px;
+}
+.top h3{margin-bottom:10px;color:var(--gold)}
+.player{
+  font-size:14px;
+  padding:6px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.player:last-child{border:none}
 
 /* ABOUT */
 .about{
@@ -92,24 +76,12 @@ h1{
   border-radius:16px;
   padding:16px;
   margin-bottom:20px;
-  backdrop-filter:blur(6px);
 }
-.about h2{
-  font-size:18px;
-  margin-bottom:8px;
-}
-.about p{
-  font-size:14px;
-  line-height:1.6;
-  color:#ddd;
-}
+.about h2{font-size:18px;margin-bottom:8px}
+.about p{font-size:14px;line-height:1.6;color:#ddd}
 
 /* MENU */
-.menu{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
+.menu{display:flex;flex-direction:column;gap:12px}
 .menu a{
   text-decoration:none;
   padding:15px;
@@ -117,21 +89,6 @@ h1{
   background:linear-gradient(145deg,#061726,#020c14);
   color:var(--neon);
   font-weight:700;
-  letter-spacing:.4px;
-  position:relative;
-  overflow:hidden;
-  transition:.25s;
-}
-.menu a::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(120deg,transparent,rgba(0,247,255,.25),transparent);
-  transform:translateX(-100%);
-}
-.menu a:hover::after{
-  transform:translateX(100%);
-  transition:.6s;
 }
 .menu a:hover{
   transform:scale(1.05);
@@ -139,23 +96,14 @@ h1{
 }
 
 /* FOOTER */
-footer{
-  margin-top:24px;
-  font-size:12px;
-  color:#aaa;
-}
-footer a{
-  color:var(--neon);
-  text-decoration:none;
-  font-weight:700;
-}
+footer{margin-top:24px;font-size:12px;color:#aaa}
+footer a{color:var(--neon);text-decoration:none;font-weight:700}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-  <!-- LOGO -->
   <div class="logo">
     <img src="logo.png" alt="AFN Logo">
   </div>
@@ -163,17 +111,19 @@ footer a{
   <h1>AFN's Elite Strikers</h1>
   <div class="tagline">Play Smart. Play Elite. Play AFN.</div>
 
-  <!-- LIVE NOTICE -->
   <div class="notice">
-    <span id="noticeText">🔥 Season 2026 Live • Registration Open Now</span>
+    <span id="noticeText">Loading notice...</span>
   </div>
 
-  <!-- SEASON STATUS -->
-  <div class="season">
-    🏟️ Season 2026 • Ongoing • Rankings Live
+  <div class="season" id="seasonBox">
+    Loading season...
   </div>
 
-  <!-- ABOUT -->
+  <div class="top">
+    <h3>🏆 Top 3 Players</h3>
+    <div id="topPlayers">Loading...</div>
+  </div>
+
   <div class="about">
     <h2>আমাদের ক্লাব</h2>
     <p>
@@ -182,39 +132,56 @@ footer a{
     </p>
   </div>
 
-  <!-- MENU -->
   <div class="menu">
     <a href="login.html">👤 Player Login / Profile</a>
     <a href="leaderboard.html">🏆 Leaderboard</a>
     <a href="admin-login.html">🔐 Admin Panel</a>
   </div>
 
-  <!-- FOOTER -->
   <footer>
     © 2026 AFN's Elite Strikers |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
-      SI SHOHAN
-    </a>
+    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI SHOHAN</a>
   </footer>
 
 </div>
 
 <script>
-/* Live Notice Rotation (future Firestore replaceable) */
-const notices = [
-  "🔥 Season 2026 Live • Registration Open",
-  "🏆 PvP Rankings Updating Live",
-  "⚠️ Tonight: Knockout Matches",
-  "👑 Champion Certificate Available",
-  "🚀 New Players Joined AFN"
-];
+/* 🔥 Firebase Init */
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+const db=firebase.firestore();
 
-let n=0;
-const box=document.getElementById("noticeText");
-setInterval(()=>{
-  n=(n+1)%notices.length;
-  box.textContent=notices[n];
-},8000);
+/* 🔔 Live Notice */
+db.collection("notices").doc("home").onSnapshot(d=>{
+  if(d.exists) noticeText.textContent=d.data().text;
+});
+
+/* 🏟️ Active Season */
+db.collection("seasons").where("active","==",true).limit(1)
+.onSnapshot(s=>{
+  if(!s.empty){
+    const d=s.docs[0].data();
+    seasonBox.textContent=`🏟️ ${d.name} • Ongoing • Rankings Live`;
+  }
+});
+
+/* 🏆 Top 3 Players */
+db.collection("players")
+  .orderBy("rating","desc")
+  .limit(3)
+  .onSnapshot(s=>{
+    topPlayers.innerHTML="";
+    s.forEach((d,i)=>{
+      const p=d.data();
+      topPlayers.innerHTML+=`
+        <div class="player">
+          ${i+1}. ${p.name||"Player"} — ⭐ ${p.rating}
+        </div>`;
+    });
+  });
 </script>
 
 </body>
