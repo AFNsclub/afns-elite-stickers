@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Match Control</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{background:#050b1e;color:#fff;font-family:Arial}
+.card{background:#0b1622;padding:14px;margin:10px;border-radius:12px}
+button{margin:4px;padding:6px 10px}
+</style>
+</head>
+<body>
+
+<h2>🛠 Match Control</h2>
+<div id="list"></div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+const db=firebase.firestore();
+
+db.collection("matches").orderBy("time","desc").onSnapshot(snap=>{
+  list.innerHTML="";
+  snap.forEach(doc=>{
+    const m=doc.data();
+    list.innerHTML+=`
+      <div class="card">
+        <b>${m.p1} vs ${m.p2}</b><br>
+        Winner: ${m.winner}<br>
+        <button onclick="edit('${doc.id}')">✏ Edit</button>
+        <button onclick="rollback('${doc.id}')">♻ Rollback</button>
+      </div>`;
+  });
+});
+
+async function edit(id){
+  const win=prompt("New winner UID?");
+  if(!win) return;
+  await db.collection("matches").doc(id).update({
+    winner:win,
+    edited:true
+  });
+  log("Match edited "+id);
+}
+
+async function rollback(id){
+  if(!confirm("Rollback this match?")) return;
+  await db.collection("matches").doc(id).update({
+    rolledBack:true
+  });
+  log("Match rollback "+id);
+}
+
+function log(text){
+  db.collection("activity").add({
+    text,
+    time:Date.now()
+  });
+}
+</script>
+</body>
+</html>
