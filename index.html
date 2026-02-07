@@ -40,31 +40,24 @@ body{
 h1{color:var(--gold);font-size:30px}
 .tagline{color:var(--neon);font-size:14px;margin:6px 0 18px}
 
-/* 🔔 ANNOUNCEMENT BANNER */
+/* 🔔 TEXT ANNOUNCEMENT */
 .announcement{
-  position:relative;
-  border-radius:20px;
-  overflow:hidden;
   margin-bottom:22px;
-  box-shadow:0 0 25px rgba(255,215,0,.35);
-}
-.announcement img{
-  width:100%;
-  display:block;
-}
-.announcement .overlay{
-  position:absolute;
-  inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,.75),transparent);
-  display:flex;
-  align-items:flex-end;
-  padding:16px;
-}
-.announcement h3{
+  padding:14px 16px;
+  border-radius:18px;
+  background:linear-gradient(145deg,#120c02,#1a1205);
+  box-shadow:0 0 22px rgba(255,215,0,.35);
   color:var(--gold);
-  font-size:16px;
-  text-align:left;
+  font-weight:800;
+  font-size:14px;
+  animation:pulse 2.5s infinite;
 }
+@keyframes pulse{
+  0%{box-shadow:0 0 16px rgba(255,215,0,.25)}
+  50%{box-shadow:0 0 26px rgba(255,215,0,.55)}
+  100%{box-shadow:0 0 16px rgba(255,215,0,.25)}
+}
+.hidden{display:none}
 
 /* MOTIVE */
 .motive-box{
@@ -184,11 +177,8 @@ footer a{color:var(--neon);font-weight:700;text-decoration:none}
 <div class="tagline">Play Smart. Play Elite. Play AFN.</div>
 
 <!-- 🔔 ANNOUNCEMENT -->
-<div class="announcement">
-  <img src="announcement.jpg" alt="Announcement">
-  <div class="overlay">
-    <h3>🔥 New Season • Rankings Reset • Play Fair & Rise Elite</h3>
-  </div>
+<div id="announcementBar" class="announcement hidden">
+  <span id="announcementText"></span>
 </div>
 
 <div class="motive-box">
@@ -234,13 +224,36 @@ footer a{color:var(--neon);font-weight:700;text-decoration:none}
 <!-- 💬 SUPPORT CHAT -->
 <a href="support-chat.html" class="support-chat">💬</a>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
-function goMyProfile(){
-  if(localStorage.getItem("uid")){
-    location.href="my-profile.html";
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+const db=firebase.firestore();
+
+/* 🔔 ANNOUNCEMENT AUTO */
+db.collection("announcements").doc("latest")
+.onSnapshot(doc=>{
+  if(!doc.exists) return;
+  const d=doc.data();
+  if(d.active){
+    announcementText.innerText=d.text;
+    announcementBar.classList.remove("hidden");
   }else{
-    location.href="login.html";
+    announcementBar.classList.add("hidden");
   }
+});
+
+/* NAV */
+function goMyProfile(){
+  location.href = localStorage.getItem("uid")
+    ? "my-profile.html"
+    : "login.html";
 }
 function goAdmin(){ location.href="admin-login.html"; }
 
