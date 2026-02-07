@@ -125,6 +125,7 @@ input{
   padding:12px;
   border-radius:10px;
   border:none;
+  margin-top:10px;
 }
 .hidden{display:none}
 .error{color:#ff6b6b;font-size:13px;margin-top:10px}
@@ -183,6 +184,15 @@ input{
     </div>
   </div>
 
+  <!-- DEVICE NAME -->
+  <div class="info-row">
+    <div class="info-icon">📲</div>
+    <div class="info-text">
+      <span class="info-label">Device</span>
+      <span class="info-value" id="v_device"></span>
+    </div>
+  </div>
+
   <div class="stats">
     <div>⭐ <span id="rating">0</span></div>
     <div>🏆 <span id="wins">0</span></div>
@@ -198,6 +208,7 @@ input{
   <input id="phone" placeholder="Phone">
   <input id="facebook" placeholder="Facebook link">
   <input id="gameId" placeholder="Game ID">
+  <input id="device" placeholder="Device (Android / iPhone / PC)">
   <button onclick="saveProfile()">Save</button>
   <button class="secondary" onclick="toggleEdit(false)">Cancel</button>
 </div>
@@ -233,9 +244,15 @@ auth.onAuthStateChanged(user=>{
     v_username.innerText=d.username||"—";
     v_phone.innerText=d.phone||"—";
     v_gameId.innerText=d.gameId||"—";
+    v_device.innerText=d.device||"—";
     rating.innerText=d.rating||0;
     wins.innerText=d.wins||0;
     losses.innerText=d.losses||0;
+
+    phone.value=d.phone||"";
+    facebook.value=d.facebook||"";
+    gameId.value=d.gameId||"";
+    device.value=d.device||"";
 
     const r=getRank(d.rating||0);
     rankBadge.className="rank-badge "+r.c;
@@ -253,13 +270,14 @@ function saveProfile(){
   db.collection("players").doc(uid).update({
     phone:phone.value,
     facebook:facebook.value,
-    gameId:gameId.value
+    gameId:gameId.value,
+    device:device.value
   }).then(()=>msg.innerHTML="<div class='success'>Updated</div>");
 }
 function logout(){auth.signOut().then(()=>location.replace("login.html"))}
 </script>
 
 <script src="season-manager.js"></script>
-  
+
 </body>
 </html>
