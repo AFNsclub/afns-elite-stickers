@@ -24,32 +24,17 @@ body{
   background:rgba(255,255,255,.06);
   backdrop-filter:blur(12px);
   border-radius:20px;
-  box-shadow:0 0 30px rgba(0,0,0,.6);
 }
 h2{text-align:center;margin:0}
-.season{
-  text-align:center;
-  margin:8px 0 16px;
-  font-size:13px;
-  color:#a5b4fc;
-}
-.top3{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-bottom:20px;
-}
+.season{text-align:center;font-size:13px;color:#a5b4fc;margin:8px 0 16px}
+.top3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .champ{
-  padding:14px;
-  border-radius:16px;
-  text-align:center;
+  padding:14px;border-radius:16px;text-align:center;
   background:linear-gradient(145deg,#1e293b,#020617);
 }
 .champ img{
-  width:54px;height:54px;
-  border-radius:50%;
-  border:2px solid #ffd700;
-  margin-bottom:6px;
+  width:54px;height:54px;border-radius:50%;
+  border:2px solid gold;margin-bottom:6px
 }
 .gold{box-shadow:0 0 20px rgba(255,215,0,.6)}
 .silver{box-shadow:0 0 16px rgba(192,192,192,.6)}
@@ -58,39 +43,18 @@ h2{text-align:center;margin:0}
   display:grid;
   grid-template-columns:36px 1fr 60px;
   gap:10px;
-  align-items:center;
   padding:12px;
-  border-radius:14px;
   background:rgba(255,255,255,.05);
-  margin-bottom:8px;
+  border-radius:14px;
+  margin-top:8px;
   cursor:pointer;
-  transition:.2s;
 }
-.row:hover{background:rgba(255,255,255,.1)}
 .rank{font-weight:bold;text-align:center}
-.name{font-size:14px}
 .points{text-align:right;color:#a5b4fc;font-weight:700}
-.actions{
-  display:flex;
-  justify-content:space-between;
-  margin-top:16px;
-}
-.actions a{
-  text-decoration:none;
-  font-size:13px;
-  color:#60a5fa;
-  font-weight:700;
-}
-footer{
-  text-align:center;
-  font-size:12px;
-  opacity:.6;
-  margin-top:18px;
-}
-.badge{
-  font-size:12px;
-  margin-left:4px;
-}
+.badge{font-size:12px;margin-left:4px}
+.actions{display:flex;justify-content:space-between;margin-top:16px}
+.actions a{color:#60a5fa;font-size:13px;text-decoration:none;font-weight:700}
+footer{text-align:center;font-size:12px;opacity:.6;margin-top:18px}
 </style>
 
 <script>
@@ -99,13 +63,86 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
-const db=firebase.firestore();
+const db = firebase.firestore();
 
-/* 🔥 STREAK BADGE LOGIC */
 function getStreakBadge(streak){
   if(streak >= 5) return "🔥 HOT";
   if(streak >= 3) return "⚡";
   return "";
+}
+
+async function getSeasonSafe(){
+  // 1️⃣ try active season
+  let snap = await db.collection("seasons")
+    .where("active","==",true)
+    .limit(1).get();
+
+  if(!snap.empty) return snap.docs[0].id;
+
+  // 2️⃣ fallback: latest season
+  snap = await db.collection("seasons")
+    .orderBy("createdAt","desc")
+    .limit(1).get();
+
+  return snap.empty ? null : snap.docs[0].id;
+}
+
+(async ()=>{
+  const seasonId = await getSeasonSafe();
+
+  if(!seasonId){
+    document.getElementById("seasonText").innerText="No season found";
+    return;
+  }
+
+  seasonText.innerText = `Season ${seasonId} • Rankings`;
+
+  db.collection("players")
+    .where("seasonId","==",seasonId)
+    .onSnapshot(snap=>{
+      let players=[];
+      snap.forEach(d=>players.push({uid:d.id,...d.data()}));
+
+      players.sort((a,b)=>
+        (b.rating||0)-(a.rating||0) ||
+        (b.wins||0)-(a.wins||0) ||
+        (b.gd||0)-(a.gd||0)
+      );
+
+      render(players);
+    });
+})();
+
+function render(players){
+  top3.innerHTML="";
+  list.innerHTML="";
+
+  players.slice(0,3).forEach((p,i)=>{
+    const badge=getStreakBadge(p.winStreak||0);
+    const d=document.createElement("div");
+    d.className=`champ ${["gold","silver","bronze"][i]}`;
+    d.onclick=()=>location.href=`public-profile.html?uid=${p.uid}`;
+    d.innerHTML=`
+      <div>${["🥇","🥈","🥉"][i]}</div>
+      <img src="${p.photo||'avatar.png'}">
+      <div>${p.name||"Player"} ${badge?`<span class="badge">${badge}</span>`:""}</div>
+      <small>${p.rating||0} RP</small>
+    `;
+    top3.appendChild(d);
+  });
+
+  players.slice(3,10).forEach((p,i)=>{
+    const badge=getStreakBadge(p.winStreak||0);
+    const r=document.createElement("div");
+    r.className="row";
+    r.onclick=()=>location.href=`public-profile.html?uid=${p.uid}`;
+    r.innerHTML=`
+      <div class="rank">#${i+4}</div>
+      <div>${p.name||"Player"} ${badge?`<span class="badge">${badge}</span>`:""}</div>
+      <div class="points">${p.rating||0}</div>
+    `;
+    list.appendChild(r);
+  });
 }
 </script>
 </head>
@@ -114,7 +151,6 @@ function getStreakBadge(streak){
 <div class="container">
   <h2>🏆 Rankings & Legends</h2>
   <div class="season" id="seasonText">Loading season...</div>
-
   <div class="top3" id="top3"></div>
   <div class="rank-list" id="list"></div>
 
@@ -128,78 +164,5 @@ function getStreakBadge(streak){
     Play Smart • Stay Elite
   </footer>
 </div>
-
-<script>
-async function getActiveSeason(){
-  const snap = await db.collection("seasons")
-    .where("active","==",true).limit(1).get();
-  return snap.empty ? null : snap.docs[0].id;
-}
-
-(async()=>{
-  const seasonId = await getActiveSeason();
-  if(!seasonId) return;
-
-  seasonText.textContent = `Season ${seasonId} • Live Ranking`;
-
-  db.collection("players")
-    .where("seasonId","==",seasonId)
-    .onSnapshot(snap=>{
-      let players=[];
-      snap.forEach(d=>players.push({uid:d.id,...d.data()}));
-
-      players.sort((a,b)=>{
-        if((b.rating||0)!==(a.rating||0)) return (b.rating||0)-(a.rating||0);
-        if((b.wins||0)!==(a.wins||0)) return (b.wins||0)-(a.wins||0);
-        if((b.gd||0)!==(a.gd||0)) return (b.gd||0)-(a.gd||0);
-        return (b.goals||0)-(a.goals||0);
-      });
-
-      render(players);
-    });
-})();
-
-function render(players){
-  top3.innerHTML="";
-  list.innerHTML="";
-
-  /* 🥇 TOP 3 */
-  players.slice(0,3).forEach((p,i)=>{
-    const badge = getStreakBadge(p.winStreak || 0);
-
-    const div=document.createElement("div");
-    div.className=`champ ${["gold","silver","bronze"][i]}`;
-    div.onclick=()=>location.href=`public-profile.html?uid=${p.uid}`;
-    div.innerHTML=`
-      <div>${["🥇","🥈","🥉"][i]}</div>
-      <img src="${p.photo||'avatar.png'}">
-      <div>
-        ${p.name||"Player"}
-        ${badge ? `<span class="badge">${badge}</span>` : ""}
-      </div>
-      <small>${p.rating||0} RP</small>
-    `;
-    top3.appendChild(div);
-  });
-
-  /* 🔢 4–10 RANK */
-  players.slice(3,10).forEach((p,i)=>{
-    const badge = getStreakBadge(p.winStreak || 0);
-
-    const row=document.createElement("div");
-    row.className="row";
-    row.onclick=()=>location.href=`public-profile.html?uid=${p.uid}`;
-    row.innerHTML=`
-      <div class="rank">#${i+4}</div>
-      <div class="name">
-        ${p.name||"Player"}
-        ${badge ? `<span class="badge">${badge}</span>` : ""}
-      </div>
-      <div class="points">${p.rating||0}</div>
-    `;
-    list.appendChild(row);
-  });
-}
-</script>
 </body>
 </html>
