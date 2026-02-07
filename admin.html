@@ -138,7 +138,6 @@ body{
 
 <div class="container">
 
-<!-- MAIN GRID -->
 <div class="grid">
 
   <div class="card perm-addMatch" onclick="go('add-match.html')">
@@ -179,20 +178,17 @@ body{
 
 </div>
 
-<!-- PERMISSIONS -->
 <div class="section-title">🛡️ My Permissions</div>
 <div class="permissions">
   <div class="box" id="permBox">Loading...</div>
 </div>
 
-<!-- QUICK ACTIONS -->
 <div class="section-title">⚡ Quick Actions</div>
 <div class="quick">
   <button class="perm-addMatch" onclick="go('add-match.html')">➕ Add Match</button>
   <button class="perm-editMatch" onclick="go('admin-match-control.html')">🛠 Edit Match</button>
 </div>
 
-<!-- ALERTS -->
 <div class="section-title">🔔 Recent Activity</div>
 <div class="alerts">
   <div class="box" id="alertsBox">
@@ -200,7 +196,6 @@ body{
   </div>
 </div>
 
-<!-- STATS -->
 <div class="stats">
   <div class="stat"><span id="players">0</span>Players</div>
   <div class="stat"><span id="matches">0</span>Matches</div>
@@ -222,16 +217,21 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-/* 🔐 FORCE PERSISTENCE (AUTO LOGOUT FIX) */
-firebase.auth().setPersistence(
-  firebase.auth.Auth.Persistence.LOCAL
-);
-
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* 🔐 AUTH + ADMIN CHECK */
-auth.onAuthStateChanged(async user=>{
+/* 🔐 SAFE AUTH BOOTSTRAP */
+(async ()=>{
+  try{
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    auth.onAuthStateChanged(handleAuth);
+  }catch(e){
+    location.href="admin-login.html";
+  }
+})();
+
+/* 🔐 AUTH HANDLER */
+async function handleAuth(user){
   if(!user){
     return location.href="admin-login.html";
   }
@@ -250,7 +250,6 @@ auth.onAuthStateChanged(async user=>{
     adminRole.innerText =
       (a.badge || "") + " " + a.role.toUpperCase();
 
-    /* 🔒 PERMISSION VISIBILITY */
     document.querySelectorAll("[class*='perm-']").forEach(el=>{
       const m = el.className.match(/perm-(\w+)/);
       if(m && !a.permissions?.[m[1]]){
@@ -258,7 +257,6 @@ auth.onAuthStateChanged(async user=>{
       }
     });
 
-    /* 🛡 PERMISSION SUMMARY */
     let html="";
     for(const k in a.permissions){
       html += `${a.permissions[k] ? "✔" : "❌"} ${k}<br>`;
@@ -268,11 +266,9 @@ auth.onAuthStateChanged(async user=>{
     loadAlerts();
 
   }catch(err){
-    console.error(err);
-    alert("Session error. Please login again.");
-    auth.signOut().then(()=>location.href="admin-login.html");
+    alert("Admin verification failed");
   }
-});
+}
 
 /* 🔔 ACTIVITY */
 function loadAlerts(){
