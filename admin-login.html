@@ -24,18 +24,12 @@ body{
   border-radius:16px;
   box-shadow:0 0 25px rgba(0,0,0,.6);
 }
-.logo{
-  text-align:center;
-  margin-bottom:16px;
-}
+.logo{text-align:center;margin-bottom:16px}
 .logo img{
   height:60px;
   filter:drop-shadow(0 0 10px rgba(79,140,255,.6));
 }
-h2{
-  text-align:center;
-  margin:10px 0 18px;
-}
+h2{text-align:center;margin:10px 0 18px}
 input{
   width:100%;
   padding:12px;
@@ -44,9 +38,7 @@ input{
   border-radius:8px;
   outline:none;
 }
-.pass-wrap{
-  position:relative;
-}
+.pass-wrap{position:relative}
 .pass-wrap span{
   position:absolute;
   right:12px;
@@ -67,14 +59,8 @@ button{
   font-weight:bold;
   cursor:pointer;
 }
-button:hover{
-  box-shadow:0 0 14px rgba(79,140,255,.7);
-}
-.msg{
-  margin-top:14px;
-  text-align:center;
-  font-size:14px;
-}
+button:hover{box-shadow:0 0 14px rgba(79,140,255,.7)}
+.msg{margin-top:14px;text-align:center;font-size:14px}
 .error{color:#ff6b6b}
 .success{color:#22c55e}
 .forgot{
@@ -103,6 +89,11 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
+
+/* ✅ AUTO LOGOUT OFF (FINAL FIX) */
+firebase.auth().setPersistence(
+  firebase.auth.Auth.Persistence.LOCAL
+);
 </script>
 </head>
 
@@ -126,9 +117,7 @@ firebase.initializeApp({
 
   <div class="msg" id="msg"></div>
 
-  <div class="forgot" onclick="forgot()">
-    Forgot password?
-  </div>
+  <div class="forgot" onclick="forgot()">Forgot password?</div>
 
   <footer>
     AFNs Elite Striker |
@@ -139,12 +128,12 @@ firebase.initializeApp({
 </div>
 
 <script>
-const auth=firebase.auth();
-const msg=document.getElementById("msg");
+const auth = firebase.auth();
+const msg  = document.getElementById("msg");
 
 function togglePass(){
   const p=document.getElementById("password");
-  p.type=p.type==="password"?"text":"password";
+  p.type = p.type==="password" ? "text" : "password";
 }
 
 function login(){
@@ -154,7 +143,7 @@ function login(){
   msg.textContent="";
   msg.className="msg";
 
-  if(!email||!pass){
+  if(!email || !pass){
     msg.textContent="Email & Password required";
     msg.classList.add("error");
     return;
@@ -164,9 +153,7 @@ function login(){
     .then(()=>{
       msg.textContent="Login success ✓";
       msg.classList.add("success");
-      setTimeout(()=>{
-        location.href="admin.html";
-      },800);
+      setTimeout(()=>location.href="admin.html",800);
     })
     .catch(err=>{
       msg.textContent=err.message;
@@ -176,10 +163,8 @@ function login(){
 
 function forgot(){
   const email=document.getElementById("email").value.trim();
-  if(!email){
-    alert("Enter email first");
-    return;
-  }
+  if(!email) return alert("Enter email first");
+
   auth.sendPasswordResetEmail(email)
     .then(()=>alert("Password reset email sent"))
     .catch(e=>alert(e.message));
