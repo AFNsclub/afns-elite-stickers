@@ -2,76 +2,92 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Leaderboard</title>
+<title>Rankings & Legends</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
-*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+*{box-sizing:border-box;font-family:Segoe UI,Arial}
 body{
   margin:0;
   min-height:100vh;
-  background:linear-gradient(135deg,#050b1f,#0a1233);
+  background:radial-gradient(circle at top,#0a1a4a,#050b1e);
   color:#fff;
 }
 .container{
   max-width:520px;
-  margin:40px auto;
+  margin:30px auto;
+  padding:20px;
   background:rgba(255,255,255,.06);
-  backdrop-filter:blur(10px);
-  border-radius:16px;
-  padding:22px;
-  box-shadow:0 0 25px rgba(0,0,0,.6);
+  backdrop-filter:blur(12px);
+  border-radius:20px;
+  box-shadow:0 0 30px rgba(0,0,0,.6);
 }
-h2{text-align:center;margin:0 0 16px}
-.motivation{
+h2{text-align:center;margin:0}
+.season{
   text-align:center;
-  font-size:14px;
-  background:rgba(59,130,246,.15);
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:14px;
+  margin:8px 0 16px;
+  font-size:13px;
+  color:#a5b4fc;
 }
-.list{margin-top:10px}
-.row{
+.top3{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:20px;
+}
+.champ{
+  padding:14px;
+  border-radius:16px;
+  text-align:center;
+  background:linear-gradient(145deg,#1e293b,#020617);
+}
+.champ img{
+  width:54px;height:54px;
+  border-radius:50%;
+  border:2px solid #ffd700;
+  margin-bottom:6px;
+}
+.gold{box-shadow:0 0 20px rgba(255,215,0,.6)}
+.silver{box-shadow:0 0 16px rgba(192,192,192,.6)}
+.bronze{box-shadow:0 0 14px rgba(205,127,50,.6)}
+.rank-list .row{
   display:grid;
   grid-template-columns:36px 1fr 60px;
-  align-items:center;
   gap:10px;
-  padding:10px 12px;
-  border-radius:12px;
-  margin-bottom:8px;
+  align-items:center;
+  padding:12px;
+  border-radius:14px;
   background:rgba(255,255,255,.05);
+  margin-bottom:8px;
   cursor:pointer;
   transition:.2s;
 }
 .row:hover{background:rgba(255,255,255,.1)}
-.rank{
-  font-weight:bold;
-  text-align:center;
+.rank{font-weight:bold;text-align:center}
+.name{font-size:14px}
+.points{text-align:right;color:#a5b4fc;font-weight:700}
+.actions{
+  display:flex;
+  justify-content:space-between;
+  margin-top:16px;
 }
-.name{
-  font-size:14px;
+.actions a{
+  text-decoration:none;
+  font-size:13px;
+  color:#60a5fa;
+  font-weight:700;
 }
-.points{
-  text-align:right;
-  font-weight:bold;
-  color:#a5b4fc;
-}
-.t1{color:#ffd700}
-.t2{color:#c0c0c0}
-.t3{color:#cd7f32}
 footer{
-  margin-top:18px;
   text-align:center;
   font-size:12px;
   opacity:.6;
+  margin-top:18px;
 }
-footer img{height:24px;vertical-align:middle}
-footer a{color:#a5b4fc;text-decoration:none}
 </style>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -79,85 +95,88 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
+const db=firebase.firestore();
 </script>
 </head>
 
 <body>
-
 <div class="container">
-  <h2>Leaderboard</h2>
+  <h2>🏆 Rankings & Legends</h2>
+  <div class="season" id="seasonText">Loading season...</div>
 
-  <div class="motivation" id="motivation"></div>
+  <div class="top3" id="top3"></div>
+  <div class="rank-list" id="list"></div>
 
-  <div class="list" id="list"></div>
+  <div class="actions">
+    <a href="hall-of-fame.html">👑 Hall of Fame</a>
+    <a href="players.html">🔍 All Players</a>
+  </div>
 
   <footer>
-    <img src="logo.png"><br>
-    AFNs Elite Striker |
-    <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">
-      SI Shohan
-    </a>
+    AFN's Elite Strikers<br>
+    Play Smart • Stay Elite
   </footer>
 </div>
 
 <script>
-const db = firebase.firestore();
+async function getActiveSeason(){
+  const snap = await db.collection("seasons")
+    .where("active","==",true).limit(1).get();
+  return snap.empty ? null : snap.docs[0].id;
+}
 
-/* MOTIVATION */
-const MOTIVATIONS=[
-"Every match matters.",
-"Discipline beats talent.",
-"Focus. Fight. Finish.",
-"Winners never quit.",
-"Train hard, win easy."
-];
-motivation.textContent =
-  MOTIVATIONS[Math.floor(Math.random()*MOTIVATIONS.length)];
+(async()=>{
+  const seasonId = await getActiveSeason();
+  if(!seasonId) return;
 
-/* LOAD PLAYERS */
-db.collection("players").onSnapshot(snap=>{
-  let players=[];
-  snap.forEach(d=>{
-    players.push({uid:d.id,...d.data()});
-  });
+  seasonText.textContent = `Season ${seasonId} • Live Ranking`;
 
-  players.sort((a,b)=>{
-    if((b.wins||0)!==(a.wins||0)) return (b.wins||0)-(a.wins||0);
-    if((b.gd||0)!==(a.gd||0)) return (b.gd||0)-(a.gd||0);
-    return (b.goals||0)-(a.goals||0);
-  });
+  db.collection("players")
+    .where("seasonId","==",seasonId)
+    .onSnapshot(snap=>{
+      let players=[];
+      snap.forEach(d=>players.push({uid:d.id,...d.data()}));
 
+      players.sort((a,b)=>{
+        if((b.rating||0)!==(a.rating||0)) return (b.rating||0)-(a.rating||0);
+        if((b.wins||0)!==(a.wins||0)) return (b.wins||0)-(a.wins||0);
+        if((b.gd||0)!==(a.gd||0)) return (b.gd||0)-(a.gd||0);
+        return (b.goals||0)-(a.goals||0);
+      });
+
+      render(players);
+    });
+})();
+
+function render(players){
+  top3.innerHTML="";
   list.innerHTML="";
-  players.forEach((p,i)=>{
-    const r=i+1;
+
+  players.slice(0,3).forEach((p,i)=>{
+    const div=document.createElement("div");
+    div.className=`champ ${["gold","silver","bronze"][i]}`;
+    div.onclick=()=>location.href=`public-profile.html?uid=${p.uid}`;
+    div.innerHTML=`
+      <div>${["🥇","🥈","🥉"][i]}</div>
+      <img src="${p.photo||'avatar.png'}">
+      <div>${p.name||"Player"}</div>
+      <small>${p.rating||0} RP</small>
+    `;
+    top3.appendChild(div);
+  });
+
+  players.slice(3,10).forEach((p,i)=>{
     const row=document.createElement("div");
     row.className="row";
-    row.onclick=()=>location.href=
-      "public-profile.html?uid="+p.uid;
-
-    const rank=document.createElement("div");
-    rank.className="rank";
-    rank.textContent="#"+r;
-    if(r===1)rank.classList.add("t1");
-    if(r===2)rank.classList.add("t2");
-    if(r===3)rank.classList.add("t3");
-
-    const name=document.createElement("div");
-    name.className="name";
-    name.textContent=p.name||"Player";
-
-    const pts=document.createElement("div");
-    pts.className="points";
-    pts.textContent=(p.wins||0)+"W";
-
-    row.append(rank,name,pts);
+    row.onclick=()=>location.href=`public-profile.html?uid=${p.uid}`;
+    row.innerHTML=`
+      <div class="rank">#${i+4}</div>
+      <div class="name">${p.name||"Player"}</div>
+      <div class="points">${p.rating||0}</div>
+    `;
     list.appendChild(row);
-
-    // save rank back (optional, safe)
-    db.collection("players").doc(p.uid).update({rank:r});
   });
-});
+}
 </script>
-
 </body>
 </html>
