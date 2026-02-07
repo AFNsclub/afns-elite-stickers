@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AI Help</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{background:#050b1e;color:#fff;font-family:Arial}
+.chatbox{
+  max-width:420px;
+  margin:30px auto;
+  background:#0b1622;
+  border-radius:16px;
+  padding:14px;
+}
+.msg{margin:6px 0;padding:8px 10px;border-radius:10px;font-size:14px}
+.user{background:#4f8cff;text-align:right}
+.ai{background:#222}
+.admin{background:#ff4f4f}
+input,button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+}
+button{background:#4f8cff;color:#fff;font-weight:bold}
+.small{font-size:12px;opacity:.6}
+</style>
+</head>
+
+<body>
+
+<div class="chatbox">
+  <h3>🤖 AI Help Desk</h3>
+  <div id="chat"></div>
+
+  <input id="text" placeholder="আপনার সমস্যা লিখুন…">
+  <button onclick="send()">Send</button>
+
+  <button id="adminBtn" style="display:none;background:#ff4f4f"
+    onclick="escalate()">📩 Contact Admin</button>
+
+  <div class="small">AI না পারলে Admin জানানো হবে</div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
+const db=firebase.firestore();
+let chatId=null;
+
+/* SIMPLE AI BRAIN */
+function aiReply(text){
+  text=text.toLowerCase();
+
+  if(text.includes("match"))
+    return "🔧 Match সমস্যা হলে permission এবং season active আছে কিনা চেক করুন";
+
+  if(text.includes("login"))
+    return "🔐 Login সমস্যা হলে আবার sign out করে try করুন";
+
+  if(text.includes("permission"))
+    return "🛡️ আপনার role অনুযায়ী permission নাও থাকতে পারে";
+
+  return null; // AI failed
+}
+
+function render(from,text){
+  const d=document.createElement("div");
+  d.className="msg "+from;
+  d.innerText=text;
+  chat.appendChild(d);
+}
+
+async function send(){
+  if(!text.value) return;
+
+  if(!chatId){
+    const ref=await db.collection("help_chats").add({
+      userId:"guest",
+      userName:"Guest",
+      messages:[],
+      status:"ai",
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    chatId=ref.id;
+  }
+
+  const userMsg=text.value;
+  text.value="";
+
+  render("user",userMsg);
+
+  const ai=aiReply(userMsg);
+
+  const msgs=[
+    {from:"user",text:userMsg,time:new Date()}
+  ];
+
+  if(ai){
+    render("ai",ai);
+    msgs.push({from:"ai",text:ai,time:new Date()});
+  }else{
+    render("ai","🤖 আমি পুরোপুরি নিশ্চিত না…");
+    adminBtn.style.display="block";
+  }
+
+  await db.collection("help_chats").doc(chatId).update({
+    messages:firebase.firestore.FieldValue.arrayUnion(...msgs),
+    lastUpdate:firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+async function escalate(){
+  await db.collection("help_chats").doc(chatId).update({
+    status:"escalated"
+  });
+
+  await db.collection("admin_notifications").add({
+    type:"help_chat",
+    chatId,
+    message:"User needs admin help",
+    seen:false,
+    time:firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  adminBtn.style.display="none";
+  render("admin","📩 Admin কে জানানো হয়েছে");
+}
+</script>
+
+</body>
+</html>
