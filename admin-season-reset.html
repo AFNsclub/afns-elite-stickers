@@ -57,7 +57,8 @@ button{
     • Rating reset to <b>50</b><br>
     • Wins / Losses reset<br>
     • Match history remains SAFE<br>
-    • Auto season (3x per year)
+    • Auto season (3x per year)<br>
+    • 🏆 Auto Hall of Fame entry
   </div>
 
   <button onclick="resetSeason()">RESET SEASON</button>
@@ -88,6 +89,42 @@ async function resetSeason(){
   msg.innerHTML="⏳ Processing season reset...";
 
   try{
+    /* CURRENT ACTIVE SEASON (TO ARCHIVE) */
+    const activeSnap = await db.collection("seasons")
+      .where("active","==",true).limit(1).get();
+
+    const oldSeasonId = activeSnap.empty ? null : activeSnap.docs[0].id;
+
+    /* 🔥 AUTO HALL OF FAME ENTRY */
+    if(oldSeasonId){
+      const topSnap = await db.collection("players")
+        .where("seasonId","==",oldSeasonId)
+        .orderBy("rating","desc")
+        .limit(3)
+        .get();
+
+      let champions=[];
+      topSnap.forEach(doc=>{
+        const p = doc.data();
+        champions.push({
+          uid: doc.id,
+          name: p.name || "Player",
+          rating: p.rating || 0
+        });
+      });
+
+      if(champions.length){
+        await db.collection("hall_of_fame")
+          .doc(oldSeasonId)
+          .set({
+            season: oldSeasonId,
+            champions: champions,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+      }
+    }
+
+    /* CREATE NEW SEASON */
     const seasonId = await getAutoSeason();
 
     const playersSnap = await db.collection("players").get();
@@ -109,16 +146,12 @@ async function resetSeason(){
     /* 🔄 APPLY RESET */
     await batch.commit();
 
-    /* 📊 SEASON SUMMARY SNAPSHOT (🔥 NEW PART) */
+    /* 📊 SEASON SUMMARY SNAPSHOT */
     await db.collection("season_snapshots").doc(seasonId).set({
       seasonId: seasonId,
       totalPlayers: playersSnap.size,
       totalMatches: matchesSnap.size,
       avgRating: 50,
-      suspiciousCount: (
-        await db.collection("players")
-        .where("suspicious","==",true).get()
-      ).size,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
@@ -130,7 +163,7 @@ async function resetSeason(){
       time:firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    msg.innerHTML=`<div class="success">✅ Season reset completed (${seasonId})</div>`;
+    msg.innerHTML=`<div class="success">✅ Season reset completed<br>🏆 Hall of Fame updated</div>`;
 
   }catch(e){
     msg.innerHTML=`<div class="error">❌ ${e}</div>`;
