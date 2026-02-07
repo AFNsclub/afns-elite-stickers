@@ -12,232 +12,104 @@
 
 <style>
 :root{
-  --afn-gold:#F5B94C;
-  --afn-neon:#4DB6FF;
-  --afn-bg:#0A1630;
-  --afn-dark:#05070A;
-  --afn-red:#E53935;
+  --gold:#f5c46c;
+  --blue:#4db6ff;
+  --bg:#050b14;
+  --card:#0c1d2f;
 }
-
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
-
-body{
-  height:100vh;
-  background:linear-gradient(180deg,var(--afn-bg),var(--afn-dark));
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  color:#fff;
+*{box-sizing:border-box;font-family:Segoe UI}
+body{margin:0;background:var(--bg);color:#fff}
+header{
+  background:linear-gradient(145deg,#091d30,#020a12);
+  padding:14px;text-align:center;
+  font-weight:900;color:var(--gold)
 }
-
-/* CHAT CONTAINER */
-.chat-wrap{
-  width:100%;
-  max-width:430px;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
+.chat{
+  height:calc(100vh - 120px);
+  overflow:auto;padding:14px
 }
-
-/* HEADER */
-.chat-header{
-  padding:14px;
-  background:linear-gradient(145deg,var(--afn-gold),#ffcc70);
-  color:#000;
-  font-weight:900;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+.msg{max-width:80%;padding:10px 14px;border-radius:16px;margin-bottom:10px}
+.user{background:#1e3a5f;margin-left:auto}
+.ai{background:#132e24;border-left:3px solid #00e676}
+.admin{background:#2a1a1a;border-left:3px solid #ff5252}
+footer{
+  display:flex;gap:8px;padding:10px;
+  background:#020a12
 }
-
-.chat-header span{
-  font-size:13px;
-  font-weight:700;
+input{
+  flex:1;padding:12px;border-radius:12px;border:none
 }
-
-/* CHAT BODY */
-.chat-body{
-  flex:1;
-  padding:14px;
-  overflow-y:auto;
+button{
+  padding:12px 18px;border:none;border-radius:12px;
+  background:var(--blue);font-weight:900
 }
-
-/* MESSAGE COMMON */
-.msg{
-  max-width:78%;
-  padding:12px 14px;
-  margin-bottom:10px;
-  border-radius:18px;
-  font-size:14px;
-  line-height:1.4;
-  animation:fadeIn .25s ease;
-}
-
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(6px)}
-  to{opacity:1;transform:none}
-}
-
-/* USER */
-.user{
-  background:linear-gradient(145deg,var(--afn-neon),#1e90ff);
-  color:#001;
-  margin-left:auto;
-  border-bottom-right-radius:4px;
-}
-
-/* AI */
-.ai{
-  background:rgba(245,185,76,.15);
-  border:1px solid var(--afn-gold);
-  color:#fff;
-  border-bottom-left-radius:4px;
-}
-
-/* ADMIN */
-.admin{
-  background:linear-gradient(145deg,var(--afn-gold),#ffd86b);
-  color:#000;
-  border-bottom-left-radius:4px;
-  font-weight:700;
-}
-
-/* ESCALATED */
-.escalated{
-  border-left:4px solid var(--afn-red);
-  background:rgba(229,57,53,.15);
-}
-
-/* INPUT */
-.chat-input{
-  padding:12px;
-  display:flex;
-  gap:10px;
-  background:#020816;
-}
-
-.chat-input input{
-  flex:1;
-  padding:12px;
-  border-radius:14px;
-  border:none;
-  outline:none;
-}
-
-.chat-input button{
-  background:linear-gradient(145deg,var(--afn-neon),#1e90ff);
-  border:none;
-  border-radius:14px;
-  padding:0 18px;
-  font-weight:900;
-  cursor:pointer;
+.escalate{
+  background:#ff5252;margin-left:6px
 }
 </style>
 </head>
 
 <body>
+<header>🤖 AFN AI Support</header>
 
-<div class="chat-wrap">
+<div class="chat" id="chat"></div>
 
-  <!-- HEADER -->
-  <div class="chat-header">
-    💬 AFN Support
-    <span>AI + Admin Help</span>
-  </div>
-
-  <!-- BODY -->
-  <div class="chat-body" id="chat"></div>
-
-  <!-- INPUT -->
-  <div class="chat-input">
-    <input id="msg" placeholder="সমস্যা লিখুন...">
-    <button onclick="send()">➤</button>
-  </div>
-
-</div>
+<footer>
+  <input id="msg" placeholder="Type your problem...">
+  <button onclick="send()">Send</button>
+  <button class="escalate" onclick="needAdmin()">Admin</button>
+</footer>
 
 <script>
-/* FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
+const auth=firebase.auth(),db=firebase.firestore();
+let uid=null;
 
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-let uid=null, escalated=false;
-
-/* AUTH */
 auth.onAuthStateChanged(u=>{
   if(!u){location.href="login.html";return;}
   uid=u.uid;
-  loadMessages();
+  listen();
 });
 
-/* LOAD CHAT */
-function loadMessages(){
+function listen(){
   db.collection("supportChats").doc(uid)
-    .collection("messages")
-    .orderBy("time")
-    .onSnapshot(snap=>{
-      chat.innerHTML="";
-      snap.forEach(d=>render(d.data()));
-      chat.scrollTop=chat.scrollHeight;
-    });
+   .collection("messages").orderBy("time")
+   .onSnapshot(s=>{
+     chat.innerHTML="";
+     s.forEach(d=>{
+       const m=d.data();
+       const div=document.createElement("div");
+       div.className="msg "+m.from;
+       div.innerText=m.text;
+       chat.appendChild(div);
+     });
+     chat.scrollTop=chat.scrollHeight;
+   });
 }
 
-/* RENDER */
-function render(d){
-  const div=document.createElement("div");
-  div.className=`msg ${d.from} ${d.escalated?'escalated':''}`;
-  div.innerText=d.text;
-  chat.appendChild(div);
-}
-
-/* SEND */
 async function send(){
-  const text=msg.value.trim();
-  if(!text)return;
+  const t=msg.value.trim();
+  if(!t) return;
   msg.value="";
-
-  await save("user",text);
-
-  if(text.length>80 || text.includes("admin")){
-    escalated=true;
-    await save("ai","এই সমস্যাটি অ্যাডমিনের কাছে পাঠানো হচ্ছে…",true);
-    notifyAdmin(text);
-  }else{
-    aiReply(text);
-  }
-}
-
-/* SAVE */
-function save(from,text,esc=false){
-  return db.collection("supportChats").doc(uid)
+  await db.collection("supportChats").doc(uid)
     .collection("messages").add({
-      from,text,escalated:esc,time:Date.now()
+      from:"user",text:t,time:Date.now()
     });
+
+  // AI placeholder (Cloud Function will answer)
 }
 
-/* AI REPLY (Placeholder – API ready) */
-function aiReply(t){
-  let r="এই সমস্যার সমাধান আমরা খুঁজে দিচ্ছি। একটু অপেক্ষা করুন।";
-  if(t.includes("login")) r="লগইন সমস্যা হলে অ্যাপ রিফ্রেশ করুন।";
-  save("ai",r);
-}
-
-/* ADMIN NOTIFY */
-function notifyAdmin(text){
+function needAdmin(){
   db.collection("adminAlerts").add({
-    uid,
-    text,
-    time:Date.now(),
-    status:"pending"
+    uid,reason:"User requested admin",
+    time:Date.now(),status:"open"
   });
+  alert("✅ Admin notified");
 }
 </script>
-
 </body>
 </html>
