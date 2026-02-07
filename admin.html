@@ -171,11 +171,17 @@ body{
     <div class="desc">Reset season</div>
   </div>
 
-  <div class="card perm-manageRoles" id="roleManagerCard"
-       onclick="go('admin-role-manager.html')">
+  <div class="card perm-manageRoles" onclick="go('admin-role-manager.html')">
     <div class="icon">🛡️</div>
     <div class="title">Role Manager</div>
     <div class="desc">Permissions & roles</div>
+  </div>
+
+  <!-- ✅ SUPPORT CHAT (AI → ADMIN) -->
+  <div class="card perm-replySupport" onclick="go('admin-support.html')">
+    <div class="icon">💬</div>
+    <div class="title">Support Chat</div>
+    <div class="desc">AI → Admin Escalation</div>
   </div>
 
 </div>
@@ -255,9 +261,10 @@ auth.onAuthStateChanged(async user=>{
   permBox.innerHTML=html;
 
   loadAlerts();
+  loadAISupportAlerts();
 });
 
-/* 🔔 ALERTS */
+/* 🔔 NORMAL ACTIVITY */
 function loadAlerts(){
   db.collection("activity")
     .orderBy("time","desc")
@@ -275,6 +282,20 @@ function loadAlerts(){
     });
 }
 
+/* 🤖 AI → ADMIN ESCALATION */
+function loadAISupportAlerts(){
+  db.collection("adminAlerts")
+    .orderBy("time","desc")
+    .limit(5)
+    .onSnapshot(s=>{
+      s.forEach(d=>{
+        const a=d.data();
+        alertsBox.innerHTML+=
+          `<div class="alert-item">🤖 AI Escalation • ${a.uid}</div>`;
+      });
+    });
+}
+
 /* 📊 STATS */
 db.collection("players").onSnapshot(s=>players.innerText=s.size);
 db.collection("matches").onSnapshot(s=>matches.innerText=s.size);
@@ -287,4 +308,4 @@ function logout(){
 </script>
 
 </body>
-</html>
+  </html>
