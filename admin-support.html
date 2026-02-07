@@ -1,220 +1,126 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFN Admin Support Panel</title>
+<title>Admin Support Panel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
 :root{
-  --gold:#F5B94C;
-  --blue:#4DB6FF;
-  --bg:#0A1630;
-  --dark:#05070A;
-  --red:#E53935;
+  --gold:#f5c46c;
+  --blue:#4db6ff;
+  --bg:#050b14;
 }
-
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
-
-body{
-  height:100vh;
-  background:linear-gradient(180deg,var(--bg),var(--dark));
-  color:#fff;
-  display:flex;
+body{margin:0;background:var(--bg);color:#fff;font-family:Segoe UI}
+header{
+  padding:14px;text-align:center;
+  background:#020a12;font-weight:900
 }
-
-/* SIDEBAR */
-.sidebar{
-  width:90px;
-  background:#020816;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  padding:10px;
-  gap:10px;
+#role{color:var(--gold)}
+.main{display:flex;height:calc(100vh - 60px)}
+.users{
+  width:30%;border-right:1px solid #123;
+  overflow:auto
 }
-
-.ticket{
-  width:100%;
-  padding:8px;
-  background:rgba(245,185,76,.15);
-  border-radius:12px;
-  text-align:center;
-  font-size:12px;
-  cursor:pointer;
+.users div{
+  padding:12px;border-bottom:1px solid #123;
+  cursor:pointer
 }
-.ticket.active{
-  background:linear-gradient(145deg,var(--gold),#ffd86b);
-  color:#000;
-  font-weight:900;
+.chat{flex:1;padding:14px;overflow:auto}
+.msg{margin-bottom:8px}
+footer{
+  display:flex;gap:8px;padding:10px;
+  background:#020a12
 }
-
-/* CHAT AREA */
-.main{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-}
-
-.header{
-  padding:14px;
-  background:linear-gradient(145deg,var(--gold),#ffd86b);
-  color:#000;
-  font-weight:900;
-}
-
-.chat{
-  flex:1;
-  padding:14px;
-  overflow-y:auto;
-}
-
-.msg{
-  max-width:75%;
-  padding:12px;
-  border-radius:16px;
-  margin-bottom:10px;
-  font-size:14px;
-}
-
-.user{
-  background:linear-gradient(145deg,var(--blue),#1e90ff);
-  color:#001;
-}
-
-.ai{
-  background:rgba(255,255,255,.08);
-  border-left:4px solid var(--gold);
-}
-
-.admin{
-  background:linear-gradient(145deg,var(--gold),#ffd86b);
-  color:#000;
-  margin-left:auto;
-  font-weight:700;
-}
-
-.input{
-  display:flex;
-  padding:12px;
-  gap:10px;
-  background:#020816;
-}
-.input input{
-  flex:1;
-  padding:12px;
-  border-radius:12px;
-  border:none;
-}
-.input button{
-  background:linear-gradient(145deg,var(--blue),#1e90ff);
-  border:none;
-  border-radius:12px;
-  padding:0 18px;
-  font-weight:900;
-  cursor:pointer;
-}
+input{flex:1;padding:10px;border-radius:10px;border:none}
+button{padding:10px 16px;border:none;border-radius:10px}
 </style>
 </head>
 
 <body>
+<header>
+ Admin Support Console — <span id="role"></span>
+</header>
 
-<!-- SIDEBAR -->
-<div class="sidebar" id="users"></div>
-
-<!-- MAIN -->
 <div class="main">
-  <div class="header">👑 Admin Support Console</div>
+  <div class="users" id="users"></div>
   <div class="chat" id="chat"></div>
-  <div class="input">
-    <input id="reply" placeholder="Admin reply লিখুন...">
-    <button onclick="send()">SEND</button>
-  </div>
 </div>
 
+<footer>
+  <input id="reply" placeholder="Reply...">
+  <button onclick="send()">Send</button>
+</footer>
+
 <script>
-/* FIREBASE */
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
+const auth=firebase.auth(),db=firebase.firestore();
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+let ACTIVE_UID=null;
+let ROLE=null, PERMS={};
 
-let activeUID=null;
-
-/* ADMIN AUTH CHECK */
-auth.onAuthStateChanged(u=>{
+auth.onAuthStateChanged(async u=>{
   if(!u){location.href="admin-login.html";return;}
+  const d=await db.collection("admins").doc(u.uid).get();
+  if(!d.exists){alert("Unauthorized");location.href="admin-login.html";return;}
+  ROLE=d.data().role;
+  PERMS=d.data().permissions||{};
+  role.innerText=ROLE.toUpperCase();
   loadUsers();
 });
 
-/* LOAD ESCALATED USERS */
 function loadUsers(){
-  db.collection("adminAlerts")
-    .orderBy("time","desc")
-    .onSnapshot(snap=>{
-      users.innerHTML="";
-      snap.forEach(d=>{
-        const div=document.createElement("div");
-        div.className="ticket";
-        div.innerText=d.data().uid.slice(0,6);
-        div.onclick=()=>openChat(d.data().uid,div);
-        users.appendChild(div);
-      });
+  db.collection("supportChats").onSnapshot(s=>{
+    users.innerHTML="";
+    s.forEach(d=>{
+      const div=document.createElement("div");
+      div.innerText=d.id;
+      div.onclick=()=>openChat(d.id);
+      users.appendChild(div);
     });
+  });
 }
 
-/* OPEN CHAT */
-function openChat(uid,el){
-  activeUID=uid;
-  [...users.children].forEach(c=>c.classList.remove("active"));
-  el.classList.add("active");
-
+function openChat(uid){
+  ACTIVE_UID=uid;
   db.collection("supportChats").doc(uid)
-    .collection("messages")
-    .orderBy("time")
-    .onSnapshot(snap=>{
+    .collection("messages").orderBy("time")
+    .onSnapshot(s=>{
       chat.innerHTML="";
-      snap.forEach(d=>render(d.data()));
+      s.forEach(d=>{
+        const m=d.data();
+        const div=document.createElement("div");
+        div.className="msg";
+        div.innerText=`${m.from}: ${m.text}`;
+        chat.appendChild(div);
+      });
       chat.scrollTop=chat.scrollHeight;
     });
 }
 
-/* RENDER */
-function render(d){
-  const div=document.createElement("div");
-  div.className=`msg ${d.from}`;
-  div.innerText=d.text;
-  chat.appendChild(div);
-}
-
-/* SEND ADMIN REPLY */
 function send(){
+  if(!PERMS.reply){
+    alert("❌ No permission to reply");
+    return;
+  }
   const t=reply.value.trim();
-  if(!t || !activeUID)return;
+  if(!t||!ACTIVE_UID)return;
   reply.value="";
-
-  db.collection("supportChats").doc(activeUID)
+  db.collection("supportChats").doc(ACTIVE_UID)
     .collection("messages").add({
       from:"admin",
-      text:t,
+      text:`[${ROLE.toUpperCase()}] ${t}`,
       time:Date.now()
-    });
-
-  db.collection("adminAlerts").where("uid","==",activeUID)
-    .get().then(s=>{
-      s.forEach(d=>d.ref.update({status:"replied"}));
     });
 }
 </script>
-
 </body>
 </html>
