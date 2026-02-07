@@ -1,125 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Admin Support Panel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-:root{
-  --gold:#f5c46c;
-  --blue:#4db6ff;
-  --bg:#050b14;
-}
-body{margin:0;background:var(--bg);color:#fff;font-family:Segoe UI}
-header{
-  padding:14px;text-align:center;
-  background:#020a12;font-weight:900
-}
-#role{color:var(--gold)}
-.main{display:flex;height:calc(100vh - 60px)}
-.users{
-  width:30%;border-right:1px solid #123;
-  overflow:auto
-}
-.users div{
-  padding:12px;border-bottom:1px solid #123;
-  cursor:pointer
-}
-.chat{flex:1;padding:14px;overflow:auto}
-.msg{margin-bottom:8px}
-footer{
-  display:flex;gap:8px;padding:10px;
-  background:#020a12
-}
-input{flex:1;padding:10px;border-radius:10px;border:none}
-button{padding:10px 16px;border:none;border-radius:10px}
+body{margin:0;background:#0b1025;color:#fff;font-family:system-ui}
+.container{display:flex;height:100vh}
+.users{width:35%;border-right:1px solid #1f2550;overflow:auto}
+.chat{flex:1;display:flex;flex-direction:column}
+.user{padding:10px;border-bottom:1px solid #1f2550;cursor:pointer}
+.user.active{background:#1f2550}
+.messages{flex:1;padding:10px;overflow:auto}
+.msg{margin-bottom:8px;padding:8px 12px;border-radius:12px;max-width:70%}
+.user-msg{background:#0d6efd;margin-left:auto}
+.ai-msg{background:#2a2f55}
+.admin-msg{background:#198754}
+footer{display:flex;padding:10px}
+input{flex:1;padding:10px;border-radius:20px;border:none}
+button{margin-left:8px;border:none;padding:10px 16px;border-radius:20px;background:#0d6efd;color:#fff}
 </style>
 </head>
 
 <body>
-<header>
- Admin Support Console — <span id="role"></span>
-</header>
-
-<div class="main">
+<div class="container">
   <div class="users" id="users"></div>
-  <div class="chat" id="chat"></div>
+  <div class="chat">
+    <div class="messages" id="messages"></div>
+    <footer>
+      <input id="reply" placeholder="Admin reply...">
+      <button onclick="send()">Send</button>
+    </footer>
+  </div>
 </div>
-
-<footer>
-  <input id="reply" placeholder="Reply...">
-  <button onclick="send()">Send</button>
-</footer>
 
 <script>
 firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
+  apiKey:"YOUR_KEY",
+  authDomain:"YOUR_DOMAIN",
+  projectId:"YOUR_PROJECT"
 });
-const auth=firebase.auth(),db=firebase.firestore();
+const db=firebase.firestore();
+let current=null;
 
-let ACTIVE_UID=null;
-let ROLE=null, PERMS={};
-
-auth.onAuthStateChanged(async u=>{
-  if(!u){location.href="admin-login.html";return;}
-  const d=await db.collection("admins").doc(u.uid).get();
-  if(!d.exists){alert("Unauthorized");location.href="admin-login.html";return;}
-  ROLE=d.data().role;
-  PERMS=d.data().permissions||{};
-  role.innerText=ROLE.toUpperCase();
-  loadUsers();
+/* 🔐 Auth check */
+firebase.auth().onAuthStateChanged(u=>{
+  if(!u) location.href="admin-login.html";
 });
 
-function loadUsers(){
-  db.collection("supportChats").onSnapshot(s=>{
-    users.innerHTML="";
+/* 📋 Load chats */
+db.collection("supportChats")
+.orderBy("updated","desc")
+.onSnapshot(s=>{
+  users.innerHTML="";
+  s.forEach(d=>{
+    let div=document.createElement("div");
+    div.className="user";
+    div.innerText=d.id;
+    div.onclick=()=>openChat(d.id);
+    users.appendChild(div);
+  });
+});
+
+function openChat(uid){
+  current=uid;
+  messages.innerHTML="";
+  db.collection("supportChats").doc(uid)
+  .collection("messages").orderBy("time")
+  .onSnapshot(s=>{
+    messages.innerHTML="";
     s.forEach(d=>{
-      const div=document.createElement("div");
-      div.innerText=d.id;
-      div.onclick=()=>openChat(d.id);
-      users.appendChild(div);
+      let m=d.data();
+      let div=document.createElement("div");
+      div.className="msg "+
+        (m.from==="user"?"user-msg":m.from==="admin"?"admin-msg":"ai-msg");
+      div.innerText=m.text;
+      messages.appendChild(div);
     });
+    messages.scrollTop=messages.scrollHeight;
   });
 }
 
-function openChat(uid){
-  ACTIVE_UID=uid;
-  db.collection("supportChats").doc(uid)
-    .collection("messages").orderBy("time")
-    .onSnapshot(s=>{
-      chat.innerHTML="";
-      s.forEach(d=>{
-        const m=d.data();
-        const div=document.createElement("div");
-        div.className="msg";
-        div.innerText=`${m.from}: ${m.text}`;
-        chat.appendChild(div);
-      });
-      chat.scrollTop=chat.scrollHeight;
-    });
-}
-
 function send(){
-  if(!PERMS.reply){
-    alert("❌ No permission to reply");
-    return;
-  }
-  const t=reply.value.trim();
-  if(!t||!ACTIVE_UID)return;
+  if(!current) return;
+  let text=reply.value.trim();
+  if(!text) return;
   reply.value="";
-  db.collection("supportChats").doc(ACTIVE_UID)
-    .collection("messages").add({
-      from:"admin",
-      text:`[${ROLE.toUpperCase()}] ${t}`,
-      time:Date.now()
-    });
+  db.collection("supportChats").doc(current)
+  .collection("messages").add({
+    text,
+    from:"admin",
+    time:Date.now()
+  });
 }
 </script>
 </body>
