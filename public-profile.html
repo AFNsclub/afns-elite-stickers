@@ -51,19 +51,9 @@ h1{color:var(--gold);margin:8px 0}
   box-shadow:0 0 18px rgba(0,247,255,.25);
 }
 
-.row{
-  margin-bottom:12px;
-}
-
-.label{
-  font-size:12px;
-  color:#aaa;
-}
-
-.value{
-  font-size:15px;
-  font-weight:700;
-}
+.row{margin-bottom:12px}
+.label{font-size:12px;color:#aaa}
+.value{font-size:15px;font-weight:700}
 
 .stats{
   display:flex;
@@ -78,7 +68,6 @@ a.link{
   text-decoration:none;
 }
 
-/* FOOTER */
 .global-footer{
   margin-top:30px;
   padding:16px 0;
@@ -101,7 +90,7 @@ a.link{
 </head>
 
 <body>
-<div class="container">
+<div class="container" id="app">
 
 <header>
   <img src="logo.png">
@@ -170,31 +159,38 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 
-/* GET USER ID */
+/* GET USER ID (FIXED) */
 const params = new URLSearchParams(location.search);
-const uid = params.get("id");
+const uid = params.get("uid");
+
 if(!uid){
-  document.body.innerHTML="Invalid profile";
+  document.getElementById("app").innerHTML = "<h2 style='text-align:center'>Invalid profile</h2>";
+  throw new Error("UID missing");
 }
 
 /* LOAD PLAYER */
 db.collection("players").doc(uid).get().then(doc=>{
-  if(!doc.exists) return;
+  if(!doc.exists){
+    document.getElementById("app").innerHTML = "<h2 style='text-align:center'>Profile not found</h2>";
+    return;
+  }
+
   const d = doc.data();
 
-  document.getElementById("username").innerText = d.username || "Player";
-  document.getElementById("email").innerText = d.email || "—";
-  document.getElementById("phone").innerText = d.phone || "—";
-  document.getElementById("gameId").innerText = d.gameId || "—";
-  document.getElementById("device").innerText = d.device || "—";
-  document.getElementById("rating").innerText = d.rating || 0;
-  document.getElementById("wins").innerText = d.wins || 0;
-  document.getElementById("losses").innerText = d.losses || 0;
+  username.innerText = d.username || "Player";
+  email.innerText = d.email || "—";
+  phone.innerText = d.phone || "—";
+  gameId.innerText = d.gameId || "—";
+  device.innerText = d.device || "—";
+  rating.innerText = d.rating || 0;
+  wins.innerText = d.wins || 0;
+  losses.innerText = d.losses || 0;
 
   if(d.facebook){
-    const fb = document.getElementById("facebook");
-    fb.href = d.facebook;
-    fb.innerText = "View Facebook Profile";
+    facebook.href = d.facebook;
+    facebook.innerText = "View Facebook Profile";
+  }else{
+    facebook.innerText = "—";
   }
 });
 </script>
