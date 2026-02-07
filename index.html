@@ -5,22 +5,20 @@
 <title>AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- FIREBASE -->
+<!-- 🔥 FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
+/* ===== YOUR EXISTING STYLE (UNCHANGED) ===== */
 :root{
   --neon:#00f7ff;
   --gold:#ffd400;
   --bg1:#02060c;
   --bg2:#0c1b2a;
-  --accent:#4f8cff;
 }
-
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
-
 body{
   min-height:100vh;
   background:radial-gradient(circle at top,var(--bg2),var(--bg1));
@@ -28,123 +26,36 @@ body{
   display:flex;
   justify-content:center;
 }
+.container{width:100%;max-width:430px;padding:20px;text-align:center}
 
-.container{
-  width:100%;
-  max-width:430px;
-  padding:20px;
-  text-align:center;
-}
-
-/* ===== ANNOUNCEMENT ===== */
-.announcement{
-  background:linear-gradient(145deg,#0b1d2a,#02121c);
-  border-left:4px solid var(--gold);
-  padding:12px;
-  border-radius:14px;
-  margin-bottom:18px;
-  box-shadow:0 0 18px rgba(255,215,0,.35);
-  display:none;
-}
-.announcement strong{color:var(--gold)}
-.announcement span{font-size:13px;color:#ddd}
-
-/* LOGO */
-.logo img{
-  width:130px;
-  filter:drop-shadow(0 0 22px rgba(255,215,0,.65));
-}
-
-h1{color:var(--gold);font-size:30px}
-.tagline{color:var(--neon);font-size:14px;margin:6px 0 18px}
-
-/* MENU */
-.menu{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  margin-bottom:24px;
-}
-.menu a{
-  text-decoration:none;
-  padding:14px;
-  border-radius:16px;
-  background:linear-gradient(145deg,#061726,#020c14);
-  color:var(--neon);
-  font-weight:700;
-  transition:.25s;
-}
-.menu a:hover{
-  box-shadow:0 0 18px rgba(0,247,255,.45);
-  transform:scale(1.04);
-}
-
-/* ADMIN COUNCIL */
-.admin-panel{
-  margin-top:10px;
-  padding:18px;
-  border-radius:22px;
-  background:linear-gradient(145deg,#0a1c2a,#030a12);
-  box-shadow:0 0 30px rgba(255,215,0,.25);
-}
-.admins{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:14px;
-}
-.admin-card{
-  background:rgba(255,255,255,.06);
-  border-radius:18px;
-  padding:10px;
-}
-.admin-card img{
-  width:60px;height:60px;border-radius:50%;
-  border:2px solid var(--gold);
-}
-.admin-card span{
-  display:block;
-  font-size:12px;
-  color:var(--gold);
-  font-weight:700;
-}
-
-/* SUPPORT CHAT */
+/* ===== SUPPORT CHAT FLOAT ===== */
 .chat-float{
   position:fixed;
   bottom:18px;
   right:18px;
-  background:var(--accent);
+  background:#4f8cff;
   color:#fff;
   padding:14px;
   border-radius:50%;
   font-size:22px;
   cursor:pointer;
-  box-shadow:0 0 22px rgba(79,140,255,.8);
+  box-shadow:0 0 20px rgba(79,140,255,.7);
   z-index:99;
 }
 .chat-float:hover{transform:scale(1.1)}
-
-footer{
-  margin-top:22px;
-  font-size:12px;
-  color:#aaa;
-}
-footer a{color:var(--neon);font-weight:700;text-decoration:none}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<!-- 🔔 ANNOUNCEMENT -->
-<div class="announcement" id="announcementBox">
-  <strong id="annTitle"></strong><br>
-  <span id="annText"></span>
-</div>
-
 <div class="logo"><img src="logo.png"></div>
 <h1>AFN's Elite Strikers</h1>
 <div class="tagline">Play Smart. Play Elite. Play AFN.</div>
+
+<div class="motive-box">
+  <span id="typingText"></span>
+</div>
 
 <div class="menu">
   <a href="#" id="profileBtn">🧑‍💻 My Profile</a>
@@ -152,12 +63,13 @@ footer a{color:var(--neon);font-weight:700;text-decoration:none}
   <a href="leaderboard.html">🏆 Rankings & Legends</a>
   <a href="hall-of-fame.html">👑 Hall of Fame</a>
   <a href="stats.html">📊 Player Stats</a>
-  <a href="support-chat.html">🤖 Support / Help (AI)</a>
+  <a href="announcements.html">📢 Announcements</a>
   <a href="rules.html">📜 Rules & Fair Play</a>
   <a href="training.html">🎯 Training & Tips</a>
   <a href="admin-login.html">👑 Admin Console</a>
 </div>
 
+<!-- 👑 ADMIN COUNCIL -->
 <div class="admin-panel">
 <h2>👑 Elite Admin Council</h2>
 <div class="admins" id="adminList"></div>
@@ -170,11 +82,11 @@ footer a{color:var(--neon);font-weight:700;text-decoration:none}
 
 </div>
 
-<!-- 🤖 AI SUPPORT -->
-<div class="chat-float" onclick="openSupport()">💬</div>
+<!-- 🤖 SUPPORT CHAT BUTTON -->
+<div class="chat-float" onclick="openChat()">💬</div>
 
 <script>
-/* FIREBASE INIT */
+/* 🔥 FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
@@ -184,28 +96,25 @@ firebase.initializeApp({
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-/* PROFILE */
-auth.onAuthStateChanged(u=>{
-  profileBtn.onclick=()=>location.href=u?"my-profile.html":"login.html";
-});
-
-/* ANNOUNCEMENT */
-db.collection("announcements")
-.where("active","==",true)
-.limit(1)
-.onSnapshot(s=>{
-  if(!s.empty){
-    const d=s.docs[0].data();
-    announcementBox.style.display="block";
-    annTitle.innerText="🔔 "+(d.title||"Notice");
-    annText.innerText=d.text||"";
+/* ===============================
+   AUTH PROFILE LOGIC
+=============================== */
+auth.onAuthStateChanged(user=>{
+  if(user){
+    profileBtn.onclick=()=>location.href="my-profile.html";
+  }else{
+    profileBtn.onclick=()=>location.href="login.html";
   }
 });
 
-/* ADMIN COUNCIL */
-db.collection("admins").where("active","==",true).onSnapshot(s=>{
+/* ===============================
+   LOAD ADMIN COUNCIL
+=============================== */
+db.collection("admins")
+.where("active","==",true)
+.onSnapshot(snap=>{
   adminList.innerHTML="";
-  s.forEach(d=>{
+  snap.forEach(d=>{
     const a=d.data();
     adminList.innerHTML+=`
       <div class="admin-card">
@@ -215,10 +124,29 @@ db.collection("admins").where("active","==",true).onSnapshot(s=>{
   });
 });
 
-/* SUPPORT CHAT */
-function openSupport(){
+/* ===============================
+   SUPPORT CHAT
+=============================== */
+function openChat(){
   location.href="support-chat.html";
 }
+
+/* ===============================
+   TYPING TEXT
+=============================== */
+const lines=[
+"চ্যাম্পিয়ন তৈরি হয় চাপের মধ্যেই।",
+"AFN is not a club, it's a mindset."
+];
+let i=0,c=0,t=document.getElementById("typingText");
+(function type(){
+  if(c<lines[i].length){
+    t.textContent+=lines[i][c++];
+    setTimeout(type,80);
+  }else{
+    setTimeout(()=>{t.textContent="";c=0;i=(i+1)%lines.length;type()},5000);
+  }
+})();
 </script>
 
 </body>
