@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Role Management | Admin</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Role Manager</title>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -13,60 +12,60 @@
 body{
   background:#050b1e;
   color:#fff;
-  font-family:Segoe UI,sans-serif;
+  font-family:Arial;
+  padding:20px;
 }
-.container{
-  max-width:520px;
-  margin:30px auto;
+.box{
+  max-width:500px;
+  margin:auto;
   background:#0b1622;
   padding:20px;
-  border-radius:18px;
-}
-h2{text-align:center;color:#4f8cff}
-.player{
-  background:rgba(255,255,255,.06);
   border-radius:14px;
-  padding:14px;
-  margin-bottom:12px;
 }
-.player h3{margin:0 0 8px}
-.roles{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-}
-.role{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:13px;
-}
-.role input[type=text]{
+select,input,label{
   width:100%;
-  padding:6px;
-  border-radius:6px;
-  border:none;
-  font-size:12px;
+  margin:8px 0;
 }
 button{
-  margin-top:10px;
   width:100%;
   padding:10px;
+  background:#4f8cff;
   border:none;
-  border-radius:10px;
-  background:#22c55e;
-  font-weight:700;
+  border-radius:8px;
+  color:#fff;
   cursor:pointer;
 }
-small{opacity:.6}
+.permissions label{
+  display:flex;
+  justify-content:space-between;
+}
 </style>
 </head>
 
 <body>
 
-<div class="container">
-<h2>🛠️ Role Management</h2>
-<div id="players"></div>
+<div class="box">
+  <h2>🛡️ Role Manager</h2>
+
+  <select id="playerSelect"></select>
+
+  <select id="role">
+    <option value="admin">Admin</option>
+    <option value="captain">Captain</option>
+    <option value="vice-captain">Vice Captain</option>
+    <option value="manager">Manager</option>
+  </select>
+
+  <input id="team" placeholder="Team / Responsibility">
+  <input id="badge" placeholder="Emoji Badge (👑 ⭐ ⚔️)">
+
+  <div class="permissions">
+    <label>Add Match <input type="checkbox" id="addMatch"></label>
+    <label>Edit Match <input type="checkbox" id="editMatch"></label>
+    <label>Delete Match <input type="checkbox" id="deleteMatch"></label>
+  </div>
+
+  <button onclick="saveRole()">Save Role</button>
 </div>
 
 <script>
@@ -76,97 +75,37 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const auth = firebase.auth();
-const db = firebase.firestore();
-const box = document.getElementById("players");
+const db=firebase.firestore();
+const auth=firebase.auth();
 
-/* 🔐 OWNER CHECK */
-auth.onAuthStateChanged(async user=>{
-  if(!user) return location.href="admin-login.html";
-
-  const owner = await db.collection("system").doc("owner").get();
-  if(!owner.exists || owner.data().uid !== user.uid){
-    alert("❌ Only Super Admin allowed");
-    location.href="admin.html";
-    return;
-  }
-
+auth.onAuthStateChanged(async u=>{
+  if(!u) location.href="admin-login.html";
+  const a=await db.collection("admins").doc(u.uid).get();
+  if(a.data().role!=="owner") location.href="admin.html";
   loadPlayers();
 });
 
 function loadPlayers(){
-  db.collection("players").onSnapshot(snap=>{
-    box.innerHTML="";
-    snap.forEach(d=>{
-      renderPlayer(d.id,d.data());
+  db.collection("players").get().then(s=>{
+    s.forEach(d=>{
+      playerSelect.innerHTML+=`<option value="${d.id}">${d.data().name}</option>`;
     });
   });
 }
 
-function renderPlayer(uid,p){
-  const div=document.createElement("div");
-  div.className="player";
-
-  div.innerHTML=`
-    <h3>${p.name||"Player"}</h3>
-
-    <div class="roles">
-      ${roleRow("admin","🛡️","Admin",p)}
-      ${roleRow("captain","🎽","Captain",p)}
-      ${roleRow("viceCaptain","⭐","Vice Captain",p)}
-      ${roleRow("manager","📋","Manager",p)}
-    </div>
-
-    <button onclick="saveRoles('${uid}',this)">Save</button>
-    <small>Status saved instantly</small>
-  `;
-  box.appendChild(div);
-}
-
-function roleRow(key,emoji,label,p){
-  const checked = p.roles?.[key] ? "checked":"";
-  const text = p.roleMeta?.[key]?.label || "";
-  return `
-    <div class="role">
-      <input type="checkbox" data-role="${key}" ${checked}>
-      ${emoji}
-      <input type="text" placeholder="${label} responsibility"
-        data-label="${key}" value="${text}">
-    </div>
-  `;
-}
-
-async function saveRoles(uid,btn){
-  const parent = btn.parentElement;
-  const roles={}, roleMeta={};
-
-  parent.querySelectorAll("[data-role]").forEach(c=>{
-    roles[c.dataset.role]=c.checked;
-  });
-
-  parent.querySelectorAll("[data-label]").forEach(i=>{
-    if(i.value.trim()){
-      roleMeta[i.dataset.label]={
-        label:i.value.trim(),
-        emoji:getEmoji(i.dataset.label)
-      };
+function saveRole(){
+  const pid=playerSelect.value;
+  db.collection("admins").doc(pid).set({
+    role: role.value,
+    team: team.value,
+    badge: badge.value,
+    permissions:{
+      addMatch:addMatch.checked,
+      editMatch:editMatch.checked,
+      deleteMatch:deleteMatch.checked
     }
   });
-
-  await db.collection("players").doc(uid).update({
-    roles, roleMeta
-  });
-
-  alert("✅ Roles updated");
-}
-
-function getEmoji(role){
-  return {
-    admin:"🛡️",
-    captain:"🎽",
-    viceCaptain:"⭐",
-    manager:"📋"
-  }[role];
+  alert("Role Updated ✅");
 }
 </script>
 
