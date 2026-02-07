@@ -54,6 +54,7 @@ body{
   padding:20px;
   cursor:pointer;
   transition:.25s;
+  position:relative;
 }
 .card:hover{
   transform:translateY(-4px);
@@ -62,6 +63,18 @@ body{
 .icon{font-size:28px}
 .title{margin-top:10px;font-weight:bold}
 .desc{font-size:12px;opacity:.6}
+
+.badge{
+  position:absolute;
+  top:10px;
+  right:12px;
+  background:#ff3b3b;
+  color:#fff;
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:20px;
+  display:none;
+}
 
 .section-title{
   margin-top:30px;
@@ -177,11 +190,12 @@ body{
     <div class="desc">Permissions & roles</div>
   </div>
 
-  <!-- ✅ SUPPORT CHAT (AI → ADMIN) -->
-  <div class="card perm-replySupport" onclick="go('admin-support.html')">
+  <!-- 🆘 SUPPORT CHAT (NEW) -->
+  <div class="card perm-support" onclick="go('admin-support.html')">
+    <span class="badge" id="supportBadge">0</span>
     <div class="icon">💬</div>
     <div class="title">Support Chat</div>
-    <div class="desc">AI → Admin Escalation</div>
+    <div class="desc">User escalations</div>
   </div>
 
 </div>
@@ -197,6 +211,7 @@ body{
 <div class="quick">
   <button class="perm-addMatch" onclick="go('add-match.html')">➕ Add Match</button>
   <button class="perm-editMatch" onclick="go('admin-match-control.html')">🛠 Edit Match</button>
+  <button class="perm-support" onclick="go('admin-support.html')">💬 Support Panel</button>
 </div>
 
 <!-- 🔹 ALERTS -->
@@ -261,10 +276,24 @@ auth.onAuthStateChanged(async user=>{
   permBox.innerHTML=html;
 
   loadAlerts();
-  loadAISupportAlerts();
+  loadSupportUnread();
 });
 
-/* 🔔 NORMAL ACTIVITY */
+/* 🆘 SUPPORT UNREAD COUNTER */
+function loadSupportUnread(){
+  db.collection("supportChats")
+    .where("needsAdmin","==",true)
+    .onSnapshot(s=>{
+      if(s.size>0){
+        supportBadge.style.display="inline-block";
+        supportBadge.innerText=s.size;
+      }else{
+        supportBadge.style.display="none";
+      }
+    });
+}
+
+/* 🔔 ALERTS */
 function loadAlerts(){
   db.collection("activity")
     .orderBy("time","desc")
@@ -282,20 +311,6 @@ function loadAlerts(){
     });
 }
 
-/* 🤖 AI → ADMIN ESCALATION */
-function loadAISupportAlerts(){
-  db.collection("adminAlerts")
-    .orderBy("time","desc")
-    .limit(5)
-    .onSnapshot(s=>{
-      s.forEach(d=>{
-        const a=d.data();
-        alertsBox.innerHTML+=
-          `<div class="alert-item">🤖 AI Escalation • ${a.uid}</div>`;
-      });
-    });
-}
-
 /* 📊 STATS */
 db.collection("players").onSnapshot(s=>players.innerText=s.size);
 db.collection("matches").onSnapshot(s=>matches.innerText=s.size);
@@ -308,4 +323,4 @@ function logout(){
 </script>
 
 </body>
-  </html>
+</html>
