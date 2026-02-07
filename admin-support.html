@@ -1,0 +1,50 @@
+<h2>🧑‍💼 Support Inbox</h2>
+<div id="chatList"></div>
+<div id="chatBox"></div>
+
+<script>
+const db = firebase.firestore();
+
+db.collection("supportChats")
+.orderBy("updatedAt","desc")
+.onSnapshot(snap=>{
+  chatList.innerHTML="";
+  snap.forEach(d=>{
+    chatList.innerHTML+=`
+      <div onclick="openChat('${d.id}')">
+        🗨️ ${d.data().lastMessage}
+      </div>`;
+  });
+});
+
+function openChat(chatId){
+  db.collection("supportChats")
+    .doc(chatId)
+    .collection("messages")
+    .orderBy("createdAt")
+    .onSnapshot(snap=>{
+      chatBox.innerHTML="";
+      snap.forEach(m=>{
+        chatBox.innerHTML+=`
+          <p><b>${m.data().sender}:</b> ${m.data().text}</p>`;
+      });
+    });
+}
+
+function sendAdminReply(chatId,text){
+  db.collection("supportChats")
+    .doc(chatId)
+    .collection("messages")
+    .add({
+      sender:"admin",
+      text,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+  db.collection("supportChats").doc(chatId).update({
+    status:"admin",
+    lastMessage:text,
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+</script>
