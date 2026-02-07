@@ -37,47 +37,33 @@ body{
   margin-bottom:10px;
 }
 
-h1{
-  color:var(--gold);
-  font-size:30px;
-}
-
-.tagline{
-  color:var(--neon);
-  font-size:14px;
-  margin:6px 0 12px;
-}
+h1{color:var(--gold);font-size:30px}
+.tagline{color:var(--neon);font-size:14px;margin:6px 0 18px}
 
 /* 🔔 ANNOUNCEMENT BANNER */
-.announce-box{
-  background:linear-gradient(145deg,#061726,#020c14);
-  border-radius:18px;
-  padding:14px;
-  margin-bottom:18px;
-  box-shadow:0 0 22px rgba(255,215,0,.45);
-  border:1px solid rgba(255,215,0,.4);
+.announcement{
   position:relative;
+  border-radius:20px;
   overflow:hidden;
+  margin-bottom:22px;
+  box-shadow:0 0 25px rgba(255,215,0,.35);
 }
-
-.announce-title{
+.announcement img{
+  width:100%;
+  display:block;
+}
+.announcement .overlay{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.75),transparent);
+  display:flex;
+  align-items:flex-end;
+  padding:16px;
+}
+.announcement h3{
   color:var(--gold);
-  font-size:13px;
-  font-weight:900;
-  margin-bottom:6px;
-  letter-spacing:.5px;
-}
-
-#announceText{
-  color:var(--neon);
-  font-size:14px;
-  font-weight:700;
-  animation:fadeIn .6s ease;
-}
-
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(6px)}
-  to{opacity:1;transform:translateY(0)}
+  font-size:16px;
+  text-align:left;
 }
 
 /* MOTIVE */
@@ -117,7 +103,6 @@ h1{
   gap:12px;
   margin-bottom:26px;
 }
-
 .menu a{
   text-decoration:none;
   padding:14px;
@@ -132,7 +117,7 @@ h1{
   transform:scale(1.04);
 }
 
-/* ADMIN PREMIUM */
+/* ADMIN PANEL */
 .admin-panel{
   margin-top:10px;
   padding:20px;
@@ -140,24 +125,17 @@ h1{
   background:linear-gradient(145deg,#0a1c2a,#030a12);
   box-shadow:0 0 30px rgba(255,215,0,.25);
 }
-
-.admin-panel h2{
-  color:var(--gold);
-  margin-bottom:18px;
-}
-
+.admin-panel h2{color:var(--gold);margin-bottom:18px}
 .admins{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:14px;
 }
-
 .admin-card{
   background:rgba(255,255,255,.06);
   border-radius:18px;
   padding:12px 8px;
   backdrop-filter:blur(10px);
-  box-shadow:inset 0 0 12px rgba(255,215,0,.15);
   transition:.35s;
 }
 .admin-card:hover{
@@ -167,18 +145,28 @@ h1{
 .admin-card img{
   width:66px;height:66px;border-radius:50%;
   border:2px solid var(--gold);
-  object-fit:cover;
-  box-shadow:0 0 14px rgba(255,215,0,.6);
   margin-bottom:6px;
 }
-.admin-card span{
-  display:block;
-  font-size:12px;
-  font-weight:700;
-  color:var(--gold);
+.admin-card span{font-size:12px;font-weight:700;color:var(--gold)}
+
+/* 💬 SUPPORT CHAT FLOAT */
+.support-chat{
+  position:fixed;
+  bottom:18px;
+  right:18px;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:linear-gradient(145deg,var(--neon),#008cff);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  color:#001;
+  box-shadow:0 0 20px rgba(0,247,255,.8);
+  z-index:999;
 }
 
-/* FOOTER */
 footer{
   margin-top:22px;
   font-size:12px;
@@ -196,9 +184,11 @@ footer a{color:var(--neon);font-weight:700;text-decoration:none}
 <div class="tagline">Play Smart. Play Elite. Play AFN.</div>
 
 <!-- 🔔 ANNOUNCEMENT -->
-<div class="announce-box">
-  <div class="announce-title">📢 Elite Announcements</div>
-  <div id="announceText"></div>
+<div class="announcement">
+  <img src="announcement.jpg" alt="Announcement">
+  <div class="overlay">
+    <h3>🔥 New Season • Rankings Reset • Play Fair & Rise Elite</h3>
+  </div>
 </div>
 
 <div class="motive-box">
@@ -231,9 +221,6 @@ footer a{color:var(--neon);font-weight:700;text-decoration:none}
   <div class="admin-card"><img src="admin1.jpg"><span>Admin One</span></div>
   <div class="admin-card"><img src="admin2.jpg"><span>Admin Two</span></div>
   <div class="admin-card"><img src="admin3.jpg"><span>Admin Three</span></div>
-  <div class="admin-card"><img src="admin4.jpg"><span>Admin Four</span></div>
-  <div class="admin-card"><img src="admin5.jpg"><span>Admin Five</span></div>
-  <div class="admin-card"><img src="admin6.jpg"><span>Admin Six</span></div>
 </div>
 </div>
 
@@ -244,31 +231,18 @@ footer a{color:var(--neon);font-weight:700;text-decoration:none}
 
 </div>
 
+<!-- 💬 SUPPORT CHAT -->
+<a href="support-chat.html" class="support-chat">💬</a>
+
 <script>
-/* PROFILE */
 function goMyProfile(){
   if(localStorage.getItem("uid")){
-    location.href="Player.html";
+    location.href="my-profile.html";
   }else{
     location.href="login.html";
   }
 }
-function goAdmin(){location.href="admin-login.html";}
-
-/* ANNOUNCEMENTS */
-const announces=[
-  "🔥 Registration open for AFN Winter Tournament!",
-  "🏆 Last Match MVP: AFN_Raptor",
-  "⚠️ Rule Update: Fair Play strictly enforced",
-  "⭐ Top Ranked Player crossed 200+ rating",
-  "📢 New Training Guide added!"
-];
-let ai=0;
-const aBox=document.getElementById("announceText");
-(function rotate(){
-  aBox.textContent=announces[ai++%announces.length];
-  setTimeout(rotate,4000);
-})();
+function goAdmin(){ location.href="admin-login.html"; }
 
 /* TYPING TEXT */
 const lines=[
@@ -287,12 +261,13 @@ const t=document.getElementById("typingText");
     setTimeout(type,90);
   }else{
     setTimeout(()=>{
-      t.textContent="";c=0;
-      i=Math.floor(Math.random()*lines.length);
+      t.textContent="";
+      c=0;i=Math.floor(Math.random()*lines.length);
       type();
     },6000);
   }
 })();
 </script>
+
 </body>
 </html>
