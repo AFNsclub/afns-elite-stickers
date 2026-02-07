@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Support Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:#050b1e;
+  font-family:Segoe UI,sans-serif;
+  color:#fff;
+}
+.chat-wrapper{
+  max-width:480px;
+  margin:auto;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  background:#0b1622;
+}
+.header{
+  padding:14px;
+  background:#081020;
+  text-align:center;
+  font-weight:700;
+  color:#4f8cff;
+}
+.messages{
+  flex:1;
+  overflow-y:auto;
+  padding:12px;
+}
+.msg{
+  max-width:78%;
+  margin-bottom:10px;
+  padding:10px 14px;
+  border-radius:16px;
+  font-size:14px;
+  line-height:1.4;
+}
+.user{
+  background:#4f8cff;
+  margin-left:auto;
+  border-bottom-right-radius:4px;
+}
+.ai{
+  background:#1e293b;
+  border-bottom-left-radius:4px;
+}
+.admin{
+  background:#16a34a;
+  border-bottom-left-radius:4px;
+}
+.system{
+  text-align:center;
+  font-size:12px;
+  opacity:.7;
+  margin:10px 0;
+}
+.input-box{
+  display:flex;
+  padding:10px;
+  background:#081020;
+}
+.input-box input{
+  flex:1;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  outline:none;
+}
+.input-box button{
+  margin-left:8px;
+  padding:12px 16px;
+  border:none;
+  border-radius:12px;
+  background:#4f8cff;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+.confidence{
+  font-size:11px;
+  opacity:.6;
+  margin-top:4px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="chat-wrapper">
+  <div class="header">🤖 Support Chat</div>
+  <div class="messages" id="messages"></div>
+
+  <div class="input-box">
+    <input id="input" placeholder="Type your problem…">
+    <button onclick="send()">Send</button>
+  </div>
+</div>
+
+<script>
+/* 🔥 FIREBASE INIT */
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+let chatId = null;
+let userId = null;
+
+/* ===============================
+   AUTH & CHAT INIT
+=============================== */
+auth.onAuthStateChanged(async user=>{
+  if(!user){
+    alert("Login required");
+    return;
+  }
+  userId = user.uid;
+  await initChat();
+});
+
+/* ===============================
+   CREATE / LOAD CHAT
+=============================== */
+async function initChat(){
+  // One active chat per user
+  const q = await db.collection("help_chats")
+    .where("userId","==",userId)
+    .where("status","in",["open","need_admin"])
+    .limit(1)
+    .get();
+
+  if(!q.empty){
+    chatId = q.docs[0].id;
+  }else{
+    const c = await db.collection("help_chats").add({
+      userId,
+      status:"open",
+      aiConfidence:1,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    chatId = c.id;
+  }
+
+  listenMessages();
+}
+
+/* ===============================
+   LISTEN MESSAGES
+=============================== */
+function listenMessages(){
+  db.collection("help_chats")
+    .doc(chatId)
+    .collection("messages")
+    .orderBy("createdAt")
+    .onSnapshot(snap=>{
+      messages.innerHTML="";
+      snap.forEach(d=>{
+        const m=d.data();
+        let cls=m.sender;
+        messages.innerHTML+=`
+          <div class="msg ${cls}">
+            ${m.text}
+            ${m.confidence!=null
+              ? `<div class="confidence">AI confidence: ${Math.round(m.confidence*100)}%</div>`
+              : ``}
+          </div>`;
+      });
+      messages.scrollTop=messages.scrollHeight;
+    });
+}
+
+/* ===============================
+   SEND MESSAGE
+=============================== */
+async function send(){
+  const text=input.value.trim();
+  if(!text) return;
+  input.value="";
+
+  await addMessage("user",text);
+
+  // AI RESPONSE
+  const ai = await getAIResponse(text);
+
+  await addMessage("ai",ai.text,ai.confidence);
+
+  await db.collection("help_chats").doc(chatId).update({
+    aiConfidence: ai.confidence
+  });
+
+  // ESCALATE TO ADMIN
+  if(ai.confidence < 0.6){
+    await db.collection("help_chats").doc(chatId).update({
+      status:"need_admin"
+    });
+
+    await addSystem("⚠️ AI could not fully solve. Admin has been notified.");
+
+    await notifyAdmin();
+  }
+}
+
+/* ===============================
+   ADD MESSAGE
+=============================== */
+function addMessage(sender,text,confidence=null){
+  return db.collection("help_chats")
+    .doc(chatId)
+    .collection("messages")
+    .add({
+      sender,
+      text,
+      confidence,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+}
+
+function addSystem(text){
+  return db.collection("help_chats")
+    .doc(chatId)
+    .collection("messages")
+    .add({
+      sender:"system",
+      text,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+}
+
+/* ===============================
+   ADMIN NOTIFY (DB LEVEL)
+=============================== */
+async function notifyAdmin(){
+  const admins = await db.collection("admins")
+    .where("active","==",true)
+    .get();
+
+  admins.forEach(a=>{
+    db.collection("notifications")
+      .doc(a.id)
+      .collection("items")
+      .add({
+        type:"support",
+        chatId,
+        message:"New support chat needs attention",
+        read:false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+  });
+}
+
+/* ===============================
+   AI ENGINE (PLACEHOLDER)
+   Replace with GPT / Gemini later
+=============================== */
+async function getAIResponse(q){
+  q=q.toLowerCase();
+
+  if(q.includes("permission")){
+    return {
+      text:"Check if your role has the required permission enabled by Owner.",
+      confidence:0.85
+    };
+  }
+  if(q.includes("match")){
+    return {
+      text:"Match issues are usually related to add/edit permissions.",
+      confidence:0.65
+    };
+  }
+
+  return {
+    text:"I'm not fully sure about this issue. An admin may need to check.",
+    confidence:0.45
+  };
+}
+</script>
+
+</body>
+</html>
