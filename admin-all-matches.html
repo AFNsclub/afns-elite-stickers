@@ -5,75 +5,25 @@
 <title>All Matches | Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  margin:0;
-  background:#050b1e;
-  color:#fff;
-  font-family:Segoe UI,sans-serif;
-}
-header{
-  padding:14px;
-  background:#0b1622;
-  text-align:center;
-  font-size:18px;
-  color:#4f8cff;
-}
-.container{
-  max-width:1100px;
-  margin:auto;
-  padding:16px;
-}
-select{
-  padding:10px;
-  border-radius:10px;
-  border:none;
-  margin-bottom:14px;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:#0b1622;
-  border-radius:14px;
-  overflow:hidden;
-}
-th,td{
-  padding:10px;
-  text-align:left;
-  font-size:13px;
-}
-th{
-  background:#081020;
-  color:#4f8cff;
-}
+body{margin:0;background:#050b1e;color:#fff;font-family:Segoe UI,sans-serif}
+header{padding:14px;background:#0b1622;text-align:center;font-size:18px;color:#4f8cff}
+.container{max-width:1100px;margin:auto;padding:16px}
+select{padding:10px;border-radius:10px;border:none;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;background:#0b1622;border-radius:14px;overflow:hidden}
+th,td{padding:10px;font-size:13px}
+th{background:#081020;color:#4f8cff}
 tr:nth-child(even){background:rgba(255,255,255,.03)}
-.badge{
-  padding:4px 8px;
-  border-radius:8px;
-  font-size:11px;
-  font-weight:700;
-}
+.badge{padding:4px 8px;border-radius:8px;font-size:11px;font-weight:700}
 .win{background:#1f8f5f}
 .loss{background:#8f1f1f}
-button{
-  background:#ff4f4f;
-  border:none;
-  color:#fff;
-  padding:6px 10px;
-  border-radius:8px;
-  cursor:pointer;
-  font-size:12px;
-}
-button:hover{opacity:.8}
-.empty{
-  text-align:center;
-  opacity:.6;
-  padding:20px;
-}
+button{background:#ff4f4f;border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer}
+button[disabled]{background:#333;cursor:not-allowed}
+.empty{text-align:center;opacity:.6;padding:20px}
 </style>
 </head>
 
@@ -91,7 +41,7 @@ button:hover{opacity:.8}
 <thead>
 <tr>
   <th>Time</th>
-  <th>Player UID</th>
+  <th>Player</th>
   <th>Opponent</th>
   <th>Result</th>
   <th>Score</th>
@@ -113,25 +63,41 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
+const auth=firebase.auth();
 const db=firebase.firestore();
 
-/* ===============================
-   LOAD SEASONS
-=============================== */
+let CAN_ROLLBACK=false;
+
+/* 🔐 AUTH + PERMISSION */
+auth.onAuthStateChanged(async user=>{
+  if(!user){
+    location.href="admin-login.html";
+    return;
+  }
+
+  const admin=await db.collection("admins").doc(user.uid).get();
+  if(!admin.exists){
+    alert("Unauthorized");
+    location.href="admin.html";
+    return;
+  }
+
+  CAN_ROLLBACK = admin.data().permissions?.editMatch === true;
+
+  loadSeasons();
+  loadMatches();
+});
+
+/* LOAD SEASONS */
 async function loadSeasons(){
   const snap=await db.collection("seasons").orderBy("start","desc").get();
   snap.forEach(d=>{
-    const o=document.createElement("option");
-    o.value=d.id;
-    o.textContent=d.data().name || d.id;
-    seasonFilter.appendChild(o);
+    seasonFilter.innerHTML+=
+      `<option value="${d.id}">${d.data().name||d.id}</option>`;
   });
 }
-loadSeasons();
 
-/* ===============================
-   LOAD MATCHES
-=============================== */
+/* LOAD MATCHES */
 async function loadMatches(){
   list.innerHTML="";
   empty.style.display="none";
@@ -151,18 +117,15 @@ async function loadMatches(){
     const m=doc.data();
     const tr=document.createElement("tr");
 
-    const time=m.time ? m.time.toDate().toLocaleString() : "-";
-    const resultClass=m.result==="win"?"win":"loss";
-
     tr.innerHTML=`
-      <td>${time}</td>
+      <td>${m.time?.toDate().toLocaleString()||"-"}</td>
       <td>${m.playerId}</td>
-      <td>${m.opponent||"-"} </td>
-      <td><span class="badge ${resultClass}">${m.result.toUpperCase()}</span></td>
+      <td>${m.opponent||"-"}</td>
+      <td><span class="badge ${m.result}">${m.result.toUpperCase()}</span></td>
       <td>${m.score||"-"}</td>
       <td>${m.seasonId||"-"}</td>
       <td>
-        ${m.editable!==false
+        ${CAN_ROLLBACK
           ? `<button onclick="rollback('${doc.id}')">Rollback</button>`
           : "-"
         }
@@ -172,23 +135,21 @@ async function loadMatches(){
   });
 }
 
-loadMatches();
+/* 🔥 ROLLBACK */
+async function rollback(id){
+  if(!CAN_ROLLBACK){
+    alert("Permission denied");
+    return;
+  }
 
-/* ===============================
-   ROLLBACK MATCH
-=============================== */
-async function rollback(matchId){
   if(!confirm("Rollback this match?")) return;
 
-  const ref=db.collection("matches").doc(matchId);
+  const ref=db.collection("matches").doc(id);
   const snap=await ref.get();
-  if(!snap.exists) return alert("Match not found");
-
-  const m=snap.data();
-  const pRef=db.collection("players").doc(m.playerId);
+  if(!snap.exists) return alert("Match missing");
 
   await db.runTransaction(async(t)=>{
-    t.update(pRef,m.before);
+    t.update(db.collection("players").doc(snap.data().playerId), snap.data().before);
     t.delete(ref);
   });
 
