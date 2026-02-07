@@ -1,50 +1,82 @@
-<h2>🧑‍💼 Support Inbox</h2>
-<div id="chatList"></div>
-<div id="chatBox"></div>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Support Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  background:#020b13;
+  color:#fff;
+  font-family:Segoe UI,sans-serif;
+}
+h1{text-align:center;color:#ffd400}
+.box{
+  background:#0a1c2a;
+  padding:14px;
+  border-radius:16px;
+  margin:14px;
+}
+textarea{
+  width:100%;
+  padding:10px;
+  border-radius:12px;
+}
+button{
+  margin-top:8px;
+  padding:10px 16px;
+  border:none;
+  border-radius:12px;
+  background:#ffd400;
+  font-weight:700;
+}
+</style>
+</head>
+
+<body>
+
+<h1>👑 Admin Escalations</h1>
+<div id="list"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
+const firebaseConfig = {
+  /* same firebase config */
+};
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-db.collection("supportChats")
-.orderBy("updatedAt","desc")
+db.collection("adminEscalations")
+.where("status","==","pending")
 .onSnapshot(snap=>{
-  chatList.innerHTML="";
-  snap.forEach(d=>{
-    chatList.innerHTML+=`
-      <div onclick="openChat('${d.id}')">
-        🗨️ ${d.data().lastMessage}
-      </div>`;
+  document.getElementById("list").innerHTML="";
+  snap.forEach(doc=>{
+    const d=doc.data();
+    const div=document.createElement("div");
+    div.className="box";
+    div.innerHTML=`
+      <b>User:</b> ${d.uid}<br><br>
+      ${d.message}<br><br>
+      <textarea id="r${doc.id}" placeholder="Admin reply..."></textarea>
+      <button onclick="reply('${doc.id}')">Send Reply</button>
+    `;
+    document.getElementById("list").appendChild(div);
   });
 });
 
-function openChat(chatId){
-  db.collection("supportChats")
-    .doc(chatId)
-    .collection("messages")
-    .orderBy("createdAt")
-    .onSnapshot(snap=>{
-      chatBox.innerHTML="";
-      snap.forEach(m=>{
-        chatBox.innerHTML+=`
-          <p><b>${m.data().sender}:</b> ${m.data().text}</p>`;
-      });
-    });
-}
-
-function sendAdminReply(chatId,text){
-  db.collection("supportChats")
-    .doc(chatId)
-    .collection("messages")
-    .add({
-      sender:"admin",
-      text,
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-  db.collection("supportChats").doc(chatId).update({
-    status:"admin",
-    lastMessage:text,
-    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+function reply(id){
+  const text=document.getElementById("r"+id).value;
+  if(!text) return;
+  db.collection("adminEscalations").doc(id).update({
+    status:"handled",
+    adminReply:text,
+    handledAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 }
 </script>
+
+</body>
+</html>
