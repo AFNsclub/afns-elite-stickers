@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
@@ -14,6 +15,7 @@ body{background:#050b1e;color:#fff;font-family:Segoe UI,sans-serif}
 h2{text-align:center;color:#4f8cff}
 input,select,button{width:100%;padding:12px;margin-top:12px;border-radius:10px;border:none}
 button{background:#4f8cff;font-weight:700;cursor:pointer}
+button[disabled]{background:#333;cursor:not-allowed}
 .success{color:#4cff8f;margin-top:10px}
 .error{color:#ff6b6b;margin-top:10px}
 </style>
@@ -30,7 +32,8 @@ button{background:#4f8cff;font-weight:700;cursor:pointer}
 </select>
 <input id="opponent" placeholder="Opponent">
 <input id="score" placeholder="Score (ex: 3-1)">
-<button onclick="addMatch()">Add Match</button>
+
+<button id="addBtn" onclick="addMatch()">Add Match</button>
 <div id="msg"></div>
 </div>
 
@@ -41,7 +44,30 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+let CAN_EDIT_MATCH = false;
+
+/* ===============================
+   AUTH + PERMISSION CHECK
+=============================== */
+auth.onAuthStateChanged(async user=>{
+  if(!user){
+    location.href="admin-login.html";
+    return;
+  }
+
+  const admin = await db.collection("admins").doc(user.uid).get();
+
+  if(!admin.exists || !admin.data().permissions?.editMatch){
+    msg.innerHTML="<div class='error'>❌ Permission denied</div>";
+    addBtn.disabled = true;
+    return;
+  }
+
+  CAN_EDIT_MATCH = true;
+});
 
 /* ===============================
    RANK SYSTEM
@@ -58,7 +84,7 @@ function getRank(r){
    CURRENT ACTIVE SEASON
 =============================== */
 async function getCurrentSeason(){
-  const q=await db.collection("seasons")
+  const q = await db.collection("seasons")
     .where("active","==",true)
     .limit(1)
     .get();
@@ -67,7 +93,6 @@ async function getCurrentSeason(){
     return {id:q.docs[0].id,...q.docs[0].data()};
   }
 
-  // fallback (should not normally happen)
   const year=new Date().getFullYear();
   const id=`${year}-S1`;
 
@@ -84,6 +109,11 @@ async function getCurrentSeason(){
    ADD MATCH (ROLLBACK SAFE)
 =============================== */
 async function addMatch(){
+  if(!CAN_EDIT_MATCH){
+    alert("Permission denied");
+    return;
+  }
+
   msg.innerHTML="";
   const uid=playerId.value.trim();
 
@@ -102,29 +132,27 @@ async function addMatch(){
 
       const d=snap.data();
 
-      /* BEFORE STATE (for rollback) */
       const before={
-        rating: d.rating ?? 50,
-        wins: d.wins ?? 0,
-        losses: d.losses ?? 0,
-        rank: d.rank ?? "Bronze 🟤"
+        rating:d.rating ?? 50,
+        wins:d.wins ?? 0,
+        losses:d.losses ?? 0,
+        rank:d.rank ?? "Bronze 🟤"
       };
 
-      let rating = before.rating;
-      let wins   = before.wins;
-      let losses = before.losses;
+      let rating=before.rating;
+      let wins=before.wins;
+      let losses=before.losses;
 
       if(result.value==="win"){
-        rating += 10;
+        rating+=10;
         wins++;
       }else{
-        rating = Math.max(50, rating-5);
+        rating=Math.max(50,rating-5);
         losses++;
       }
 
-      const newRank = getRank(rating);
+      const newRank=getRank(rating);
 
-      /* UPDATE PLAYER */
       t.update(playerRef,{
         rating,
         wins,
@@ -134,24 +162,19 @@ async function addMatch(){
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      /* SAVE MATCH (rollback ready) */
       t.set(db.collection("matches").doc(),{
-        playerId: uid,
-        opponent: opponent.value,
-        result: result.value,
-        score: score.value,
-        seasonId: season.id,
+        playerId:uid,
+        opponent:opponent.value,
+        result:result.value,
+        score:score.value,
+        seasonId:season.id,
 
-        ratingBefore: before.rating,
-        winsBefore: before.wins,
-        lossesBefore: before.losses,
-        rankBefore: before.rank,
+        before,
+        ratingAfter:rating,
+        rankAfter:newRank,
 
-        ratingAfter: rating,
-        rankAfter: newRank,
-
-        editable: true,
-        time: firebase.firestore.FieldValue.serverTimestamp()
+        editable:true,
+        time:firebase.firestore.FieldValue.serverTimestamp()
       });
     });
 
@@ -160,7 +183,7 @@ async function addMatch(){
     msg.innerHTML="<div class='error'>❌ "+e+"</div>";
   }
 }
-</script> 
-<script src="season-manager.js"></script>
+</script>
+
 </body>
 </html>
