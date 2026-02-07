@@ -5,12 +5,21 @@
 <title>Players</title>
 <meta name="viewport" content="width=device-width">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{background:#050b1e;color:#fff;font-family:Segoe UI}
-.container{max-width:480px;margin:auto;padding:20px}
+body{
+  background:#050b1e;
+  color:#fff;
+  font-family:Segoe UI;
+}
+.container{
+  max-width:480px;
+  margin:auto;
+  padding:20px;
+}
 input{
   width:100%;
   padding:12px;
@@ -24,6 +33,10 @@ input{
   border-radius:14px;
   margin-bottom:10px;
   cursor:pointer;
+  font-weight:600;
+}
+.player:hover{
+  background:rgba(0,234,255,.15);
 }
 </style>
 </head>
@@ -35,34 +48,49 @@ input{
 </div>
 
 <script>
+/* 🔥 FIREBASE INIT */
 firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub"
 });
 
-const db=firebase.firestore();
-let all=[];
+const db = firebase.firestore();
+let allPlayers = [];
 
-db.collection("players").onSnapshot(snap=>{
-  all=[];
-  snap.forEach(d=>all.push({uid:d.id,...d.data()}));
-  render(all);
+/* 🔄 LOAD PLAYERS */
+db.collection("players").onSnapshot(snapshot => {
+  allPlayers = [];
+  snapshot.forEach(doc => {
+    allPlayers.push({
+      uid: doc.id,
+      ...doc.data()
+    });
+  });
+  renderPlayers(allPlayers);
 });
 
-search.oninput=()=>{
-  const q=search.value.toLowerCase();
-  render(all.filter(p=>(p.name||"").toLowerCase().includes(q)));
-};
+/* 🔍 SEARCH */
+search.addEventListener("input", () => {
+  const q = search.value.toLowerCase().trim();
+  renderPlayers(
+    allPlayers.filter(p =>
+      (p.username || "").toLowerCase().includes(q)
+    )
+  );
+});
 
-function render(arr){
-  list.innerHTML="";
-  arr.forEach(p=>{
-    const d=document.createElement("div");
-    d.className="player";
-    d.textContent=p.name||"Player";
-    d.onclick=()=>location.href="public-profile.html?uid="+p.uid;
-    list.appendChild(d);
+/* 🧾 RENDER LIST */
+function renderPlayers(players){
+  list.innerHTML = "";
+  players.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "player";
+    div.textContent = p.username || "Player";
+    div.onclick = () => {
+      location.href = "public-profile.html?uid=" + p.uid;
+    };
+    list.appendChild(div);
   });
 }
 </script>
