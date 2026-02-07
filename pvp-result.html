@@ -1,112 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PvP Result Entry</title>
+<meta charset="UTF-8">
+<title>PvP Match Result</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #fff;
-      padding: 20px;
-    }
-
-    h1, h2 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .box {
-      max-width: 400px;
-      margin: 20px auto;
-      background: #020617;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.6);
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      font-size: 16px;
-      font-weight: bold;
-      background: #22c55e;
-      color: #000;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #16a34a;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      max-width: 500px;
-      margin: 20px auto;
-    }
-
-    li {
-      background: #020617;
-      margin-bottom: 8px;
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    .note {
-      text-align: center;
-      font-size: 13px;
-      opacity: 0.8;
-      margin-top: 15px;
-    }
-  </style>
+<style>
+body{
+  background:#020617;
+  color:#fff;
+  font-family:Segoe UI,sans-serif;
+  padding:16px;
+}
+.box{
+  max-width:420px;
+  margin:auto;
+  background:#020617;
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 0 18px rgba(0,0,0,.6);
+}
+h1,h2{text-align:center}
+select,input,button{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+}
+button{
+  background:#22c55e;
+  font-weight:bold;
+}
+button:hover{background:#16a34a}
+ul{list-style:none;padding:0}
+li{
+  background:#020617;
+  margin:8px 0;
+  padding:10px;
+  border-radius:8px;
+}
+</style>
 </head>
 
 <body>
 
-  <h1>⚔️ PvP Match Result</h1>
+<h1>⚔️ PvP Match Result</h1>
 
-  <!-- PvP Result Entry -->
-  <div class="box">
-    <h2>Enter Match Result</h2>
+<div class="box">
+  <h2>Enter Match</h2>
 
-    <input id="player1" placeholder="Player 1 Name">
-    <input id="player2" placeholder="Player 2 Name">
+  <select id="player1"></select>
+  <select id="player2"></select>
 
-    <input id="score1" type="number" placeholder="Player 1 Score">
-    <input id="score2" type="number" placeholder="Player 2 Score">
+  <input id="score1" type="number" placeholder="Player 1 Score">
+  <input id="score2" type="number" placeholder="Player 2 Score">
 
-    <button onclick="submitPvPResult()">Save Result</button>
+  <button onclick="submitMatch()">Save Result</button>
+</div>
 
-    <div class="note">
-      Winner / Draw auto detect হবে<br>
-      Ranking auto update হবে
-    </div>
-  </div>
+<h2>🏆 Leaderboard</h2>
+<ul id="leaderboard"></ul>
 
-  <!-- Leaderboard -->
-  <h2>🏆 Player Ranking</h2>
-
-  <ul id="leaderboard"></ul>
-
-  <!-- Script -->
-  <script src="pvp.js"></script>
-
+<script src="pvp-firestore.js"></script>
 </body>
 </html>
