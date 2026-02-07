@@ -87,6 +87,10 @@ footer{
   opacity:.6;
   margin-top:18px;
 }
+.badge{
+  font-size:12px;
+  margin-left:4px;
+}
 </style>
 
 <script>
@@ -96,6 +100,13 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 const db=firebase.firestore();
+
+/* 🔥 STREAK BADGE LOGIC */
+function getStreakBadge(streak){
+  if(streak >= 5) return "🔥 HOT";
+  if(streak >= 3) return "⚡";
+  return "";
+}
 </script>
 </head>
 
@@ -152,26 +163,38 @@ function render(players){
   top3.innerHTML="";
   list.innerHTML="";
 
+  /* 🥇 TOP 3 */
   players.slice(0,3).forEach((p,i)=>{
+    const badge = getStreakBadge(p.winStreak || 0);
+
     const div=document.createElement("div");
     div.className=`champ ${["gold","silver","bronze"][i]}`;
     div.onclick=()=>location.href=`public-profile.html?uid=${p.uid}`;
     div.innerHTML=`
       <div>${["🥇","🥈","🥉"][i]}</div>
       <img src="${p.photo||'avatar.png'}">
-      <div>${p.name||"Player"}</div>
+      <div>
+        ${p.name||"Player"}
+        ${badge ? `<span class="badge">${badge}</span>` : ""}
+      </div>
       <small>${p.rating||0} RP</small>
     `;
     top3.appendChild(div);
   });
 
+  /* 🔢 4–10 RANK */
   players.slice(3,10).forEach((p,i)=>{
+    const badge = getStreakBadge(p.winStreak || 0);
+
     const row=document.createElement("div");
     row.className="row";
     row.onclick=()=>location.href=`public-profile.html?uid=${p.uid}`;
     row.innerHTML=`
       <div class="rank">#${i+4}</div>
-      <div class="name">${p.name||"Player"}</div>
+      <div class="name">
+        ${p.name||"Player"}
+        ${badge ? `<span class="badge">${badge}</span>` : ""}
+      </div>
       <div class="points">${p.rating||0}</div>
     `;
     list.appendChild(row);
