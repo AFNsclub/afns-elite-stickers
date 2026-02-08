@@ -15,9 +15,12 @@ body{background:#050b1e;color:#fff;font-family:Segoe UI,sans-serif}
 h2{text-align:center;color:#4f8cff}
 input,select,button{width:100%;padding:12px;margin-top:12px;border-radius:10px;border:none}
 button{background:#4f8cff;font-weight:700;cursor:pointer}
-button[disabled]{background:#333;cursor:not-allowed}
-.success{color:#4cff8f;margin-top:10px}
-.error{color:#ff6b6b;margin-top:10px}
+button[disabled]{background:#333}
+.list{background:#111;border-radius:10px;margin-top:6px}
+.item{padding:8px;cursor:pointer}
+.item:hover{background:#222}
+.success{color:#4cff8f;margin-top:12px}
+.error{color:#ff6b6b;margin-top:12px}
 </style>
 </head>
 
@@ -25,53 +28,93 @@ button[disabled]{background:#333;cursor:not-allowed}
 <div class="container">
 <h2>⚔️ Add Match Result</h2>
 
-<input id="playerId" placeholder="Player UID">
+<input id="playerSearch" placeholder="Search player">
+<div id="playerList" class="list"></div>
+
+<input id="opponentSearch" placeholder="Search opponent">
+<div id="opponentList" class="list"></div>
+
 <select id="result">
   <option value="win">Win</option>
   <option value="loss">Loss</option>
 </select>
-<input id="opponent" placeholder="Opponent">
+
+<select id="matchType">
+  <option value="friendly">Friendly</option>
+  <option value="tournament">Tournament</option>
+</select>
+
+<input id="tournamentName" placeholder="Tournament name" style="display:none">
 <input id="score" placeholder="Score (ex: 3-1)">
 
-<button id="addBtn" onclick="addMatch()">Add Match</button>
+<button id="addBtn">Add Match</button>
 <div id="msg"></div>
 </div>
 
 <script>
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
 
-const auth = firebase.auth();
-const db   = firebase.firestore();
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-let CAN_EDIT_MATCH = false;
+let CAN_EDIT=false;
+let playerId=null;
+let opponentId=null;
 
-/* ===============================
-   AUTH + PERMISSION CHECK
-=============================== */
+/* ================= AUTH ================= */
 auth.onAuthStateChanged(async user=>{
-  if(!user){
-    location.href="admin-login.html";
-    return;
-  }
+  if(!user){ location.href="admin-login.html"; return; }
 
-  const admin = await db.collection("admins").doc(user.uid).get();
-
-  if(!admin.exists || !admin.data().permissions?.editMatch){
+  const a=await db.collection("admins").doc(user.uid).get();
+  if(!a.exists || !a.data().permissions?.editMatch){
     msg.innerHTML="<div class='error'>❌ Permission denied</div>";
-    addBtn.disabled = true;
+    addBtn.disabled=true;
     return;
   }
-
-  CAN_EDIT_MATCH = true;
+  CAN_EDIT=true;
 });
 
-/* ===============================
-   RANK SYSTEM
-=============================== */
+/* ================= UI ================= */
+matchType.onchange=()=>{
+  tournamentName.style.display=
+    matchType.value==="tournament"?"block":"none";
+};
+
+/* ================= AUTOCOMPLETE ================= */
+function autoComplete(input,list,setter){
+  input.oninput=async()=>{
+    const q=input.value.toLowerCase();
+    list.innerHTML="";
+    if(q.length<2) return;
+
+    const snap=await db.collection("players")
+      .where("usernameLower",">=",q)
+      .where("usernameLower","<=",q+"\uf8ff")
+      .limit(6).get();
+
+    snap.forEach(d=>{
+      const div=document.createElement("div");
+      div.className="item";
+      div.innerText=d.data().username;
+      div.onclick=()=>{
+        setter(d.id);
+        input.value=d.data().username;
+        list.innerHTML="";
+      };
+      list.appendChild(div);
+    });
+  };
+}
+
+autoComplete(playerSearch,playerList,id=>playerId=id);
+autoComplete(opponentSearch,opponentList,id=>opponentId=id);
+
+/* ================= RANK ================= */
 function getRank(r){
   if(r>=200) return "Legend 🔥";
   if(r>=150) return "Platinum 🔵";
@@ -80,110 +123,77 @@ function getRank(r){
   return "Bronze 🟤";
 }
 
-/* ===============================
-   CURRENT ACTIVE SEASON
-=============================== */
-async function getCurrentSeason(){
-  const q = await db.collection("seasons")
-    .where("active","==",true)
-    .limit(1)
-    .get();
+/* ================= SEASON ================= */
+async function getSeason(){
+  const q=await db.collection("seasons")
+    .where("active","==",true).limit(1).get();
 
-  if(!q.empty){
-    return {id:q.docs[0].id,...q.docs[0].data()};
-  }
+  if(!q.empty) return q.docs[0].id;
 
-  const year=new Date().getFullYear();
-  const id=`${year}-S1`;
-
+  const y=new Date().getFullYear();
+  const id=`${y}-S1`;
   await db.collection("seasons").doc(id).set({
-    name:`${year} Season 1`,
+    name:`${y} Season 1`,
     active:true,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
-
-  return {id};
+  return id;
 }
 
-/* ===============================
-   ADD MATCH (ROLLBACK SAFE)
-=============================== */
-async function addMatch(){
-  if(!CAN_EDIT_MATCH){
-    alert("Permission denied");
-    return;
-  }
+/* ================= ADD MATCH ================= */
+addBtn.onclick=async()=>{
+  if(!CAN_EDIT) return;
 
   msg.innerHTML="";
-  const uid=playerId.value.trim();
-
-  if(!uid){
-    msg.innerHTML="<div class='error'>Player UID required</div>";
+  if(!playerId || !opponentId){
+    msg.innerHTML="<div class='error'>Select both players</div>";
+    return;
+  }
+  if(playerId===opponentId){
+    msg.innerHTML="<div class='error'>Same player not allowed</div>";
     return;
   }
 
   try{
-    const season=await getCurrentSeason();
-    const playerRef=db.collection("players").doc(uid);
+    const seasonId=await getSeason();
+    const pRef=db.collection("players").doc(playerId);
 
-    await db.runTransaction(async(t)=>{
-      const snap=await t.get(playerRef);
-      if(!snap.exists) throw "Player not found";
+    await db.runTransaction(async t=>{
+      const pSnap=await t.get(pRef);
+      if(!pSnap.exists) throw "Player not found";
 
-      const d=snap.data();
+      let {rating=50,wins=0,losses=0}=pSnap.data();
 
-      const before={
-        rating:d.rating ?? 50,
-        wins:d.wins ?? 0,
-        losses:d.losses ?? 0,
-        rank:d.rank ?? "Bronze 🟤"
-      };
+      if(result.value==="win"){ rating+=10; wins++; }
+      else{ rating=Math.max(50,rating-5); losses++; }
 
-      let rating=before.rating;
-      let wins=before.wins;
-      let losses=before.losses;
+      const rank=getRank(rating);
 
-      if(result.value==="win"){
-        rating+=10;
-        wins++;
-      }else{
-        rating=Math.max(50,rating-5);
-        losses++;
-      }
-
-      const newRank=getRank(rating);
-
-      t.update(playerRef,{
-        rating,
-        wins,
-        losses,
-        rank:newRank,
-        seasonId:season.id,
+      t.update(pRef,{
+        rating,wins,losses,rank,
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       });
 
       t.set(db.collection("matches").doc(),{
-        playerId:uid,
-        opponent:opponent.value,
+        playerId,
+        opponentId,
         result:result.value,
         score:score.value,
-        seasonId:season.id,
-
-        before,
+        matchType:matchType.value,
+        tournamentName:matchType.value==="tournament"?tournamentName.value:null,
+        seasonId,
         ratingAfter:rating,
-        rankAfter:newRank,
-
-        editable:true,
+        rankAfter:rank,
+        addedBy:"admin",
         time:firebase.firestore.FieldValue.serverTimestamp()
       });
     });
 
-    msg.innerHTML="<div class='success'>✅ Match added (Rollback safe)</div>";
+    msg.innerHTML="<div class='success'>✅ Match added successfully</div>";
   }catch(e){
     msg.innerHTML="<div class='error'>❌ "+e+"</div>";
   }
-}
+};
 </script>
-
 </body>
 </html>
