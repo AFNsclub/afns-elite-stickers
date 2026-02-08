@@ -22,9 +22,12 @@
 
 body{
   margin:0;
-  background:radial-gradient(circle at top,#0b1d3a,var(--bg));
+  min-height:100vh;
+  background:radial-gradient(circle at top, #0b1d3a, var(--bg));
   color:#fff;
   font-family:Segoe UI,Arial,sans-serif;
+  display:flex;
+  flex-direction:column;
 }
 
 .box{
@@ -39,7 +42,7 @@ body{
 
 .logo{
   display:block;
-  width:80px;
+  width:90px;
   margin:0 auto 10px;
 }
 
@@ -60,27 +63,7 @@ input,select{
   font-size:15px;
 }
 
-.list{
-  margin-top:6px;
-  background:#020814;
-  border-radius:12px;
-  max-height:180px;
-  overflow-y:auto;
-  border:1px solid #1f2d44;
-}
-
-.item{
-  padding:11px 12px;
-  cursor:pointer;
-  border-bottom:1px solid #16233a;
-}
-.item:hover{background:#0d1b33}
-
-.small{
-  text-align:center;
-  font-size:13px;
-  opacity:.7;
-}
+input::placeholder{color:#aaa}
 
 button{
   width:100%;
@@ -90,8 +73,33 @@ button{
   border:none;
   font-size:16px;
   font-weight:900;
+  color:#00131f;
   background:linear-gradient(90deg,var(--neon),var(--neon-dark));
+  box-shadow:0 0 18px rgba(0,234,255,.45);
   cursor:pointer;
+}
+
+.list{
+  margin-top:6px;
+  background:#020814;
+  border-radius:12px;
+  max-height:170px;
+  overflow-y:auto;
+  border:1px solid #1f2d44;
+}
+
+.item{
+  padding:11px 12px;
+  cursor:pointer;
+  border-bottom:1px solid #16233a;
+}
+.item:last-child{border-bottom:none}
+.item:hover{background:#0d1b33}
+
+.small{
+  font-size:13px;
+  opacity:.7;
+  text-align:center;
 }
 
 #msg{
@@ -100,16 +108,13 @@ button{
   font-weight:700;
 }
 
+/* Footer */
 footer{
-  margin:40px 0 20px;
+  margin-top:auto;
+  padding:14px;
   text-align:center;
   font-size:13px;
-  opacity:.75;
-}
-footer img{
-  width:36px;
-  display:block;
-  margin:0 auto 6px;
+  opacity:.6;
 }
 </style>
 </head>
@@ -117,12 +122,16 @@ footer img{
 <body>
 
 <div class="box">
-  <img src="logo.png" class="logo">
+  <!-- LOGO -->
+  <img src="logo.png" class="logo" alt="AFNs Logo">
+
   <h2>⚔️ Submit Match</h2>
 
+  <!-- PLAYER SEARCH -->
   <input id="opponentSearch" placeholder="Type opponent name">
   <div id="opponentList" class="list"></div>
 
+  <!-- MATCH TYPE -->
   <select id="matchType">
     <option value="friendly">Friendly Match</option>
     <option value="tournament">Tournament Match</option>
@@ -136,8 +145,7 @@ footer img{
 </div>
 
 <footer>
-  <img src="logo.png">
-  AFNs Elite • Official Match System
+  © AFNs Club — All Rights Reserved
 </footer>
 
 <script>
@@ -148,13 +156,16 @@ firebase.initializeApp({
 });
 
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db   = firebase.firestore();
 
 let currentUser = null;
-let opponentId = null;
+let opponentId  = null;
 
 auth.onAuthStateChanged(u=>{
-  if(!u){ location.href="login.html"; return; }
+  if(!u){
+    location.href="login.html";
+    return;
+  }
   currentUser = u;
 });
 
@@ -163,17 +174,17 @@ matchType.onchange = ()=>{
     matchType.value === "tournament" ? "block" : "none";
 };
 
-/* 🔥 FIXED AUTOCOMPLETE */
 opponentSearch.oninput = async ()=>{
   const q = opponentSearch.value.trim().toLowerCase();
   opponentList.innerHTML = "";
   opponentId = null;
 
-  if(q.length === 0) return;
+  if(q.length < 1) return;
 
   const snap = await db.collection("players")
     .where("usernameLower", ">=", q)
     .where("usernameLower", "<=", q + "\uf8ff")
+    .orderBy("usernameLower")
     .limit(20)
     .get();
 
@@ -208,12 +219,13 @@ async function submitMatch(){
     msg.innerText="❌ Select opponent from list";
     return;
   }
+
   if(!score.value.trim()){
     msg.innerText="❌ Enter match score";
     return;
   }
 
-  msg.innerText="⏳ Submitting...";
+  msg.innerText="⏳ Submitting match...";
 
   await db.collection("matches_pending").add({
     playerId: currentUser.uid,
@@ -222,6 +234,7 @@ async function submitMatch(){
     tournamentName:
       matchType.value === "tournament" ? tournamentName.value.trim() : null,
     score: score.value.trim(),
+    submittedBy: currentUser.uid,
     status:"pending",
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
