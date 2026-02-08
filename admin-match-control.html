@@ -80,12 +80,20 @@ auth.onAuthStateChanged(async user=>{
     return;
   }
 
-  const snap = await db.collection("players").doc(user.uid).get();
-  if(!snap.exists || snap.data().role !== "admin"){
-    alert("Access denied");
-    location.href="index.html";
-    return;
-  }
+  const adminSnap = await db.collection("admins").doc(user.uid).get();
+if(!adminSnap.exists){
+  alert("Access denied");
+  location.href="admin-login.html";
+  return;
+}
+
+const admin = adminSnap.data();
+
+// example: permission check
+if(!admin.permissions?.editMatch){
+  alert("No permission");
+  return;
+}
 
   loadMatches();
 });
