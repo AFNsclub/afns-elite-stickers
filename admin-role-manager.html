@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Role Manager</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -12,32 +13,41 @@
 body{
   background:#050b1e;
   color:#fff;
-  font-family:Arial;
+  font-family:Segoe UI,Arial,sans-serif;
   padding:20px;
 }
 .box{
-  max-width:500px;
+  max-width:520px;
   margin:auto;
   background:#0b1622;
   padding:20px;
-  border-radius:14px;
+  border-radius:16px;
+  border:1px solid #00eaff55;
 }
-select,input,label{
+h2{
+  text-align:center;
+  color:#ffd24d;
+}
+select,input{
   width:100%;
   margin:8px 0;
+  padding:10px;
+  border-radius:10px;
+  border:none;
 }
 button{
   width:100%;
-  padding:10px;
-  background:#4f8cff;
+  padding:12px;
+  background:#00eaff;
   border:none;
-  border-radius:8px;
-  color:#fff;
+  border-radius:12px;
+  font-weight:800;
   cursor:pointer;
 }
 .permissions label{
   display:flex;
   justify-content:space-between;
+  margin:6px 0;
 }
 </style>
 </head>
@@ -47,8 +57,12 @@ button{
 <div class="box">
   <h2>🛡️ Role Manager</h2>
 
-  <select id="playerSelect"></select>
+  <!-- PLAYER SELECT -->
+  <select id="playerSelect">
+    <option value="">Select Player</option>
+  </select>
 
+  <!-- ROLE -->
   <select id="role">
     <option value="admin">Admin</option>
     <option value="captain">Captain</option>
@@ -59,10 +73,12 @@ button{
   <input id="team" placeholder="Team / Responsibility">
   <input id="badge" placeholder="Emoji Badge (👑 ⭐ ⚔️)">
 
+  <!-- PERMISSIONS -->
   <div class="permissions">
     <label>Add Match <input type="checkbox" id="addMatch"></label>
     <label>Edit Match <input type="checkbox" id="editMatch"></label>
     <label>Delete Match <input type="checkbox" id="deleteMatch"></label>
+    <label>Approve Match <input type="checkbox" id="approveMatch"></label>
   </div>
 
   <button onclick="saveRole()">Save Role</button>
@@ -75,36 +91,58 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const db=firebase.firestore();
-const auth=firebase.auth();
+const db = firebase.firestore();
+const auth = firebase.auth();
 
+/* 🔐 OWNER ONLY */
 auth.onAuthStateChanged(async u=>{
-  if(!u) location.href="admin-login.html";
-  const a=await db.collection("admins").doc(u.uid).get();
-  if(a.data().role!=="owner") location.href="admin.html";
+  if(!u){
+    location.href="admin-login.html";
+    return;
+  }
+
+  const a = await db.collection("admins").doc(u.uid).get();
+  if(!a.exists || a.data().role !== "owner"){
+    alert("Access denied");
+    location.href="admin.html";
+    return;
+  }
+
   loadPlayers();
 });
 
-function loadPlayers(){
-  db.collection("players").get().then(s=>{
-    s.forEach(d=>{
-      playerSelect.innerHTML+=`<option value="${d.id}">${d.data().name}</option>`;
-    });
+/* 📥 LOAD PLAYERS */
+async function loadPlayers(){
+  const snap = await db.collection("players")
+    .orderBy("username")
+    .get();
+
+  snap.forEach(d=>{
+    playerSelect.innerHTML +=
+      `<option value="${d.id}">${d.data().username}</option>`;
   });
 }
 
-function saveRole(){
-  const pid=playerSelect.value;
-  db.collection("admins").doc(pid).set({
+/* 💾 SAVE ROLE */
+async function saveRole(){
+  const pid = playerSelect.value;
+  if(!pid){
+    alert("Select a player");
+    return;
+  }
+
+  await db.collection("admins").doc(pid).set({
     role: role.value,
     team: team.value,
     badge: badge.value,
     permissions:{
-      addMatch:addMatch.checked,
-      editMatch:editMatch.checked,
-      deleteMatch:deleteMatch.checked
+      addMatch: addMatch.checked,
+      editMatch: editMatch.checked,
+      deleteMatch: deleteMatch.checked,
+      approveMatch: approveMatch.checked
     }
-  });
+  }, { merge:true });
+
   alert("Role Updated ✅");
 }
 </script>
