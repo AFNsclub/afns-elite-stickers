@@ -5,12 +5,87 @@
 <title>Create Account | AFNs Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <style>
-/* --- SAME STYLE --- */
+:root{
+  --gold:#ffd700;
+  --neon:#00f7ff;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
+  --card:rgba(0,0,0,.65);
+}
+
+*{box-sizing:border-box;font-family:Segoe UI,Arial,sans-serif}
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:
+    radial-gradient(circle at top,var(--neon),transparent 45%),
+    radial-gradient(circle at bottom,var(--gold),transparent 45%),
+    linear-gradient(180deg,var(--bg2),var(--bg1));
+  color:#fff;
+}
+
+.card{
+  width:100%;
+  max-width:420px;
+  padding:26px;
+  border-radius:22px;
+  background:var(--card);
+  box-shadow:
+    0 0 30px rgba(0,247,255,.35),
+    0 0 18px rgba(255,215,0,.25);
+}
+
+.logo{
+  width:110px;
+  display:block;
+  margin:0 auto 12px;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.7));
+}
+
+h2{
+  text-align:center;
+  color:var(--gold);
+  margin-bottom:18px;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  margin-bottom:12px;
+  font-size:15px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:16px;
+  background:linear-gradient(90deg,var(--neon),#008cff);
+  color:#000;
+  font-size:18px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.msg{
+  margin-top:12px;
+  text-align:center;
+  font-weight:700;
+}
+.error{color:#ff6b6b}
+.success{color:#4cff8f}
 </style>
 </head>
 
@@ -39,8 +114,8 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db   = firebase.firestore();
 
 function createAccount(){
   const msg=document.getElementById("message");
@@ -55,37 +130,30 @@ function createAccount(){
   const password=document.getElementById("password").value.trim();
 
   if(!username||!email||!phone||!facebook||!gameid||!device||!password){
-    msg.innerText="⚠️ All fields required";
-    return;
+    msg.innerText="⚠️ All fields are required";
+    msg.className="msg error"; return;
   }
 
   auth.createUserWithEmailAndPassword(email,password)
   .then(cred=>{
     return db.collection("players").doc(cred.user.uid).set({
-      username: username,
+      username,
       usernameLower: username.toLowerCase(),
-
-      email: email,
-      phone: phone,
-      facebook: facebook,
+      email, phone, facebook,
       gameId: gameid,
       deviceName: device,
-
-      rating: 0,
-      wins: 0,
-      losses: 0,
-
-      status: "active",   // ✅ SAFE ADD
-
+      rating:0, wins:0, losses:0,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   })
   .then(()=>{
     msg.innerText="✅ Account created!";
+    msg.className="msg success";
     setTimeout(()=>location.href="player.html",1200);
   })
-  .catch(err=>{
-    msg.innerText="❌ "+err.message;
+  .catch(e=>{
+    msg.innerText="❌ "+e.message;
+    msg.className="msg error";
   });
 }
 </script>
