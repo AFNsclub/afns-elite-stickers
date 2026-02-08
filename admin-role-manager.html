@@ -106,29 +106,30 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-/* 🔐 OWNER ONLY */
+const playerSelect = document.getElementById("playerSelect");
+
+/* 🔐 OWNER ONLY ACCESS */
 auth.onAuthStateChanged(async user=>{
   if(!user){
-    location.href="admin-login.html";
+    location.href = "admin-login.html";
     return;
   }
 
   const snap = await db.collection("admins").doc(user.uid).get();
+
   if(!snap.exists || snap.data().role !== "owner"){
     alert("Access denied");
-    location.href="admin.html";
+    location.href = "admin.html";
     return;
   }
 
   loadPlayers();
 });
 
-/* ✅ LOAD PLAYERS — FINAL & SAFE (NO orderBy BUG) */
+/* ✅ LOAD PLAYERS (usernameLower SAFE) */
 async function loadPlayers(){
   try{
     const snap = await db.collection("players").get();
-    const select = document.getElementById("playerSelect");
-
     const players = [];
 
     snap.forEach(d=>{
@@ -139,18 +140,20 @@ async function loadPlayers(){
       });
     });
 
-    // client-side sort (safe)
     players.sort((a,b)=>
       a.name.toLowerCase().localeCompare(b.name.toLowerCase())
     );
 
-    select.innerHTML = `<option value="">Select Player</option>`;
+    playerSelect.innerHTML =
+      `<option value="">Select Player</option>`;
+
     players.forEach(p=>{
-      select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+      playerSelect.innerHTML +=
+        `<option value="${p.id}">${p.name}</option>`;
     });
 
-  }catch(err){
-    console.error("LOAD PLAYERS ERROR:", err);
+  }catch(e){
+    console.error(e);
     alert("Failed to load players");
   }
 }
@@ -160,31 +163,44 @@ async function loadAdminData(){
   const uid = playerSelect.value;
   if(!uid) return;
 
-  const snap = await db.collection("admins").doc(uid).get();
+  try{
+    const snap = await db.collection("admins").doc(uid).get();
 
-  if(!snap.exists){
-    role.value = "admin";
-    team.value = "";
-    badge.value = "";
-    document.querySelectorAll(".permissions input")
-      .forEach(c=>c.checked=false);
-    return;
+    if(!snap.exists){
+      resetForm();
+      return;
+    }
+
+    const a = snap.data();
+
+    role.value  = a.role  || "admin";
+    team.value  = a.team  || "";
+    badge.value = a.badge || "";
+
+    addMatch.checked     = !!a.permissions?.addMatch;
+    editMatch.checked    = !!a.permissions?.editMatch;
+    deleteMatch.checked  = !!a.permissions?.deleteMatch;
+    approveMatch.checked = !!a.permissions?.approveMatch;
+    manageRoles.checked  = !!a.permissions?.manageRoles;
+    seasonReset.checked  = !!a.permissions?.seasonReset;
+
+  }catch(e){
+    // Firestore rule block → safe reset
+    resetForm();
   }
-
-  const a = snap.data();
-  role.value = a.role || "admin";
-  team.value = a.team || "";
-  badge.value = a.badge || "";
-
-  addMatch.checked     = !!a.permissions?.addMatch;
-  editMatch.checked    = !!a.permissions?.editMatch;
-  deleteMatch.checked  = !!a.permissions?.deleteMatch;
-  approveMatch.checked = !!a.permissions?.approveMatch;
-  manageRoles.checked  = !!a.permissions?.manageRoles;
-  seasonReset.checked  = !!a.permissions?.seasonReset;
 }
 
-/* 💾 SAVE ROLE */
+/* ♻️ RESET FORM */
+function resetForm(){
+  role.value = "admin";
+  team.value = "";
+  badge.value = "";
+  document
+    .querySelectorAll(".permissions input")
+    .forEach(c=>c.checked=false);
+}
+
+/* 💾 SAVE ROLE (OWNER ONLY) */
 async function saveRole(){
   const uid = playerSelect.value;
   if(!uid){
@@ -192,7 +208,8 @@ async function saveRole(){
     return;
   }
 
-  const playerSnap = await db.collection("players").doc(uid).get();
+  const playerSnap =
+    await db.collection("players").doc(uid).get();
 
   await db.collection("admins").doc(uid).set({
     active: true,
