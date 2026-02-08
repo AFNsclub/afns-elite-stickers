@@ -13,7 +13,8 @@
 body{background:#050b1e;color:#fff;font-family:Segoe UI,sans-serif}
 .container{max-width:440px;margin:40px auto;padding:20px;background:#0b1622;border-radius:16px}
 h2{text-align:center;color:#4f8cff}
-input,select,button{width:100%;padding:12px;margin-top:12px;border-radius:10px;border:none}
+label{font-size:13px;opacity:.8;margin-top:12px;display:block}
+input,select,button{width:100%;padding:12px;margin-top:6px;border-radius:10px;border:none}
 button{background:#4f8cff;font-weight:700;cursor:pointer}
 button[disabled]{background:#333}
 .list{background:#111;border-radius:10px;margin-top:6px}
@@ -28,17 +29,23 @@ button[disabled]{background:#333}
 <div class="container">
 <h2>⚔️ Add Match Result</h2>
 
-<input id="playerSearch" placeholder="Search player">
-<div id="playerList" class="list"></div>
+<!-- PLAYER 1 -->
+<label>Player 1 (Main Player)</label>
+<input id="p1Search" placeholder="Search Player 1">
+<div id="p1List" class="list"></div>
 
-<input id="opponentSearch" placeholder="Search opponent">
-<div id="opponentList" class="list"></div>
+<!-- PLAYER 2 -->
+<label>Player 2 (Opponent)</label>
+<input id="p2Search" placeholder="Search Player 2">
+<div id="p2List" class="list"></div>
 
+<label>Result (for Player 1)</label>
 <select id="result">
   <option value="win">Win</option>
   <option value="loss">Loss</option>
 </select>
 
+<label>Match Type</label>
 <select id="matchType">
   <option value="friendly">Friendly</option>
   <option value="tournament">Tournament</option>
@@ -59,24 +66,24 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db   = firebase.firestore();
 
-let CAN_EDIT=false;
-let playerId=null;
-let opponentId=null;
+let CAN_ADD=false;
+let player1Id=null;
+let player2Id=null;
 
 /* ================= AUTH ================= */
 auth.onAuthStateChanged(async user=>{
   if(!user){ location.href="admin-login.html"; return; }
 
-  const a=await db.collection("admins").doc(user.uid).get();
-  if(!a.exists || !a.data().permissions?.editMatch){
+  const a = await db.collection("admins").doc(user.uid).get();
+  if(!a.exists || !a.data().permissions?.addMatch){
     msg.innerHTML="<div class='error'>❌ Permission denied</div>";
     addBtn.disabled=true;
     return;
   }
-  CAN_EDIT=true;
+  CAN_ADD=true;
 });
 
 /* ================= UI ================= */
@@ -111,8 +118,8 @@ function autoComplete(input,list,setter){
   };
 }
 
-autoComplete(playerSearch,playerList,id=>playerId=id);
-autoComplete(opponentSearch,opponentList,id=>opponentId=id);
+autoComplete(p1Search,p1List,id=>player1Id=id);
+autoComplete(p2Search,p2List,id=>player2Id=id);
 
 /* ================= RANK ================= */
 function getRank(r){
@@ -142,21 +149,22 @@ async function getSeason(){
 
 /* ================= ADD MATCH ================= */
 addBtn.onclick=async()=>{
-  if(!CAN_EDIT) return;
-
+  if(!CAN_ADD) return;
   msg.innerHTML="";
-  if(!playerId || !opponentId){
+
+  if(!player1Id || !player2Id){
     msg.innerHTML="<div class='error'>Select both players</div>";
     return;
   }
-  if(playerId===opponentId){
+
+  if(player1Id===player2Id){
     msg.innerHTML="<div class='error'>Same player not allowed</div>";
     return;
   }
 
   try{
     const seasonId=await getSeason();
-    const pRef=db.collection("players").doc(playerId);
+    const pRef=db.collection("players").doc(player1Id);
 
     await db.runTransaction(async t=>{
       const pSnap=await t.get(pRef);
@@ -175,16 +183,17 @@ addBtn.onclick=async()=>{
       });
 
       t.set(db.collection("matches").doc(),{
-        playerId,
-        opponentId,
-        result:result.value,
+        player1Id,
+        player2Id,
+        result:result.value,   // result of Player 1
         score:score.value,
         matchType:matchType.value,
-        tournamentName:matchType.value==="tournament"?tournamentName.value:null,
+        tournamentName:
+          matchType.value==="tournament"?tournamentName.value:null,
         seasonId,
         ratingAfter:rating,
         rankAfter:rank,
-        addedBy:"admin",
+        addedBy:auth.currentUser.uid,
         time:firebase.firestore.FieldValue.serverTimestamp()
       });
     });
