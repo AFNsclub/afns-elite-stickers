@@ -1,202 +1,190 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Add Match | Admin</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  doc,
+  updateDoc,
+  increment
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+/* ======================
+   🔥 FIREBASE CONFIG
+====================== */
+const firebaseConfig = {
+  // 🔴 তোমার config এখানে থাকবে
+};
 
-<style>
-body{background:#050b1e;color:#fff;font-family:Segoe UI,sans-serif}
-.container{max-width:440px;margin:40px auto;padding:20px;background:#0b1622;border-radius:16px}
-h2{text-align:center;color:#4f8cff}
-label{font-size:13px;opacity:.85;margin-top:12px;display:block}
-input,select,button{width:100%;padding:12px;margin-top:6px;border-radius:10px;border:none}
-button{background:#4f8cff;font-weight:700;cursor:pointer}
-.list{background:#111;border-radius:10px;margin-top:6px}
-.item{padding:8px;cursor:pointer}
-.item:hover{background:#222}
-.success{color:#4cff8f;margin-top:12px}
-.error{color:#ff6b6b;margin-top:12px}
-</style>
-</head>
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-<body>
-<div class="container">
-<h2>⚔️ Add Match Result</h2>
+/* ======================
+   👤 ELEMENTS
+====================== */
+const p1Input = document.getElementById("player1");
+const p2Input = document.getElementById("player2");
+const p1List = document.getElementById("player1List");
+const p2List = document.getElementById("player2List");
 
-<label>Player 1 (Main Player)</label>
-<input id="p1Search" placeholder="Search Player 1">
-<div id="p1List" class="list"></div>
+const resultSelect = document.getElementById("result");
+const matchTypeSelect = document.getElementById("matchType");
+const scoreInput = document.getElementById("score");
+const addBtn = document.getElementById("addMatchBtn");
+const errorBox = document.getElementById("errorBox");
 
-<label>Player 2 (Opponent)</label>
-<input id="p2Search" placeholder="Search Player 2">
-<div id="p2List" class="list"></div>
+/* ======================
+   📦 STATE
+====================== */
+let allPlayers = [];
+let selectedP1 = null;
+let selectedP2 = null;
 
-<label>Result (for Player 1)</label>
-<select id="result">
-  <option value="win">Win</option>
-  <option value="loss">Loss</option>
-</select>
-
-<label>Match Type</label>
-<select id="matchType">
-  <option value="friendly">Friendly</option>
-  <option value="tournament">Tournament</option>
-</select>
-
-<input id="tournamentName" placeholder="Tournament name" style="display:none">
-<input id="score" placeholder="Score (ex: 4-2)">
-
-<button id="addBtn" type="button">Add Match</button>
-<div id="msg"></div>
-</div>
-
-<script>
-/* ================= FIREBASE ================= */
-firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
-
-const auth = firebase.auth();
-const db   = firebase.firestore();
-
-let player1Id=null;
-let player2Id=null;
-
-/* ================= AUTH CHECK ================= */
-auth.onAuthStateChanged(async user=>{
-  if(!user){
-    location.href="admin-login.html";
-    return;
+/* ======================
+   🔐 AUTH CHECK
+====================== */
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = "/login.html";
   }
 });
 
-/* ================= UI ================= */
-matchType.onchange=()=>{
-  tournamentName.style.display =
-    matchType.value==="tournament" ? "block" : "none";
-};
-
-/* ================= AUTOCOMPLETE ================= */
-function autoComplete(input,list,setter){
-  input.oninput=async()=>{
-    const q=input.value.toLowerCase();
-    list.innerHTML="";
-    if(q.length<2) return;
-
-    const snap = await db.collection("players")
-      .where("usernameLower",">=",q)
-      .where("usernameLower","<=",q+"\uf8ff")
-      .limit(6).get();
-
-    snap.forEach(d=>{
-      const div=document.createElement("div");
-      div.className="item";
-      div.innerText=d.data().username;
-      div.onclick=()=>{
-        setter(d.id);
-        input.value=d.data().username;
-        list.innerHTML="";
-      };
-      list.appendChild(div);
+/* ======================
+   📥 LOAD PLAYERS
+====================== */
+async function loadPlayers() {
+  const snap = await getDocs(collection(db, "players"));
+  allPlayers = [];
+  snap.forEach(docSnap => {
+    allPlayers.push({
+      id: docSnap.id,
+      ...docSnap.data()
     });
-  };
-}
-
-autoComplete(p1Search,p1List,id=>player1Id=id);
-autoComplete(p2Search,p2List,id=>player2Id=id);
-
-/* ================= RANK ================= */
-function getRank(r){
-  if(r>=200) return "Legend 🔥";
-  if(r>=150) return "Platinum 🔵";
-  if(r>=100) return "Gold 🟡";
-  if(r>=50)  return "Silver ⚪";
-  return "Bronze 🟤";
-}
-
-/* ================= SEASON ================= */
-async function getSeason(){
-  const q = await db.collection("seasons")
-    .where("active","==",true).limit(1).get();
-
-  if(!q.empty) return q.docs[0].id;
-
-  const y=new Date().getFullYear();
-  const id=`${y}-S1`;
-  await db.collection("seasons").doc(id).set({
-    name:`${y} Season 1`,
-    active:true,
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
-  return id;
+}
+loadPlayers();
+
+/* ======================
+   🔍 SEARCH HELPERS
+====================== */
+function renderList(input, listEl, isPlayer1) {
+  listEl.innerHTML = ""; // ✅ DUPLICATE FIX
+
+  const q = input.value.toLowerCase();
+  if (!q) return;
+
+  allPlayers
+    .filter(p => p.usernameLower?.includes(q))
+    .slice(0, 6)
+    .forEach(player => {
+      const div = document.createElement("div");
+      div.textContent = player.username;
+      div.className = "search-item";
+      div.onclick = () => {
+        input.value = player.username;
+        listEl.innerHTML = "";
+
+        if (isPlayer1) selectedP1 = player;
+        else selectedP2 = player;
+      };
+      listEl.appendChild(div);
+    });
 }
 
-/* ================= ADD MATCH ================= */
-addBtn.onclick = async ()=>{
-  console.log("ADD MATCH CLICKED");
+/* ======================
+   🔍 INPUT EVENTS
+====================== */
+p1Input.addEventListener("input", () =>
+  renderList(p1Input, p1List, true)
+);
 
-  msg.innerHTML="";
+p2Input.addEventListener("input", () =>
+  renderList(p2Input, p2List, false)
+);
 
-  if(!player1Id || !player2Id){
-    msg.innerHTML="<div class='error'>Select both players</div>";
+/* ======================
+   ⚔️ ADD MATCH
+====================== */
+addBtn.addEventListener("click", async () => {
+  errorBox.textContent = "";
+
+  if (!selectedP1 || !selectedP2) {
+    errorBox.textContent = "❌ Player 1 এবং Player 2 সিলেক্ট করো";
     return;
   }
 
-  if(player1Id===player2Id){
-    msg.innerHTML="<div class='error'>Same player not allowed</div>";
+  if (selectedP1.id === selectedP2.id) {
+    errorBox.textContent = "❌ একই player দুইবার দেওয়া যাবে না";
     return;
   }
 
-  try{
-    const seasonId = await getSeason();
-    const pRef = db.collection("players").doc(player1Id);
+  try {
+    const result = resultSelect.value;
+    const score = scoreInput.value.trim();
 
-    await db.runTransaction(async t=>{
-      const pSnap = await t.get(pRef);
-      if(!pSnap.exists) throw "Player not found";
-
-      let {rating=50,wins=0,losses=0}=pSnap.data();
-
-      if(result.value==="win"){ rating+=10; wins++; }
-      else{ rating=Math.max(50,rating-5); losses++; }
-
-      const rank=getRank(rating);
-
-      t.update(pRef,{
-        rating,wins,losses,rank,
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      t.set(db.collection("matches").doc(),{
-        player1Id,
-        player2Id,
-        result:result.value,
-        score:score.value,
-        matchType:matchType.value,
-        tournamentName:
-          matchType.value==="tournament"?tournamentName.value:null,
-        seasonId,
-        ratingAfter:rating,
-        rankAfter:rank,
-        addedBy:auth.currentUser.uid,
-        time:firebase.firestore.FieldValue.serverTimestamp()
-      });
+    /* ======================
+       📝 MATCH DATA
+    ====================== */
+    await addDoc(collection(db, "matches"), {
+      player1Id: selectedP1.id,
+      player1Name: selectedP1.username,
+      player2Id: selectedP2.id,
+      player2Name: selectedP2.username,
+      result,
+      score,
+      matchType: matchTypeSelect.value,
+      createdAt: new Date()
     });
 
-    msg.innerHTML="<div class='success'>✅ Match added successfully</div>";
+    /* ======================
+       📊 PLAYER UPDATES
+    ====================== */
+    const p1Ref = doc(db, "players", selectedP1.id);
+    const p2Ref = doc(db, "players", selectedP2.id);
+
+    if (result === "Win") {
+      await updateDoc(p1Ref, {
+        wins: increment(1),
+        matches: increment(1)
+      });
+      await updateDoc(p2Ref, {
+        losses: increment(1),
+        matches: increment(1)
+      });
+    } else if (result === "Lose") {
+      await updateDoc(p1Ref, {
+        losses: increment(1),
+        matches: increment(1)
+      });
+      await updateDoc(p2Ref, {
+        wins: increment(1),
+        matches: increment(1)
+      });
+    } else {
+      await updateDoc(p1Ref, { matches: increment(1) });
+      await updateDoc(p2Ref, { matches: increment(1) });
+    }
+
+    /* ======================
+       ✅ RESET UI
+    ====================== */
+    p1Input.value = "";
+    p2Input.value = "";
+    scoreInput.value = "";
+    selectedP1 = null;
+    selectedP2 = null;
+
+    alert("✅ Match added successfully");
+
+  } catch (err) {
+    console.error(err);
+    errorBox.textContent = "❌ Permission বা data error হয়েছে";
   }
-  catch(e){
-    console.error(e);
-    msg.innerHTML="<div class='error'>❌ "+e+"</div>";
-  }
-};
+});
 </script>
-</body>
-</html>
