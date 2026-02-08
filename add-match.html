@@ -14,13 +14,14 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-/* ======================
-   🔥 FIREBASE CONFIG
-====================== */
-const firebaseConfig = {
-  // 🔴 তোমার config এখানে থাকবে
-};
-
+<script>
+/* ================= FIREBASE ================= */
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+  
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
