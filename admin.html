@@ -127,9 +127,6 @@ body{
 </head>
 
 <body>
-
-  <!-- ADMIN SIDEBAR -->
-<div id="sidebar-container"></div>
   
 <div class="header">
   <div class="brand">
@@ -315,14 +312,6 @@ function logout(){
   auth.signOut().then(()=>location.href="admin-login.html");
 }
 <script>
-  
-<script>
-  fetch("sidebar.html")
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById("sidebar-container").innerHTML = html;
-    });
-</script>
   
 </body>
 </html>
