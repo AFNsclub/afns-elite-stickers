@@ -67,7 +67,7 @@ small{
 
   <!-- PLAYER SELECT -->
   <select id="playerSelect" onchange="loadAdminData()">
-    <option value="">Select Player</option>
+    <option value="">Loading players...</option>
   </select>
 
   <!-- ROLE -->
@@ -123,16 +123,29 @@ auth.onAuthStateChanged(async user=>{
   loadPlayers();
 });
 
-/* 📥 LOAD PLAYERS */
+/* 📥 LOAD PLAYERS (FIXED FOR usernameLower) */
 async function loadPlayers(){
-  const snap = await db.collection("players")
-    .orderBy("username")
-    .get();
+  try{
+    const snap = await db.collection("players")
+      .orderBy("usernameLower")
+      .get();
 
-  snap.forEach(d=>{
-    playerSelect.innerHTML +=
-      `<option value="${d.id}">${d.data().username}</option>`;
-  });
+    const select = document.getElementById("playerSelect");
+    select.innerHTML = `<option value="">Select Player</option>`;
+
+    snap.forEach(d=>{
+      const p = d.data();
+      select.innerHTML += `
+        <option value="${d.id}">
+          ${p.username || p.usernameLower}
+        </option>
+      `;
+    });
+
+  }catch(err){
+    alert("Failed to load players");
+    console.error("LOAD PLAYERS ERROR:", err);
+  }
 }
 
 /* 🔄 LOAD EXISTING ADMIN DATA */
@@ -141,6 +154,7 @@ async function loadAdminData(){
   if(!uid) return;
 
   const snap = await db.collection("admins").doc(uid).get();
+
   if(!snap.exists){
     role.value = "admin";
     team.value = "";
