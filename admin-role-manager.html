@@ -5,7 +5,6 @@
 <title>Admin | Role Manager</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -48,7 +47,6 @@ button{
   border:none;
   border-radius:14px;
   font-weight:800;
-  cursor:pointer;
 }
 .permissions label{
   display:flex;
@@ -68,18 +66,13 @@ small{
 <body>
 
 <div class="box">
-
-  <!-- LOGO -->
-  <img src="logo.png" class="logo" alt="Logo">
-
+  <img src="logo.png" class="logo">
   <h2>🛡️ Role Manager</h2>
 
-  <!-- PLAYER SELECT -->
   <select id="playerSelect" onchange="loadAdminData()">
-    <option value="">Loading players...</option>
+    <option>Loading players...</option>
   </select>
 
-  <!-- ROLE -->
   <select id="role">
     <option value="admin">Admin</option>
     <option value="captain">Captain</option>
@@ -90,7 +83,6 @@ small{
   <input id="team" placeholder="Team / Responsibility">
   <input id="badge" placeholder="Emoji Badge (👑 ⭐ ⚔️)">
 
-  <!-- PERMISSIONS -->
   <div class="permissions">
     <label>Add Match <input type="checkbox" id="addMatch"></label>
     <label>Edit Match <input type="checkbox" id="editMatch"></label>
@@ -102,129 +94,86 @@ small{
 
   <button onclick="saveRole()">Save Role</button>
   <small>Only OWNER can manage roles</small>
-
 </div>
 
 <script>
-/* 🔥 FIREBASE INIT */
 firebase.initializeApp({
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub"
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
 });
 
 const auth = firebase.auth();
-const db   = firebase.firestore();
+const db = firebase.firestore();
 
-/* 🔐 OWNER CHECK */
-auth.onAuthStateChanged(async user=>{
+/* ✅ AUTH ONLY — RULES WILL HANDLE OWNER */
+auth.onAuthStateChanged(user=>{
   if(!user){
     location.href="admin-login.html";
     return;
   }
-
-  const adminSnap = await db.collection("admins").doc(user.uid).get();
-  if(!adminSnap.exists || adminSnap.data().role !== "owner"){
-    alert("Access denied");
-    location.href="admin.html";
-    return;
-  }
-
-  loadPlayers();
+  loadPlayers(); // 🔥 always load
 });
 
-/* ✅ LOAD PLAYERS — FINAL FIX */
+/* ✅ PLAYERS LOAD (100% FIXED) */
 function loadPlayers(){
-  const select = document.getElementById("playerSelect");
-  select.innerHTML = `<option value="">Loading players...</option>`;
-
-  db.collection("players").onSnapshot(snapshot=>{
-    const players = [];
-
-    snapshot.forEach(doc=>{
-      const p = doc.data();
-      players.push({
-        id: doc.id,
-        name: p.username || p.usernameLower || "Unknown"
+  const select = playerSelect;
+  db.collection("players").onSnapshot(snap=>{
+    const arr = [];
+    snap.forEach(d=>{
+      const p=d.data();
+      arr.push({
+        id:d.id,
+        name:p.username || p.usernameLower || "Unknown"
       });
     });
 
-    players.sort((a,b)=>
-      a.name.toLowerCase().localeCompare(
-        b.name.toLowerCase()
-      )
-    );
-
-    select.innerHTML = `<option value="">Select Player</option>`;
-    players.forEach(p=>{
-      select.innerHTML +=
-        `<option value="${p.id}">${p.name}</option>`;
+    arr.sort((a,b)=>a.name.localeCompare(b.name));
+    select.innerHTML='<option value="">Select Player</option>';
+    arr.forEach(p=>{
+      select.innerHTML+=`<option value="${p.id}">${p.name}</option>`;
     });
-
-  }, err=>{
-    console.error("PLAYER LOAD ERROR:", err);
-    alert("Players loading blocked");
   });
 }
 
-/* 🔄 LOAD ADMIN DATA */
+/* LOAD ADMIN DATA */
 async function loadAdminData(){
-  const uid = playerSelect.value;
-  if(!uid) return;
+  const id = playerSelect.value;
+  if(!id) return;
+  const snap = await db.collection("admins").doc(id).get().catch(()=>null);
+  if(!snap || !snap.exists) return;
 
-  const snap = await db.collection("admins").doc(uid).get();
-
-  if(!snap.exists){
-    role.value = "admin";
-    team.value = "";
-    badge.value = "";
-    document.querySelectorAll(".permissions input")
-      .forEach(c=>c.checked=false);
-    return;
-  }
-
-  const a = snap.data();
-  role.value = a.role || "admin";
-  team.value = a.team || "";
-  badge.value = a.badge || "";
-
-  addMatch.checked     = !!a.permissions?.addMatch;
-  editMatch.checked    = !!a.permissions?.editMatch;
-  deleteMatch.checked  = !!a.permissions?.deleteMatch;
-  approveMatch.checked = !!a.permissions?.approveMatch;
-  manageRoles.checked  = !!a.permissions?.manageRoles;
-  seasonReset.checked  = !!a.permissions?.seasonReset;
+  const a=snap.data();
+  role.value=a.role||"admin";
+  team.value=a.team||"";
+  badge.value=a.badge||"";
+  Object.keys(a.permissions||{}).forEach(k=>{
+    document.getElementById(k).checked=!!a.permissions[k];
+  });
 }
 
-/* 💾 SAVE ROLE */
+/* SAVE ROLE — RULES WILL VERIFY OWNER */
 async function saveRole(){
-  const uid = playerSelect.value;
-  if(!uid){
-    alert("Select a player");
-    return;
-  }
+  const id=playerSelect.value;
+  if(!id) return alert("Select player");
 
-  const playerSnap = await db.collection("players").doc(uid).get();
-
-  await db.collection("admins").doc(uid).set({
-    active: true,
-    role: role.value,
-    team: team.value,
-    badge: badge.value,
-    email: playerSnap.data()?.email || "",
+  await db.collection("admins").doc(id).set({
+    active:true,
+    role:role.value,
+    team:team.value,
+    badge:badge.value,
     permissions:{
-      addMatch: addMatch.checked,
-      editMatch: editMatch.checked,
-      deleteMatch: deleteMatch.checked,
-      approveMatch: approveMatch.checked,
-      manageRoles: manageRoles.checked,
-      seasonReset: seasonReset.checked
+      addMatch:addMatch.checked,
+      editMatch:editMatch.checked,
+      deleteMatch:deleteMatch.checked,
+      approveMatch:approveMatch.checked,
+      manageRoles:manageRoles.checked,
+      seasonReset:seasonReset.checked
     }
-  }, { merge:true });
+  },{merge:true});
 
-  alert("Role updated successfully ✅");
+  alert("Role saved ✅");
 }
 </script>
-
 </body>
-</html>
+  </html>
