@@ -1,23 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Match Control</title>
+<title>Admin | Match Control</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{background:#050b1e;color:#fff;font-family:Arial}
-.card{background:#0b1622;padding:14px;margin:10px;border-radius:12px}
-button{margin:4px;padding:6px 10px}
+body{
+  margin:0;
+  background:#050b1e;
+  color:#fff;
+  font-family:Segoe UI,Arial,sans-serif;
+}
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:16px;
+}
+h2{
+  text-align:center;
+  color:#ffd24d;
+  margin-bottom:20px;
+}
+.card{
+  background:#0b1622;
+  border:1px solid #00eaff55;
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:12px;
+}
+.info{
+  font-size:14px;
+  line-height:1.6;
+}
+.actions{
+  margin-top:10px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+}
+.edit{ background:#00eaff; color:#00222c }
+.rollback{ background:#ff4d4d; color:#330000 }
 </style>
 </head>
+
 <body>
 
-<h2>🛠 Match Control</h2>
-<div id="list"></div>
+<div class="container">
+  <h2>🛠 Match Control</h2>
+  <div id="list"></div>
+</div>
 
 <script>
 firebase.initializeApp({
@@ -25,46 +69,103 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
-const db=firebase.firestore();
 
-db.collection("matches").orderBy("time","desc").onSnapshot(snap=>{
-  list.innerHTML="";
-  snap.forEach(doc=>{
-    const m=doc.data();
-    list.innerHTML+=`
-      <div class="card">
-        <b>${m.p1} vs ${m.p2}</b><br>
-        Winner: ${m.winner}<br>
-        <button onclick="edit('${doc.id}')">✏ Edit</button>
-        <button onclick="rollback('${doc.id}')">♻ Rollback</button>
-      </div>`;
-  });
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+/* 🔐 ADMIN CHECK */
+auth.onAuthStateChanged(async user=>{
+  if(!user){
+    location.href="login.html";
+    return;
+  }
+
+  const snap = await db.collection("players").doc(user.uid).get();
+  if(!snap.exists || snap.data().role !== "admin"){
+    alert("Access denied");
+    location.href="index.html";
+    return;
+  }
+
+  loadMatches();
 });
 
-async function edit(id){
-  const win=prompt("New winner UID?");
-  if(!win) return;
-  await db.collection("matches").doc(id).update({
-    winner:win,
-    edited:true
-  });
-  log("Match edited "+id);
+/* 📥 LOAD MATCHES */
+async function loadMatches(){
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  const snap = await db.collection("matches")
+    .orderBy("approvedAt","desc")
+    .get();
+
+  if(snap.empty){
+    list.innerHTML = "<p>No matches found</p>";
+    return;
+  }
+
+  for(const doc of snap.docs){
+    const m = doc.data();
+
+    const p1 = await db.collection("players").doc(m.playerId).get();
+    const p2 = await db.collection("players").doc(m.opponentId).get();
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <div class="info">
+        <b>${p1.data().username}</b> vs <b>${p2.data().username}</b><br>
+        Score: ${m.score}<br>
+        Type: ${m.matchType}
+        ${m.tournamentName ? `<br>Tournament: ${m.tournamentName}` : ""}
+        ${m.edited ? "<br>✏ Edited" : ""}
+        ${m.rolledBack ? "<br>♻ Rolled Back" : ""}
+      </div>
+
+      <div class="actions">
+        <button class="edit" onclick="editMatch('${doc.id}')">✏ Edit Score</button>
+        <button class="rollback" onclick="rollbackMatch('${doc.id}')">♻ Rollback</button>
+      </div>
+    `;
+    list.appendChild(card);
+  }
 }
 
-async function rollback(id){
+/* ✏ EDIT */
+async function editMatch(id){
+  const newScore = prompt("Enter new score (ex: 2-1)");
+  if(!newScore) return;
+
+  await db.collection("matches").doc(id).update({
+    score: newScore,
+    edited: true
+  });
+
+  log("Match edited: "+id);
+  loadMatches();
+}
+
+/* ♻ ROLLBACK */
+async function rollbackMatch(id){
   if(!confirm("Rollback this match?")) return;
+
   await db.collection("matches").doc(id).update({
-    rolledBack:true
+    rolledBack: true
   });
-  log("Match rollback "+id);
+
+  log("Match rollback: "+id);
+  loadMatches();
 }
 
+/* 📝 ACTIVITY LOG */
 function log(text){
   db.collection("activity").add({
     text,
-    time:Date.now()
+    time: firebase.firestore.FieldValue.serverTimestamp()
   });
 }
 </script>
+
 </body>
 </html>
