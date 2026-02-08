@@ -13,10 +13,9 @@
 body{background:#050b1e;color:#fff;font-family:Segoe UI,sans-serif}
 .container{max-width:440px;margin:40px auto;padding:20px;background:#0b1622;border-radius:16px}
 h2{text-align:center;color:#4f8cff}
-label{font-size:13px;opacity:.8;margin-top:12px;display:block}
+label{font-size:13px;opacity:.85;margin-top:12px;display:block}
 input,select,button{width:100%;padding:12px;margin-top:6px;border-radius:10px;border:none}
 button{background:#4f8cff;font-weight:700;cursor:pointer}
-button[disabled]{background:#333}
 .list{background:#111;border-radius:10px;margin-top:6px}
 .item{padding:8px;cursor:pointer}
 .item:hover{background:#222}
@@ -29,12 +28,10 @@ button[disabled]{background:#333}
 <div class="container">
 <h2>⚔️ Add Match Result</h2>
 
-<!-- PLAYER 1 -->
 <label>Player 1 (Main Player)</label>
 <input id="p1Search" placeholder="Search Player 1">
 <div id="p1List" class="list"></div>
 
-<!-- PLAYER 2 -->
 <label>Player 2 (Opponent)</label>
 <input id="p2Search" placeholder="Search Player 2">
 <div id="p2List" class="list"></div>
@@ -52,9 +49,9 @@ button[disabled]{background:#333}
 </select>
 
 <input id="tournamentName" placeholder="Tournament name" style="display:none">
-<input id="score" placeholder="Score (ex: 3-1)">
+<input id="score" placeholder="Score (ex: 4-2)">
 
-<button id="addBtn">Add Match</button>
+<button id="addBtn" type="button">Add Match</button>
 <div id="msg"></div>
 </div>
 
@@ -69,27 +66,21 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-let CAN_ADD=false;
 let player1Id=null;
 let player2Id=null;
 
-/* ================= AUTH ================= */
+/* ================= AUTH CHECK ================= */
 auth.onAuthStateChanged(async user=>{
-  if(!user){ location.href="admin-login.html"; return; }
-
-  const a = await db.collection("admins").doc(user.uid).get();
-  if(!a.exists || !a.data().permissions?.addMatch){
-    msg.innerHTML="<div class='error'>❌ Permission denied</div>";
-    addBtn.disabled=true;
+  if(!user){
+    location.href="admin-login.html";
     return;
   }
-  CAN_ADD=true;
 });
 
 /* ================= UI ================= */
 matchType.onchange=()=>{
-  tournamentName.style.display=
-    matchType.value==="tournament"?"block":"none";
+  tournamentName.style.display =
+    matchType.value==="tournament" ? "block" : "none";
 };
 
 /* ================= AUTOCOMPLETE ================= */
@@ -99,7 +90,7 @@ function autoComplete(input,list,setter){
     list.innerHTML="";
     if(q.length<2) return;
 
-    const snap=await db.collection("players")
+    const snap = await db.collection("players")
       .where("usernameLower",">=",q)
       .where("usernameLower","<=",q+"\uf8ff")
       .limit(6).get();
@@ -132,7 +123,7 @@ function getRank(r){
 
 /* ================= SEASON ================= */
 async function getSeason(){
-  const q=await db.collection("seasons")
+  const q = await db.collection("seasons")
     .where("active","==",true).limit(1).get();
 
   if(!q.empty) return q.docs[0].id;
@@ -148,8 +139,9 @@ async function getSeason(){
 }
 
 /* ================= ADD MATCH ================= */
-addBtn.onclick=async()=>{
-  if(!CAN_ADD) return;
+addBtn.onclick = async ()=>{
+  console.log("ADD MATCH CLICKED");
+
   msg.innerHTML="";
 
   if(!player1Id || !player2Id){
@@ -163,11 +155,11 @@ addBtn.onclick=async()=>{
   }
 
   try{
-    const seasonId=await getSeason();
-    const pRef=db.collection("players").doc(player1Id);
+    const seasonId = await getSeason();
+    const pRef = db.collection("players").doc(player1Id);
 
     await db.runTransaction(async t=>{
-      const pSnap=await t.get(pRef);
+      const pSnap = await t.get(pRef);
       if(!pSnap.exists) throw "Player not found";
 
       let {rating=50,wins=0,losses=0}=pSnap.data();
@@ -185,7 +177,7 @@ addBtn.onclick=async()=>{
       t.set(db.collection("matches").doc(),{
         player1Id,
         player2Id,
-        result:result.value,   // result of Player 1
+        result:result.value,
         score:score.value,
         matchType:matchType.value,
         tournamentName:
@@ -199,7 +191,9 @@ addBtn.onclick=async()=>{
     });
 
     msg.innerHTML="<div class='success'>✅ Match added successfully</div>";
-  }catch(e){
+  }
+  catch(e){
+    console.error(e);
     msg.innerHTML="<div class='error'>❌ "+e+"</div>";
   }
 };
