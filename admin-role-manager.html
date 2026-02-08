@@ -123,28 +123,35 @@ auth.onAuthStateChanged(async user=>{
   loadPlayers();
 });
 
-/* 📥 LOAD PLAYERS (FIXED FOR usernameLower) */
+/* ✅ LOAD PLAYERS — FINAL & SAFE (NO orderBy BUG) */
 async function loadPlayers(){
   try{
-    const snap = await db.collection("players")
-      .orderBy("usernameLower")
-      .get();
-
+    const snap = await db.collection("players").get();
     const select = document.getElementById("playerSelect");
-    select.innerHTML = `<option value="">Select Player</option>`;
+
+    const players = [];
 
     snap.forEach(d=>{
       const p = d.data();
-      select.innerHTML += `
-        <option value="${d.id}">
-          ${p.username || p.usernameLower}
-        </option>
-      `;
+      players.push({
+        id: d.id,
+        name: p.username || p.usernameLower || "Unknown"
+      });
+    });
+
+    // client-side sort (safe)
+    players.sort((a,b)=>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+
+    select.innerHTML = `<option value="">Select Player</option>`;
+    players.forEach(p=>{
+      select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
     });
 
   }catch(err){
-    alert("Failed to load players");
     console.error("LOAD PLAYERS ERROR:", err);
+    alert("Failed to load players");
   }
 }
 
