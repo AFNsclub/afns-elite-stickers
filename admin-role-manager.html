@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Role Manager</title>
+<title>Admin | Role Manager</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -48,17 +49,24 @@ button{
   display:flex;
   justify-content:space-between;
   margin:6px 0;
+  font-size:14px;
+}
+small{
+  display:block;
+  text-align:center;
+  opacity:.6;
+  margin-top:10px;
 }
 </style>
 </head>
 
 <body>
-  
+
 <div class="box">
   <h2>🛡️ Role Manager</h2>
 
   <!-- PLAYER SELECT -->
-  <select id="playerSelect">
+  <select id="playerSelect" onchange="loadAdminData()">
     <option value="">Select Player</option>
   </select>
 
@@ -79,30 +87,34 @@ button{
     <label>Edit Match <input type="checkbox" id="editMatch"></label>
     <label>Delete Match <input type="checkbox" id="deleteMatch"></label>
     <label>Approve Match <input type="checkbox" id="approveMatch"></label>
+    <label>Manage Roles <input type="checkbox" id="manageRoles"></label>
+    <label>Season Reset <input type="checkbox" id="seasonReset"></label>
   </div>
 
   <button onclick="saveRole()">Save Role</button>
+  <small>Only OWNER can manage roles</small>
 </div>
 
 <script>
+/* 🔥 FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
 
-const db = firebase.firestore();
 const auth = firebase.auth();
+const db   = firebase.firestore();
 
 /* 🔐 OWNER ONLY */
-auth.onAuthStateChanged(async u=>{
-  if(!u){
+auth.onAuthStateChanged(async user=>{
+  if(!user){
     location.href="admin-login.html";
     return;
   }
 
-  const a = await db.collection("admins").doc(u.uid).get();
-  if(!a.exists || a.data().role !== "owner"){
+  const snap = await db.collection("admins").doc(user.uid).get();
+  if(!snap.exists || snap.data().role !== "owner"){
     alert("Access denied");
     location.href="admin.html";
     return;
@@ -123,27 +135,61 @@ async function loadPlayers(){
   });
 }
 
+/* 🔄 LOAD EXISTING ADMIN DATA */
+async function loadAdminData(){
+  const uid = playerSelect.value;
+  if(!uid) return;
+
+  const snap = await db.collection("admins").doc(uid).get();
+  if(!snap.exists){
+    role.value = "admin";
+    team.value = "";
+    badge.value = "";
+    document.querySelectorAll(".permissions input")
+      .forEach(c=>c.checked=false);
+    return;
+  }
+
+  const a = snap.data();
+  role.value = a.role || "admin";
+  team.value = a.team || "";
+  badge.value = a.badge || "";
+
+  addMatch.checked     = !!a.permissions?.addMatch;
+  editMatch.checked    = !!a.permissions?.editMatch;
+  deleteMatch.checked  = !!a.permissions?.deleteMatch;
+  approveMatch.checked = !!a.permissions?.approveMatch;
+  manageRoles.checked  = !!a.permissions?.manageRoles;
+  seasonReset.checked  = !!a.permissions?.seasonReset;
+}
+
 /* 💾 SAVE ROLE */
 async function saveRole(){
-  const pid = playerSelect.value;
-  if(!pid){
+  const uid = playerSelect.value;
+  if(!uid){
     alert("Select a player");
     return;
   }
 
-  await db.collection("admins").doc(pid).set({
+  const playerSnap = await db.collection("players").doc(uid).get();
+
+  await db.collection("admins").doc(uid).set({
+    active: true,
     role: role.value,
     team: team.value,
     badge: badge.value,
+    email: playerSnap.data()?.email || "",
     permissions:{
       addMatch: addMatch.checked,
       editMatch: editMatch.checked,
       deleteMatch: deleteMatch.checked,
-      approveMatch: approveMatch.checked
+      approveMatch: approveMatch.checked,
+      manageRoles: manageRoles.checked,
+      seasonReset: seasonReset.checked
     }
   }, { merge:true });
 
-  alert("Role Updated ✅");
+  alert("Role updated successfully ✅");
 }
 </script>
 
