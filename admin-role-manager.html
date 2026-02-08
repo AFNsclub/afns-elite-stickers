@@ -54,9 +54,6 @@ button{
 
 <body>
   
-  <!-- ADMIN SIDEBAR -->
-<div id="sidebar-container"></div>
-
 <div class="box">
   <h2>🛡️ Role Manager</h2>
 
@@ -148,14 +145,6 @@ async function saveRole(){
 
   alert("Role Updated ✅");
 }
-</script>
-  
-<script>
-  fetch("sidebar.html")
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById("sidebar-container").innerHTML = html;
-    });
 </script>
 
 </body>
