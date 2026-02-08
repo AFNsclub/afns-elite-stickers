@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Submit Match</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{background:#050b1e;color:#fff;font-family:sans-serif}
+.box{max-width:420px;margin:30px auto;background:#0b1622;padding:20px;border-radius:16px}
+input,select,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none}
+button{background:#4f8cff;font-weight:700}
+.list{background:#111;padding:8px;border-radius:8px}
+.item{padding:6px;cursor:pointer}
+.item:hover{background:#222}
+</style>
+</head>
+
+<body>
+<div class="box">
+<h2>⚔️ Submit Match</h2>
+
+<input id="opponentSearch" placeholder="Opponent name">
+<div id="opponentList" class="list"></div>
+
+<select id="matchType">
+  <option value="friendly">Friendly</option>
+  <option value="tournament">Tournament</option>
+</select>
+
+<input id="tournamentName" placeholder="Tournament name" style="display:none">
+<input id="score" placeholder="Score (ex: 3-1)">
+
+<button onclick="submitMatch()">Submit</button>
+<div id="msg"></div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+let currentUser=null;
+let opponentId=null;
+
+auth.onAuthStateChanged(u=>{
+  if(!u){ location.href="login.html"; return; }
+  currentUser=u;
+});
+
+/* TOURNAMENT TOGGLE */
+matchType.onchange=()=>{
+  tournamentName.style.display=
+    matchType.value==="tournament"?"block":"none";
+};
+
+/* AUTOCOMPLETE */
+opponentSearch.oninput=async()=>{
+  const q=opponentSearch.value.toLowerCase();
+  opponentList.innerHTML="";
+  if(q.length<2) return;
+
+  const snap=await db.collection("players")
+    .where("usernameLower",">=",q)
+    .where("usernameLower","<=",q+"\uf8ff")
+    .limit(5).get();
+
+  snap.forEach(d=>{
+    if(d.id===currentUser.uid) return;
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerText=d.data().username;
+    div.onclick=()=>{
+      opponentId=d.id;
+      opponentSearch.value=d.data().username;
+      opponentList.innerHTML="";
+    };
+    opponentList.appendChild(div);
+  });
+};
+
+async function submitMatch(){
+  if(!opponentId) return msg.innerText="Select opponent";
+
+  await db.collection("matches_pending").add({
+    playerId:currentUser.uid,
+    opponentId,
+    matchType:matchType.value,
+    tournamentName:tournamentName.value||null,
+    score:score.value,
+    submittedBy:currentUser.uid,
+    status:"pending",
+    time:firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  msg.innerHTML="✅ Match submitted for admin approval";
+}
+</script>
+</body>
+</html>
