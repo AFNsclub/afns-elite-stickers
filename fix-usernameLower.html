@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Fix usernameLower</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+<h2>Fixing players...</h2>
+<pre id="log"></pre>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  projectId:"afnsclub"
+});
+
+const db = firebase.firestore();
+const log = t => document.getElementById("log").textContent += t + "\n";
+
+(async()=>{
+  const snap = await db.collection("players").get();
+  let count = 0;
+
+  for(const d of snap.docs){
+    const data = d.data();
+    if(data.username && !data.usernameLower){
+      await d.ref.update({
+        usernameLower: data.username.toLowerCase()
+      });
+      log(`✅ Fixed: ${data.username}`);
+      count++;
+    }
+  }
+
+  log(`\nDone! Updated ${count} players`);
+})();
+</script>
+</body>
+</html>
