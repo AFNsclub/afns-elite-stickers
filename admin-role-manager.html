@@ -25,6 +25,11 @@ body{
   border-radius:16px;
   border:1px solid #00eaff55;
 }
+.logo{
+  display:block;
+  margin:0 auto 10px;
+  width:70px;
+}
 h2{
   text-align:center;
   color:#ffd24d;
@@ -32,16 +37,16 @@ h2{
 select,input{
   width:100%;
   margin:8px 0;
-  padding:10px;
-  border-radius:10px;
+  padding:12px;
+  border-radius:12px;
   border:none;
 }
 button{
   width:100%;
-  padding:12px;
+  padding:14px;
   background:#00eaff;
   border:none;
-  border-radius:12px;
+  border-radius:14px;
   font-weight:800;
   cursor:pointer;
 }
@@ -63,6 +68,10 @@ small{
 <body>
 
 <div class="box">
+
+  <!-- LOGO -->
+  <img src="logo.png" class="logo" alt="Logo">
+
   <h2>🛡️ Role Manager</h2>
 
   <!-- PLAYER SELECT -->
@@ -93,114 +102,101 @@ small{
 
   <button onclick="saveRole()">Save Role</button>
   <small>Only OWNER can manage roles</small>
+
 </div>
 
 <script>
 /* 🔥 FIREBASE INIT */
 firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub"
 });
 
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-const playerSelect = document.getElementById("playerSelect");
-
-/* 🔐 OWNER ONLY ACCESS */
+/* 🔐 OWNER CHECK */
 auth.onAuthStateChanged(async user=>{
   if(!user){
-    location.href = "admin-login.html";
+    location.href="admin-login.html";
     return;
   }
 
-  const snap = await db.collection("admins").doc(user.uid).get();
-
-  if(!snap.exists || snap.data().role !== "owner"){
+  const adminSnap = await db.collection("admins").doc(user.uid).get();
+  if(!adminSnap.exists || adminSnap.data().role !== "owner"){
     alert("Access denied");
-    location.href = "admin.html";
+    location.href="admin.html";
     return;
   }
 
   loadPlayers();
 });
 
-/* ✅ LOAD PLAYERS (usernameLower SAFE) */
-async function loadPlayers(){
-  try{
-    const snap = await db.collection("players").get();
+/* ✅ LOAD PLAYERS — FINAL FIX */
+function loadPlayers(){
+  const select = document.getElementById("playerSelect");
+  select.innerHTML = `<option value="">Loading players...</option>`;
+
+  db.collection("players").onSnapshot(snapshot=>{
     const players = [];
 
-    snap.forEach(d=>{
-      const p = d.data();
+    snapshot.forEach(doc=>{
+      const p = doc.data();
       players.push({
-        id: d.id,
+        id: doc.id,
         name: p.username || p.usernameLower || "Unknown"
       });
     });
 
     players.sort((a,b)=>
-      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+      a.name.toLowerCase().localeCompare(
+        b.name.toLowerCase()
+      )
     );
 
-    playerSelect.innerHTML =
-      `<option value="">Select Player</option>`;
-
+    select.innerHTML = `<option value="">Select Player</option>`;
     players.forEach(p=>{
-      playerSelect.innerHTML +=
+      select.innerHTML +=
         `<option value="${p.id}">${p.name}</option>`;
     });
 
-  }catch(e){
-    console.error(e);
-    alert("Failed to load players");
-  }
+  }, err=>{
+    console.error("PLAYER LOAD ERROR:", err);
+    alert("Players loading blocked");
+  });
 }
 
-/* 🔄 LOAD EXISTING ADMIN DATA */
+/* 🔄 LOAD ADMIN DATA */
 async function loadAdminData(){
   const uid = playerSelect.value;
   if(!uid) return;
 
-  try{
-    const snap = await db.collection("admins").doc(uid).get();
+  const snap = await db.collection("admins").doc(uid).get();
 
-    if(!snap.exists){
-      resetForm();
-      return;
-    }
-
-    const a = snap.data();
-
-    role.value  = a.role  || "admin";
-    team.value  = a.team  || "";
-    badge.value = a.badge || "";
-
-    addMatch.checked     = !!a.permissions?.addMatch;
-    editMatch.checked    = !!a.permissions?.editMatch;
-    deleteMatch.checked  = !!a.permissions?.deleteMatch;
-    approveMatch.checked = !!a.permissions?.approveMatch;
-    manageRoles.checked  = !!a.permissions?.manageRoles;
-    seasonReset.checked  = !!a.permissions?.seasonReset;
-
-  }catch(e){
-    // Firestore rule block → safe reset
-    resetForm();
+  if(!snap.exists){
+    role.value = "admin";
+    team.value = "";
+    badge.value = "";
+    document.querySelectorAll(".permissions input")
+      .forEach(c=>c.checked=false);
+    return;
   }
+
+  const a = snap.data();
+  role.value = a.role || "admin";
+  team.value = a.team || "";
+  badge.value = a.badge || "";
+
+  addMatch.checked     = !!a.permissions?.addMatch;
+  editMatch.checked    = !!a.permissions?.editMatch;
+  deleteMatch.checked  = !!a.permissions?.deleteMatch;
+  approveMatch.checked = !!a.permissions?.approveMatch;
+  manageRoles.checked  = !!a.permissions?.manageRoles;
+  seasonReset.checked  = !!a.permissions?.seasonReset;
 }
 
-/* ♻️ RESET FORM */
-function resetForm(){
-  role.value = "admin";
-  team.value = "";
-  badge.value = "";
-  document
-    .querySelectorAll(".permissions input")
-    .forEach(c=>c.checked=false);
-}
-
-/* 💾 SAVE ROLE (OWNER ONLY) */
+/* 💾 SAVE ROLE */
 async function saveRole(){
   const uid = playerSelect.value;
   if(!uid){
@@ -208,8 +204,7 @@ async function saveRole(){
     return;
   }
 
-  const playerSnap =
-    await db.collection("players").doc(uid).get();
+  const playerSnap = await db.collection("players").doc(uid).get();
 
   await db.collection("admins").doc(uid).set({
     active: true,
