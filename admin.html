@@ -1,118 +1,317 @@
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { 
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  collection,
-  onSnapshot,
-  query,
-  orderBy,
-  limit
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard | AFNS Club</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --bg:#050b1e;
+  --card:#0b1622;
+  --accent:#4f8cff;
+  --text:#fff;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:radial-gradient(circle at top,#0a1a4a,#050b1e);
+  color:var(--text);
+}
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 16px;
+  background:#050b1e;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.role{font-size:12px;color:#ffd400}
+.logout{
+  background:none;
+  border:1px solid var(--accent);
+  color:var(--accent);
+  padding:6px 14px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.container{max-width:1200px;margin:auto;padding:18px}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;
+}
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:20px;
+  cursor:pointer;
+  transition:.25s;
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 0 18px rgba(79,140,255,.4);
+}
+.icon{font-size:28px}
+.title{margin-top:10px;font-weight:bold}
+.desc{font-size:12px;opacity:.6}
+
+.section-title{
+  margin-top:30px;
+  margin-bottom:10px;
+  font-size:14px;
+  opacity:.7;
+}
+
+.permissions, .alerts, .quick{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:14px;
+}
+.box{
+  background:rgba(255,255,255,.05);
+  border-radius:16px;
+  padding:16px;
+}
+.box h4{margin:0 0 10px 0;font-size:14px}
+
+.alert-item{
+  font-size:12px;
+  opacity:.85;
+  margin-bottom:6px;
+}
+
+.quick button{
+  width:100%;
+  padding:10px;
+  background:#0b1622;
+  border:1px solid var(--accent);
+  color:var(--accent);
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.stats{
+  margin-top:22px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:14px;
+}
+.stat{
+  background:rgba(255,255,255,.05);
+  border-radius:16px;
+  padding:16px;
+  text-align:center;
+}
+.stat span{
+  display:block;
+  font-size:24px;
+  font-weight:bold;
+  color:var(--accent);
+}
+
+.footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.5;
+  margin:30px 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="brand">
+    <span>AFNS Admin</span>
+    <span class="role" id="adminRole">Loading...</span>
+  </div>
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+<!-- 🔹 MAIN GRID -->
+<div class="grid" id="mainGrid">
+
+  <div class="card perm-addMatch" onclick="go('add-match.html')">
+    <div class="icon">➕</div>
+    <div class="title">Add Match</div>
+    <div class="desc">Submit match result</div>
+  </div>
+
+  <div class="card perm-editMatch" onclick="go('admin-match-control.html')">
+    <div class="icon">🛠</div>
+    <div class="title">Match Control</div>
+    <div class="desc">Edit / rollback</div>
+  </div>
+
+  <div class="card" onclick="go('admin-approve-matches.html')">
+    <div class="icon">📇</div>
+    <div class="title">Approve Matches</div>
+    <div class="desc">Match result review</div>
+  </div>
+  
+  <div class="card" onclick="go('admin-player.html')">
+    <div class="icon">👤</div>
+    <div class="title">Players</div>
+    <div class="desc">Inspect profiles</div>
+  </div>
+
+  <div class="card" onclick="go('ranking.html')">
+    <div class="icon">📊</div>
+    <div class="title">Leaderboard</div>
+    <div class="desc">Season ranking</div>
+  </div>
+
+  <div class="card perm-seasonReset" onclick="go('admin-season-reset.html')">
+    <div class="icon">♻️</div>
+    <div class="title">Season Manager</div>
+    <div class="desc">Reset season</div>
+  </div>
+
+  <div class="card perm-manageRoles" onclick="go('admin-role-manager.html')">
+    <div class="icon">🛡️</div>
+    <div class="title">Role Manager</div>
+    <div class="desc">Permissions & roles</div>
+  </div>
+
+  <!-- ✅ SUPPORT CHAT (AI → ADMIN) -->
+  <div class="card perm-replySupport" onclick="go('admin-support.html')">
+    <div class="icon">💬</div>
+    <div class="title">Support Chat</div>
+    <div class="desc">AI → Admin Escalation</div>
+  </div>
+
+</div>
+
+<!-- 🔹 PERMISSIONS -->
+<div class="section-title">🛡️ My Permissions</div>
+<div class="permissions">
+  <div class="box" id="permBox"></div>
+</div>
+
+<!-- 🔹 QUICK ACTIONS -->
+<div class="section-title">⚡ Quick Actions</div>
+<div class="quick">
+  <button class="perm-addMatch" onclick="go('add-match.html')">➕ Add Match</button>
+  <button class="perm-editMatch" onclick="go('admin-match-control.html')">🛠 Edit Match</button>
+</div>
+
+<!-- 🔹 ALERTS -->
+<div class="section-title">🔔 Recent Activity</div>
+<div class="alerts">
+  <div class="box" id="alertsBox">
+    <div class="alert-item">Loading...</div>
+  </div>
+</div>
+
+<!-- 🔹 STATS -->
+<div class="stats">
+  <div class="stat"><span id="players">0</span>Players</div>
+  <div class="stat"><span id="matches">0</span>Matches</div>
+  <div class="stat"><span id="admins">0</span>Admins</div>
+  <div class="stat"><span>OK</span>System</div>
+</div>
+
+<div class="footer">
+  AFNS Club • Pro Admin System
+</div>
+
+</div>
+
+<script>
 /* 🔥 FIREBASE INIT */
-const firebaseConfig = {
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub"
-};
-
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
-
-/* 🔐 AUTH GUARD (ROLE BASED) */
-onAuthStateChanged(auth, async user => {
-  if (!user) {
-    location.replace("admin-login.html");
-    return;
-  }
-
-  const adminRef  = doc(db, "admins", user.uid);
-  const adminSnap = await getDoc(adminRef);
-
-  if (!adminSnap.exists() || adminSnap.data().active !== true) {
-    await signOut(auth);
-    location.replace("admin-login.html");
-    return;
-  }
-
-  const admin = adminSnap.data();
-  const role  = admin.role || "admin";
-
-  // 🔰 ROLE LABEL
-  adminRole.innerText =
-    role === "owner"   ? "👑 OWNER" :
-    role === "admin"   ? "🛡️ ADMIN" :
-    role === "manager" ? "📋 MANAGER" :
-    role === "captain" ? "🎽 CAPTAIN" :
-    "USER";
-
-  applyPermissions(admin.permissions || {}, role);
-  loadDashboard();
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
 });
 
-/* 🔐 PERMISSION HANDLER */
-function applyPermissions(perms, role) {
-  document.querySelectorAll("[class^='perm-']").forEach(el => {
-    const key = el.dataset.perm;
-    el.style.display = (role === "owner" || perms[key]) ? "block" : "none";
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+/* 🔐 AUTH + ROLE */
+auth.onAuthStateChanged(async user=>{
+  if(!user) return location.href="admin-login.html";
+
+  const snap=await db.collection("admins").doc(user.uid).get();
+  if(!snap.exists){
+    alert("Access denied");
+    return location.href="admin-login.html";
+  }
+
+  const a=snap.data();
+  adminRole.innerText=(a.badge||"") + " " + a.role.toUpperCase();
+
+  // permission hide
+  document.querySelectorAll("[class*='perm-']").forEach(el=>{
+    const perm=el.className.match(/perm-(\w+)/);
+    if(perm && !a.permissions?.[perm[1]]){
+      el.style.display="none";
+    }
   });
 
-  permBox.innerText =
-    role === "owner"
-      ? "✔ Full Owner Access"
-      : "✔ Limited Admin Access";
-}
+  // permission summary
+  let html="";
+  for(const k in a.permissions){
+    html+=`${a.permissions[k]?"✔":"❌"} ${k}<br>`;
+  }
+  permBox.innerHTML=html;
 
-/* 📊 DASHBOARD DATA */
-function loadDashboard() {
+  loadAlerts();
+  loadAISupportAlerts();
+});
 
-  // 🔔 ACTIVITY
-  onSnapshot(
-    query(collection(db, "activity"), orderBy("time", "desc"), limit(5)),
-    snap => {
-      alertsBox.innerHTML = "";
-      if (snap.empty) {
-        alertsBox.innerHTML = "<div class='alert-item'>No activity</div>";
+/* 🔔 NORMAL ACTIVITY */
+function loadAlerts(){
+  db.collection("activity")
+    .orderBy("time","desc")
+    .limit(5)
+    .onSnapshot(s=>{
+      alertsBox.innerHTML="";
+      if(s.empty){
+        alertsBox.innerHTML="<div class='alert-item'>No activity</div>";
       }
-      snap.forEach(d => {
-        const a = d.data();
-        alertsBox.innerHTML +=
+      s.forEach(d=>{
+        const a=d.data();
+        alertsBox.innerHTML+=
           `<div class="alert-item">• ${a.type} by ${a.by}</div>`;
       });
-    }
-  );
-
-  // 🤖 AI ALERTS
-  onSnapshot(
-    query(collection(db, "adminAlerts"), orderBy("time", "desc"), limit(5)),
-    snap => {
-      snap.forEach(d => {
-        alertsBox.innerHTML +=
-          `<div class="alert-item">🤖 AI Alert • ${d.data().uid}</div>`;
-      });
-    }
-  );
-
-  // 📈 STATS
-  onSnapshot(collection(db, "players"), s => players.innerText = s.size);
-  onSnapshot(collection(db, "matches"), s => matches.innerText = s.size);
-  onSnapshot(collection(db, "admins"),  s => admins.innerText  = s.size);
+    });
 }
 
-/* 🚪 LOGOUT */
-window.logout = async function () {
-  await signOut(auth);
-  location.replace("admin-login.html");
-};
+/* 🤖 AI → ADMIN ESCALATION */
+function loadAISupportAlerts(){
+  db.collection("adminAlerts")
+    .orderBy("time","desc")
+    .limit(5)
+    .onSnapshot(s=>{
+      s.forEach(d=>{
+        const a=d.data();
+        alertsBox.innerHTML+=
+          `<div class="alert-item">🤖 AI Escalation • ${a.uid}</div>`;
+      });
+    });
+}
 
-/* 🔁 NAV */
-window.go = page => location.href = page;
-    </script>
+/* 📊 STATS */
+db.collection("players").onSnapshot(s=>players.innerText=s.size);
+db.collection("matches").onSnapshot(s=>matches.innerText=s.size);
+db.collection("admins").onSnapshot(s=>admins.innerText=s.size);
+
+function go(p){location.href=p}
+function logout(){
+  auth.signOut().then(()=>location.href="admin-login.html");
+}
+</script>
+
+</body>
+  </html>
