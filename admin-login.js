@@ -1,30 +1,33 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword
+import { 
+  getAuth, 
+  signInWithEmailAndPassword 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc
+import { 
+  getFirestore, 
+  doc, 
+  getDoc 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 FIREBASE CONFIG */
+/* 🔥 YOUR FIREBASE CONFIG (YOU ALREADY GAVE THIS) */
 const firebaseConfig = {
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub"
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
 
-const app  = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db   = getFirestore(app);
+const db = getFirestore(app);
 
-/* 🔐 ADMIN LOGIN */
+/* 🔐 LOGIN FUNCTION */
 window.loginAdmin = async () => {
-  const email    = document.getElementById("email").value.trim();
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
-  const error    = document.getElementById("error");
+  const error = document.getElementById("error");
 
   error.textContent = "";
 
@@ -34,21 +37,20 @@ window.loginAdmin = async () => {
   }
 
   try {
-    // 🔑 AUTH LOGIN
-    const res  = await signInWithEmailAndPassword(auth, email, password);
+    const res = await signInWithEmailAndPassword(auth, email, password);
     const user = res.user;
 
-    // ✅ CHECK ADMIN BY UID (FIXED)
-    const adminRef  = doc(db, "admins", user.uid);
-    const adminSnap = await getDoc(adminRef);
+    // 🔥 CHECK ADMIN COLLECTION
+    const adminRef = doc(db, "admins", user.email);
+    const snap = await getDoc(adminRef);
 
-    if (!adminSnap.exists() || adminSnap.data().active !== true) {
-      error.textContent = "❌ You are not an active admin";
+    if (!snap.exists() || snap.data().active !== true) {
+      error.textContent = "Not authorized admin";
       return;
     }
 
     // ✅ SUCCESS
-    window.location.href = "admin.html";
+    window.location.href = "admin-dashboard.html";
 
   } catch (e) {
     error.textContent = e.message;
