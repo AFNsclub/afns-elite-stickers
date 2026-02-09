@@ -2,10 +2,10 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Player Profile | AFN's Elite Strikers</title>
+<title>My Profile | AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
+<!-- Firebase v9 compat -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -62,7 +62,6 @@ header img{width:90px;filter:drop-shadow(0 0 18px rgba(255,215,0,.6))}
   border-radius:20px;
   font-size:11px;
   font-weight:900;
-  animation:rankPulse 2s infinite;
 }
 .rank-bronze{background:#6d4c41}
 .rank-silver{background:#b0bec5;color:#000}
@@ -70,12 +69,6 @@ header img{width:90px;filter:drop-shadow(0 0 18px rgba(255,215,0,.6))}
 .rank-platinum{background:#4fc3f7;color:#001}
 .rank-legend{
   background:linear-gradient(145deg,#ff1744,#ff9100);
-  box-shadow:0 0 12px rgba(255,87,34,.9);
-}
-@keyframes rankPulse{
-  0%{transform:scale(1)}
-  50%{transform:scale(1.08)}
-  100%{transform:scale(1)}
 }
 
 .fb-btn{
@@ -141,7 +134,7 @@ input{
     <div class="info-text">
       <span class="info-label">Player Name</span>
       <div class="player-name-row">
-        <span class="info-value" id="v_username"></span>
+        <span class="info-value" id="v_username">—</span>
         <span id="rankBadge" class="rank-badge hidden"></span>
       </div>
     </div>
@@ -151,7 +144,7 @@ input{
     <div class="info-icon">📧</div>
     <div class="info-text">
       <span class="info-label">Email</span>
-      <span class="info-value" id="v_email"></span>
+      <span class="info-value" id="v_email">—</span>
     </div>
   </div>
 
@@ -159,25 +152,25 @@ input{
     <div class="info-icon">📱</div>
     <div class="info-text">
       <span class="info-label">Phone</span>
-      <span class="info-value" id="v_phone"></span>
+      <span class="info-value" id="v_phone">—</span>
     </div>
   </div>
 
   <div class="info-row">
     <div class="info-icon">📲</div>
     <div class="info-text">
-      <span class="info-label">Device Name</span>
-      <span class="info-value" id="v_device"></span>
+      <span class="info-label">Device</span>
+      <span class="info-value" id="v_device">—</span>
     </div>
   </div>
 
-  <button class="fb-btn" id="fbBtn" onclick="openFacebook()">🌐 View Facebook Profile</button>
+  <button class="fb-btn hidden" id="fbBtn" onclick="openFacebook()">🌐 View Facebook Profile</button>
 
   <div class="info-row">
     <div class="info-icon">🎮</div>
     <div class="info-text">
       <span class="info-label">Game ID</span>
-      <span class="info-value" id="v_gameId"></span>
+      <span class="info-value" id="v_gameId">—</span>
     </div>
   </div>
 
@@ -187,10 +180,6 @@ input{
     <div>❌ <span id="losses">0</span></div>
   </div>
 
-  <button onclick="location.href='player-submit-match.html'">
-  📝 Submit Match Result
-  </button>
-  <button onclick="location.href='match-history.html'">📜 Match History</button>
   <button onclick="toggleEdit(true)">✏️ Edit Profile</button>
   <button class="secondary" onclick="logout()">Logout</button>
 </div>
@@ -199,7 +188,7 @@ input{
   <input id="phone" placeholder="Phone">
   <input id="facebook" placeholder="Facebook link">
   <input id="gameId" placeholder="Game ID">
-  <input id="deviceName" placeholder="Device name (e.g. Redmi Note 12)">
+  <input id="deviceName" placeholder="Device name">
   <button onclick="saveProfile()">Save</button>
   <button class="secondary" onclick="toggleEdit(false)">Cancel</button>
 </div>
@@ -208,75 +197,91 @@ input{
 </div>
 
 <script>
+/* 🔥 FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
 
-const auth=firebase.auth(), db=firebase.firestore();
-let uid, fbLink="";
+const auth = firebase.auth();
+const db = firebase.firestore();
+let uid = null;
+let fbLink = "";
 
+/* 🏆 RANK */
 function getRank(r){
-  if(r>=200) return {n:"LEGEND",c:"rank-legend",i:"🔥"};
-  if(r>=150) return {n:"PLATINUM",c:"rank-platinum",i:"🔵"};
-  if(r>=100) return {n:"GOLD",c:"rank-gold",i:"🟡"};
-  if(r>=50) return {n:"SILVER",c:"rank-silver",i:"⚪"};
-  return {n:"BRONZE",c:"rank-bronze",i:"🟤"};
+  if(r>=200) return {n:"LEGEND",c:"rank-legend"};
+  if(r>=150) return {n:"PLATINUM",c:"rank-platinum"};
+  if(r>=100) return {n:"GOLD",c:"rank-gold"};
+  if(r>=50)  return {n:"SILVER",c:"rank-silver"};
+  return {n:"BRONZE",c:"rank-bronze"};
 }
 
+/* 🔐 AUTH */
 auth.onAuthStateChanged(user=>{
-  if(!user){location.replace("login.html");return;}
-  uid=user.uid;
-  v_email.innerText=user.email;
+  if(!user){
+    location.replace("login.html");
+    return;
+  }
 
-  db.collection("players").doc(uid).onSnapshot(doc=>{
-    const d=doc.data() || {};
-    v_username.innerText=d.username||"—";
-    v_phone.innerText=d.phone||"—";
-    v_gameId.innerText=d.gameId||"—";
-    v_device.innerText=d.deviceName||"—";
+  uid = user.uid;
+  v_email.innerText = user.email;
 
-    rating.innerText=d.rating||0;
-    wins.innerText=d.wins||0;
-    losses.innerText=d.losses||0;
+  db.collection("players").doc(uid).onSnapshot(snap=>{
+    if(!snap.exists) return;
+    const d = snap.data();
 
-    const r=getRank(d.rating||0);
-    rankBadge.className="rank-badge "+r.c;
-    rankBadge.innerText=`${r.i} ${r.n}`;
+    v_username.innerText = d.username || "—";
+    v_phone.innerText = d.phone || "—";
+    v_gameId.innerText = d.gameId || "—";
+    v_device.innerText = d.deviceName || "—";
+
+    rating.innerText = d.rating || 0;
+    wins.innerText = d.wins || 0;
+    losses.innerText = d.losses || 0;
+
+    const r = getRank(d.rating || 0);
+    rankBadge.className = "rank-badge "+r.c;
+    rankBadge.innerText = r.n;
     rankBadge.classList.remove("hidden");
 
-    fbLink=d.facebook||"";
-    fbBtn.style.display=fbLink?"flex":"none";
+    fbLink = d.facebook || "";
+    fbBtn.classList.toggle("hidden", !fbLink);
   });
 });
 
+/* 🌐 FB */
 function openFacebook(){
   if(fbLink) window.open(fbLink,"_blank");
 }
 
+/* ✏️ EDIT */
 function toggleEdit(edit){
-  viewBox.classList.toggle("hidden",edit);
-  editBox.classList.toggle("hidden",!edit);
+  viewBox.classList.toggle("hidden", edit);
+  editBox.classList.toggle("hidden", !edit);
 }
 
+/* 💾 SAVE */
 function saveProfile(){
   db.collection("players").doc(uid).update({
-    phone:phone.value,
-    facebook:facebook.value,
-    gameId:gameId.value,
-    deviceName:deviceName.value
+    phone: phone.value,
+    facebook: facebook.value,
+    gameId: gameId.value,
+    deviceName: deviceName.value
   }).then(()=>{
-    msg.innerHTML="<div class='success'>Profile Updated</div>";
+    msg.innerHTML = "<div class='success'>Profile Updated</div>";
     toggleEdit(false);
   });
 }
 
+/* 🚪 LOGOUT */
 function logout(){
-  auth.signOut().then(()=>location.replace("login.html"));
+  auth.signOut().then(()=>{
+    location.replace("login.html");
+  });
 }
 </script>
 
-<script src="season-manager.js"></script>
 </body>
 </html>
