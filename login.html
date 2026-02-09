@@ -12,14 +12,7 @@
   --bg1:#02060c;
   --bg2:#0c1b2a;
 }
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Segoe UI',sans-serif;
-}
-
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
 body{
   min-height:100vh;
   background:radial-gradient(circle at top,var(--bg2),var(--bg1));
@@ -28,7 +21,6 @@ body{
   justify-content:center;
   align-items:center;
 }
-
 .card{
   width:100%;
   max-width:380px;
@@ -37,22 +29,9 @@ body{
   padding:24px;
   box-shadow:0 0 35px rgba(0,247,255,.45);
 }
-
-.logo{
-  text-align:center;
-  margin-bottom:10px;
-}
-.logo img{
-  width:90px;
-  filter:drop-shadow(0 0 18px rgba(255,215,0,.6));
-}
-
-h2{
-  text-align:center;
-  color:var(--gold);
-  margin-bottom:18px;
-}
-
+.logo{text-align:center;margin-bottom:10px}
+.logo img{width:90px;filter:drop-shadow(0 0 18px rgba(255,215,0,.6))}
+h2{text-align:center;color:var(--gold);margin-bottom:18px}
 input{
   width:100%;
   padding:13px;
@@ -64,10 +43,7 @@ input{
   color:#fff;
   font-size:15px;
 }
-
-.password-box{
-  position:relative;
-}
+.password-box{position:relative}
 .toggle{
   position:absolute;
   right:14px;
@@ -76,9 +52,7 @@ input{
   font-size:13px;
   color:var(--neon);
   cursor:pointer;
-  user-select:none;
 }
-
 button{
   width:100%;
   padding:14px;
@@ -89,13 +63,7 @@ button{
   font-size:16px;
   background:linear-gradient(145deg,#081c2c,#020c14);
   color:var(--neon);
-  transition:.25s;
 }
-button:hover{
-  transform:scale(1.05);
-  box-shadow:0 0 16px rgba(0,247,255,.45);
-}
-
 .error{
   color:#ff6b6b;
   font-size:14px;
@@ -103,31 +71,15 @@ button:hover{
   display:none;
   text-align:center;
 }
-
-.links{
-  text-align:center;
-  margin-top:16px;
-  font-size:14px;
-}
-.links a{
-  color:var(--neon);
-  text-decoration:none;
-  font-weight:700;
-}
-
-footer{
-  text-align:center;
-  font-size:12px;
-  color:#aaa;
-  margin-top:16px;
-}
+.links{text-align:center;margin-top:16px;font-size:14px}
+.links a{color:var(--neon);text-decoration:none;font-weight:700}
+footer{text-align:center;font-size:12px;color:#aaa;margin-top:16px}
 </style>
 </head>
 
 <body>
 
 <div class="card">
-
   <div class="logo">
     <img src="logo.png">
   </div>
@@ -151,72 +103,86 @@ footer{
     <a href="register.html">Create Account</a>
   </div>
 
-  <footer>
-    © 2026 AFN's Elite Strikers
-  </footer>
-
+  <footer>© 2026 AFN's Elite Strikers</footer>
 </div>
 
-<!-- Firebase -->
+<!-- 🔥 Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig={
+/* 🔥 FIREBASE INIT */
+firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub",
-  storageBucket:"afnsclub.firebasestorage.app",
-  messagingSenderId:"1088089213558",
-  appId:"1:1088089213558:web:bd5e01caaeecaa46bcad57"
-};
-firebase.initializeApp(firebaseConfig);
-
-const auth=firebase.auth();
-
-// ✅ already logged in → direct profile
-auth.onAuthStateChanged(user=>{
-  if(user){
-    location.replace("player.html");
-  }
+  projectId:"afnsclub"
 });
 
-const email=document.getElementById("email");
-const password=document.getElementById("password");
-const errorBox=document.getElementById("errorBox");
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+/* 👑 OWNER EMAIL */
+const OWNER_EMAIL = "sisaif167@gmail.com";
+
+/* UI */
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+const errorBox = document.getElementById("errorBox");
 
 function showError(msg){
-  errorBox.innerText=msg;
-  errorBox.style.display="block";
+  errorBox.innerText = msg;
+  errorBox.style.display = "block";
 }
 
 function togglePassword(){
-  if(password.type==="password"){
-    password.type="text";
-    document.querySelector(".toggle").innerText="Hide";
+  const t = document.querySelector(".toggle");
+  if(password.type === "password"){
+    password.type = "text"; t.innerText = "Hide";
   }else{
-    password.type="password";
-    document.querySelector(".toggle").innerText="Show";
+    password.type = "password"; t.innerText = "Show";
   }
 }
 
+/* 🔐 AUTO REDIRECT (LOGIN STAY SAFE) */
+auth.onAuthStateChanged(async user=>{
+  if(!user) return;
+
+  // OWNER → admin
+  if(user.email === OWNER_EMAIL){
+    location.replace("admin.html");
+    return;
+  }
+
+  // Check admin collection
+  const adminSnap = await db.collection("admins").doc(user.uid).get();
+  if(adminSnap.exists && adminSnap.data().active){
+    location.replace("admin.html");
+    return;
+  }
+
+  // Normal player
+  location.replace("player.html");
+});
+
+/* 🔑 LOGIN */
 function login(){
-  errorBox.style.display="none";
+  errorBox.style.display = "none";
 
   if(!email.value || !password.value){
     showError("⚠️ Gmail এবং Password দিতে হবে");
     return;
   }
 
-  auth.signInWithEmailAndPassword(email.value.trim(),password.value)
-  .then(()=>{
-    location.href="player.html";
-  })
-  .catch(()=>{
+  auth.signInWithEmailAndPassword(
+    email.value.trim(),
+    password.value
+  ).catch(()=>{
     showError("❌ Gmail অথবা Password ভুল");
   });
 }
 
+/* 🔁 PASSWORD RESET */
 function forgotPassword(){
   if(!email.value){
     showError("📧 আগে Gmail লিখুন");
@@ -224,14 +190,10 @@ function forgotPassword(){
   }
 
   auth.sendPasswordResetEmail(email.value.trim())
-  .then(()=>{
-    showError("✅ Reset link Gmail এ পাঠানো হয়েছে");
-  })
-  .catch(()=>{
-    showError("❌ Gmail পাওয়া যায়নি");
-  });
+    .then(()=>showError("✅ Reset link Gmail এ পাঠানো হয়েছে"))
+    .catch(()=>showError("❌ Gmail পাওয়া যায়নি"));
 }
 </script>
 
 </body>
-  </html>
+</html>
