@@ -22,7 +22,6 @@ input,select,button{
 button{
   background:#22c55e;
   font-weight:bold;
-  cursor:pointer;
 }
 .search-list{
   background:#020617;
@@ -81,10 +80,10 @@ button{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, collection, getDocs, addDoc,
-  doc, updateDoc, increment, getDoc
+  doc, updateDoc, increment
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import {
-  getAuth, onAuthStateChanged, signOut
+  getAuth, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 /* 🔥 FIREBASE CONFIG */
@@ -98,19 +97,9 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* 🔐 AUTH + ADMIN CHECK (FINAL FIX) */
-onAuthStateChanged(auth, async (user)=>{
+/* 🔐 AUTH CHECK */
+onAuthStateChanged(auth,user=>{
   if(!user){
-    location.href="login.html";
-    return;
-  }
-
-  const adminRef = doc(db,"admins",user.uid);
-  const adminSnap = await getDoc(adminRef);
-
-  if(!adminSnap.exists() || adminSnap.data().active !== true){
-    alert("❌ Admin access denied");
-    await signOut(auth);
     location.href="login.html";
   }
 });
@@ -132,19 +121,19 @@ let selectedP1=null;
 let selectedP2=null;
 
 /* 📥 LOAD PLAYERS */
-const snap = await getDocs(collection(db,"players"));
+const snap=await getDocs(collection(db,"players"));
 snap.forEach(d=>{
   allPlayers.push({id:d.id,...d.data()});
 });
 
-/* 🔍 SEARCH FUNCTION */
+/* 🔍 SEARCH */
 function render(input,list,isP1){
   list.innerHTML="";
-  const q=input.value.trim().toLowerCase();
+  const q=input.value.toLowerCase();
   if(!q)return;
 
   allPlayers
-    .filter(p=>p.usernameLower && p.usernameLower.includes(q))
+    .filter(p=>p.usernameLower?.includes(q))
     .slice(0,6)
     .forEach(p=>{
       const div=document.createElement("div");
@@ -153,7 +142,7 @@ function render(input,list,isP1){
       div.onclick=()=>{
         input.value=p.username;
         list.innerHTML="";
-        if(isP1) selectedP1=p;
+        if(isP1)selectedP1=p;
         else selectedP2=p;
       };
       list.appendChild(div);
@@ -164,15 +153,14 @@ p1Input.addEventListener("input",()=>render(p1Input,p1List,true));
 p2Input.addEventListener("input",()=>render(p2Input,p2List,false));
 
 /* ⚔️ ADD MATCH */
-addBtn.onclick = async ()=>{
+addBtn.onclick=async()=>{
   errorBox.textContent="";
 
-  if(!selectedP1 || !selectedP2){
-    errorBox.textContent="❌ Player 1 এবং Player 2 select করো";
+  if(!selectedP1||!selectedP2){
+    errorBox.textContent="❌ Player 1 & Player 2 select করো";
     return;
   }
-
-  if(selectedP1.id === selectedP2.id){
+  if(selectedP1.id===selectedP2.id){
     errorBox.textContent="❌ Same player allowed না";
     return;
   }
@@ -216,7 +204,7 @@ addBtn.onclick = async ()=>{
 
   }catch(e){
     console.error(e);
-    errorBox.textContent="❌ Firestore / Permission error";
+    errorBox.textContent="❌ Permission বা Firestore error";
   }
 };
 </script>
