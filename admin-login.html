@@ -134,29 +134,37 @@ async function login(){
   }
 
   try{
-    const cred = await auth.signInWithEmailAndPassword(email, pass);
-    const uid  = cred.user.uid;
+    // 🔐 Firebase Auth
+    await auth.signInWithEmailAndPassword(email, pass);
 
-    const snap = await db.collection("admins").doc(uid).get();
+    // 🔑 EMAIL-BASED ADMIN CHECK (FINAL)
+    const snap = await db.collection("admins").doc(email).get();
 
-    if(!snap.exists || snap.data().active !== true){
+    if(!snap.exists){
       await auth.signOut();
-      msg.textContent = "❌ You are not an active admin";
+      msg.textContent = "❌ Admin not found";
       msg.classList.add("error");
       return;
     }
 
+    if(snap.data().active !== true){
+      await auth.signOut();
+      msg.textContent = "❌ Admin inactive";
+      msg.classList.add("error");
+      return;
+    }
+
+    // ✅ SUCCESS
     msg.textContent = "Login success ✓";
     msg.classList.add("success");
     setTimeout(()=>location.href="admin.html",800);
 
   }catch(e){
     console.error(e.code);
-    msg.textContent = e.code === "auth/wrong-password"
-      ? "Wrong password"
-      : e.code === "auth/user-not-found"
-      ? "User not found"
-      : "Login failed";
+    msg.textContent =
+      e.code === "auth/wrong-password" ? "Wrong password" :
+      e.code === "auth/user-not-found" ? "User not found" :
+      "Login failed";
     msg.classList.add("error");
   }
 }
