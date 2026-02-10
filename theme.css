@@ -1,0 +1,11 @@
+:root{
+  --bg-main: #050b1e;
+  --bg-card: #0b1622;
+
+  --primary: #4f8cff;     /* logo main */
+  --accent: #ffd24d;      /* logo highlight */
+  --danger: #ff4d4d;
+
+  --glow: 0 0 18px rgba(79,140,255,.35);
+  --radius: 16px;
+}
