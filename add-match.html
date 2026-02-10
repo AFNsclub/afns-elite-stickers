@@ -5,14 +5,13 @@
 <title>Add Match | AFNS Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Admin Guard -->
 <script type="module" src="admin.js"></script>
 
 <style>
 body{
   margin:0;
   font-family:Arial,sans-serif;
-  background:#050b1e;
+  background:#050b1e url("assets/logo.png") no-repeat center/200px;
   color:#fff;
 }
 .header{
@@ -25,8 +24,8 @@ body{
 button{
   background:#4f8cff;
   border:none;
-  padding:8px 14px;
-  border-radius:8px;
+  padding:10px 16px;
+  border-radius:10px;
   color:#fff;
   cursor:pointer;
 }
@@ -34,13 +33,35 @@ button{
   max-width:600px;
   margin:20px auto;
   padding:16px;
+  background:rgba(10,20,40,.85);
+  border-radius:14px;
 }
 input{
   width:100%;
-  padding:10px;
-  margin-bottom:12px;
-  border-radius:8px;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:10px;
   border:none;
+  outline:none;
+}
+.suggest{
+  background:#0f1f3a;
+  border-radius:10px;
+  overflow:hidden;
+  margin-bottom:10px;
+}
+.suggest div{
+  padding:8px 12px;
+  cursor:pointer;
+}
+.suggest div:hover{
+  background:#4f8cff;
+}
+.playerBox{
+  background:#08162c;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:12px;
 }
 </style>
 </head>
@@ -48,19 +69,98 @@ input{
 <body>
 
 <div class="header">
-  <div>Add Match</div>
+  <div>AFNS • Add Match</div>
   <button onclick="adminLogout()">Logout</button>
 </div>
 
 <div class="container">
-  <h3>Submit Match Result</h3>
+<h3>Submit Match Result</h3>
 
-  <input type="text" placeholder="Match ID">
-  <input type="text" placeholder="Winner UID">
-  <input type="number" placeholder="Score">
+<input id="matchId" placeholder="Match ID">
 
-  <button>Submit</button>
+<!-- PLAYER ONE -->
+<input id="p1search" placeholder="Player One Name">
+<div id="p1suggest" class="suggest"></div>
+<div id="p1info" class="playerBox"></div>
+
+<!-- PLAYER TWO -->
+<input id="p2search" placeholder="Player Two Name">
+<div id="p2suggest" class="suggest"></div>
+<div id="p2info" class="playerBox"></div>
+
+<input id="score" placeholder="Score">
+
+<button onclick="submitMatch()">Submit Match</button>
 </div>
+
+<script type="module">
+import { getDatabase, ref, get, update }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { app } from "./firebase.js";
+
+const db = getDatabase(app);
+let players = [];
+let p1=null, p2=null;
+
+get(ref(db,"players")).then(snap=>{
+  snap.forEach(c=>{
+    players.push({...c.val(), uid:c.key});
+  });
+});
+
+function searchPlayer(input, box, setPlayer){
+  box.innerHTML="";
+  if(!input) return;
+  players
+  .filter(p=>p.name.toLowerCase().startsWith(input.toLowerCase()))
+  .slice(0,5)
+  .forEach(p=>{
+    const d=document.createElement("div");
+    d.innerText=p.name+" (Rank "+p.rank+")";
+    d.onclick=()=>{
+      setPlayer(p);
+      box.innerHTML="";
+    };
+    box.appendChild(d);
+  });
+}
+
+p1search.oninput=()=>searchPlayer(
+  p1search.value,p1suggest,
+  p=>{
+    p1=p;
+    p1info.innerHTML=`Name: ${p.name}<br>UID: ${p.uid}<br>Rank: ${p.rank}`;
+  }
+);
+
+p2search.oninput=()=>searchPlayer(
+  p2search.value,p2suggest,
+  p=>{
+    p2=p;
+    p2info.innerHTML=`Name: ${p.name}<br>UID: ${p.uid}<br>Rank: ${p.rank}`;
+  }
+);
+
+window.submitMatch=()=>{
+  if(!p1||!p2) return alert("Select both players");
+
+  const matchId=matchId.value;
+  const score=score.value;
+
+  update(ref(db,"matches/"+matchId),{
+    p1:p1.uid,
+    p2:p2.uid,
+    score:score,
+    time:Date.now()
+  });
+
+  // Rank update example
+  update(ref(db,"players/"+p1.uid),{rank:p1.rank+1});
+  update(ref(db,"players/"+p2.uid),{rank:p2.rank-1});
+
+  alert("Match Submitted Successfully");
+};
+</script>
 
 </body>
 </html>
