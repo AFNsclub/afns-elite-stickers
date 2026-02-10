@@ -1,11 +1,23 @@
 :root{
+  /* 🌌 BACKGROUND */
   --bg-main: #050b1e;
   --bg-card: #0b1622;
+  --bg-soft: rgba(11,22,34,0.85);
 
-  --primary: #4f8cff;     /* logo main */
-  --accent: #ffd24d;      /* logo highlight */
-  --danger: #ff4d4d;
+  /* 👑 BRAND COLORS (LOGO BASED) */
+  --gold: #f4c35a;
+  --blue: #4fb6ff;
+  --red: #d93a3a;
 
-  --glow: 0 0 18px rgba(79,140,255,.35);
-  --radius: 16px;
+  /* ✨ TEXT */
+  --text-main: #ffffff;
+  --text-soft: #b8c2ff;
+
+  /* 💡 GLOW & EFFECTS */
+  --glow-blue: 0 0 18px rgba(79,182,255,.45);
+  --glow-gold: 0 0 20px rgba(244,195,90,.45);
+  --glow-red: 0 0 16px rgba(217,58,58,.45);
+
+  /* 📐 UI SHAPE */
+  --radius: 18px;
 }
