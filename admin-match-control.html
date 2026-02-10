@@ -5,7 +5,6 @@
 <title>Admin | Match Control</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -15,34 +14,18 @@ body{
   margin:0;
   background:#050b1e;
   color:#fff;
-  font-family:Segoe UI,Arial,sans-serif;
+  font-family:Arial,sans-serif;
 }
 .container{
   max-width:900px;
   margin:20px auto;
   padding:16px;
 }
-h2{
-  text-align:center;
-  color:#ffd24d;
-  margin-bottom:20px;
-}
 .card{
   background:#0b1622;
-  border:1px solid #00eaff55;
   border-radius:14px;
   padding:14px;
   margin-bottom:12px;
-}
-.info{
-  font-size:14px;
-  line-height:1.6;
-}
-.actions{
-  margin-top:10px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
 }
 button{
   padding:8px 12px;
@@ -51,8 +34,8 @@ button{
   font-weight:700;
   cursor:pointer;
 }
-.edit{ background:#00eaff; color:#00222c }
-.rollback{ background:#ff4d4d; color:#330000 }
+.edit{ background:#00eaff }
+.rollback{ background:#ff4d4d; color:#fff }
 </style>
 </head>
 
@@ -71,107 +54,71 @@ firebase.initializeApp({
 });
 
 const auth = firebase.auth();
-const db   = firebase.firestore();
+const db = firebase.firestore();
 
-/* 🔐 ADMIN CHECK */
+/* 🔐 ADMIN GUARD (FINAL) */
 auth.onAuthStateChanged(async user=>{
   if(!user){
-    location.href="login.html";
+    location.href="admin-login.html";
     return;
   }
 
-  const adminSnap = await db.collection("admins").doc(user.uid).get();
-if(!adminSnap.exists){
-  alert("Access denied");
-  location.href="admin-login.html";
-  return;
-}
+  const snap = await db.collection("admins").doc(user.email).get();
+  if(!snap.exists || snap.data().active !== true){
+    alert("Access denied");
+    location.href="admin-login.html";
+    return;
+  }
 
-const admin = adminSnap.data();
-
-// example: permission check
-if(!admin.permissions?.editMatch){
-  alert("No permission");
-  return;
-}
+  const admin = snap.data();
+  if(!admin.permission?.editMatch){
+    alert("No permission");
+    return;
+  }
 
   loadMatches();
 });
 
 /* 📥 LOAD MATCHES */
 async function loadMatches(){
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+  list.innerHTML="";
 
   const snap = await db.collection("matches")
     .orderBy("approvedAt","desc")
     .get();
 
   if(snap.empty){
-    list.innerHTML = "<p>No matches found</p>";
+    list.innerHTML="<p>No matches</p>";
     return;
   }
 
-  for(const doc of snap.docs){
-    const m = doc.data();
+  for(const d of snap.docs){
+    const m = d.data();
 
-    const p1 = await db.collection("players").doc(m.playerId).get();
-    const p2 = await db.collection("players").doc(m.opponentId).get();
+    const card=document.createElement("div");
+    card.className="card";
 
-    const card = document.createElement("div");
-    card.className = "card";
-
-    card.innerHTML = `
-      <div class="info">
-        <b>${p1.data().username}</b> vs <b>${p2.data().username}</b><br>
-        Score: ${m.score}<br>
-        Type: ${m.matchType}
-        ${m.tournamentName ? `<br>Tournament: ${m.tournamentName}` : ""}
-        ${m.edited ? "<br>✏ Edited" : ""}
-        ${m.rolledBack ? "<br>♻ Rolled Back" : ""}
-      </div>
-
-      <div class="actions">
-        <button class="edit" onclick="editMatch('${doc.id}')">✏ Edit Score</button>
-        <button class="rollback" onclick="rollbackMatch('${doc.id}')">♻ Rollback</button>
-      </div>
+    card.innerHTML=`
+      <b>${m.playerName}</b> vs <b>${m.opponentName}</b><br>
+      Score: ${m.score}<br><br>
+      <button class="edit" onclick="editMatch('${d.id}')">Edit</button>
+      <button class="rollback" onclick="rollbackMatch('${d.id}')">Rollback</button>
     `;
     list.appendChild(card);
   }
 }
 
-/* ✏ EDIT */
 async function editMatch(id){
-  const newScore = prompt("Enter new score (ex: 2-1)");
-  if(!newScore) return;
-
-  await db.collection("matches").doc(id).update({
-    score: newScore,
-    edited: true
-  });
-
-  log("Match edited: "+id);
+  const score=prompt("New score");
+  if(!score) return;
+  await db.collection("matches").doc(id).update({ score, edited:true });
   loadMatches();
 }
 
-/* ♻ ROLLBACK */
 async function rollbackMatch(id){
-  if(!confirm("Rollback this match?")) return;
-
-  await db.collection("matches").doc(id).update({
-    rolledBack: true
-  });
-
-  log("Match rollback: "+id);
+  if(!confirm("Rollback match?")) return;
+  await db.collection("matches").doc(id).update({ rolledBack:true });
   loadMatches();
-}
-
-/* 📝 ACTIVITY LOG */
-function log(text){
-  db.collection("activity").add({
-    text,
-    time: firebase.firestore.FieldValue.serverTimestamp()
-  });
 }
 </script>
 
