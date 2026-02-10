@@ -1,3 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard | AFNS Club</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- THEME (ROOT BASED) -->
+<link rel="stylesheet" href="theme.css">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+/* ===== ADMIN LAYOUT (AFN STYLE) ===== */
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:radial-gradient(circle at top,rgba(79,182,255,.08),var(--bg-main));
+  color:var(--text-main);
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 16px;
+  background:var(--bg-card);
+  box-shadow:var(--glow-blue);
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.brand img{
+  height:36px;
+  filter:
+    drop-shadow(0 0 8px var(--blue))
+    drop-shadow(0 0 6px var(--gold));
+}
+.role{
+  font-size:12px;
+  color:var(--gold);
+}
+.logout{
+  background:transparent;
+  border:1px solid var(--blue);
+  color:var(--blue);
+  padding:6px 14px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* CONTAINER */
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:18px;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;
+}
+
+/* CARD */
+.card{
+  background:var(--bg-card);
+  border-radius:var(--radius);
+  padding:20px;
+  cursor:pointer;
+  transition:.25s;
+  box-shadow:var(--glow-blue);
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:var(--glow-gold);
+}
+.icon{font-size:28px}
+.title{margin-top:10px;font-weight:bold;color:var(--gold)}
+.desc{font-size:12px;opacity:.7}
+
+/* SECTIONS */
+.section-title{
+  margin-top:30px;
+  margin-bottom:10px;
+  font-size:14px;
+  opacity:.7;
+}
+
+/* BOX */
+.permissions,.quick{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:14px;
+}
+.box{
+  background:var(--bg-soft);
+  border-radius:16px;
+  padding:16px;
+}
+.box h4{
+  margin:0 0 10px 0;
+  font-size:14px;
+  color:var(--gold);
+}
+
+/* STATS */
+.stats{
+  margin-top:22px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:14px;
+}
+.stat{
+  background:var(--bg-soft);
+  border-radius:16px;
+  padding:16px;
+  text-align:center;
+}
+.stat span{
+  display:block;
+  font-size:24px;
+  font-weight:bold;
+  color:var(--blue);
+}
+
+/* FOOTER */
+.footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.5;
+  margin:30px 0;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="brand">
+    <img src="logo.png" alt="AFNS">
+    <span class="role" id="adminRole">Loading...</span>
+  </div>
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+<!-- MAIN GRID -->
+<div class="grid">
+
+  <div class="card perm-addMatch" onclick="go('add-match.html')">
+    <div class="icon">➕</div>
+    <div class="title">Add Match</div>
+    <div class="desc">Submit match result</div>
+  </div>
+
+  <div class="card perm-deleteMatch" onclick="go('admin-match-control.html')">
+    <div class="icon">🛠</div>
+    <div class="title">Match Control</div>
+    <div class="desc">Edit / rollback</div>
+  </div>
+
+  <div class="card perm-approveMatch" onclick="go('admin-approve-matches.html')">
+    <div class="icon">📇</div>
+    <div class="title">Approve Matches</div>
+    <div class="desc">Match result review</div>
+  </div>
+
+  <div class="card" onclick="go('admin-player.html')">
+    <div class="icon">👤</div>
+    <div class="title">Players</div>
+    <div class="desc">Inspect profiles</div>
+  </div>
+
+  <div class="card" onclick="go('ranking.html')">
+    <div class="icon">📊</div>
+    <div class="title">Leaderboard</div>
+    <div class="desc">Season ranking</div>
+  </div>
+
+  <div class="card perm-sessionReset" onclick="go('admin-season-reset.html')">
     <div class="icon">♻️</div>
     <div class="title">Season Manager</div>
     <div class="desc">Reset season</div>
@@ -14,7 +205,7 @@
 <!-- PERMISSIONS -->
 <div class="section-title">🛡️ My Permissions</div>
 <div class="permissions">
-  <div class="box" id="permBox"></div>
+  <div class="box" id="permBox">Loading...</div>
 </div>
 
 <!-- STATS -->
@@ -42,7 +233,7 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-/* 🔐 AUTH GUARD (FINAL) */
+/* 🔐 AUTH GUARD */
 auth.onAuthStateChanged(async user=>{
   if(!user){
     location.href="admin-login.html";
@@ -54,7 +245,6 @@ auth.onAuthStateChanged(async user=>{
     if(!snap.exists) throw "no-admin";
 
     const a = snap.data();
-
     if(a.active !== true) throw "inactive";
     if(a.uid && a.uid !== user.uid) throw "uid-mismatch";
 
@@ -94,4 +284,4 @@ function logout(){
 </script>
 
 </body>
-                                </html>
+</html>
