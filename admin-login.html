@@ -2,182 +2,138 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Login</title>
+<title>Admin Login | AFNS Club</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase SDK (MODULAR) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔥 FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+};
+
+/* 🔥 INIT */
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* 🔐 ADMIN LOGIN FINAL */
+window.loginAdmin = async function () {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const errorBox = document.getElementById("error");
+
+  errorBox.innerText = "";
+
+  if (!email || !password) {
+    errorBox.innerText = "Email and password required";
+    return;
+  }
+
+  try {
+    const res = await signInWithEmailAndPassword(auth, email, password);
+    const user = res.user;
+
+    // 🔑 CHECK ADMIN (EMAIL BASED)
+    const snap = await getDoc(doc(db, "admins", user.email));
+
+    if (!snap.exists()) {
+      throw "not-admin";
+    }
+
+    const admin = snap.data();
+
+    if (admin.active !== true) {
+      throw "inactive";
+    }
+
+    if (admin.uid && admin.uid !== user.uid) {
+      throw "uid-mismatch";
+    }
+
+    // ✅ SUCCESS
+    window.location.href = "admin.html";
+
+  } catch (e) {
+    console.error(e);
+    errorBox.innerText = "❌ Invalid admin credentials";
+  }
+};
+</script>
+
 <style>
-*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
 body{
   margin:0;
-  min-height:100vh;
+  height:100vh;
   display:flex;
-  align-items:center;
   justify-content:center;
-  background:linear-gradient(135deg,#050b1f,#0a1233);
+  align-items:center;
+  background:radial-gradient(circle at top,#0a1a4a,#050b1e);
+  font-family:Arial,sans-serif;
   color:#fff;
 }
 .box{
-  width:360px;
-  background:rgba(255,255,255,.06);
-  backdrop-filter:blur(10px);
-  padding:26px;
-  border-radius:16px;
-  box-shadow:0 0 25px rgba(0,0,0,.6);
+  background:#0b1622;
+  padding:24px;
+  border-radius:18px;
+  width:100%;
+  max-width:360px;
+  box-shadow:0 0 25px rgba(79,140,255,.25);
 }
-.logo{text-align:center;margin-bottom:16px}
-.logo img{height:60px}
-h2{text-align:center;margin:10px 0 18px}
+h2{
+  text-align:center;
+  margin-bottom:20px;
+  color:#ffd24d;
+}
 input{
   width:100%;
   padding:12px;
-  margin-top:12px;
+  margin-bottom:14px;
+  border-radius:10px;
   border:none;
-  border-radius:8px;
   outline:none;
-}
-.pass-wrap{position:relative}
-.pass-wrap span{
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  cursor:pointer;
-  font-size:13px;
-  opacity:.7;
 }
 button{
   width:100%;
-  margin-top:16px;
   padding:12px;
   border:none;
   border-radius:10px;
   background:#4f8cff;
   color:#fff;
+  font-size:16px;
   font-weight:bold;
   cursor:pointer;
 }
-.msg{margin-top:14px;text-align:center;font-size:14px}
-.error{color:#ff6b6b}
-.success{color:#22c55e}
-.forgot{
-  margin-top:14px;
+.error{
+  margin-top:12px;
   text-align:center;
-  font-size:13px;
-  opacity:.8;
-  cursor:pointer;
-}
-footer{
-  margin-top:20px;
-  text-align:center;
-  font-size:12px;
-  opacity:.5;
+  font-size:14px;
+  color:#ff6b6b;
 }
 </style>
-
-<!-- Firebase v9 compat -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-firebase.initializeApp({
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub"
-});
-
-firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-</script>
 </head>
 
 <body>
 
 <div class="box">
-  <div class="logo"><img src="logo.png"></div>
-  <h2>Admin Login</h2>
+  <h2>AFNS Admin Login</h2>
 
   <input type="email" id="email" placeholder="Admin Email">
+  <input type="password" id="password" placeholder="Password">
 
-  <div class="pass-wrap">
-    <input type="password" id="password" placeholder="Password">
-    <span onclick="togglePass()">SHOW</span>
-  </div>
+  <button onclick="loginAdmin()">Login</button>
 
-  <button onclick="login()">LOGIN</button>
-  <div class="msg" id="msg"></div>
-  <div class="forgot" onclick="forgot()">Forgot password?</div>
-
-  <footer>AFNs Elite Striker | SI Shohan</footer>
+  <div class="error" id="error"></div>
 </div>
-
-<script>
-const auth = firebase.auth();
-const db   = firebase.firestore();
-const msg  = document.getElementById("msg");
-
-function togglePass(){
-  const p = document.getElementById("password");
-  p.type = p.type === "password" ? "text" : "password";
-}
-
-async function login(){
-  const email = document.getElementById("email").value.trim();
-  const pass  = document.getElementById("password").value;
-
-  msg.textContent = "";
-  msg.className = "msg";
-
-  if(!email || !pass){
-    msg.textContent = "Email & Password required";
-    msg.classList.add("error");
-    return;
-  }
-
-  try{
-    // 🔐 Firebase Auth
-    await auth.signInWithEmailAndPassword(email, pass);
-
-    // 🔑 EMAIL-BASED ADMIN CHECK (FINAL)
-    const snap = await db.collection("admins").doc(email).get();
-
-    if(!snap.exists){
-      await auth.signOut();
-      msg.textContent = "❌ Admin not found";
-      msg.classList.add("error");
-      return;
-    }
-
-    if(snap.data().active !== true){
-      await auth.signOut();
-      msg.textContent = "❌ Admin inactive";
-      msg.classList.add("error");
-      return;
-    }
-
-    // ✅ SUCCESS
-    msg.textContent = "Login success ✓";
-    msg.classList.add("success");
-    setTimeout(()=>location.href="admin.html",800);
-
-  }catch(e){
-    console.error(e.code);
-    msg.textContent =
-      e.code === "auth/wrong-password" ? "Wrong password" :
-      e.code === "auth/user-not-found" ? "User not found" :
-      "Login failed";
-    msg.classList.add("error");
-  }
-}
-
-function forgot(){
-  const email = document.getElementById("email").value.trim();
-  if(!email) return alert("Enter email first");
-
-  auth.sendPasswordResetEmail(email)
-    .then(()=>alert("Password reset email sent"))
-    .catch(e=>alert(e.message));
-}
-</script>
 
 </body>
 </html>
