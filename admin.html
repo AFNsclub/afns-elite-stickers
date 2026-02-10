@@ -138,8 +138,8 @@ body{
 
 <div class="container">
 
-<!-- 🔹 MAIN GRID -->
-<div class="grid" id="mainGrid">
+<!-- MAIN GRID -->
+<div class="grid">
 
   <div class="card perm-addMatch" onclick="go('add-match.html')">
     <div class="icon">➕</div>
@@ -147,18 +147,18 @@ body{
     <div class="desc">Submit match result</div>
   </div>
 
-  <div class="card perm-editMatch" onclick="go('admin-match-control.html')">
+  <div class="card perm-deleteMatch" onclick="go('admin-match-control.html')">
     <div class="icon">🛠</div>
     <div class="title">Match Control</div>
     <div class="desc">Edit / rollback</div>
   </div>
 
-  <div class="card" onclick="go('admin-approve-matches.html')">
+  <div class="card perm-approveMatch" onclick="go('admin-approve-matches.html')">
     <div class="icon">📇</div>
     <div class="title">Approve Matches</div>
     <div class="desc">Match result review</div>
   </div>
-  
+
   <div class="card" onclick="go('admin-player.html')">
     <div class="icon">👤</div>
     <div class="title">Players</div>
@@ -171,7 +171,7 @@ body{
     <div class="desc">Season ranking</div>
   </div>
 
-  <div class="card perm-seasonReset" onclick="go('admin-season-reset.html')">
+  <div class="card perm-sessionReset" onclick="go('admin-season-reset.html')">
     <div class="icon">♻️</div>
     <div class="title">Season Manager</div>
     <div class="desc">Reset season</div>
@@ -183,37 +183,15 @@ body{
     <div class="desc">Permissions & roles</div>
   </div>
 
-  <!-- ✅ SUPPORT CHAT (AI → ADMIN) -->
-  <div class="card perm-replySupport" onclick="go('admin-support.html')">
-    <div class="icon">💬</div>
-    <div class="title">Support Chat</div>
-    <div class="desc">AI → Admin Escalation</div>
-  </div>
-
 </div>
 
-<!-- 🔹 PERMISSIONS -->
+<!-- PERMISSIONS -->
 <div class="section-title">🛡️ My Permissions</div>
 <div class="permissions">
   <div class="box" id="permBox"></div>
 </div>
 
-<!-- 🔹 QUICK ACTIONS -->
-<div class="section-title">⚡ Quick Actions</div>
-<div class="quick">
-  <button class="perm-addMatch" onclick="go('add-match.html')">➕ Add Match</button>
-  <button class="perm-editMatch" onclick="go('admin-match-control.html')">🛠 Edit Match</button>
-</div>
-
-<!-- 🔹 ALERTS -->
-<div class="section-title">🔔 Recent Activity</div>
-<div class="alerts">
-  <div class="box" id="alertsBox">
-    <div class="alert-item">Loading...</div>
-  </div>
-</div>
-
-<!-- 🔹 STATS -->
+<!-- STATS -->
 <div class="stats">
   <div class="stat"><span id="players">0</span>Players</div>
   <div class="stat"><span id="matches">0</span>Matches</div>
@@ -235,72 +213,48 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db   = firebase.firestore();
 
-/* 🔐 AUTH + ROLE */
+/* 🔐 AUTH GUARD (FINAL) */
 auth.onAuthStateChanged(async user=>{
-  if(!user) return location.href="admin-login.html";
-
-  const snap=await db.collection("admins").doc(user.uid).get();
-  if(!snap.exists){
-    alert("Access denied");
-    return location.href="admin-login.html";
+  if(!user){
+    location.href="admin-login.html";
+    return;
   }
 
-  const a=snap.data();
-  adminRole.innerText=(a.badge||"") + " " + a.role.toUpperCase();
+  try{
+    const snap = await db.collection("admins").doc(user.email).get();
+    if(!snap.exists) throw "no-admin";
 
-  // permission hide
-  document.querySelectorAll("[class*='perm-']").forEach(el=>{
-    const perm=el.className.match(/perm-(\w+)/);
-    if(perm && !a.permissions?.[perm[1]]){
-      el.style.display="none";
-    }
-  });
+    const a = snap.data();
 
-  // permission summary
-  let html="";
-  for(const k in a.permissions){
-    html+=`${a.permissions[k]?"✔":"❌"} ${k}<br>`;
-  }
-  permBox.innerHTML=html;
+    if(a.active !== true) throw "inactive";
+    if(a.uid && a.uid !== user.uid) throw "uid-mismatch";
 
-  loadAlerts();
-  loadAISupportAlerts();
-});
+    adminRole.innerText = (a.badge||"") + " " + a.role.toUpperCase();
 
-/* 🔔 NORMAL ACTIVITY */
-function loadAlerts(){
-  db.collection("activity")
-    .orderBy("time","desc")
-    .limit(5)
-    .onSnapshot(s=>{
-      alertsBox.innerHTML="";
-      if(s.empty){
-        alertsBox.innerHTML="<div class='alert-item'>No activity</div>";
+    document.querySelectorAll("[class*='perm-']").forEach(el=>{
+      const m = el.className.match(/perm-(\w+)/);
+      if(m && a.permission && a.permission[m[1]] !== true){
+        el.style.display="none";
       }
-      s.forEach(d=>{
-        const a=d.data();
-        alertsBox.innerHTML+=
-          `<div class="alert-item">• ${a.type} by ${a.by}</div>`;
-      });
     });
-}
 
-/* 🤖 AI → ADMIN ESCALATION */
-function loadAISupportAlerts(){
-  db.collection("adminAlerts")
-    .orderBy("time","desc")
-    .limit(5)
-    .onSnapshot(s=>{
-      s.forEach(d=>{
-        const a=d.data();
-        alertsBox.innerHTML+=
-          `<div class="alert-item">🤖 AI Escalation • ${a.uid}</div>`;
-      });
-    });
-}
+    let html="";
+    if(a.permission){
+      for(const k in a.permission){
+        html+=`${a.permission[k]?"✔":"❌"} ${k}<br>`;
+      }
+    }
+    permBox.innerHTML = html || "No permissions";
+
+  }catch(e){
+    alert("Access denied");
+    await auth.signOut();
+    location.href="admin-login.html";
+  }
+});
 
 /* 📊 STATS */
 db.collection("players").onSnapshot(s=>players.innerText=s.size);
@@ -314,4 +268,4 @@ function logout(){
 </script>
 
 </body>
-  </html>
+                                </html>
