@@ -173,16 +173,15 @@ auth.onAuthStateChanged(async user=>{
   document.getElementById("adminRole").innerText =
     (admin.badge || "") + " " + admin.role.toUpperCase();
 
-  /* 🔥 Permission Hide */
+  // OWNER হলে সব visible
+if(a.role !== "owner"){
   document.querySelectorAll("[class*='perm-']").forEach(el=>{
-    const match = el.className.match(/perm-(\w+)/);
-    if(match){
-      const perm = match[1];
-      if(!admin.permissions || !admin.permissions[perm]){
-        el.style.display="none";
-      }
+    const perm = el.className.match(/perm-(\w+)/);
+    if(perm && !a.permissions?.[perm[1]]){
+      el.style.display="none";
     }
   });
+}
 
 });
 
