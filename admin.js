@@ -1,54 +1,100 @@
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+// 🔥 Firebase SDK Import
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  signOut 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  collection, 
+  getDocs 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 FIREBASE CONFIG */
+
+// 🔐 Your Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
   projectId: "afnsclub",
   storageBucket: "afnsclub.firebasestorage.app",
   messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
+  appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57",
+  measurementId: "G-WT4XY15N6Y"
 };
 
+// 🚀 Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+getAnalytics(app);
 
-/* 🔐 ADMIN AUTH GUARD (FINAL) */
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 🎯 Elements
+const roleEl = document.getElementById("adminRole");
+const mainContent = document.getElementById("mainContent");
+const logoutBtn = document.getElementById("logoutBtn");
+
+// 🔐 Auth Check
 onAuthStateChanged(auth, async (user) => {
+
   if (!user) {
-    window.location.href = "admin-login.html";
+    window.location.href = "login.html";
     return;
   }
 
-  try {
-    // 🔑 EMAIL = DOC ID
-    const snap = await getDoc(doc(db, "admins", user.email));
-    if (!snap.exists()) throw "no-admin";
+  const snap = await getDoc(doc(db, "admins", user.email));
 
-    const admin = snap.data();
-
-    if (admin.active !== true) throw "inactive";
-    if (admin.uid && admin.uid !== user.uid) throw "uid-mismatch";
-
-    // ✅ AUTH OK — DO NOTHING (NO REDIRECT)
-    console.log("Admin verified:", admin.role);
-
-  } catch (e) {
-    console.error(e);
+  if (!snap.exists()) {
+    alert("Not Authorized");
     await signOut(auth);
-    alert("Access denied");
-    window.location.href = "admin-login.html";
+    window.location.href = "login.html";
+    return;
   }
+
+  const admin = snap.data();
+
+  // 👑 Show Role
+  roleEl.innerText = admin.role === "owner"
+    ? "👑 OWNER"
+    : admin.role?.toUpperCase();
+
+  // 🔥 Permission Check (Owner skip)
+  if (admin.role !== "owner") {
+
+    document.querySelectorAll("[class*='perm-']").forEach(el => {
+
+      const match = el.className.match(/perm-(\w+)/);
+
+      if (match) {
+        const permName = match[1];
+
+        if (!admin.permission?.[permName]) {
+          el.style.display = "none";
+        }
+      }
+    });
+  }
+
+  // 📊 Load Stats
+  const playersSnap = await getDocs(collection(db, "players"));
+  const matchesSnap = await getDocs(collection(db, "matches"));
+  const adminsSnap = await getDocs(collection(db, "admins"));
+
+  document.getElementById("totalPlayers").innerText = playersSnap.size;
+  document.getElementById("totalMatches").innerText = matchesSnap.size;
+  document.getElementById("totalAdmins").innerText = adminsSnap.size;
+
+  // 🔓 Show UI after verification
+  mainContent.style.display = "block";
 });
 
-/* 🚪 LOGOUT */
-window.adminLogout = function () {
-  signOut(auth).then(() => {
-    window.location.href = "admin-login.html";
-  });
-};
-</script>
+
+// 🚪 Logout
+logoutBtn.addEventListener("click", async () => {
+  await signOut(auth);
+  window.location.href = "login.html";
+});
