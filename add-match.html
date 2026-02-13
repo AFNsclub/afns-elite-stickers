@@ -2,163 +2,210 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Add Match | AFNS Admin</title>
+<title>Add Match</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script type="module" src="admin.js"></script>
 
 <style>
 body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:#050b1e url("assets/logo.png") no-repeat center/200px;
-  color:#fff;
+  background:#0f172a;
+  color:#e5e7eb;
+  font-family:sans-serif;
+  padding:20px;
 }
-.header{
-  padding:14px 16px;
-  background:#0b1622;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+input,select,button{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:6px;
+  border:none;
 }
 button{
-  background:#4f8cff;
-  border:none;
-  padding:10px 16px;
-  border-radius:10px;
-  color:#fff;
+  background:#22c55e;
+  font-weight:bold;
+}
+.search-list{
+  background:#020617;
+  border:1px solid #334155;
+  max-height:160px;
+  overflow:auto;
+}
+.search-item{
+  padding:8px;
   cursor:pointer;
 }
-.container{
-  max-width:600px;
-  margin:20px auto;
-  padding:16px;
-  background:rgba(10,20,40,.85);
-  border-radius:14px;
+.search-item:hover{
+  background:#1e293b;
 }
-input{
-  width:100%;
-  padding:12px;
-  margin-bottom:10px;
-  border-radius:10px;
-  border:none;
-  outline:none;
-}
-.suggest{
-  background:#0f1f3a;
-  border-radius:10px;
-  overflow:hidden;
-  margin-bottom:10px;
-}
-.suggest div{
-  padding:8px 12px;
-  cursor:pointer;
-}
-.suggest div:hover{
-  background:#4f8cff;
-}
-.playerBox{
-  background:#08162c;
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:12px;
+#errorBox{
+  color:#ff6b6b;
+  margin-top:10px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <div>AFNS • Add Match</div>
-  <button onclick="adminLogout()">Logout</button>
-</div>
+<h2>➕ Add Match</h2>
 
-<div class="container">
-<h3>Submit Match Result</h3>
+<label>Player 1</label>
+<input id="player1" autocomplete="off">
+<div id="player1List" class="search-list"></div>
 
-<input id="matchId" placeholder="Match ID">
+<label>Player 2</label>
+<input id="player2" autocomplete="off">
+<div id="player2List" class="search-list"></div>
 
-<!-- PLAYER ONE -->
-<input id="p1search" placeholder="Player One Name">
-<div id="p1suggest" class="suggest"></div>
-<div id="p1info" class="playerBox"></div>
+<label>Result</label>
+<select id="result">
+  <option value="Win">Player 1 Win</option>
+  <option value="Lose">Player 1 Lose</option>
+  <option value="Draw">Draw</option>
+</select>
 
-<!-- PLAYER TWO -->
-<input id="p2search" placeholder="Player Two Name">
-<div id="p2suggest" class="suggest"></div>
-<div id="p2info" class="playerBox"></div>
+<label>Match Type</label>
+<select id="matchType">
+  <option value="ranked">Ranked</option>
+  <option value="friendly">Friendly</option>
+</select>
 
-<input id="score" placeholder="Score">
+<label>Score</label>
+<input id="score" placeholder="e.g. 3-2">
 
-<button onclick="submitMatch()">Submit Match</button>
-</div>
+<button id="addMatchBtn">Save Match</button>
 
+<div id="errorBox"></div>
+
+<!-- 🔥 FINAL SCRIPT -->
 <script type="module">
-import { getDatabase, ref, get, update }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-import { app } from "./firebase.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, addDoc,
+  doc, updateDoc, increment
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getAuth, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const db = getDatabase(app);
-let players = [];
-let p1=null, p2=null;
+/* 🔥 FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyBtXDuXLJyb10ZkHH8lpxT5",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub"
+};
 
-get(ref(db,"players")).then(snap=>{
-  snap.forEach(c=>{
-    players.push({...c.val(), uid:c.key});
-  });
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+/* 🔐 AUTH CHECK */
+onAuthStateChanged(auth,user=>{
+  if(!user){
+    location.href="login.html";
+  }
 });
 
-function searchPlayer(input, box, setPlayer){
-  box.innerHTML="";
-  if(!input) return;
-  players
-  .filter(p=>p.name.toLowerCase().startsWith(input.toLowerCase()))
-  .slice(0,5)
-  .forEach(p=>{
-    const d=document.createElement("div");
-    d.innerText=p.name+" (Rank "+p.rank+")";
-    d.onclick=()=>{
-      setPlayer(p);
-      box.innerHTML="";
-    };
-    box.appendChild(d);
-  });
+/* 👤 ELEMENTS */
+const p1Input=document.getElementById("player1");
+const p2Input=document.getElementById("player2");
+const p1List=document.getElementById("player1List");
+const p2List=document.getElementById("player2List");
+const resultSelect=document.getElementById("result");
+const matchTypeSelect=document.getElementById("matchType");
+const scoreInput=document.getElementById("score");
+const addBtn=document.getElementById("addMatchBtn");
+const errorBox=document.getElementById("errorBox");
+
+/* 📦 STATE */
+let allPlayers=[];
+let selectedP1=null;
+let selectedP2=null;
+
+/* 📥 LOAD PLAYERS */
+const snap=await getDocs(collection(db,"players"));
+snap.forEach(d=>{
+  allPlayers.push({id:d.id,...d.data()});
+});
+
+/* 🔍 SEARCH */
+function render(input,list,isP1){
+  list.innerHTML="";
+  const q=input.value.toLowerCase();
+  if(!q)return;
+
+  allPlayers
+    .filter(p=>p.usernameLower?.includes(q))
+    .slice(0,6)
+    .forEach(p=>{
+      const div=document.createElement("div");
+      div.textContent=p.username;
+      div.className="search-item";
+      div.onclick=()=>{
+        input.value=p.username;
+        list.innerHTML="";
+        if(isP1)selectedP1=p;
+        else selectedP2=p;
+      };
+      list.appendChild(div);
+    });
 }
 
-p1search.oninput=()=>searchPlayer(
-  p1search.value,p1suggest,
-  p=>{
-    p1=p;
-    p1info.innerHTML=`Name: ${p.name}<br>UID: ${p.uid}<br>Rank: ${p.rank}`;
+p1Input.addEventListener("input",()=>render(p1Input,p1List,true));
+p2Input.addEventListener("input",()=>render(p2Input,p2List,false));
+
+/* ⚔️ ADD MATCH */
+addBtn.onclick=async()=>{
+  errorBox.textContent="";
+
+  if(!selectedP1||!selectedP2){
+    errorBox.textContent="❌ Player 1 & Player 2 select করো";
+    return;
   }
-);
-
-p2search.oninput=()=>searchPlayer(
-  p2search.value,p2suggest,
-  p=>{
-    p2=p;
-    p2info.innerHTML=`Name: ${p.name}<br>UID: ${p.uid}<br>Rank: ${p.rank}`;
+  if(selectedP1.id===selectedP2.id){
+    errorBox.textContent="❌ Same player allowed না";
+    return;
   }
-);
 
-window.submitMatch=()=>{
-  if(!p1||!p2) return alert("Select both players");
+  try{
+    const result=resultSelect.value;
+    const score=scoreInput.value.trim();
 
-  const matchId=matchId.value;
-  const score=score.value;
+    await addDoc(collection(db,"matches"),{
+      player1Id:selectedP1.id,
+      player1Name:selectedP1.username,
+      player2Id:selectedP2.id,
+      player2Name:selectedP2.username,
+      result,
+      score,
+      matchType:matchTypeSelect.value,
+      createdAt:new Date()
+    });
 
-  update(ref(db,"matches/"+matchId),{
-    p1:p1.uid,
-    p2:p2.uid,
-    score:score,
-    time:Date.now()
-  });
+    const p1Ref=doc(db,"players",selectedP1.id);
+    const p2Ref=doc(db,"players",selectedP2.id);
 
-  // Rank update example
-  update(ref(db,"players/"+p1.uid),{rank:p1.rank+1});
-  update(ref(db,"players/"+p2.uid),{rank:p2.rank-1});
+    if(result==="Win"){
+      await updateDoc(p1Ref,{wins:increment(1),matches:increment(1)});
+      await updateDoc(p2Ref,{losses:increment(1),matches:increment(1)});
+    }else if(result==="Lose"){
+      await updateDoc(p1Ref,{losses:increment(1),matches:increment(1)});
+      await updateDoc(p2Ref,{wins:increment(1),matches:increment(1)});
+    }else{
+      await updateDoc(p1Ref,{matches:increment(1)});
+      await updateDoc(p2Ref,{matches:increment(1)});
+    }
 
-  alert("Match Submitted Successfully");
+    p1Input.value="";
+    p2Input.value="";
+    scoreInput.value="";
+    selectedP1=null;
+    selectedP2=null;
+
+    alert("✅ Match Added Successfully");
+
+  }catch(e){
+    console.error(e);
+    errorBox.textContent="❌ Permission বা Firestore error";
+  }
 };
 </script>
 
