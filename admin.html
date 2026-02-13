@@ -142,7 +142,6 @@ AFNS Club • Pro Admin System
 </div>
 
 <script>
-/* 🔥 Firebase Init */
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
@@ -152,18 +151,18 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* 🔐 AUTH + EMAIL ADMIN CHECK */
 auth.onAuthStateChanged(async user=>{
   if(!user){
     location.href="admin-login.html";
     return;
   }
 
+  // EMAIL ভিত্তিক Admin Check
   const snap = await db.collection("admins").doc(user.email).get();
 
   if(!snap.exists){
     alert("Access denied");
-    auth.signOut();
+    await auth.signOut();
     location.href="admin-login.html";
     return;
   }
@@ -174,18 +173,20 @@ auth.onAuthStateChanged(async user=>{
     (admin.badge || "") + " " + admin.role.toUpperCase();
 
   // OWNER হলে সব visible
-if(a.role !== "owner"){
-  document.querySelectorAll("[class*='perm-']").forEach(el=>{
-    const perm = el.className.match(/perm-(\w+)/);
-    if(perm && !a.permissions?.[perm[1]]){
-      el.style.display="none";
-    }
-  });
-}
-
+  if(admin.role !== "owner"){
+    document.querySelectorAll("[class*='perm-']").forEach(el=>{
+      const match = el.className.match(/perm-(\w+)/);
+      if(match){
+        const permName = match[1];
+        if(!admin.permissions?.[permName]){
+          el.style.display="none";
+        }
+      }
+    });
+  }
 });
 
-/* 📊 Live Stats */
+/* Stats */
 db.collection("players").onSnapshot(s=>{
   document.getElementById("players").innerText = s.size;
 });
@@ -196,12 +197,10 @@ db.collection("admins").onSnapshot(s=>{
   document.getElementById("admins").innerText = s.size;
 });
 
-/* Navigation */
 function go(page){
   location.href = page;
 }
 
-/* Logout */
 function logout(){
   auth.signOut().then(()=>{
     location.href="admin-login.html";
