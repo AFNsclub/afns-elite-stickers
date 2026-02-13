@@ -1,15 +1,9 @@
+// 🔥 Firebase imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { 
-  getAuth, 
-  signInWithEmailAndPassword 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { 
-  getFirestore, 
-  doc, 
-  getDoc 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 YOUR FIREBASE CONFIG (YOU ALREADY GAVE THIS) */
+// 🔥 YOUR FIREBASE CONFIG (ALREADY FIXED)
 const firebaseConfig = {
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
@@ -19,40 +13,49 @@ const firebaseConfig = {
   appId: "1:1088089213558:web:bd5e01caaeecaa46bcad57"
 };
 
+// 🔥 Init Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* 🔐 LOGIN FUNCTION */
-window.loginAdmin = async () => {
+// 🔐 ADMIN LOGIN FUNCTION
+window.loginAdmin = async function () {
+
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
   const error = document.getElementById("error");
 
-  error.textContent = "";
+  error.style.color = "red";
+  error.innerText = "";
 
   if (!email || !password) {
-    error.textContent = "Email & Password required";
+    error.innerText = "Email and password required";
     return;
   }
 
   try {
-    const res = await signInWithEmailAndPassword(auth, email, password);
-    const user = res.user;
+    // ✅ Step 1: Firebase Auth Login
+    const userCred = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCred.user;
 
-    // 🔥 CHECK ADMIN COLLECTION
+    // ✅ Step 2: Check admin permission (EMAIL = document ID)
     const adminRef = doc(db, "admins", user.email);
-    const snap = await getDoc(adminRef);
+    const adminSnap = await getDoc(adminRef);
 
-    if (!snap.exists() || snap.data().active !== true) {
-      error.textContent = "Not authorized admin";
+    if (!adminSnap.exists()) {
+      error.innerText = "You are not an authorized admin";
       return;
     }
 
-    // ✅ SUCCESS
+    if (adminSnap.data().active !== true) {
+      error.innerText = "Admin account disabled";
+      return;
+    }
+
+    // ✅ SUCCESS → DASHBOARD
     window.location.href = "admin-dashboard.html";
 
-  } catch (e) {
-    error.textContent = e.message;
+  } catch (err) {
+    error.innerText = err.message;
   }
 };
