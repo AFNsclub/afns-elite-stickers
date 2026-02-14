@@ -82,6 +82,7 @@ footer{
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -90,7 +91,7 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-/* ✅ AUTO LOGOUT OFF (FINAL FIX) */
+/* 🔥 KEEP LOGIN */
 firebase.auth().setPersistence(
   firebase.auth.Auth.Persistence.LOCAL
 );
@@ -110,7 +111,7 @@ firebase.auth().setPersistence(
 
   <div class="pass-wrap">
     <input type="password" id="password" placeholder="Password">
-    <span onclick="togglePass()">SHOW</span>
+    <span id="toggleBtn" onclick="togglePass()">SHOW</span>
   </div>
 
   <button onclick="login()">LOGIN</button>
@@ -129,13 +130,25 @@ firebase.auth().setPersistence(
 
 <script>
 const auth = firebase.auth();
+const db   = firebase.firestore();
 const msg  = document.getElementById("msg");
+const OWNER_EMAIL = "sisaif167@gmail.com";
 
+/* 👁 PASSWORD TOGGLE */
 function togglePass(){
   const p=document.getElementById("password");
-  p.type = p.type==="password" ? "text" : "password";
+  const btn=document.getElementById("toggleBtn");
+
+  if(p.type==="password"){
+    p.type="text";
+    btn.textContent="HIDE";
+  }else{
+    p.type="password";
+    btn.textContent="SHOW";
+  }
 }
 
+/* 🔐 ADMIN LOGIN WITH ROLE CHECK */
 function login(){
   const email=document.getElementById("email").value.trim();
   const pass=document.getElementById("password").value;
@@ -150,7 +163,24 @@ function login(){
   }
 
   auth.signInWithEmailAndPassword(email,pass)
-    .then(()=>{
+    .then(async (cred)=>{
+
+      // OWNER always allowed
+      if(email === OWNER_EMAIL){
+        location.href="admin.html";
+        return;
+      }
+
+      // Firestore admin check
+      const adminDoc = await db.collection("admins").doc(email).get();
+
+      if(!adminDoc.exists || adminDoc.data().active !== true){
+        await auth.signOut();
+        msg.textContent="Access Denied";
+        msg.classList.add("error");
+        return;
+      }
+
       msg.textContent="Login success ✓";
       msg.classList.add("success");
       setTimeout(()=>location.href="admin.html",800);
@@ -161,6 +191,7 @@ function login(){
     });
 }
 
+/* 🔁 FORGOT PASSWORD */
 function forgot(){
   const email=document.getElementById("email").value.trim();
   if(!email) return alert("Enter email first");
