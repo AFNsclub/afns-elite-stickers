@@ -106,10 +106,9 @@ footer{text-align:center;font-size:12px;color:#aaa;margin-top:16px}
   <footer>© 2026 AFN's Elite Strikers</footer>
 </div>
 
-<!-- 🔥 Firebase -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -119,9 +118,6 @@ firebase.initializeApp({
 });
 
 const auth = firebase.auth();
-const db   = firebase.firestore();
-
-const OWNER_EMAIL = "sisaif167@gmail.com";
 
 const email = document.getElementById("email");
 const password = document.getElementById("password");
@@ -135,35 +131,22 @@ function showError(msg){
 function togglePassword(){
   const t = document.querySelector(".toggle");
   if(password.type === "password"){
-    password.type = "text"; t.innerText = "Hide";
+    password.type = "text";
+    t.innerText = "Hide";
   }else{
-    password.type = "password"; t.innerText = "Show";
+    password.type = "password";
+    t.innerText = "Show";
   }
 }
 
-/* 🔐 AUTO REDIRECT (EMAIL BASED) */
-auth.onAuthStateChanged(async user=>{
-  if(!user) return;
-
-  // OWNER
-  if(user.email === OWNER_EMAIL){
-    location.replace("admin.html");
-    return;
+/* ✅ FIXED REDIRECT — NO ROLE CHECK */
+auth.onAuthStateChanged(user=>{
+  if(user){
+    location.replace("player.html");
   }
-
-  // Admin Check (EMAIL)
-  const adminSnap = await db.collection("admins").doc(user.email).get();
-
-  if(adminSnap.exists){
-    location.replace("admin.html");
-    return;
-  }
-
-  // Player
-  location.replace("player.html");
 });
 
-/* 🔑 LOGIN */
+/* LOGIN */
 function login(){
   errorBox.style.display = "none";
 
@@ -180,7 +163,7 @@ function login(){
   });
 }
 
-/* 🔁 PASSWORD RESET */
+/* PASSWORD RESET */
 function forgotPassword(){
   if(!email.value){
     showError("📧 আগে Gmail লিখুন");
