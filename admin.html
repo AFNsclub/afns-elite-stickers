@@ -96,7 +96,7 @@ body{
 <div class="header">
   <div class="brand">
     <span>AFNS Admin</span>
-    <span class="role" id="adminRole">Loading...</span>
+    <span class="role" id="adminRole">Checking...</span>
   </div>
   <button class="logout" onclick="logout()">Logout</button>
 </div>
@@ -152,50 +152,58 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const OWNER_EMAIL = "sisaif167@gmail.com";
 
-/* 🔐 STRONG AUTH CHECK */
-auth.onAuthStateChanged(async user=>{
+auth.onAuthStateChanged(async user => {
+
   if(!user){
-    location.href="admin-login.html";
+    location.href = "admin-login.html";
     return;
   }
 
-  // 🔥 OWNER ALWAYS ALLOWED
-  if(user.email === OWNER_EMAIL){
-    document.getElementById("adminRole").innerText = "👑 OWNER";
-    loadStats();
-    return;
-  }
+  try {
 
-  const snap = await db.collection("admins").doc(user.email).get();
+    const snap = await db.collection("admins").doc(user.email).get();
 
-  if(!snap.exists || snap.data().active !== true){
-    await auth.signOut();
-    location.href="admin-login.html";
-    return;
-  }
+    // OWNER DIRECT ACCESS
+    if(user.email === OWNER_EMAIL){
+      document.getElementById("adminRole").innerText = "👑 OWNER";
+      loadStats();
+      return;
+    }
 
-  const admin = snap.data();
+    // NOT ADMIN OR INACTIVE
+    if(!snap.exists || snap.data().active !== true){
+      await auth.signOut();
+      location.href = "admin-login.html";
+      return;
+    }
 
-  document.getElementById("adminRole").innerText =
-    (admin.badge || "") + " " + (admin.role || "admin").toUpperCase();
+    const admin = snap.data();
 
-  // Permission filter
-  if(admin.role !== "owner"){
-    document.querySelectorAll("[class*='perm-']").forEach(el=>{
-      const match = el.className.match(/perm-(\w+)/);
-      if(match){
-        const permName = match[1];
-        if(!admin.permissions?.[permName]){
-          el.style.display="none";
+    document.getElementById("adminRole").innerText =
+      (admin.badge || "") + " " + (admin.role || "ADMIN").toUpperCase();
+
+    // 🔥 CORRECT permission check
+    if(admin.role !== "owner"){
+      document.querySelectorAll("[class*='perm-']").forEach(el=>{
+        const match = el.className.match(/perm-(\w+)/);
+        if(match){
+          const permName = match[1];
+          if(!admin.permission || admin.permission[permName] !== true){
+            el.style.display = "none";
+          }
         }
-      }
-    });
+      });
+    }
+
+    loadStats();
+
+  } catch(error){
+    await auth.signOut();
+    location.href = "admin-login.html";
   }
 
-  loadStats();
 });
 
-/* 📊 Stats Function */
 function loadStats(){
   db.collection("players").onSnapshot(s=>{
     document.getElementById("players").innerText = s.size;
