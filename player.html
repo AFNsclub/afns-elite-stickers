@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Player Profile | AFN's Elite Strikers</title>
+<title>Player Profile | AFN Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -13,7 +13,7 @@
 body{
   margin:0;
   font-family:Arial;
-  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  background:linear-gradient(135deg,#0b1c2d,#122c44,#1b3d5c);
   color:#fff;
 }
 .container{
@@ -26,43 +26,65 @@ header{
   margin-bottom:20px;
 }
 header img{
-  width:70px;
+  width:80px;
 }
 .card{
-  background:#111c2a;
+  background:#0e2236;
   padding:20px;
-  border-radius:16px;
-  box-shadow:0 0 20px rgba(0,0,0,0.5);
+  border-radius:18px;
+  box-shadow:0 0 25px rgba(255,215,0,.15);
+}
+.name{
+  font-size:22px;
+  font-weight:bold;
+  color:#ffd700;
+}
+.email{
+  opacity:.8;
+  margin-bottom:15px;
+}
+.info-line{
+  margin:8px 0;
+  font-size:14px;
+}
+.info-line span{
+  color:#ffd700;
+}
+.stats-title{
+  margin-top:20px;
+  margin-bottom:10px;
+  color:#ffd700;
+  font-weight:bold;
 }
 .stats{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   gap:12px;
-  margin:15px 0;
 }
 .stat{
-  background:#1b2a3c;
-  padding:12px;
-  border-radius:10px;
+  background:#132f4a;
+  padding:14px;
+  border-radius:12px;
   text-align:center;
 }
 .stat h3{
   margin:5px 0;
-  color:#4f8cff;
+  color:#ffd700;
 }
 button{
   width:100%;
-  padding:10px;
-  margin-top:8px;
+  padding:12px;
+  margin-top:10px;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   cursor:pointer;
-  background:#4f8cff;
-  color:#fff;
+  background:linear-gradient(45deg,#ffd700,#ffb700);
+  color:#000;
   font-weight:bold;
 }
 button.secondary{
   background:#333;
+  color:#fff;
 }
 .hidden{display:none;}
 input{
@@ -73,6 +95,11 @@ input{
   border:none;
 }
 .success{color:#00ff88;margin-top:10px;}
+.fb-link{
+  color:#4da6ff;
+  cursor:pointer;
+  text-decoration:underline;
+}
 </style>
 </head>
 
@@ -82,15 +109,25 @@ input{
 <header>
   <img src="logo.png">
   <h2>My Profile</h2>
-  <div>AFN's Elite Strikers</div>
+  <div>AFN Elite Strikers</div>
 </header>
 
 <div class="card">
 
 <div id="viewBox">
 
-  <h3 id="v_username">—</h3>
-  <div id="v_email">—</div>
+  <div class="name" id="v_username">—</div>
+  <div class="email" id="v_email">—</div>
+
+  <div class="info-line">🌐 Facebook: 
+    <span id="fbLink" class="fb-link hidden" onclick="openFb()">View Profile</span>
+  </div>
+
+  <div class="info-line">📱 Phone: <span id="v_phone">—</span></div>
+  <div class="info-line">👑 Owner ID: <span id="v_ownerId">—</span></div>
+  <div class="info-line">💻 Device: <span id="v_device">—</span></div>
+
+  <div class="stats-title">Match Statistics</div>
 
   <div class="stats">
     <div class="stat">
@@ -99,7 +136,7 @@ input{
     </div>
     <div class="stat">
       <div>Rank</div>
-      <h3 id="rank">—</h3>
+      <h3 id="rank">Unranked</h3>
     </div>
     <div class="stat">
       <div>Wins</div>
@@ -119,22 +156,17 @@ input{
     </div>
   </div>
 
-  <p>📱 Phone: <span id="v_phone">—</span></p>
-  <p>🎮 Game ID: <span id="v_gameId">—</span></p>
-  <p>💻 Device: <span id="v_device">—</span></p>
-
-  <button id="fbBtn" class="secondary hidden" onclick="openFb()">🌐 Open Facebook</button>
-
-  <button onclick="location.href='player-submit-match.html'">📝 Submit Match</button>
-  <button onclick="location.href='match-history.html'">📜 Match History</button>
-  <button onclick="toggleEdit(true)">✏️ Edit Profile</button>
+  <button onclick="location.href='player-submit-match.html'">Submit Match</button>
+  <button onclick="location.href='match-history.html'">Match History</button>
+  <button onclick="toggleEdit(true)">Edit Profile</button>
   <button class="secondary" onclick="logout()">Logout</button>
+
 </div>
 
 <div id="editBox" class="hidden">
   <input id="phone" placeholder="Phone">
+  <input id="ownerId" placeholder="Owner ID">
   <input id="facebook" placeholder="Facebook link">
-  <input id="gameId" placeholder="Game ID">
   <input id="deviceName" placeholder="Device name">
   <button onclick="saveProfile()">Save</button>
   <button class="secondary" onclick="toggleEdit(false)">Cancel</button>
@@ -154,7 +186,7 @@ firebase.initializeApp({
 
 const auth=firebase.auth();
 const db=firebase.firestore();
-let uid, fbLink="";
+let uid, fbUrl="";
 
 auth.onAuthStateChanged(user=>{
   if(!user){location.href="login.html";return;}
@@ -165,7 +197,7 @@ auth.onAuthStateChanged(user=>{
     const d=doc.data()||{};
     v_username.innerText=d.username||"—";
     v_phone.innerText=d.phone||"—";
-    v_gameId.innerText=d.gameId||"—";
+    v_ownerId.innerText=d.ownerId||"—";
     v_device.innerText=d.deviceName||"—";
     rating.innerText=d.rating||0;
     wins.innerText=d.wins||0;
@@ -173,22 +205,20 @@ auth.onAuthStateChanged(user=>{
 
     const total=(d.wins||0)+(d.losses||0);
     totalMatch.innerText=total;
-
-    const rate=total?Math.round((d.wins/total)*100):0;
-    winRate.innerText=rate+"%";
+    winRate.innerText= total?Math.round((d.wins/total)*100)+"%":"0%";
 
     rank.innerText=d.rank||"Unranked";
 
-    fbLink=d.facebook||"";
-    fbBtn.classList.toggle("hidden",!fbLink);
+    fbUrl=d.facebook||"";
+    fbLink.classList.toggle("hidden",!fbUrl);
   });
 });
 
 function toggleEdit(edit){
   if(edit){
     phone.value=v_phone.innerText;
-    facebook.value=fbLink;
-    gameId.value=v_gameId.innerText;
+    ownerId.value=v_ownerId.innerText;
+    facebook.value=fbUrl;
     deviceName.value=v_device.innerText;
   }
   viewBox.classList.toggle("hidden",edit);
@@ -198,8 +228,8 @@ function toggleEdit(edit){
 function saveProfile(){
   db.collection("players").doc(uid).update({
     phone:phone.value.trim(),
+    ownerId:ownerId.value.trim(),
     facebook:facebook.value.trim(),
-    gameId:gameId.value.trim(),
     deviceName:deviceName.value.trim()
   }).then(()=>{
     msg.innerHTML="<div class='success'>Profile Updated</div>";
@@ -208,7 +238,7 @@ function saveProfile(){
 }
 
 function openFb(){
-  if(fbLink) window.open(fbLink,"_blank");
+  if(fbUrl) window.open(fbUrl,"_blank");
 }
 
 function logout(){
