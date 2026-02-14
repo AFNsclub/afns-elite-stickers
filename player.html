@@ -12,8 +12,8 @@
 <style>
 body{
   margin:0;
-  font-family:Arial, sans-serif;
-  background:#0b1622;
+  font-family:Arial;
+  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
   color:#fff;
 }
 .container{
@@ -25,37 +25,30 @@ header{
   text-align:center;
   margin-bottom:20px;
 }
+header img{
+  width:70px;
+}
 .card{
   background:#111c2a;
   padding:20px;
   border-radius:16px;
-  box-shadow:0 0 15px rgba(0,0,0,.4);
-}
-.profile-top{
-  text-align:center;
-  margin-bottom:20px;
-}
-.profile-top h2{
-  margin:5px 0;
+  box-shadow:0 0 20px rgba(0,0,0,0.5);
 }
 .stats{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
   margin:15px 0;
 }
-.stat-box{
-  background:#162334;
+.stat{
+  background:#1b2a3c;
   padding:12px;
-  border-radius:12px;
+  border-radius:10px;
   text-align:center;
 }
-.stat-box h3{
+.stat h3{
   margin:5px 0;
   color:#4f8cff;
-}
-.field{
-  margin:6px 0;
 }
 button{
   width:100%;
@@ -71,6 +64,7 @@ button{
 button.secondary{
   background:#333;
 }
+.hidden{display:none;}
 input{
   width:100%;
   padding:10px;
@@ -78,7 +72,6 @@ input{
   border-radius:6px;
   border:none;
 }
-.hidden{display:none;}
 .success{color:#00ff88;margin-top:10px;}
 </style>
 </head>
@@ -87,7 +80,8 @@ input{
 <div class="container">
 
 <header>
-  <h1>My Profile</h1>
+  <img src="logo.png">
+  <h2>My Profile</h2>
   <div>AFN's Elite Strikers</div>
 </header>
 
@@ -95,47 +89,46 @@ input{
 
 <div id="viewBox">
 
-<div class="profile-top">
-  <h2 id="v_username">—</h2>
+  <h3 id="v_username">—</h3>
   <div id="v_email">—</div>
-</div>
 
-<div class="stats">
-  <div class="stat-box">
-    <h3 id="rating">0</h3>
-    <small>Rating</small>
+  <div class="stats">
+    <div class="stat">
+      <div>Rating</div>
+      <h3 id="rating">0</h3>
+    </div>
+    <div class="stat">
+      <div>Rank</div>
+      <h3 id="rank">—</h3>
+    </div>
+    <div class="stat">
+      <div>Wins</div>
+      <h3 id="wins">0</h3>
+    </div>
+    <div class="stat">
+      <div>Losses</div>
+      <h3 id="losses">0</h3>
+    </div>
+    <div class="stat">
+      <div>Total Match</div>
+      <h3 id="totalMatch">0</h3>
+    </div>
+    <div class="stat">
+      <div>Win Rate</div>
+      <h3 id="winRate">0%</h3>
+    </div>
   </div>
-  <div class="stat-box">
-    <h3 id="rank">Unranked</h3>
-    <small>Rank</small>
-  </div>
-  <div class="stat-box">
-    <h3 id="totalMatches">0</h3>
-    <small>Total Matches</small>
-  </div>
-  <div class="stat-box">
-    <h3 id="wins">0</h3>
-    <small>Wins</small>
-  </div>
-  <div class="stat-box">
-    <h3 id="losses">0</h3>
-    <small>Losses</small>
-  </div>
-  <div class="stat-box">
-    <h3 id="winRate">0%</h3>
-    <small>Win Rate</small>
-  </div>
-</div>
 
-<div class="field">📱 Phone: <span id="v_phone">—</span></div>
-<div class="field">🎮 Game ID: <span id="v_gameId">—</span></div>
-<div class="field">💻 Device: <span id="v_device">—</span></div>
+  <p>📱 Phone: <span id="v_phone">—</span></p>
+  <p>🎮 Game ID: <span id="v_gameId">—</span></p>
+  <p>💻 Device: <span id="v_device">—</span></p>
 
-<button onclick="location.href='player-submit-match.html'">📝 Submit Match</button>
-<button onclick="location.href='match-history.html'">📜 Match History</button>
-<button onclick="toggleEdit(true)">✏️ Edit Profile</button>
-<button class="secondary" onclick="logout()">Logout</button>
+  <button id="fbBtn" class="secondary hidden" onclick="openFb()">🌐 Open Facebook</button>
 
+  <button onclick="location.href='player-submit-match.html'">📝 Submit Match</button>
+  <button onclick="location.href='match-history.html'">📜 Match History</button>
+  <button onclick="toggleEdit(true)">✏️ Edit Profile</button>
+  <button class="secondary" onclick="logout()">Logout</button>
 </div>
 
 <div id="editBox" class="hidden">
@@ -161,7 +154,7 @@ firebase.initializeApp({
 
 const auth=firebase.auth();
 const db=firebase.firestore();
-let uid;
+let uid, fbLink="";
 
 auth.onAuthStateChanged(user=>{
   if(!user){location.href="login.html";return;}
@@ -174,31 +167,27 @@ auth.onAuthStateChanged(user=>{
     v_phone.innerText=d.phone||"—";
     v_gameId.innerText=d.gameId||"—";
     v_device.innerText=d.deviceName||"—";
-
     rating.innerText=d.rating||0;
     wins.innerText=d.wins||0;
     losses.innerText=d.losses||0;
 
     const total=(d.wins||0)+(d.losses||0);
-    totalMatches.innerText=total;
+    totalMatch.innerText=total;
 
-    const winPercent=total?((d.wins/total)*100).toFixed(1):0;
-    winRate.innerText=winPercent+"%";
+    const rate=total?Math.round((d.wins/total)*100):0;
+    winRate.innerText=rate+"%";
 
-    // Rank system
-    let r=d.rating||0;
-    let rankName="Unranked";
-    if(r>=2000) rankName="Legend";
-    else if(r>=1500) rankName="Pro";
-    else if(r>=1000) rankName="Elite";
-    else if(r>=500) rankName="Rising Star";
-    rank.innerText=rankName;
+    rank.innerText=d.rank||"Unranked";
+
+    fbLink=d.facebook||"";
+    fbBtn.classList.toggle("hidden",!fbLink);
   });
 });
 
 function toggleEdit(edit){
   if(edit){
     phone.value=v_phone.innerText;
+    facebook.value=fbLink;
     gameId.value=v_gameId.innerText;
     deviceName.value=v_device.innerText;
   }
@@ -208,14 +197,18 @@ function toggleEdit(edit){
 
 function saveProfile(){
   db.collection("players").doc(uid).update({
-    phone:phone.value,
-    gameId:gameId.value,
-    deviceName:deviceName.value,
-    facebook:facebook.value
+    phone:phone.value.trim(),
+    facebook:facebook.value.trim(),
+    gameId:gameId.value.trim(),
+    deviceName:deviceName.value.trim()
   }).then(()=>{
     msg.innerHTML="<div class='success'>Profile Updated</div>";
     toggleEdit(false);
   });
+}
+
+function openFb(){
+  if(fbLink) window.open(fbLink,"_blank");
 }
 
 function logout(){
