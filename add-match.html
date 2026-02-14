@@ -75,15 +75,14 @@ button{
 
 <div id="errorBox"></div>
 
-<!-- 🔥 FINAL SCRIPT -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, collection, getDocs, addDoc,
-  doc, updateDoc, increment
+  doc, updateDoc, increment, getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import {
-  getAuth, onAuthStateChanged
+  getAuth, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 /* 🔥 FIREBASE CONFIG */
@@ -97,14 +96,38 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* 🔐 AUTH CHECK */
-onAuthStateChanged(auth,user=>{
+/* 🔐 OWNER EMAIL */
+const OWNER_EMAIL = "sisaif167@gmail.com";
+
+/* 🔐 STRONG ADMIN CHECK */
+onAuthStateChanged(auth, async (user)=>{
   if(!user){
     location.href="login.html";
+    return;
   }
+
+  if(user.email === OWNER_EMAIL){
+    initPage();
+    return;
+  }
+
+  const adminDoc = await getDoc(doc(db,"admins",user.email));
+
+  if(!adminDoc.exists() || adminDoc.data().active !== true){
+    await signOut(auth);
+    location.href="login.html";
+    return;
+  }
+
+  initPage();
 });
 
-/* 👤 ELEMENTS */
+/* ============================= */
+/* ✅ MAIN PAGE INIT START HERE */
+/* ============================= */
+
+async function initPage(){
+
 const p1Input=document.getElementById("player1");
 const p2Input=document.getElementById("player2");
 const p1List=document.getElementById("player1List");
@@ -115,7 +138,6 @@ const scoreInput=document.getElementById("score");
 const addBtn=document.getElementById("addMatchBtn");
 const errorBox=document.getElementById("errorBox");
 
-/* 📦 STATE */
 let allPlayers=[];
 let selectedP1=null;
 let selectedP2=null;
@@ -207,6 +229,8 @@ addBtn.onclick=async()=>{
     errorBox.textContent="❌ Permission বা Firestore error";
   }
 };
+
+}
 </script>
 
 </body>
