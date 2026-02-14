@@ -10,174 +10,70 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
+/* ===== SAME DESIGN ===== */
 body{
   margin:0;
   font-family:Arial;
-  background:radial-gradient(circle at top,
-      #1a2f5c 0%,
-      #0b1c33 40%,
-      #1a0f1f 75%,
-      #000 100%);
+  background:radial-gradient(circle at top,#1a2f5c 0%,#0b1c33 40%,#1a0f1f 75%,#000 100%);
   color:#fff;
 }
-
-.container{
-  max-width:700px;
-  margin:auto;
-  padding:20px;
-}
-
-header{
-  text-align:center;
-  margin-bottom:20px;
-}
-
-header img{
-  width:90px;
-}
-
+.container{max-width:700px;margin:auto;padding:20px;}
+header{text-align:center;margin-bottom:20px;}
+header img{width:90px;}
 .card{
   background:linear-gradient(145deg,#0f2545,#081a2e);
-  padding:20px;
-  border-radius:22px;
-  box-shadow:0 0 25px rgba(255,215,0,.15),
-             0 0 40px rgba(0,120,255,.15);
+  padding:20px;border-radius:22px;
+  box-shadow:0 0 25px rgba(255,215,0,.15),0 0 40px rgba(0,120,255,.15);
 }
-
-.name{
-  font-size:22px;
-  font-weight:bold;
-  color:#ffd34d;
-}
-
-.email{
-  opacity:.85;
-  margin-bottom:8px;
-}
-
+.name{font-size:22px;font-weight:bold;color:#ffd34d;}
+.email{opacity:.85;margin-bottom:8px;}
 .rank-badge{
-  display:inline-block;
-  padding:6px 14px;
-  border-radius:25px;
+  display:inline-block;padding:6px 14px;border-radius:25px;
   background:linear-gradient(45deg,#ff3b3b,#ffae00);
-  color:#fff;
-  font-weight:bold;
-  margin-top:6px;
-  box-shadow:0 0 15px rgba(255,0,0,.5);
+  color:#fff;font-weight:bold;margin-top:6px;
 }
-
-.progress{
-  background:#0c223f;
-  border-radius:10px;
-  overflow:hidden;
-  height:10px;
-  margin:12px 0;
-}
-
-.progress-bar{
-  height:100%;
-  background:linear-gradient(90deg,#4db8ff,#ffd34d);
-  width:0%;
-  transition:.5s;
-}
-
-.info-line{
-  margin:8px 0;
-  font-size:14px;
-}
-
-.info-line span{
-  color:#4db8ff;
-}
-
-.stats{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:12px;
-  margin-top:15px;
-}
-
+.progress{background:#0c223f;border-radius:10px;overflow:hidden;height:10px;margin:12px 0;}
+.progress-bar{height:100%;background:linear-gradient(90deg,#4db8ff,#ffd34d);width:0%;transition:.5s;}
+.info-line{margin:8px 0;font-size:14px;}
+.info-line span{color:#4db8ff;}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:15px;}
 .stat{
   background:linear-gradient(145deg,#132f55,#0d203a);
-  padding:14px;
-  border-radius:14px;
-  text-align:center;
-  border:1px solid rgba(255,215,0,.1);
+  padding:14px;border-radius:14px;text-align:center;
 }
-
-.stat h3{
-  margin:5px 0;
-  color:#ffd34d;
-}
-
+.stat h3{margin:5px 0;color:#ffd34d;}
 button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border:none;
-  border-radius:12px;
-  cursor:pointer;
-  font-weight:bold;
+  width:100%;padding:12px;margin-top:10px;border:none;
+  border-radius:12px;cursor:pointer;font-weight:bold;
   background:linear-gradient(45deg,#1e5eff,#00c6ff);
   color:#fff;
-  transition:.3s;
 }
-
-button:hover{
-  background:linear-gradient(45deg,#ffae00,#ff3b3b);
-  transform:scale(1.03);
-}
-
-button.secondary{
-  background:#1a1a1a;
-  color:#ccc;
-}
-
+button.secondary{background:#1a1a1a;color:#ccc;}
 .hidden{display:none;}
-
-input{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:8px;
-  border:none;
-}
-
-.success{
-  color:#00ff88;
-  margin-top:10px;
-}
-
-.fb-link{
-  color:#4db8ff;
-  text-decoration:underline;
-  cursor:pointer;
-}
+input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
+.success{color:#00ff88;margin-top:10px;}
+.fb-link{color:#4db8ff;text-decoration:underline;cursor:pointer;}
 </style>
 </head>
 
 <body>
 <div class="container">
-
 <header>
   <img src="logo.png">
   <h2>AFN Elite Profile</h2>
 </header>
 
 <div class="card">
-
 <div id="viewBox">
-
   <div class="name" id="v_username">—</div>
   <div class="email" id="v_email">—</div>
-
   <div id="rankBadge" class="rank-badge">Unranked</div>
 
   <div class="progress">
     <div class="progress-bar" id="progressBar"></div>
   </div>
 
-  <div class="info-line">🌐 Facebook: 
+  <div class="info-line">🌐 Facebook:
     <span id="fbLink" class="fb-link hidden" onclick="openFb()">View Profile</span>
   </div>
 
@@ -186,29 +82,16 @@ input{
   <div class="info-line">💻 Device: <span id="v_device">—</span></div>
 
   <div class="stats">
-    <div class="stat">
-      <div>Rating</div>
-      <h3 id="rating">0</h3>
-    </div>
-    <div class="stat">
-      <div>Wins</div>
-      <h3 id="wins">0</h3>
-    </div>
-    <div class="stat">
-      <div>Losses</div>
-      <h3 id="losses">0</h3>
-    </div>
-    <div class="stat">
-      <div>Win Rate</div>
-      <h3 id="winRate">0%</h3>
-    </div>
+    <div class="stat"><div>Rating</div><h3 id="rating">0</h3></div>
+    <div class="stat"><div>Wins</div><h3 id="wins">0</h3></div>
+    <div class="stat"><div>Losses</div><h3 id="losses">0</h3></div>
+    <div class="stat"><div>Win Rate</div><h3 id="winRate">0%</h3></div>
   </div>
 
   <button onclick="location.href='player-submit-match.html'">Submit Match</button>
   <button onclick="location.href='match-history.html'">Match History</button>
   <button onclick="toggleEdit(true)">Edit Profile</button>
   <button class="secondary" onclick="logout()">Logout</button>
-
 </div>
 
 <div id="editBox" class="hidden">
@@ -221,15 +104,14 @@ input{
 </div>
 
 <div id="msg"></div>
-
 </div>
 </div>
 
 <script>
 firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
+  apiKey:"YOUR_API_KEY",
+  authDomain:"YOUR_DOMAIN",
+  projectId:"YOUR_PROJECT_ID"
 });
 
 const auth=firebase.auth();
@@ -244,8 +126,13 @@ function getRank(r){
   return "Unranked";
 }
 
+/* 🔐 Player Login Check Only */
 auth.onAuthStateChanged(user=>{
-  if(!user){location.href="login.html";return;}
+  if(!user){
+    location.href="player-login.html";
+    return;
+  }
+
   uid=user.uid;
   v_email.innerText=user.email;
 
@@ -273,12 +160,6 @@ auth.onAuthStateChanged(user=>{
 });
 
 function toggleEdit(edit){
-  if(edit){
-    phone.value=v_phone.innerText;
-    ownerId.value=v_ownerId.innerText;
-    facebook.value=fbUrl;
-    deviceName.value=v_device.innerText;
-  }
   viewBox.classList.toggle("hidden",edit);
   editBox.classList.toggle("hidden",!edit);
 }
@@ -300,9 +181,8 @@ function openFb(){
 }
 
 function logout(){
-  auth.signOut().then(()=>location.href="login.html");
+  auth.signOut().then(()=>location.href="player-login.html");
 }
 </script>
-
 </body>
 </html>
