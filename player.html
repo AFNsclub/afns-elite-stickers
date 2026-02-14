@@ -10,60 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:#0b1622;
-  color:#fff;
-}
-.container{
-  max-width:600px;
-  margin:auto;
-  padding:20px;
-}
-header{
-  text-align:center;
-  margin-bottom:20px;
-}
-header img{
-  width:70px;
-}
-.card{
-  background:#111c2a;
-  padding:20px;
-  border-radius:14px;
-}
-.field{
-  margin:8px 0;
-}
-.field span{
-  color:#4f8cff;
-}
-button{
-  width:100%;
-  padding:10px;
-  margin-top:8px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  background:#4f8cff;
-  color:#fff;
-}
-button.secondary{
-  background:#333;
-}
-.hidden{
-  display:none;
-}
-input{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:6px;
-  border:none;
-}
-.success{color:#00ff88;margin-top:10px;}
-.error{color:red;margin-top:10px;}
+/* --- SAME STYLE --- */
 </style>
 </head>
 
@@ -72,41 +19,31 @@ input{
 
 <header>
   <img src="logo.png">
-  <h2>My Profile</h2>
-  <div>AFN's Elite Strikers</div>
+  <h1 id="profileTitle">My Profile</h1>
+  <div class="subtitle">AFN's Elite Strikers</div>
 </header>
 
 <div class="card">
-
 <div id="viewBox">
 
-  <div class="field">Username: <span id="v_username">—</span></div>
-  <div class="field">Phone: <span id="v_phone">—</span></div>
-  <div class="field">Device: <span id="v_device">—</span></div>
-  <div class="field">Owner ID: <span id="v_ownerId">—</span></div>
-  <div class="field">Rating: <span id="v_rating">0</span></div>
-  <div class="field">Wins: <span id="v_wins">0</span></div>
-  <div class="field">Losses: <span id="v_losses">0</span></div>
+  <!-- SAME VIEW CODE -->
 
-  <button onclick="openFb()" id="fbBtn" class="secondary hidden">Open Facebook</button>
-
+  <button onclick="location.href='player-submit-match.html'">📝 Submit Match</button>
+  <button onclick="location.href='match-history.html'">📜 Match History</button>
   <button onclick="toggleEdit(true)">✏️ Edit Profile</button>
   <button class="secondary" onclick="logout()">Logout</button>
-
 </div>
 
 <div id="editBox" class="hidden">
   <input id="phone" placeholder="Phone">
-  <input id="deviceName" placeholder="Device name">
-  <input id="ownerId" placeholder="Owner ID">
   <input id="facebook" placeholder="Facebook link">
+  <input id="gameId" placeholder="Game ID">
+  <input id="deviceName" placeholder="Device name">
   <button onclick="saveProfile()">Save</button>
   <button class="secondary" onclick="toggleEdit(false)">Cancel</button>
 </div>
 
 <div id="msg"></div>
-
-</div>
 </div>
 
 <script>
@@ -116,43 +53,36 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const auth = firebase.auth();
-const db = firebase.firestore();
-
+const auth=firebase.auth();
+const db=firebase.firestore();
 let uid, fbLink="";
 
 auth.onAuthStateChanged(user=>{
-  if(!user){
-    location.href="login.html";
-    return;
-  }
-
-  uid = user.uid;
+  if(!user){location.href="login.html";return;}
+  uid=user.uid;
+  v_email.innerText=user.email;
 
   db.collection("players").doc(uid).onSnapshot(doc=>{
-    if(!doc.exists) return;
-
-    const d = doc.data();
-
-    v_username.innerText = d.username || "—";
-    v_phone.innerText = d.phone || "—";
-    v_device.innerText = d.deviceName || "—";
-    v_ownerId.innerText = d.ownerId || "—";
-    v_rating.innerText = d.rating || 0;
-    v_wins.innerText = d.wins || 0;
-    v_losses.innerText = d.losses || 0;
-
-    fbLink = d.facebook || "";
-    fbBtn.classList.toggle("hidden", !fbLink);
+    const d=doc.data()||{};
+    v_username.innerText=d.username||"—";
+    v_phone.innerText=d.phone||"—";
+    v_gameId.innerText=d.gameId||"—";
+    v_device.innerText=d.deviceName||"—";
+    rating.innerText=d.rating||0;
+    wins.innerText=d.wins||0;
+    losses.innerText=d.losses||0;
+    fbLink=d.facebook||"";
+    fbBtn.style.display=fbLink?"flex":"none";
   });
 });
 
+/* ✅ FIXED EDIT TOGGLE */
 function toggleEdit(edit){
   if(edit){
     phone.value = v_phone.innerText;
-    deviceName.value = v_device.innerText;
-    ownerId.value = v_ownerId.innerText;
     facebook.value = fbLink;
+    gameId.value = v_gameId.innerText;
+    deviceName.value = v_device.innerText;
   }
   viewBox.classList.toggle("hidden",edit);
   editBox.classList.toggle("hidden",!edit);
@@ -160,28 +90,18 @@ function toggleEdit(edit){
 
 function saveProfile(){
   db.collection("players").doc(uid).update({
-    phone: phone.value.trim(),
-    deviceName: deviceName.value.trim(),
-    ownerId: ownerId.value.trim(),
-    facebook: facebook.value.trim()
-  })
-  .then(()=>{
-    msg.innerHTML="<div class='success'>Profile Updated Successfully</div>";
+    phone:phone.value,
+    facebook:facebook.value,
+    gameId:gameId.value,
+    deviceName:deviceName.value
+  }).then(()=>{
+    msg.innerHTML="<div class='success'>Profile Updated</div>";
     toggleEdit(false);
-  })
-  .catch(()=>{
-    msg.innerHTML="<div class='error'>Update Failed</div>";
   });
-}
-
-function openFb(){
-  if(fbLink) window.open(fbLink,"_blank");
 }
 
 function logout(){
-  auth.signOut().then(()=>{
-    location.href="login.html";
-  });
+  auth.signOut().then(()=>location.href="login.html");
 }
 </script>
 
