@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Player Profile | AFN Elite Strikers</title>
+<title>AFN Elite Player Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -13,92 +13,145 @@
 body{
   margin:0;
   font-family:Arial;
-  background:linear-gradient(135deg,#0b1c2d,#122c44,#1b3d5c);
+  background:radial-gradient(circle at top,
+      #1a2f5c 0%,
+      #0b1c33 40%,
+      #1a0f1f 75%,
+      #000 100%);
   color:#fff;
 }
+
 .container{
   max-width:700px;
   margin:auto;
   padding:20px;
 }
+
 header{
   text-align:center;
   margin-bottom:20px;
 }
+
 header img{
-  width:80px;
+  width:90px;
 }
+
 .card{
-  background:#0e2236;
+  background:linear-gradient(145deg,#0f2545,#081a2e);
   padding:20px;
-  border-radius:18px;
-  box-shadow:0 0 25px rgba(255,215,0,.15);
+  border-radius:22px;
+  box-shadow:0 0 25px rgba(255,215,0,.15),
+             0 0 40px rgba(0,120,255,.15);
 }
+
 .name{
   font-size:22px;
   font-weight:bold;
-  color:#ffd700;
+  color:#ffd34d;
 }
+
 .email{
-  opacity:.8;
-  margin-bottom:15px;
+  opacity:.85;
+  margin-bottom:8px;
 }
+
+.rank-badge{
+  display:inline-block;
+  padding:6px 14px;
+  border-radius:25px;
+  background:linear-gradient(45deg,#ff3b3b,#ffae00);
+  color:#fff;
+  font-weight:bold;
+  margin-top:6px;
+  box-shadow:0 0 15px rgba(255,0,0,.5);
+}
+
+.progress{
+  background:#0c223f;
+  border-radius:10px;
+  overflow:hidden;
+  height:10px;
+  margin:12px 0;
+}
+
+.progress-bar{
+  height:100%;
+  background:linear-gradient(90deg,#4db8ff,#ffd34d);
+  width:0%;
+  transition:.5s;
+}
+
 .info-line{
   margin:8px 0;
   font-size:14px;
 }
+
 .info-line span{
-  color:#ffd700;
+  color:#4db8ff;
 }
-.stats-title{
-  margin-top:20px;
-  margin-bottom:10px;
-  color:#ffd700;
-  font-weight:bold;
-}
+
 .stats{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   gap:12px;
+  margin-top:15px;
 }
+
 .stat{
-  background:#132f4a;
+  background:linear-gradient(145deg,#132f55,#0d203a);
   padding:14px;
-  border-radius:12px;
+  border-radius:14px;
   text-align:center;
+  border:1px solid rgba(255,215,0,.1);
 }
+
 .stat h3{
   margin:5px 0;
-  color:#ffd700;
+  color:#ffd34d;
 }
+
 button{
   width:100%;
   padding:12px;
   margin-top:10px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   cursor:pointer;
-  background:linear-gradient(45deg,#ffd700,#ffb700);
-  color:#000;
   font-weight:bold;
-}
-button.secondary{
-  background:#333;
+  background:linear-gradient(45deg,#1e5eff,#00c6ff);
   color:#fff;
+  transition:.3s;
 }
+
+button:hover{
+  background:linear-gradient(45deg,#ffae00,#ff3b3b);
+  transform:scale(1.03);
+}
+
+button.secondary{
+  background:#1a1a1a;
+  color:#ccc;
+}
+
 .hidden{display:none;}
+
 input{
   width:100%;
   padding:10px;
   margin:6px 0;
-  border-radius:6px;
+  border-radius:8px;
   border:none;
 }
-.success{color:#00ff88;margin-top:10px;}
+
+.success{
+  color:#00ff88;
+  margin-top:10px;
+}
+
 .fb-link{
-  color:#4da6ff;
-  cursor:pointer;
+  color:#4db8ff;
   text-decoration:underline;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -108,8 +161,7 @@ input{
 
 <header>
   <img src="logo.png">
-  <h2>My Profile</h2>
-  <div>AFN Elite Strikers</div>
+  <h2>AFN Elite Profile</h2>
 </header>
 
 <div class="card">
@@ -119,6 +171,12 @@ input{
   <div class="name" id="v_username">—</div>
   <div class="email" id="v_email">—</div>
 
+  <div id="rankBadge" class="rank-badge">Unranked</div>
+
+  <div class="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
   <div class="info-line">🌐 Facebook: 
     <span id="fbLink" class="fb-link hidden" onclick="openFb()">View Profile</span>
   </div>
@@ -127,16 +185,10 @@ input{
   <div class="info-line">👑 Owner ID: <span id="v_ownerId">—</span></div>
   <div class="info-line">💻 Device: <span id="v_device">—</span></div>
 
-  <div class="stats-title">Match Statistics</div>
-
   <div class="stats">
     <div class="stat">
       <div>Rating</div>
       <h3 id="rating">0</h3>
-    </div>
-    <div class="stat">
-      <div>Rank</div>
-      <h3 id="rank">Unranked</h3>
     </div>
     <div class="stat">
       <div>Wins</div>
@@ -145,10 +197,6 @@ input{
     <div class="stat">
       <div>Losses</div>
       <h3 id="losses">0</h3>
-    </div>
-    <div class="stat">
-      <div>Total Match</div>
-      <h3 id="totalMatch">0</h3>
     </div>
     <div class="stat">
       <div>Win Rate</div>
@@ -188,6 +236,14 @@ const auth=firebase.auth();
 const db=firebase.firestore();
 let uid, fbUrl="";
 
+function getRank(r){
+  if(r>=2000) return "👑 Legend";
+  if(r>=1500) return "🔥 Elite";
+  if(r>=1000) return "⭐ Pro";
+  if(r>=500) return "🥉 Rising";
+  return "Unranked";
+}
+
 auth.onAuthStateChanged(user=>{
   if(!user){location.href="login.html";return;}
   uid=user.uid;
@@ -199,15 +255,17 @@ auth.onAuthStateChanged(user=>{
     v_phone.innerText=d.phone||"—";
     v_ownerId.innerText=d.ownerId||"—";
     v_device.innerText=d.deviceName||"—";
-    rating.innerText=d.rating||0;
+
+    let r=d.rating||0;
+    rating.innerText=r;
     wins.innerText=d.wins||0;
     losses.innerText=d.losses||0;
 
-    const total=(d.wins||0)+(d.losses||0);
-    totalMatch.innerText=total;
-    winRate.innerText= total?Math.round((d.wins/total)*100)+"%":"0%";
+    let total=(d.wins||0)+(d.losses||0);
+    winRate.innerText=total?Math.round((d.wins/total)*100)+"%":"0%";
 
-    rank.innerText=d.rank||"Unranked";
+    rankBadge.innerText=getRank(r);
+    progressBar.style.width=(r%500)/5+"%";
 
     fbUrl=d.facebook||"";
     fbLink.classList.toggle("hidden",!fbUrl);
