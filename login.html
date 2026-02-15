@@ -143,7 +143,12 @@ function togglePassword(){
   }
 }
 
-/* ❌ Auto Redirect Removed — No Conflict Now */
+/* ✅ AUTO REDIRECT IF ALREADY LOGGED IN */
+auth.onAuthStateChanged(user=>{
+  if(user){
+    window.location.href = "player.html";
+  }
+});
 
 /* 🔐 Player Login */
 function login(){
@@ -159,7 +164,6 @@ function login(){
     password.value
   )
   .then(()=>{
-    // ✅ Only Player Page
     window.location.href = "player.html";
   })
   .catch(error=>{
