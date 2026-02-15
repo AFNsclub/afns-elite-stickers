@@ -1,120 +1,118 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>AFNS Leaderboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AFNS International Leaderboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    body{
+      margin:0;
+      background:#0f172a;
+      font-family:Arial;
+      color:white;
+      text-align:center;
+    }
 
-<style>
-body{
-  margin:0;
-  background:#050b1e;
-  color:#fff;
-  font-family:Arial;
-}
-.container{
-  max-width:1000px;
-  margin:auto;
-  padding:16px;
-}
-h2{text-align:center;}
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:15px;
-}
-th,td{
-  padding:10px;
-  text-align:center;
-}
-th{
-  background:#111c30;
-}
-tr:nth-child(even){
-  background:#0d1728;
-}
-.rank{
-  font-weight:bold;
-  color:#00ff99;
-}
-</style>
+    h1{margin-top:20px;}
+    h2{margin-top:-10px;color:#94a3b8;}
+
+    .board{
+      width:95%;
+      max-width:800px;
+      margin:30px auto;
+    }
+
+    .player{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:15px;
+      margin:10px 0;
+      border-radius:12px;
+      background:#1e293b;
+      transition:0.4s;
+      cursor:pointer;
+    }
+
+    .player:hover{
+      transform:scale(1.02);
+      background:#334155;
+    }
+
+    .rank{
+      font-weight:bold;
+      width:60px;
+    }
+
+    .gold{background:linear-gradient(45deg,#ffd700,#ffb700);}
+    .silver{background:linear-gradient(45deg,#c0c0c0,#9e9e9e);}
+    .bronze{background:linear-gradient(45deg,#cd7f32,#8d5524);}
+  </style>
 </head>
 
 <body>
 
-<div class="container">
-<h2>🏆 AFNS Elite Strikers Ranking</h2>
-<table>
-<thead>
-<tr>
-<th>Rank</th>
-<th>Player</th>
-<th>Win</th>
-<th>Loss</th>
-<th>Draw</th>
-<th>Rating</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-</table>
-</div>
+<h1>🌍 AFNS INTERNATIONAL FEDERATION</h1>
+<h2>WORLD RANKING BOARD</h2>
 
-<script>
+<div class="board" id="leaderboard"></div>
 
-firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
+<script type="module">
 
-const db = firebase.firestore();
-const tbody = document.getElementById("tbody");
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
-db.collection("players").onSnapshot(async snap=>{
+import { getFirestore, collection, query, orderBy, onSnapshot } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  let players=[];
+/* 🔥 YOUR FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8lpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeeecaa46bcad57",
+  measurementId: "G-WT4XY15N6Y"
+};
 
-  snap.forEach(doc=>{
-    const d=doc.data();
-    players.push({
-      id:doc.id,
-      username:d.username || "Unknown",
-      win:d.win || 0,
-      loss:d.loss || 0,
-      draw:d.draw || 0,
-      rating:d.rating || 1000
-    });
-  });
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  // Sort by rating
-  players.sort((a,b)=>b.rating - a.rating);
+const board = document.getElementById("leaderboard");
 
-  tbody.innerHTML="";
+const q = query(collection(db,"players"), orderBy("rating","desc"));
 
-  for(let i=0;i<players.length;i++){
+onSnapshot(q,(snapshot)=>{
 
-    const p=players[i];
-    const rank=i+1;
+  board.innerHTML="";
+  let rank=1;
 
-    // 🔥 ranking auto update
-    await db.collection("players").doc(p.id).update({
-      ranking:rank
-    });
+  snapshot.forEach(doc=>{
 
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td class="rank">#${rank}</td>
-      <td>${p.username}</td>
-      <td>${p.win}</td>
-      <td>${p.loss}</td>
-      <td>${p.draw}</td>
-      <td>${p.rating}</td>
+    const data = doc.data();
+    const rating = data.rating || 0;
+
+    const div = document.createElement("div");
+    div.className="player";
+
+    if(rank==1) div.classList.add("gold");
+    if(rank==2) div.classList.add("silver");
+    if(rank==3) div.classList.add("bronze");
+
+    div.innerHTML=`
+      <div class="rank">#${rank}</div>
+      <div>${data.username || "Unknown Player"}</div>
+      <div>⭐ ${rating}</div>
     `;
-    tbody.appendChild(tr);
-  }
+
+    div.onclick=()=>{
+      window.location.href="profile.html?uid="+doc.id;
+    };
+
+    board.appendChild(div);
+    rank++;
+  });
 
 });
 
