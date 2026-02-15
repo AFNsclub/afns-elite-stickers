@@ -2,105 +2,51 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Strikers - Federation Ranking</title>
+<title>AFNS Elite Strikers Ranking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
+<!-- Firebase v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <style>
-:root{
-  --gold:#FFD700;
-  --silver:#C0C0C0;
-  --bronze:#CD7F32;
-  --dark:#020d1f;
-  --card:#0c1b2a;
-}
-
 body{
   margin:0;
-  background:linear-gradient(180deg,#010814,#021b33);
+  background:#020d1f;
   font-family:Segoe UI;
   color:white;
   text-align:center;
-  overflow-x:hidden;
 }
-
 h1{
   padding:20px;
-  font-size:28px;
-  letter-spacing:2px;
-  text-shadow:0 0 15px rgba(255,215,0,.6);
 }
-
 table{
   width:95%;
   margin:auto;
   border-collapse:collapse;
   margin-top:20px;
 }
-
 th{
-  background:#061423;
-  padding:15px;
-  font-size:18px;
-  text-transform:uppercase;
-  letter-spacing:1px;
-}
-
-td{
+  background:#0c1b2a;
   padding:14px;
-  border-bottom:1px solid #112b45;
-  font-weight:600;
+  font-size:18px;
 }
-
-tr{
-  opacity:0;
-  transform:translateY(20px);
-  animation:fadeSlide .6s forwards;
+td{
+  padding:12px;
+  border-bottom:1px solid #1f2f45;
 }
-
-@keyframes fadeSlide{
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
-}
-
 tr:hover{
-  background:#0f2c4d;
-  transform:scale(1.01);
-  transition:.2s;
+  background:#102b4d;
 }
-
-/* Top 3 Special Effects */
-.rank1{
-  background:linear-gradient(90deg,#3a2e00,#1b1400);
-  color:var(--gold);
-  box-shadow:0 0 20px rgba(255,215,0,.6);
-}
-.rank2{
-  background:linear-gradient(90deg,#2a2a2a,#111);
-  color:var(--silver);
-  box-shadow:0 0 15px rgba(192,192,192,.6);
-}
-.rank3{
-  background:linear-gradient(90deg,#3b1f00,#1c0d00);
-  color:var(--bronze);
-  box-shadow:0 0 15px rgba(205,127,50,.6);
-}
-
-.medal{
-  font-size:20px;
-  margin-right:5px;
-}
+.rank1{color:gold;font-weight:bold}
+.rank2{color:silver;font-weight:bold}
+.rank3{color:#cd7f32;font-weight:bold}
 </style>
 </head>
 
 <body>
 
-<h1>🏆 AFNS Elite Strikers Federation Ranking</h1>
+<h1>🏆 AFNS Elite Strikers Ranking</h1>
 
 <table>
 <thead>
@@ -118,7 +64,7 @@ tr:hover{
 
 <script>
 
-// Firebase Config
+// 🔥 Firebase Config
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
@@ -126,6 +72,7 @@ firebase.initializeApp({
 });
 
 const db = firebase.firestore();
+
 const table = document.getElementById("rankingBody");
 
 db.collection("players")
@@ -138,25 +85,15 @@ db.collection("players")
   snapshot.forEach(doc=>{
 
     const p=doc.data();
-    let className="";
-    let medal="";
 
-    if(rank==1){
-      className="rank1";
-      medal="🥇";
-    }
-    else if(rank==2){
-      className="rank2";
-      medal="🥈";
-    }
-    else if(rank==3){
-      className="rank3";
-      medal="🥉";
-    }
+    let rankClass="";
+    if(rank==1) rankClass="rank1";
+    if(rank==2) rankClass="rank2";
+    if(rank==3) rankClass="rank3";
 
     table.innerHTML+=`
-      <tr class="${className}" style="animation-delay:${rank*0.1}s">
-        <td><span class="medal">${medal}</span>${rank}</td>
+      <tr>
+        <td class="${rankClass}">${rank}</td>
         <td>${p.username || "-"}</td>
         <td>${p.win || 0}</td>
         <td>${p.loss || 0}</td>
@@ -169,6 +106,7 @@ db.collection("players")
   });
 
 });
+
 </script>
 
 </body>
