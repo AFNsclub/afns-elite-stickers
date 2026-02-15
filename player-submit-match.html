@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Match Submit | AFN's Elite Strikers</title>
+<title>Match Submit | AFN's Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -31,7 +31,7 @@ label{
     display:block;
     margin-top:15px;
 }
-input,button{
+input,select,button{
     width:100%;
     padding:12px;
     margin-top:6px;
@@ -39,7 +39,7 @@ input,button{
     border-radius:8px;
     font-size:16px;
 }
-input{
+input,select{
     background:#0b1220;
     color:white;
 }
@@ -50,43 +50,43 @@ button{
     margin-top:20px;
     cursor:pointer;
 }
-.note{
-    font-size:13px;
-    margin-top:10px;
-    color:#aaa;
-    text-align:center;
-}
-.logout{
-    text-align:center;
-    margin-top:15px;
-}
-.logout button{
-    background:#ff4d4d;
-    color:white;
-}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-    <h2>Admin Match Submit</h2>
+    <h2>Match Submit</h2>
 
     <label>Winner Username</label>
-    <input type="text" id="winner" placeholder="Winner username">
+    <input type="text" id="winner" list="playerList" placeholder="Start typing...">
 
     <label>Loser Username</label>
-    <input type="text" id="loser" placeholder="Loser username">
+    <input type="text" id="loser" list="playerList" placeholder="Start typing...">
+
+    <datalist id="playerList"></datalist>
+
+    <label>Score (Example: 5-3)</label>
+    <input type="text" id="score" placeholder="5-3">
+
+    <label>Match Type</label>
+    <select id="matchType" onchange="toggleTournament()">
+        <option value="friendly">Friendly</option>
+        <option value="tournament">Tournament</option>
+    </select>
+
+    <div id="tournamentBox" style="display:none;">
+        <label>Tournament Name</label>
+        <input type="text" id="tournamentName" placeholder="Tournament name">
+
+        <label>Winner Team Name</label>
+        <input type="text" id="winnerTeam" placeholder="Winner team">
+
+        <label>Loser Team Name</label>
+        <input type="text" id="loserTeam" placeholder="Loser team">
+    </div>
 
     <button onclick="submitMatch()">Submit Match</button>
-
-    <div class="note">
-        Admin only • Rating & Leaderboard auto update
-    </div>
-
-    <div class="logout">
-        <button onclick="logout()">Logout</button>
-    </div>
 </div>
 
 <script>
@@ -100,28 +100,53 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* 🔐 ADMIN GUARD */
-auth.onAuthStateChanged(async user=>{
+/* 🔐 LOGIN REQUIRED */
+auth.onAuthStateChanged(user=>{
   if(!user){
-    location.href="admin-login.html";
-    return;
-  }
-
-  const snap = await db.collection("admins").doc(user.email).get();
-
-  if(!snap.exists || snap.data().active !== true){
-    alert("Access denied");
-    location.href="admin-login.html";
+    location.href="login.html";
+  }else{
+    loadPlayers();
   }
 });
 
+/* 🔎 LOAD PLAYERS */
+async function loadPlayers(){
+  const list = document.getElementById("playerList");
+  const snap = await db.collection("players").get();
+  snap.forEach(doc=>{
+    const opt = document.createElement("option");
+    opt.value = doc.data().username || doc.id;
+    list.appendChild(opt);
+  });
+}
+
+/* 🎮 SHOW TOURNAMENT BOX */
+function toggleTournament(){
+  const type = document.getElementById("matchType").value;
+  document.getElementById("tournamentBox").style.display =
+      type==="tournament" ? "block" : "none";
+}
+
+/* 🚀 SUBMIT MATCH */
 async function submitMatch(){
 
-  const winner = document.getElementById("winner").value.trim();
-  const loser = document.getElementById("loser").value.trim();
+  const user = auth.currentUser;
 
-  if(!winner || !loser){
-    alert("Both fields required!");
+  const winner = winner.value.trim();
+  const loser = loser.value.trim();
+  const score = score.value.trim();
+  const type = matchType.value;
+  const tournamentName = tournamentName.value.trim();
+  const winnerTeam = winnerTeam.value.trim();
+  const loserTeam = loserTeam.value.trim();
+
+  if(!winner || !loser || !score){
+    alert("Winner, Loser & Score required!");
+    return;
+  }
+
+  if(type==="tournament" && !tournamentName){
+    alert("Tournament name required!");
     return;
   }
 
@@ -136,19 +161,18 @@ async function submitMatch(){
   await db.collection("matches").doc(id).set({
     playerName:winner,
     opponentName:loser,
-    score:"Admin Submit",
-    status:"approved",
-    approvedAt:firebase.firestore.FieldValue.serverTimestamp(),
+    score:score,
+    matchType:type,
+    tournamentName: type==="tournament" ? tournamentName : null,
+    winnerTeam: winnerTeam || null,
+    loserTeam: loserTeam || null,
+    submittedBy:user.email,
+    status:"pending",
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  alert("Match submitted!");
-  document.getElementById("winner").value="";
-  document.getElementById("loser").value="";
-}
-
-function logout(){
-  auth.signOut();
+  alert("Match submitted! Waiting for admin approval.");
+  location.reload();
 }
 
 </script>
