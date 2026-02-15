@@ -64,7 +64,7 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 
 <div class="card">
 <div id="viewBox">
-  <div class="name" id="v_username">—</div>
+  <div class="name" id="v_username">Loading...</div>
   <div class="email" id="v_email">—</div>
   <div id="rankBadge" class="rank-badge">Unranked</div>
 
@@ -107,72 +107,89 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 </div>
 
 <script>
-
-/* 🔥 YOUR REAL FIREBASE CONFIG */
 firebase.initializeApp({
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8lpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
   projectId: "afnsclub",
   storageBucket: "afnsclub.firebasestorage.app",
   messagingSenderId: "1088089213558",
-  appId: "1:1088089213558:web:bd5e01caaeeecaa46bcad57",
-  measurementId: "G-WT4XY15N6Y"
+  appId: "1:1088089213558:web:bd5e01caaeeecaa46bcad57"
 });
 
 const auth = firebase.auth();
 const db = firebase.firestore();
 let uid, fbUrl="";
 
-auth.onAuthStateChanged(user=>{
+auth.onAuthStateChanged(async user=>{
   if(!user){
     location.replace("login.html");
     return;
   }
 
   uid = user.uid;
-  v_email.innerText = user.email;
+  document.getElementById("v_email").innerText = user.email;
 
-  db.collection("players").doc(uid).onSnapshot(doc=>{
-    const d = doc.data() || {};
-    v_username.innerText = d.username || "—";
-    v_phone.innerText = d.phone || "—";
-    v_ownerId.innerText = d.ownerId || "—";
-    v_device.innerText = d.deviceName || "—";
+  const docRef = db.collection("players").doc(uid);
+  let docSnap = await docRef.get();
 
-    let r = d.rating || 0;
-    rating.innerText = r;
-    wins.innerText = d.wins || 0;
-    losses.innerText = d.losses || 0;
+  if(!docSnap.exists){
+    await docRef.set({
+      username: user.email.split("@")[0],
+      rating: 0,
+      wins: 0,
+      losses: 0,
+      phone: "",
+      ownerId: "",
+      facebook: "",
+      deviceName: ""
+    });
+    docSnap = await docRef.get();
+  }
 
-    let total = (d.wins||0)+(d.losses||0);
-    winRate.innerText = total ? Math.round((d.wins/total)*100)+"%" : "0%";
+  const d = docSnap.data();
 
-    rankBadge.innerText = r>=2000?"👑 Legend":
-                          r>=1500?"🔥 Elite":
-                          r>=1000?"⭐ Pro":
-                          r>=500?"🥉 Rising":"Unranked";
+  document.getElementById("v_username").innerText = d.username || "—";
+  document.getElementById("v_phone").innerText = d.phone || "—";
+  document.getElementById("v_ownerId").innerText = d.ownerId || "—";
+  document.getElementById("v_device").innerText = d.deviceName || "—";
 
-    progressBar.style.width = (r%500)/5+"%";
+  let r = d.rating || 0;
+  document.getElementById("rating").innerText = r;
+  document.getElementById("wins").innerText = d.wins || 0;
+  document.getElementById("losses").innerText = d.losses || 0;
 
-    fbUrl = d.facebook || "";
-    fbLink.classList.toggle("hidden", !fbUrl);
-  });
+  let total = (d.wins||0)+(d.losses||0);
+  document.getElementById("winRate").innerText =
+    total ? Math.round((d.wins/total)*100)+"%" : "0%";
+
+  document.getElementById("rankBadge").innerText =
+    r>=2000?"👑 Legend":
+    r>=1500?"🔥 Elite":
+    r>=1000?"⭐ Pro":
+    r>=500?"🥉 Rising":"Unranked";
+
+  document.getElementById("progressBar").style.width = (r%500)/5+"%";
+
+  fbUrl = d.facebook || "";
+  document.getElementById("fbLink").classList.toggle("hidden", !fbUrl);
 });
 
 function toggleEdit(edit){
-  viewBox.classList.toggle("hidden", edit);
-  editBox.classList.toggle("hidden", !edit);
+  document.getElementById("viewBox").classList.toggle("hidden", edit);
+  document.getElementById("editBox").classList.toggle("hidden", !edit);
 }
 
 function saveProfile(){
   db.collection("players").doc(uid).update({
-    phone: phone.value.trim(),
-    ownerId: ownerId.value.trim(),
-    facebook: facebook.value.trim(),
-    deviceName: deviceName.value.trim()
+    phone: document.getElementById("phone").value.trim(),
+    ownerId: document.getElementById("ownerId").value.trim(),
+    facebook: document.getElementById("facebook").value.trim(),
+    deviceName: document.getElementById("deviceName").value.trim()
   }).then(()=>{
-    msg.innerHTML="<div class='success'>Profile Updated</div>";
+    document.getElementById("msg").innerHTML =
+      "<div class='success'>Profile Updated</div>";
     toggleEdit(false);
+    location.reload();
   });
 }
 
@@ -188,4 +205,4 @@ function logout(){
 </script>
 
 </body>
-</html>
+  </html>
