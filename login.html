@@ -116,65 +116,10 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
-
 const auth = firebase.auth();
-
-const email = document.getElementById("email");
-const password = document.getElementById("password");
-const errorBox = document.getElementById("errorBox");
-
-function showError(msg){
-  errorBox.innerText = msg;
-  errorBox.style.display = "block";
-}
-
-function togglePassword(){
-  const t = document.querySelector(".toggle");
-  if(password.type === "password"){
-    password.type = "text";
-    t.innerText = "Hide";
-  }else{
-    password.type = "password";
-    t.innerText = "Show";
-  }
-}
-
-/* ✅ FIXED REDIRECT — NO ROLE CHECK */
-auth.onAuthStateChanged(user=>{
-  if(user){
-    location.replace("player.html");
-  }
-});
-
-/* LOGIN */
-function login(){
-  errorBox.style.display = "none";
-
-  if(!email.value || !password.value){
-    showError("⚠️ Gmail এবং Password দিতে হবে");
-    return;
-  }
-
-  auth.signInWithEmailAndPassword(
-    email.value.trim(),
-    password.value
-  ).catch(()=>{
-    showError("❌ Gmail অথবা Password ভুল");
-  });
-}
-
-/* PASSWORD RESET */
-function forgotPassword(){
-  if(!email.value){
-    showError("📧 আগে Gmail লিখুন");
-    return;
-  }
-
-  auth.sendPasswordResetEmail(email.value.trim())
-    .then(()=>showError("✅ Reset link Gmail এ পাঠানো হয়েছে"))
-    .catch(()=>showError("❌ Gmail পাওয়া যায়নি"));
-}
 </script>
+
+<script src="login.js"></script>
 
 </body>
 </html>
