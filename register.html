@@ -1,102 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Create Account | AFNS Elite Strikers</title>
+<title>AFNS Elite Strikers Ranking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <style>
-:root{
-  --gold:#ffd700;
-  --neon:#00f7ff;
-  --bg1:#02060c;
-  --bg2:#0c1b2a;
-  --card:rgba(0,0,0,.65);
-}
-*{box-sizing:border-box;font-family:Segoe UI,Arial,sans-serif}
 body{
   margin:0;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:
-    radial-gradient(circle at top,var(--neon),transparent 45%),
-    radial-gradient(circle at bottom,var(--gold),transparent 45%),
-    linear-gradient(180deg,var(--bg2),var(--bg1));
-  color:#fff;
-}
-.card{
-  width:100%;
-  max-width:420px;
-  padding:26px;
-  border-radius:22px;
-  background:var(--card);
-  box-shadow:
-    0 0 30px rgba(0,247,255,.35),
-    0 0 18px rgba(255,215,0,.25);
-}
-.logo{
-  width:110px;
-  display:block;
-  margin:0 auto 12px;
-}
-h2{
+  background:#020d1f;
+  font-family:Segoe UI;
+  color:white;
   text-align:center;
-  color:var(--gold);
-  margin-bottom:18px;
 }
-input{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:14px;
-  margin-bottom:12px;
-  font-size:15px;
+h1{
+  padding:20px;
 }
-button{
-  width:100%;
+table{
+  width:95%;
+  margin:auto;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+th{
+  background:#0c1b2a;
   padding:14px;
-  border:none;
-  border-radius:16px;
-  background:linear-gradient(90deg,var(--neon),#008cff);
-  color:#000;
   font-size:18px;
-  font-weight:900;
-  cursor:pointer;
 }
-.msg{
-  margin-top:12px;
-  text-align:center;
-  font-weight:700;
+td{
+  padding:12px;
+  border-bottom:1px solid #1f2f45;
 }
-.error{color:#ff6b6b}
-.success{color:#4cff8f}
+tr:hover{
+  background:#102b4d;
+}
+.rank1{color:gold;font-weight:bold}
+.rank2{color:silver;font-weight:bold}
+.rank3{color:#cd7f32;font-weight:bold}
 </style>
 </head>
 
 <body>
 
-<div class="card">
-  <img src="logo.png" class="logo">
-  <h2>Create Player Account</h2>
+<h1>🏆 AFNS Elite Strikers Ranking</h1>
 
-  <input id="username" placeholder="Player Username">
-  <input id="email" type="email" placeholder="Gmail">
-  <input id="phone" placeholder="Mobile Number (BD)">
-  <input id="facebook" placeholder="Facebook Profile Link">
-  <input id="gameid" placeholder="Game / Owner ID">
-  <input id="device" placeholder="Device Name">
-  <input id="password" type="password" placeholder="Password">
-
-  <button onclick="createAccount()">Create Account</button>
-  <div id="message" class="msg"></div>
-</div>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Player</th>
+<th>Win</th>
+<th>Loss</th>
+<th>Draw</th>
+<th>Rating</th>
+</tr>
+</thead>
+<tbody id="rankingBody"></tbody>
+</table>
 
 <script>
 
@@ -107,78 +71,41 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const auth = firebase.auth();
-const db   = firebase.firestore();
+const db = firebase.firestore();
 
-async function createAccount(){
+const table = document.getElementById("rankingBody");
 
-  const msg=document.getElementById("message");
-  msg.innerText="⏳ Creating account...";
-  msg.className="msg";
+db.collection("players")
+.orderBy("rating","desc")
+.onSnapshot(snapshot=>{
 
-  const username=document.getElementById("username").value.trim();
-  const email=document.getElementById("email").value.trim();
-  const phone=document.getElementById("phone").value.trim();
-  const facebook=document.getElementById("facebook").value.trim();
-  const gameid=document.getElementById("gameid").value.trim();
-  const device=document.getElementById("device").value.trim();
-  const password=document.getElementById("password").value.trim();
+  table.innerHTML="";
+  let rank=1;
 
-  if(!username||!email||!phone||!facebook||!gameid||!device||!password){
-    msg.innerText="⚠️ All fields are required";
-    msg.className="msg error";
-    return;
-  }
+  snapshot.forEach(doc=>{
 
-  try{
+    const p=doc.data();
 
-    // ✅ Username Duplicate Check
-    const check = await db.collection("players")
-      .where("usernameLower","==",username.toLowerCase())
-      .get();
+    let rankClass="";
+    if(rank==1) rankClass="rank1";
+    if(rank==2) rankClass="rank2";
+    if(rank==3) rankClass="rank3";
 
-    if(!check.empty){
-      msg.innerText="❌ Username already taken";
-      msg.className="msg error";
-      return;
-    }
+    table.innerHTML+=`
+      <tr>
+        <td class="${rankClass}">${rank}</td>
+        <td>${p.username || "-"}</td>
+        <td>${p.win || 0}</td>
+        <td>${p.loss || 0}</td>
+        <td>${p.draw || 0}</td>
+        <td>${p.rating || 0}</td>
+      </tr>
+    `;
 
-    // ✅ Create Firebase Auth User
-    const cred = await auth.createUserWithEmailAndPassword(email,password);
+    rank++;
+  });
 
-    // ✅ Save Player Data
-    await db.collection("players").doc(cred.user.uid).set({
-
-      username: username,
-      usernameLower: username.toLowerCase(),
-      email: email,
-      phone: phone,
-      facebook: facebook,
-      gameId: gameid,
-      deviceName: device,
-
-      // 🔥 Official Rating System Fields
-      rating: 1000,
-      win: 0,
-      loss: 0,
-      draw: 0,
-      ranking: 0,
-
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    msg.innerText="✅ Account Created Successfully!";
-    msg.className="msg success";
-
-    setTimeout(()=>{
-      window.location.href="player.html";
-    },1500);
-
-  }catch(error){
-    msg.innerText="❌ "+error.message;
-    msg.className="msg error";
-  }
-}
+});
 
 </script>
 
