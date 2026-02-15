@@ -152,37 +152,41 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const OWNER_EMAIL = "sisaif167@gmail.com";
 
+/* 🔐 FULL SECURITY + ROLE SYSTEM */
 auth.onAuthStateChanged(async user => {
 
   if(!user){
-    location.href = "admin-login.html";
+    location.replace("admin-login.html");
     return;
   }
 
   try {
 
-    const snap = await db.collection("admins").doc(user.email).get();
-
-    // OWNER DIRECT ACCESS
+    // 👑 OWNER DIRECT ACCESS
     if(user.email === OWNER_EMAIL){
       document.getElementById("adminRole").innerText = "👑 OWNER";
       loadStats();
       return;
     }
 
-    // NOT ADMIN OR INACTIVE
+    const snap = await db.collection("admins")
+                         .doc(user.email)
+                         .get();
+
+    // ❌ NOT ADMIN OR INACTIVE
     if(!snap.exists || snap.data().active !== true){
       await auth.signOut();
-      location.href = "admin-login.html";
+      location.replace("admin-login.html");
       return;
     }
 
     const admin = snap.data();
 
     document.getElementById("adminRole").innerText =
-      (admin.badge || "") + " " + (admin.role || "ADMIN").toUpperCase();
+      (admin.badge || "") + " " +
+      (admin.role || "ADMIN").toUpperCase();
 
-    // 🔥 CORRECT permission check
+    /* 🔥 PERMISSION FILTER */
     if(admin.role !== "owner"){
       document.querySelectorAll("[class*='perm-']").forEach(el=>{
         const match = el.className.match(/perm-(\w+)/);
@@ -199,11 +203,12 @@ auth.onAuthStateChanged(async user => {
 
   } catch(error){
     await auth.signOut();
-    location.href = "admin-login.html";
+    location.replace("admin-login.html");
   }
 
 });
 
+/* 📊 LIVE STATS */
 function loadStats(){
   db.collection("players").onSnapshot(s=>{
     document.getElementById("players").innerText = s.size;
@@ -222,7 +227,7 @@ function go(page){
 
 function logout(){
   auth.signOut().then(()=>{
-    location.href="admin-login.html";
+    location.replace("admin-login.html");
   });
 }
 </script>
