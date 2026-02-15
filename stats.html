@@ -1,79 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>AFNS Player Stats</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AFNS Leaderboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
 body{
   margin:0;
-  font-family:Segoe UI,Arial;
   background:#050b1e;
   color:#fff;
+  font-family:Arial;
 }
 .container{
-  max-width:1100px;
+  max-width:1000px;
   margin:auto;
   padding:16px;
 }
-h1{
-  text-align:center;
-  margin-bottom:14px;
-}
-.top-bar{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:14px;
-}
-input,select{
-  padding:10px;
-  border-radius:10px;
-  border:none;
-  outline:none;
-}
+h2{text-align:center;}
 table{
   width:100%;
   border-collapse:collapse;
-  background:rgba(255,255,255,.05);
-  border-radius:14px;
-  overflow:hidden;
+  margin-top:15px;
 }
 th,td{
-  padding:12px;
+  padding:10px;
   text-align:center;
 }
 th{
-  background:rgba(255,255,255,.08);
+  background:#111c30;
 }
-tr:hover{
-  background:rgba(255,255,255,.07);
+tr:nth-child(even){
+  background:#0d1728;
 }
 .rank{
   font-weight:bold;
-}
-.player-link{
-  color:#4f8cff;
-  text-decoration:none;
-}
-.player-link:hover{
-  text-decoration:underline;
-}
-.loading{
-  text-align:center;
-  padding:20px;
-  opacity:.7;
-}
-footer{
-  margin-top:20px;
-  text-align:center;
-  font-size:12px;
-  opacity:.5;
+  color:#00ff99;
 }
 </style>
 </head>
@@ -81,147 +46,78 @@ footer{
 <body>
 
 <div class="container">
-  <h1>🏆 AFNS Player Leaderboard</h1>
-
-  <div class="top-bar">
-    <input id="search" placeholder="Search player username...">
-    <select id="seasonFilter">
-      <option value="">All Seasons</option>
-    </select>
-  </div>
-
-  <div id="loading" class="loading">Loading player stats...</div>
-
-  <table id="table" style="display:none">
-    <thead>
-      <tr>
-        <th>Rank</th>
-        <th>Player</th>
-        <th>Team</th>
-        <th>Wins</th>
-        <th>Loss</th>
-        <th>Win %</th>
-        <th>Rating</th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
-
-  <footer>
-    AFNs Elite Striker • Public Stats View
-  </footer>
+<h2>🏆 AFNS Elite Strikers Ranking</h2>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Player</th>
+<th>Win</th>
+<th>Loss</th>
+<th>Draw</th>
+<th>Rating</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
 </div>
 
 <script>
-/* 🔥 FIREBASE INIT */
+
 firebase.initializeApp({
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub"
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
 });
 
 const db = firebase.firestore();
-
 const tbody = document.getElementById("tbody");
-const search = document.getElementById("search");
-const seasonFilter = document.getElementById("seasonFilter");
-const table = document.getElementById("table");
-const loading = document.getElementById("loading");
 
-let players = [];
-let seasons = new Set();
+db.collection("players").onSnapshot(async snap=>{
 
-/* 🔄 LOAD PLAYERS */
-db.collection("players").onSnapshot(snap=>{
-  players=[];
-  seasons.clear();
+  let players=[];
 
   snap.forEach(doc=>{
-    const d = doc.data();
+    const d=doc.data();
     players.push({
-      uid: doc.id,
-      username: d.username || doc.id,
-      team: d.team || "-",
-      wins: d.totalWins || 0,
-      loss: d.totalLoss || 0,
-      rating: d.rating || 0,
-      seasons: d.seasons || {}
+      id:doc.id,
+      username:d.username || "Unknown",
+      win:d.win || 0,
+      loss:d.loss || 0,
+      draw:d.draw || 0,
+      rating:d.rating || 1000
     });
-
-    if(d.seasons){
-      Object.keys(d.seasons).forEach(s=>seasons.add(s));
-    }
   });
 
-  fillSeasonFilter();
-  render();
-  loading.style.display="none";
-  table.style.display="";
-});
+  // Sort by rating
+  players.sort((a,b)=>b.rating - a.rating);
 
-/* 🏷 SEASON FILTER */
-function fillSeasonFilter(){
-  seasonFilter.innerHTML='<option value="">All Seasons</option>';
-  [...seasons].sort().forEach(s=>{
-    const o=document.createElement("option");
-    o.value=s;
-    o.textContent=s;
-    seasonFilter.appendChild(o);
-  });
-}
-
-/* 🔍 SEARCH + FILTER */
-search.oninput = render;
-seasonFilter.onchange = render;
-
-/* 🧠 RENDER TABLE */
-function render(){
   tbody.innerHTML="";
 
-  let arr=[...players];
+  for(let i=0;i<players.length;i++){
 
-  const q = search.value.toLowerCase();
-  if(q){
-    arr = arr.filter(p=>p.username.toLowerCase().includes(q));
-  }
+    const p=players[i];
+    const rank=i+1;
 
-  const season = seasonFilter.value;
-  if(season){
-    arr = arr.map(p=>{
-      const s = p.seasons[season];
-      if(!s) return null;
-      return {
-        ...p,
-        wins: s.wins || 0,
-        loss: s.loss || 0,
-        rating: s.rating || 0
-      };
-    }).filter(Boolean);
-  }
-
-  arr.sort((a,b)=>b.rating - a.rating);
-
-  arr.forEach((p,i)=>{
-    const total = p.wins + p.loss;
-    const winp = total ? Math.round((p.wins/total)*100) : 0;
+    // 🔥 ranking auto update
+    await db.collection("players").doc(p.id).update({
+      ranking:rank
+    });
 
     const tr=document.createElement("tr");
     tr.innerHTML=`
-      <td class="rank">#${i+1}</td>
-      <td>
-        <a class="player-link" href="player.html?u=${p.uid}">
-          ${p.username}
-        </a>
-      </td>
-      <td>${p.team}</td>
-      <td>${p.wins}</td>
+      <td class="rank">#${rank}</td>
+      <td>${p.username}</td>
+      <td>${p.win}</td>
       <td>${p.loss}</td>
-      <td>${winp}%</td>
+      <td>${p.draw}</td>
       <td>${p.rating}</td>
     `;
     tbody.appendChild(tr);
-  });
-}
+  }
+
+});
+
 </script>
 
 </body>
