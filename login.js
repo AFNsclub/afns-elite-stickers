@@ -13,15 +13,24 @@ function clearError(){
 }
 
 function togglePassword(){
+  const t = document.querySelector(".toggle");
   if(password.type === "password"){
     password.type = "text";
-    document.querySelector(".toggle").innerText = "Hide";
+    t.innerText = "Hide";
   }else{
     password.type = "password";
-    document.querySelector(".toggle").innerText = "Show";
+    t.innerText = "Show";
   }
 }
 
+/* যদি আগে থেকেই লগইন থাকে → সরাসরি player.html */
+auth.onAuthStateChanged(user=>{
+  if(user){
+    window.location.replace("player.html");
+  }
+});
+
+/* LOGIN */
 function login(){
   clearError();
 
@@ -34,9 +43,8 @@ function login(){
     email.value.trim(),
     password.value
   )
-  .then(res=>{
-    // 🔥 login success → player.html
-    window.location.href = "player.html";
+  .then(()=>{
+    window.location.replace("player.html");
   })
   .catch(error=>{
     let msg="Login failed";
@@ -59,6 +67,7 @@ function login(){
   });
 }
 
+/* PASSWORD RESET */
 function forgotPassword(){
   clearError();
 
