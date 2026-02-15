@@ -10,7 +10,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-/* ===== SAME DESIGN ===== */
 body{
   margin:0;
   font-family:Arial;
@@ -126,15 +125,15 @@ function getRank(r){
   return "Unranked";
 }
 
-/* 🔐 Player Login Check Only */
+/* ✅ SAFE AUTH CHECK */
 auth.onAuthStateChanged(user=>{
   if(!user){
-    location.href="player-login.html";
+    location.replace("login.html"); // 🔥 FIXED
     return;
   }
 
   uid=user.uid;
-  v_email.innerText=user.email;
+  document.getElementById("v_email").innerText=user.email;
 
   db.collection("players").doc(uid).onSnapshot(doc=>{
     const d=doc.data()||{};
@@ -181,8 +180,8 @@ function openFb(){
 }
 
 function logout(){
-  auth.signOut().then(()=>location.href="player-login.html");
+  auth.signOut().then(()=>location.replace("login.html")); // 🔥 FIXED
 }
 </script>
 </body>
-</html>
+                                                                   </html>
