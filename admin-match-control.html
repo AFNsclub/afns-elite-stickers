@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Admin | Match Control</title>
+<title>Match Control</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -10,43 +10,19 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  margin:0;
-  background:#050b1e;
-  color:#fff;
-  font-family:Arial,sans-serif;
-}
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:16px;
-}
-.card{
-  background:#0b1622;
-  border-radius:14px;
-  padding:14px;
-  margin-bottom:12px;
-}
-button{
-  padding:8px 12px;
-  border:none;
-  border-radius:10px;
-  font-weight:700;
-  cursor:pointer;
-}
-.edit{ background:#00eaff }
-.rollback{ background:#ff4d4d; color:#fff }
+body{background:#050b1e;color:white;font-family:Arial;margin:0;padding:20px}
+.card{background:#0b1622;padding:14px;border-radius:10px;margin-bottom:12px}
+button{padding:6px 10px;border:none;border-radius:8px;font-weight:bold;margin-right:6px}
+.approve{background:#00eaff}
 </style>
 </head>
-
 <body>
 
-<div class="container">
-  <h2>🛠 Match Control</h2>
-  <div id="list"></div>
-</div>
+<h2>Match Control</h2>
+<div id="list"></div>
 
 <script>
+
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
@@ -56,71 +32,63 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* 🔐 ADMIN GUARD (FINAL) */
 auth.onAuthStateChanged(async user=>{
   if(!user){
-    location.href="admin-login.html";
+    location.href="login.html";
     return;
   }
 
-  const snap = await db.collection("admins").doc(user.email).get();
-  if(!snap.exists || snap.data().active !== true){
-    alert("Access denied");
-    location.href="admin-login.html";
-    return;
-  }
-
-  const admin = snap.data();
-  if(!admin.permission?.editMatch){
-    alert("No permission");
+  const adminDoc = await db.collection("admins").doc(user.email).get();
+  if(!adminDoc.exists || adminDoc.data().active !== true){
+    alert("Admin only");
+    location.href="login.html";
     return;
   }
 
   loadMatches();
 });
 
-/* 📥 LOAD MATCHES */
 async function loadMatches(){
+
+  const list = document.getElementById("list");
   list.innerHTML="";
 
   const snap = await db.collection("matches")
-    .orderBy("approvedAt","desc")
+    .orderBy("createdAt","desc")
     .get();
 
   if(snap.empty){
-    list.innerHTML="<p>No matches</p>";
+    list.innerHTML="No matches found";
     return;
   }
 
-  for(const d of snap.docs){
-    const m = d.data();
+  snap.forEach(doc=>{
+    const m = doc.data();
 
     const card=document.createElement("div");
     card.className="card";
 
     card.innerHTML=`
       <b>${m.playerName}</b> vs <b>${m.opponentName}</b><br>
-      Score: ${m.score}<br><br>
-      <button class="edit" onclick="editMatch('${d.id}')">Edit</button>
-      <button class="rollback" onclick="rollbackMatch('${d.id}')">Rollback</button>
+      Score: ${m.score}<br>
+      Status: ${m.status}<br><br>
+      ${m.status==="pending"
+        ? `<button class="approve" onclick="approveMatch('${doc.id}')">Approve</button>`
+        : ""}
     `;
+
     list.appendChild(card);
-  }
+  });
 }
 
-async function editMatch(id){
-  const score=prompt("New score");
-  if(!score) return;
-  await db.collection("matches").doc(id).update({ score, edited:true });
+async function approveMatch(id){
+  await db.collection("matches").doc(id).update({
+    status:"approved",
+    approvedAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
   loadMatches();
 }
 
-async function rollbackMatch(id){
-  if(!confirm("Rollback match?")) return;
-  await db.collection("matches").doc(id).update({ rolledBack:true });
-  loadMatches();
-}
 </script>
-
 </body>
 </html>
