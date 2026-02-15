@@ -58,6 +58,8 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+/* ================= AUTH CHECK ================= */
+
 auth.onAuthStateChanged(async user=>{
   if(!user){
     location.href="admin-login.html";
@@ -74,6 +76,8 @@ auth.onAuthStateChanged(async user=>{
 
   loadMatches();
 });
+
+/* ================= LOAD MATCHES ================= */
 
 async function loadMatches(){
 
@@ -96,8 +100,9 @@ async function loadMatches(){
     card.className="card";
 
     card.innerHTML=`
-      <b>${m.playerName}</b> vs <b>${m.opponentName}</b><br>
+      <b>${m.player1 || m.playerName}</b> vs <b>${m.player2 || m.opponentName}</b><br>
       Score: ${m.score}<br>
+      Type: ${m.matchType || "friendly"}<br>
       Status: ${m.status || "pending"}<br><br>
 
       ${m.status==="pending"
@@ -112,13 +117,98 @@ async function loadMatches(){
   });
 }
 
+/* ================= SMART ELO APPROVE ================= */
+
 async function approveMatch(id){
-  await db.collection("matches").doc(id).update({
+
+  const matchRef = db.collection("matches").doc(id);
+  const matchSnap = await matchRef.get();
+
+  if(!matchSnap.exists) return;
+
+  const match = matchSnap.data();
+
+  if(match.status !== "pending"){
+    alert("Already processed");
+    return;
+  }
+
+  const p1Name = match.player1 || match.playerName;
+  const p2Name = match.player2 || match.opponentName;
+
+  const p1Snap = await db.collection("players")
+      .where("username","==",p1Name).get();
+
+  const p2Snap = await db.collection("players")
+      .where("username","==",p2Name).get();
+
+  if(p1Snap.empty || p2Snap.empty){
+    alert("Player not found");
+    return;
+  }
+
+  const p1Doc = p1Snap.docs[0];
+  const p2Doc = p2Snap.docs[0];
+
+  const p1Data = p1Doc.data();
+  const p2Data = p2Doc.data();
+
+  let rating1 = p1Data.rating || 1000;
+  let rating2 = p2Data.rating || 1000;
+
+  const K = match.matchType === "tournament" ? 48 : 32;
+
+  // Expected scores
+  const expected1 = 1 / (1 + Math.pow(10, (rating2 - rating1)/400));
+  const expected2 = 1 / (1 + Math.pow(10, (rating1 - rating2)/400));
+
+  let actual1 = 0;
+  let actual2 = 0;
+
+  const scoreParts = match.score.split("-");
+  const s1 = parseInt(scoreParts[0]);
+  const s2 = parseInt(scoreParts[1]);
+
+  if(s1 === s2){
+    actual1 = 0.5;
+    actual2 = 0.5;
+  }
+  else if(s1 > s2){
+    actual1 = 1;
+    actual2 = 0;
+  }
+  else{
+    actual1 = 0;
+    actual2 = 1;
+  }
+
+  const newRating1 = Math.round(rating1 + K * (actual1 - expected1));
+  const newRating2 = Math.round(rating2 + K * (actual2 - expected2));
+
+  await db.collection("players").doc(p1Doc.id).update({
+    rating:newRating1,
+    win: actual1===1 ? (p1Data.win||0)+1 : (p1Data.win||0),
+    loss: actual1===0 && s1!==s2 ? (p1Data.loss||0)+1 : (p1Data.loss||0),
+    draw: s1===s2 ? (p1Data.draw||0)+1 : (p1Data.draw||0)
+  });
+
+  await db.collection("players").doc(p2Doc.id).update({
+    rating:newRating2,
+    win: actual2===1 ? (p2Data.win||0)+1 : (p2Data.win||0),
+    loss: actual2===0 && s1!==s2 ? (p2Data.loss||0)+1 : (p2Data.loss||0),
+    draw: s1===s2 ? (p2Data.draw||0)+1 : (p2Data.draw||0)
+  });
+
+  await matchRef.update({
     status:"approved",
     approvedAt:firebase.firestore.FieldValue.serverTimestamp()
   });
+
+  alert("Match approved with Smart ELO!");
   loadMatches();
 }
+
+/* ================= EDIT ================= */
 
 async function editMatch(id){
   const score=prompt("New score");
@@ -126,6 +216,8 @@ async function editMatch(id){
   await db.collection("matches").doc(id).update({ score });
   loadMatches();
 }
+
+/* ================= ROLLBACK ================= */
 
 async function rollbackMatch(id){
   if(!confirm("Rollback match?")) return;
