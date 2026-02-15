@@ -1,27 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Submit Match</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Match Submit | AFN's Elite Strikers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{background:#0b1220;color:white;font-family:Arial;margin:0;padding:20px}
-input,button{width:100%;padding:12px;margin-top:10px;border-radius:8px;border:none}
-button{background:#00eaff;color:black;font-weight:bold}
+body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background:#0b1220;
+    color:white;
+}
+.container{
+    max-width:400px;
+    margin:60px auto;
+    background:#141c2f;
+    padding:20px;
+    border-radius:12px;
+}
+h2{
+    text-align:center;
+    color:#00eaff;
+}
+label{
+    display:block;
+    margin-top:15px;
+}
+input,button{
+    width:100%;
+    padding:12px;
+    margin-top:6px;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+}
+input{
+    background:#0b1220;
+    color:white;
+}
+button{
+    background:#00eaff;
+    color:black;
+    font-weight:bold;
+    margin-top:20px;
+    cursor:pointer;
+}
+.note{
+    font-size:13px;
+    margin-top:10px;
+    color:#aaa;
+    text-align:center;
+}
+.logout{
+    text-align:center;
+    margin-top:15px;
+}
+.logout button{
+    background:#ff4d4d;
+    color:white;
+}
 </style>
 </head>
+
 <body>
 
-<h2>Submit Match</h2>
+<div class="container">
+    <h2>Admin Match Submit</h2>
 
-<input type="text" id="opponent" placeholder="Opponent name">
-<input type="text" id="score" placeholder="Score">
-<button onclick="submitMatch()" id="submitBtn">Submit</button>
+    <label>Winner Username</label>
+    <input type="text" id="winner" placeholder="Winner username">
+
+    <label>Loser Username</label>
+    <input type="text" id="loser" placeholder="Loser username">
+
+    <button onclick="submitMatch()">Submit Match</button>
+
+    <div class="note">
+        Admin only • Rating & Leaderboard auto update
+    </div>
+
+    <div class="logout">
+        <button onclick="logout()">Logout</button>
+    </div>
+</div>
 
 <script>
 
@@ -34,20 +100,28 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-auth.onAuthStateChanged(user=>{
+/* 🔐 ADMIN GUARD */
+auth.onAuthStateChanged(async user=>{
   if(!user){
-    location.href="login.html";
+    location.href="admin-login.html";
+    return;
+  }
+
+  const snap = await db.collection("admins").doc(user.email).get();
+
+  if(!snap.exists || snap.data().active !== true){
+    alert("Access denied");
+    location.href="admin-login.html";
   }
 });
 
 async function submitMatch(){
 
-  const opponent = opponent.value.trim();
-  const score = score.value.trim();
-  const user = auth.currentUser;
+  const winner = document.getElementById("winner").value.trim();
+  const loser = document.getElementById("loser").value.trim();
 
-  if(!opponent || !score){
-    alert("All fields required");
+  if(!winner || !loser){
+    alert("Both fields required!");
     return;
   }
 
@@ -59,18 +133,22 @@ async function submitMatch(){
     String(now.getMinutes()).padStart(2,"0")+"-"+
     String(now.getSeconds()).padStart(2,"0");
 
-  document.getElementById("submitBtn").innerText="Submitting...";
-
   await db.collection("matches").doc(id).set({
-    playerUid:user.uid,
-    playerName:user.email,
-    opponentName:opponent,
-    score:score,
-    status:"pending",
+    playerName:winner,
+    opponentName:loser,
+    score:"Admin Submit",
+    status:"approved",
+    approvedAt:firebase.firestore.FieldValue.serverTimestamp(),
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  document.getElementById("submitBtn").innerText="Submitted ✓";
+  alert("Match submitted!");
+  document.getElementById("winner").value="";
+  document.getElementById("loser").value="";
+}
+
+function logout(){
+  auth.signOut();
 }
 
 </script>
