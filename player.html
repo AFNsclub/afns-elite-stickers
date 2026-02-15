@@ -107,68 +107,69 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 </div>
 
 <script>
+
+/* 🔥 YOUR REAL FIREBASE CONFIG */
 firebase.initializeApp({
-  apiKey:"YOUR_API_KEY",
-  authDomain:"YOUR_DOMAIN",
-  projectId:"YOUR_PROJECT_ID"
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8lpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub",
+  storageBucket: "afnsclub.firebasestorage.app",
+  messagingSenderId: "1088089213558",
+  appId: "1:1088089213558:web:bd5e01caaeeecaa46bcad57",
+  measurementId: "G-WT4XY15N6Y"
 });
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
 let uid, fbUrl="";
 
-function getRank(r){
-  if(r>=2000) return "👑 Legend";
-  if(r>=1500) return "🔥 Elite";
-  if(r>=1000) return "⭐ Pro";
-  if(r>=500) return "🥉 Rising";
-  return "Unranked";
-}
-
-/* ✅ SAFE AUTH CHECK */
 auth.onAuthStateChanged(user=>{
   if(!user){
-    location.replace("login.html"); // 🔥 FIXED
+    location.replace("login.html");
     return;
   }
 
-  uid=user.uid;
-  document.getElementById("v_email").innerText=user.email;
+  uid = user.uid;
+  v_email.innerText = user.email;
 
   db.collection("players").doc(uid).onSnapshot(doc=>{
-    const d=doc.data()||{};
-    v_username.innerText=d.username||"—";
-    v_phone.innerText=d.phone||"—";
-    v_ownerId.innerText=d.ownerId||"—";
-    v_device.innerText=d.deviceName||"—";
+    const d = doc.data() || {};
+    v_username.innerText = d.username || "—";
+    v_phone.innerText = d.phone || "—";
+    v_ownerId.innerText = d.ownerId || "—";
+    v_device.innerText = d.deviceName || "—";
 
-    let r=d.rating||0;
-    rating.innerText=r;
-    wins.innerText=d.wins||0;
-    losses.innerText=d.losses||0;
+    let r = d.rating || 0;
+    rating.innerText = r;
+    wins.innerText = d.wins || 0;
+    losses.innerText = d.losses || 0;
 
-    let total=(d.wins||0)+(d.losses||0);
-    winRate.innerText=total?Math.round((d.wins/total)*100)+"%":"0%";
+    let total = (d.wins||0)+(d.losses||0);
+    winRate.innerText = total ? Math.round((d.wins/total)*100)+"%" : "0%";
 
-    rankBadge.innerText=getRank(r);
-    progressBar.style.width=(r%500)/5+"%";
+    rankBadge.innerText = r>=2000?"👑 Legend":
+                          r>=1500?"🔥 Elite":
+                          r>=1000?"⭐ Pro":
+                          r>=500?"🥉 Rising":"Unranked";
 
-    fbUrl=d.facebook||"";
-    fbLink.classList.toggle("hidden",!fbUrl);
+    progressBar.style.width = (r%500)/5+"%";
+
+    fbUrl = d.facebook || "";
+    fbLink.classList.toggle("hidden", !fbUrl);
   });
 });
 
 function toggleEdit(edit){
-  viewBox.classList.toggle("hidden",edit);
-  editBox.classList.toggle("hidden",!edit);
+  viewBox.classList.toggle("hidden", edit);
+  editBox.classList.toggle("hidden", !edit);
 }
 
 function saveProfile(){
   db.collection("players").doc(uid).update({
-    phone:phone.value.trim(),
-    ownerId:ownerId.value.trim(),
-    facebook:facebook.value.trim(),
-    deviceName:deviceName.value.trim()
+    phone: phone.value.trim(),
+    ownerId: ownerId.value.trim(),
+    facebook: facebook.value.trim(),
+    deviceName: deviceName.value.trim()
   }).then(()=>{
     msg.innerHTML="<div class='success'>Profile Updated</div>";
     toggleEdit(false);
@@ -180,8 +181,11 @@ function openFb(){
 }
 
 function logout(){
-  auth.signOut().then(()=>location.replace("login.html")); // 🔥 FIXED
+  auth.signOut().then(()=>{
+    location.replace("login.html");
+  });
 }
 </script>
+
 </body>
-                                                                   </html>
+</html>
