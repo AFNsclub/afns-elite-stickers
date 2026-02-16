@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AFN Tournament Registration</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  background:#020d1f;
+  color:white;
+  font-family:Segoe UI;
+  padding:20px;
+}
+.container{
+  max-width:420px;
+  margin:auto;
+}
+input,select{
+  width:100%;
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:10px;
+  border:none;
+}
+button{
+  width:100%;
+  padding:14px;
+  background:#00f7ff;
+  border:none;
+  font-weight:bold;
+  border-radius:12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>⚽ Tournament Registration</h2>
+
+<input type="text" id="playerName" placeholder="Player Name">
+<input type="text" id="gameId" placeholder="eFootball Game ID">
+<input type="text" id="teamName" placeholder="Team Name">
+
+<select id="formation">
+<option>4-3-3</option>
+<option>4-2-3-1</option>
+<option>4-4-2</option>
+<option>3-5-2</option>
+</select>
+
+<button onclick="register()">Register Now</button>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+const db=firebase.firestore();
+
+function register(){
+  db.collection("tournament_registrations").add({
+    playerName:playerName.value,
+    gameId:gameId.value,
+    teamName:teamName.value,
+    formation:formation.value,
+    status:"pending",
+    timestamp:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>{
+    alert("Registration Submitted!");
+  });
+}
+</script>
+
+</body>
+</html>
