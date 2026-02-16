@@ -40,24 +40,31 @@ body{
 h1{color:var(--gold);font-size:30px}
 .tagline{color:var(--neon);font-size:14px;margin:6px 0 18px}
 
-/* 🔔 TEXT ANNOUNCEMENT */
-.announcement{
+/* 🔔 SCROLLING NOTICE BANNER */
+.notice-bar{
   margin-bottom:22px;
-  padding:14px 16px;
+  padding:12px 0;
   border-radius:18px;
   background:linear-gradient(145deg,#120c02,#1a1205);
   box-shadow:0 0 22px rgba(255,215,0,.35);
+  overflow:hidden;
+  display:none;
+}
+
+.notice-text{
+  display:inline-block;
+  white-space:nowrap;
   color:var(--gold);
   font-weight:800;
   font-size:14px;
-  animation:pulse 2.5s infinite;
+  padding-left:100%;
+  animation:scrollNotice 15s linear infinite;
 }
-@keyframes pulse{
-  0%{box-shadow:0 0 16px rgba(255,215,0,.25)}
-  50%{box-shadow:0 0 26px rgba(255,215,0,.55)}
-  100%{box-shadow:0 0 16px rgba(255,215,0,.25)}
+
+@keyframes scrollNotice{
+  from{transform:translateX(0)}
+  to{transform:translateX(-100%)}
 }
-.hidden{display:none}
 
 /* MOTIVE */
 .motive-box{
@@ -142,7 +149,7 @@ h1{color:var(--gold);font-size:30px}
 }
 .admin-card span{font-size:12px;font-weight:700;color:var(--gold)}
 
-/* 💬 SUPPORT CHAT FLOAT */
+/* SUPPORT CHAT */
 .support-chat{
   position:fixed;
   bottom:18px;
@@ -176,9 +183,9 @@ footer a{color:var(--neon);font-weight:700;text-decoration:none}
 <h1>AFN's Elite Strikers</h1>
 <div class="tagline">Play Smart. Play Elite. Play AFN.</div>
 
-<!-- 🔔 ANNOUNCEMENT -->
-<div id="announcementBar" class="announcement hidden">
-  <span id="announcementText"></span>
+<!-- 🔔 SCROLLING NOTICE -->
+<div id="noticeBar" class="notice-bar">
+  <div id="noticeText" class="notice-text"></div>
 </div>
 
 <div class="motive-box">
@@ -198,8 +205,8 @@ footer a{color:var(--neon);font-weight:700;text-decoration:none}
   <a href="players.html">👥 Player Directory</a>
   <a href="leaderboard.html">🏆 Rankings & Legends</a>
   <a href="hall-of-fame.html">👑 Hall of Fame</a>
-  <a href="stats.html">📊 Player Stats</a>
-  <a href="announcements.html">📢 Announcements</a>
+  <a href="stats.html">📊 Player Stats / Leaderboard</a>
+  <a href="announcements.html">📢 Announcement / Notice</a>
   <a href="rules.html">📜 Rules & Fair Play</a>
   <a href="training.html">🎯 Training & Tips</a>
   <a href="#" onclick="goAdmin()">👑 Admin Console</a>
@@ -221,10 +228,8 @@ footer a{color:var(--neon);font-weight:700;text-decoration:none}
 
 </div>
 
-<!-- 💬 SUPPORT CHAT -->
 <a href="support-chat.html" class="support-chat">💬</a>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -236,17 +241,19 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-/* 🔔 ANNOUNCEMENT AUTO */
-db.collection("announcements").doc("latest")
-.onSnapshot(doc=>{
-  if(!doc.exists) return;
-  const d=doc.data();
-  if(d.active){
-    announcementText.innerText=d.text;
-    announcementBar.classList.remove("hidden");
-  }else{
-    announcementBar.classList.add("hidden");
+/* 🔔 PINNED NOTICE MARQUEE */
+db.collection("announcements")
+.where("pinned","==",true)
+.orderBy("timestamp","desc")
+.limit(1)
+.onSnapshot(snapshot=>{
+  if(snapshot.empty){
+    noticeBar.style.display="none";
+    return;
   }
+  const data=snapshot.docs[0].data();
+  noticeText.innerText="⚠ IMPORTANT: "+data.title+" — "+data.message;
+  noticeBar.style.display="block";
 });
 
 /* NAV */
