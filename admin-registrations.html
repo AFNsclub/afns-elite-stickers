@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>View Tournament Registrations</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body style="background:#021b33;color:white;padding:20px">
+
+<h2>📋 Tournament Registrations</h2>
+<div id="list"></div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+const db=firebase.firestore();
+
+db.collection("tournament_registrations")
+.orderBy("timestamp","desc")
+.onSnapshot(snapshot=>{
+  list.innerHTML="";
+  snapshot.forEach(doc=>{
+    const data=doc.data();
+    list.innerHTML+=`
+      <div style="border:1px solid cyan;margin:10px;padding:10px">
+        <b>${data.playerName}</b><br>
+        Game ID: ${data.gameId}<br>
+        Team: ${data.teamName}<br>
+        Formation: ${data.formation}<br>
+        Status: ${data.status}
+      </div>
+    `;
+  });
+});
+</script>
+
+</body>
+</html>
