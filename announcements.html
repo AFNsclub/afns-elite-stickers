@@ -2,24 +2,23 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>AFNS Federation Announcements</title>
+<title>AFNS Elite Strikers Official Notice Board</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <style>
 body{
 margin:0;
 font-family:Segoe UI;
-background:linear-gradient(180deg,#010814,#021b33);
+background:linear-gradient(135deg,#000428,#004e92);
 color:white;
 text-align:center;
 }
 header{
-padding:20px;
-font-size:22px;
+padding:25px;
+font-size:24px;
 font-weight:bold;
 color:gold;
 }
@@ -30,65 +29,45 @@ margin:auto;
 margin-top:20px;
 }
 .card{
-background:#0c1b2a;
-margin:15px 0;
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(15px);
+border-radius:20px;
 padding:20px;
-border-radius:15px;
+margin:20px 0;
 text-align:left;
 position:relative;
-}
-.card:hover{
-box-shadow:0 0 20px #00c3ff;
+box-shadow:0 0 25px rgba(0,195,255,0.3);
 }
 .pin{
 position:absolute;
-top:10px;
-right:10px;
+top:15px;
+right:15px;
 background:gold;
 color:black;
-padding:5px 10px;
-border-radius:20px;
+padding:5px 12px;
+border-radius:30px;
 font-size:12px;
 }
 .title{
 font-size:18px;
 font-weight:bold;
-color:gold;
+color:#ffd700;
 }
 .date{
 font-size:12px;
-color:#aaa;
-margin-bottom:8px;
+color:#ccc;
+margin-bottom:10px;
 }
-button{
-padding:6px 12px;
-border:none;
-border-radius:6px;
-cursor:pointer;
-margin-top:5px;
-}
-.editBtn{background:#00c3ff;}
-.deleteBtn{background:#ff3c3c;color:white;}
-.adminBox{
-margin-top:20px;
-padding:20px;
-background:#061423;
-border-radius:15px;
+.popup{
+position:fixed;
+bottom:20px;
+right:20px;
+background:gold;
+color:black;
+padding:15px;
+border-radius:10px;
 display:none;
-}
-input,textarea{
-width:95%;
-padding:8px;
-margin:5px 0;
-border-radius:6px;
-border:none;
-}
-.notification{
-background:red;
-padding:4px 10px;
-border-radius:20px;
-font-size:12px;
-display:none;
+box-shadow:0 0 20px gold;
 }
 </style>
 </head>
@@ -96,55 +75,24 @@ display:none;
 <body>
 
 <header>
-🏆 AFNS International Federation Announcements
-<span id="notify" class="notification">NEW</span>
+🏆 AFNS Elite Strikers Official Notice Board
 </header>
 
 <div class="container" id="list"></div>
 
-<div class="container">
-<h3>Login (Owner/Admin)</h3>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
-<br>
-<button onclick="login()">Login</button>
-<button onclick="logout()">Logout</button>
-</div>
-
-<div class="container adminBox" id="adminPanel">
-<h3>Post / Edit Announcement</h3>
-<input type="hidden" id="editId">
-<input type="text" id="title" placeholder="Title">
-<textarea id="message" rows="4" placeholder="Message"></textarea>
-<label><input type="checkbox" id="pin"> Pin</label>
-<br><br>
-<button onclick="saveAnnouncement()">Save</button>
-</div>
+<div class="popup" id="popup">🔔 New Announcement Posted!</div>
 
 <script>
 
-// 🔥 YOUR FIREBASE CONFIG
 firebase.initializeApp({
 apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
 authDomain:"afnsclub.firebaseapp.com",
-projectId:"afnsclub",
-storageBucket:"afnsclub.firebasestorage.app",
-messagingSenderId:"1088089213558",
-appId:"1:1088089213558:web:bd5e01caaeeecaa46bcad57"
+projectId:"afnsclub"
 });
 
 const db = firebase.firestore();
-const auth = firebase.auth();
-
-const ADMINS = [
-"sisaif167@gmail.com",
-"zahir.babur7661@gmail.com",
-"admin2@email.com"
-]; // 🔥 এখানে তোমার owner + admin email বসাও
-
 const list = document.getElementById("list");
-const notify = document.getElementById("notify");
-const adminPanel = document.getElementById("adminPanel");
+const popup = document.getElementById("popup");
 
 let lastCount = 0;
 
@@ -152,16 +100,18 @@ db.collection("announcements")
 .orderBy("pinned","desc")
 .orderBy("timestamp","desc")
 .onSnapshot(snapshot=>{
-list.innerHTML="";
 
-if(snapshot.size > lastCount){
-notify.style.display="inline-block";
-setTimeout(()=>notify.style.display="none",4000);
+if(snapshot.size > lastCount && lastCount!=0){
+popup.style.display="block";
+setTimeout(()=>popup.style.display="none",4000);
 }
 lastCount = snapshot.size;
 
+list.innerHTML="";
+
 snapshot.forEach(doc=>{
 const data = doc.data();
+
 const card = document.createElement("div");
 card.className="card";
 
@@ -172,84 +122,10 @@ ${data.pinned ? '<div class="pin">📌 PINNED</div>' : ''}
 <div>${data.message}</div>
 `;
 
-if(currentUserIsAdmin()){
-card.innerHTML+=`
-<br>
-<button class="editBtn" onclick="editAnnouncement('${doc.id}','${data.title}','${data.message}',${data.pinned})">Edit</button>
-<button class="deleteBtn" onclick="deleteAnnouncement('${doc.id}')">Delete</button>
-`;
-}
-
 list.appendChild(card);
 });
+
 });
-
-function currentUserIsAdmin(){
-const user = auth.currentUser;
-return user && ADMINS.includes(user.email);
-}
-
-auth.onAuthStateChanged(user=>{
-if(currentUserIsAdmin()){
-adminPanel.style.display="block";
-}else{
-adminPanel.style.display="none";
-}
-});
-
-function login(){
-auth.signInWithEmailAndPassword(
-document.getElementById("email").value,
-document.getElementById("password").value
-).catch(e=>alert(e.message));
-}
-
-function logout(){
-auth.signOut();
-}
-
-function saveAnnouncement(){
-const id=document.getElementById("editId").value;
-const title=document.getElementById("title").value;
-const message=document.getElementById("message").value;
-const pinned=document.getElementById("pin").checked;
-
-if(title==""||message==""){alert("Fill all fields");return;}
-
-if(id){
-db.collection("announcements").doc(id).update({
-title:title,
-message:message,
-pinned:pinned
-});
-}else{
-db.collection("announcements").add({
-title:title,
-message:message,
-pinned:pinned,
-timestamp:firebase.firestore.FieldValue.serverTimestamp()
-});
-}
-
-document.getElementById("editId").value="";
-document.getElementById("title").value="";
-document.getElementById("message").value="";
-document.getElementById("pin").checked=false;
-}
-
-function editAnnouncement(id,title,message,pinned){
-document.getElementById("editId").value=id;
-document.getElementById("title").value=title;
-document.getElementById("message").value=message;
-document.getElementById("pin").checked=pinned;
-window.scrollTo(0,document.body.scrollHeight);
-}
-
-function deleteAnnouncement(id){
-if(confirm("Delete this announcement?")){
-db.collection("announcements").doc(id).delete();
-}
-}
 
 </script>
 
