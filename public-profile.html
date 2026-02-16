@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Strikers | International Player Profile</title>
+<title>AFNS Elite Strikers | Player Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase -->
@@ -26,7 +26,6 @@ body{
   overflow-x:hidden;
 }
 
-/* Animated Background Glow */
 body::before{
   content:"";
   position:fixed;
@@ -56,7 +55,6 @@ body::before{
   to{opacity:1;transform:translateY(0)}
 }
 
-/* Header */
 header{
   text-align:center;
   margin-bottom:20px;
@@ -85,7 +83,6 @@ h1{
   color:var(--neon);
 }
 
-/* Rank Badge */
 .rank-badge{
   display:inline-block;
   margin-top:10px;
@@ -98,7 +95,6 @@ h1{
   animation:fadeIn 1.5s ease;
 }
 
-/* Card */
 .card{
   margin-top:20px;
   background:rgba(255,255,255,.05);
@@ -113,7 +109,6 @@ h1{
 .label{font-size:12px;color:#aaa}
 .value{font-size:15px;font-weight:700}
 
-/* Stats Section */
 .stats{
   margin-top:20px;
   display:grid;
@@ -141,7 +136,6 @@ h1{
   margin-top:4px;
 }
 
-/* Footer */
 footer{
   margin-top:30px;
   text-align:center;
@@ -228,7 +222,6 @@ footer a{
 
 <script>
 
-// Firebase Config
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
@@ -237,7 +230,6 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 
-// GET ID FROM URL
 const params = new URLSearchParams(location.search);
 const playerId = params.get("id");
 
@@ -246,7 +238,6 @@ if(!playerId){
   throw new Error("ID Missing");
 }
 
-// LOAD PLAYER
 db.collection("players").doc(playerId).get().then(doc=>{
   if(!doc.exists){
     document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>";
@@ -276,7 +267,6 @@ db.collection("players").doc(playerId).get().then(doc=>{
 
 });
 
-// CALCULATE RANK
 db.collection("players")
 .orderBy("rating","desc")
 .get()
@@ -284,12 +274,12 @@ db.collection("players")
   let rank=1;
   snapshot.forEach(doc=>{
     if(doc.id===playerId){
-      rankBadge.innerText="⚽ Rank #"+rank;
-    }‌
+      rankBadge.innerText="Rank #"+rank;
+    }
     rank++;
   });
 });
 </script>
 
 </body>
-</html>
+</html>gg
