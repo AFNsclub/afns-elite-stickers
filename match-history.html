@@ -1,79 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
 <title>Match History</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{background:#0f172a;color:#fff;font-family:Arial}
-.container{max-width:600px;margin:auto;padding:20px}
-.card{background:#1e293b;padding:15px;border-radius:12px;margin-top:10px}
-.win{border-left:6px solid #22c55e}
-.loss{border-left:6px solid #ef4444}
-.draw{border-left:6px solid #facc15}
-.empty{text-align:center;margin-top:40px;opacity:.6}
+body{
+  background:#050b14;
+  color:#fff;
+  font-family:Segoe UI,sans-serif;
+}
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:20px;
+}
+.card{
+  background:#0b1622;
+  padding:14px;
+  border-radius:14px;
+  margin-top:12px;
+  box-shadow:0 0 10px rgba(0,0,0,.4);
+}
+.win{border-left:5px solid #4cff8f}
+.loss{border-left:5px solid #ff6b6b}
+.small{font-size:12px;color:#aaa;margin-top:4px}
+.empty{
+  text-align:center;
+  opacity:.6;
+  margin-top:40px;
+}
 </style>
 </head>
-<body>
 
+<body>
 <div class="container">
-<h2>Match History</h2>
-<div id="list"></div>
+  <h2>📜 Match History</h2>
+  <div id="list"></div>
 </div>
 
 <script>
 firebase.initializeApp({
-apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-authDomain:"afnsclub.firebaseapp.com",
-projectId:"afnsclub"
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
 });
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth=firebase.auth(), db=firebase.firestore();
 
 auth.onAuthStateChanged(user=>{
-if(!user){location="login.html";return;}
+  if(!user){
+    location.href="login.html";
+    return;
+  }
 
-const username=user.email.split("@")[0];
+  db.collection("matches")
+    .where("playerId","==",user.uid)
+    .orderBy("time","desc")
+    .onSnapshot(snap=>{
+      list.innerHTML="";
 
-db.collection("matches")
-.where("status","==","approved")
-.orderBy("approvedAt","desc")
-.onSnapshot(snap=>{
+      if(snap.empty){
+        list.innerHTML=`<div class="empty">No matches played yet</div>`;
+        return;
+      }
 
-list.innerHTML="";
-if(snap.empty){
-list.innerHTML="<div class='empty'>No matches yet</div>";
-return;
-}
-
-snap.forEach(doc=>{
-const m=doc.data();
-if(m.player1!==username&&m.player2!==username)return;
-
-const [s1,s2]=m.score.split("-").map(Number);
-let cls="draw",text="DRAW";
-
-if(s1!==s2){
-const win=(m.player1===username&&s1>s2)||(m.player2===username&&s2>s1);
-cls=win?"win":"loss";
-text=win?"WIN":"LOSS";
-}
-
-list.innerHTML+=`
-<div class="card ${cls}">
-<b>${text}</b><br>
-${m.player1} ⚔ ${m.player2}<br>
-Score: ${m.score}<br>
-<small>${m.approvedAt?.toDate().toLocaleString()}</small>
-</div>`;
-});
-});
+      snap.forEach(d=>{
+        const m=d.data();
+        list.innerHTML+=`
+          <div class="card ${m.result}">
+            <b>${m.result.toUpperCase()}</b> vs ${m.opponent}<br>
+            Score: ${m.score}
+            ${m.season ? `<div class="small">Season: ${m.season}</div>` : ``}
+            <div class="small">
+              ${m.time?.toDate().toLocaleString()}
+            </div>
+          </div>
+        `;
+      });
+    });
 });
 </script>
 </body>
