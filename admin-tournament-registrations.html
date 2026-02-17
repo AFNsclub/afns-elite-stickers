@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tournament Registrations | AFNS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:radial-gradient(circle at top,#0a1a4a,#050b1e);
+  color:white;
+  padding:20px;
+}
+.container{
+  max-width:1000px;
+  margin:auto;
+}
+.card{
+  background:#0b1622;
+  padding:15px;
+  border-radius:14px;
+  margin-bottom:12px;
+}
+button{
+  padding:6px 12px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  margin-right:6px;
+  margin-top:5px;
+}
+.approve{background:#00c853;color:white;}
+.reject{background:#ff3d00;color:white;}
+.back{
+  background:none;
+  border:1px solid #4f8cff;
+  color:#4f8cff;
+}
+.tab-btn{
+  background:#1a2c44;
+  color:white;
+}
+.generate{
+  background:#ffd400;
+  color:black;
+  font-weight:bold;
+}
+.score-input{
+  width:40px;
+  padding:5px;
+  margin:0 5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🏆 Tournament Registrations</h2>
+<button class="back" onclick="goBack()">⬅ Back</button>
+
+<hr>
+
+<div style="margin-bottom:15px;">
+  <button class="tab-btn" onclick="showTab('pending')">🟡 Pending</button>
+  <button class="tab-btn" onclick="showTab('approved')">🟢 Approved</button>
+</div>
+
+<div id="bracketSection" style="display:none;">
+  <button class="generate" onclick="generateBracket()">🏆 Generate Bracket</button>
+  <div id="bracket" style="margin-top:15px;"></div>
+</div>
+
+<hr>
+<div id="list"></div>
+
+<hr>
+<h3>🎮 Match Control Panel</h3>
+<div id="matchControl"></div>
+
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+const OWNER_EMAIL = "sisaif167@gmail.com";
+let currentTab = "pending";
+
+/* SECURITY */
+auth.onAuthStateChanged(async user => {
+
+  if(!user){
+    location.replace("admin-login.html");
+    return;
+  }
+
+  if(user.email === OWNER_EMAIL){
+    loadData();
+    loadMatches();
+    return;
+  }
+
+  const snap = await db.collection("admins").doc(user.email).get();
+
+  if(!snap.exists || snap.data().active !== true){
+    await auth.signOut();
+    location.replace("admin-login.html");
+    return;
+  }
+
+  const admin = snap.data();
+
+  if(!admin.permission || admin.permission.tournamentReg !== true){
+    alert("No Permission");
+    location.replace("admin-dashboard.html");
+    return;
+  }
+
+  loadData();
+  loadMatches();
+});
+
+/* TAB */
+function showTab(tab){
+  currentTab = tab;
+  document.getElementById("bracketSection").style.display =
+    tab==="approved" ? "block" : "none";
+  loadData();
+}
+
+/* LOAD REGISTRATION */
+function loadData(){
+  db.collection("tournament_registrations")
+    .where("status","==",currentTab)
+    .onSnapshot(snapshot=>{
+      list.innerHTML="";
+      snapshot.forEach(doc=>{
+        const data = doc.data();
+        list.innerHTML += `
+          <div class="card">
+            <b>${data.playerName}</b><br>
+            Game ID: ${data.gameId}<br>
+            Team: ${data.teamName}<br>
+            Formation: ${data.formation}<br><br>
+            ${
+              currentTab==="pending"
+              ?
+              `<button class="approve"
+                onclick="approve('${doc.id}','${data.playerName}')">
+                Approve
+              </button>
+              <button class="reject"
+                onclick="reject('${doc.id}')">
+                Reject
+              </button>`
+              :
+              `<span style="color:#00c853;font-weight:bold;">Approved</span>`
+            }
+          </div>`;
+      });
+    });
+}
+
+/* APPROVE */
+async function approve(id, playerName){
+  await db.collection("tournament_registrations")
+          .doc(id)
+          .update({ status:"approved" });
+
+  alert("Approved");
+}
+
+/* REJECT */
+function reject(id){
+  db.collection("tournament_registrations")
+    .doc(id)
+    .update({ status:"rejected" });
+}
+
+/* GENERATE BRACKET */
+async function generateBracket(){
+
+  const snap = await db.collection("tournament_registrations")
+                       .where("status","==","approved")
+                       .get();
+
+  let players=[];
+  snap.forEach(doc=>players.push(doc.data().playerName));
+
+  players.sort(()=>Math.random()-0.5);
+
+  let round = players.length>=8?"Quarter Final":
+              players.length>=4?"Semi Final":"Final";
+
+  let html=`<h3>${round}</h3>`;
+
+  for(let i=0;i<players.length;i+=2){
+    if(players[i+1]){
+      await db.collection("matches").add({
+        playerA:players[i],
+        playerB:players[i+1],
+        round:round,
+        status:"pending",
+        winner:null
+      });
+      html+=`<div class="card">${players[i]} 🆚 ${players[i+1]}</div>`;
+    }
+  }
+
+  document.getElementById("bracket").innerHTML=html;
+
+  await db.collection("announcements").add({
+    title:`🏆 ${round} Started`,
+    message:`${round} matches generated.`,
+    pinned:true,
+    timestamp:firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  loadMatches();
+}
+
+/* MATCH CONTROL PANEL */
+function loadMatches(){
+  db.collection("matches")
+    .where("status","==","pending")
+    .onSnapshot(snapshot=>{
+      matchControl.innerHTML="";
+      snapshot.forEach(doc=>{
+        const m=doc.data();
+        matchControl.innerHTML+=`
+          <div class="card">
+            ${m.playerA}
+            <input id="a${doc.id}" class="score-input" type="number">
+            -
+            <input id="b${doc.id}" class="score-input" type="number">
+            ${m.playerB}
+            <button onclick="submitResult('${doc.id}','${m.round}')">
+              Submit
+            </button>
+          </div>`;
+      });
+    });
+}
+
+/* SUBMIT RESULT */
+async function submitResult(id,round){
+
+  let scoreA=parseInt(document.getElementById("a"+id).value);
+  let scoreB=parseInt(document.getElementById("b"+id).value);
+
+  const matchRef=db.collection("matches").doc(id);
+  const snap=await matchRef.get();
+  const m=snap.data();
+
+  let winner=scoreA>scoreB?m.playerA:m.playerB;
+
+  await matchRef.update({
+    scoreA,scoreB,winner,status:"completed"
+  });
+
+  checkRound(round);
+}
+
+/* AUTO NEXT ROUND */
+async function checkRound(round){
+
+  const pending=await db.collection("matches")
+    .where("round","==",round)
+    .where("status","==","pending")
+    .get();
+
+  if(!pending.empty) return;
+
+  const completed=await db.collection("matches")
+    .where("round","==",round)
+    .where("status","==","completed")
+    .get();
+
+  let winners=[];
+  completed.forEach(d=>winners.push(d.data().winner));
+
+  if(winners.length===1){
+    await db.collection("announcements").add({
+      title:"🏆 Champion",
+      message:`${winners[0]} is the Champion!`,
+      pinned:true,
+      timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("Tournament Completed!");
+    return;
+  }
+
+  let next=winners.length>=4?"Semi Final":"Final";
+
+  for(let i=0;i<winners.length;i+=2){
+    if(winners[i+1]){
+      await db.collection("matches").add({
+        playerA:winners[i],
+        playerB:winners[i+1],
+        round:next,
+        status:"pending",
+        winner:null
+      });
+    }
+  }
+
+  await db.collection("announcements").add({
+    title:`🔥 ${next} Started`,
+    message:`${next} matches ready.`,
+    pinned:true,
+    timestamp:firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  loadMatches();
+}
+
+function goBack(){
+  location.href="admin-dashboard.html";
+}
+</script>
+
+</body>
+</html>
