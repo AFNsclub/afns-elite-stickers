@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Admin | Match Control</title>
+<title>Admin Match Control</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -10,221 +10,99 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  margin:0;
-  background:#050b1e;
-  color:#fff;
-  font-family:Arial,sans-serif;
-}
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:16px;
-}
-.card{
-  background:#0b1622;
-  border-radius:14px;
-  padding:14px;
-  margin-bottom:12px;
-}
-button{
-  padding:8px 12px;
-  border:none;
-  border-radius:10px;
-  font-weight:700;
-  cursor:pointer;
-}
-.edit{ background:#00eaff }
-.rollback{ background:#ff4d4d; color:#fff }
-.approve{ background:#00ff99 }
+body{background:#0f172a;color:#fff;font-family:Arial}
+.container{max-width:800px;margin:auto;padding:20px}
+.card{background:#1e293b;padding:15px;border-radius:12px;margin-bottom:10px}
+button{padding:6px 10px;border:none;border-radius:6px;font-weight:bold}
+.approve{background:#22c55e}
 </style>
 </head>
-
 <body>
-
 <div class="container">
-  <h2>🛠 Match Control</h2>
-  <div id="list"></div>
+<h2>Admin Match Control</h2>
+<div id="list"></div>
 </div>
 
 <script>
-
 firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
+apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+authDomain:"afnsclub.firebaseapp.com",
+projectId:"afnsclub"
 });
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-/* ================= AUTH CHECK ================= */
-
-auth.onAuthStateChanged(async user=>{
-  if(!user){
-    location.href="admin-login.html";
-    return;
-  }
-
-  const snap = await db.collection("admins").doc(user.email).get();
-
-  if(!snap.exists || snap.data().active !== true){
-    alert("Access denied");
-    location.href="admin-login.html";
-    return;
-  }
-
-  loadMatches();
+auth.onAuthStateChanged(user=>{
+if(!user){location="admin-login.html";return;}
+loadMatches();
 });
-
-/* ================= LOAD MATCHES ================= */
 
 async function loadMatches(){
+const list=document.getElementById("list");
+list.innerHTML="";
+const snap=await db.collection("matches").orderBy("createdAt","desc").get();
 
-  const list = document.getElementById("list");
-  list.innerHTML="";
-
-  const snap = await db.collection("matches")
-    .orderBy("createdAt","desc")
-    .get();
-
-  if(snap.empty){
-    list.innerHTML="<p>No matches</p>";
-    return;
-  }
-
-  snap.forEach(d=>{
-    const m = d.data();
-
-    const card=document.createElement("div");
-    card.className="card";
-
-    card.innerHTML=`
-      <b>${m.player1 || m.playerName}</b> vs <b>${m.player2 || m.opponentName}</b><br>
-      Score: ${m.score}<br>
-      Type: ${m.matchType || "friendly"}<br>
-      Status: ${m.status || "pending"}<br><br>
-
-      ${m.status==="pending"
-        ? `<button class="approve" onclick="approveMatch('${d.id}')">Approve</button>`
-        : ""}
-
-      <button class="edit" onclick="editMatch('${d.id}')">Edit</button>
-      <button class="rollback" onclick="rollbackMatch('${d.id}')">Rollback</button>
-    `;
-
-    list.appendChild(card);
-  });
+snap.forEach(doc=>{
+const m=doc.data();
+list.innerHTML+=`
+<div class="card">
+<b>${m.player1}</b> vs <b>${m.player2}</b><br>
+Score: ${m.score}<br>
+Status: ${m.status||"pending"}<br>
+${m.status==="pending"?`<button class="approve" onclick="approveMatch('${doc.id}')">Approve</button>`:""}
+</div>`;
+});
 }
-
-/* ================= SMART ELO APPROVE ================= */
 
 async function approveMatch(id){
+const matchRef=db.collection("matches").doc(id);
+const matchSnap=await matchRef.get();
+const match=matchSnap.data();
+if(match.status!=="pending") return;
 
-  const matchRef = db.collection("matches").doc(id);
-  const matchSnap = await matchRef.get();
+const p1Snap=await db.collection("players").where("username","==",match.player1).get();
+const p2Snap=await db.collection("players").where("username","==",match.player2).get();
+if(p1Snap.empty||p2Snap.empty)return;
 
-  if(!matchSnap.exists) return;
+const p1=p1Snap.docs[0];
+const p2=p2Snap.docs[0];
 
-  const match = matchSnap.data();
+const [s1,s2]=match.score.split("-").map(Number);
 
-  if(match.status !== "pending"){
-    alert("Already processed");
-    return;
-  }
+let a1=0,a2=0;
+if(s1===s2){a1=.5;a2=.5;}
+else if(s1>s2){a1=1;a2=0;}
+else{a1=0;a2=1;}
 
-  const p1Name = match.player1 || match.playerName;
-  const p2Name = match.player2 || match.opponentName;
+const r1=p1.data().rating||1000;
+const r2=p2.data().rating||1000;
+const K=32;
 
-  const p1Snap = await db.collection("players")
-      .where("username","==",p1Name).get();
+const e1=1/(1+Math.pow(10,(r2-r1)/400));
+const e2=1/(1+Math.pow(10,(r1-r2)/400));
 
-  const p2Snap = await db.collection("players")
-      .where("username","==",p2Name).get();
+await p1.ref.update({
+rating:Math.round(r1+K*(a1-e1)),
+wins:a1===1?(p1.data().wins||0)+1:(p1.data().wins||0),
+losses:a1===0&&s1!==s2?(p1.data().losses||0)+1:(p1.data().losses||0),
+draws:s1===s2?(p1.data().draws||0)+1:(p1.data().draws||0)
+});
 
-  if(p1Snap.empty || p2Snap.empty){
-    alert("Player not found");
-    return;
-  }
+await p2.ref.update({
+rating:Math.round(r2+K*(a2-e2)),
+wins:a2===1?(p2.data().wins||0)+1:(p2.data().wins||0),
+losses:a2===0&&s1!==s2?(p2.data().losses||0)+1:(p2.data().losses||0),
+draws:s1===s2?(p2.data().draws||0)+1:(p2.data().draws||0)
+});
 
-  const p1Doc = p1Snap.docs[0];
-  const p2Doc = p2Snap.docs[0];
+await matchRef.update({
+status:"approved",
+approvedAt:firebase.firestore.FieldValue.serverTimestamp()
+});
 
-  const p1Data = p1Doc.data();
-  const p2Data = p2Doc.data();
-
-  let rating1 = p1Data.rating || 1000;
-  let rating2 = p2Data.rating || 1000;
-
-  const K = match.matchType === "tournament" ? 48 : 32;
-
-  // Expected scores
-  const expected1 = 1 / (1 + Math.pow(10, (rating2 - rating1)/400));
-  const expected2 = 1 / (1 + Math.pow(10, (rating1 - rating2)/400));
-
-  let actual1 = 0;
-  let actual2 = 0;
-
-  const scoreParts = match.score.split("-");
-  const s1 = parseInt(scoreParts[0]);
-  const s2 = parseInt(scoreParts[1]);
-
-  if(s1 === s2){
-    actual1 = 0.5;
-    actual2 = 0.5;
-  }
-  else if(s1 > s2){
-    actual1 = 1;
-    actual2 = 0;
-  }
-  else{
-    actual1 = 0;
-    actual2 = 1;
-  }
-
-  const newRating1 = Math.round(rating1 + K * (actual1 - expected1));
-  const newRating2 = Math.round(rating2 + K * (actual2 - expected2));
-
-  await db.collection("players").doc(p1Doc.id).update({
-    rating:newRating1,
-    win: actual1===1 ? (p1Data.win||0)+1 : (p1Data.win||0),
-    loss: actual1===0 && s1!==s2 ? (p1Data.loss||0)+1 : (p1Data.loss||0),
-    draw: s1===s2 ? (p1Data.draw||0)+1 : (p1Data.draw||0)
-  });
-
-  await db.collection("players").doc(p2Doc.id).update({
-    rating:newRating2,
-    win: actual2===1 ? (p2Data.win||0)+1 : (p2Data.win||0),
-    loss: actual2===0 && s1!==s2 ? (p2Data.loss||0)+1 : (p2Data.loss||0),
-    draw: s1===s2 ? (p2Data.draw||0)+1 : (p2Data.draw||0)
-  });
-
-  await matchRef.update({
-    status:"approved",
-    approvedAt:firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  alert("Match approved with Smart ELO!");
-  loadMatches();
+loadMatches();
 }
-
-/* ================= EDIT ================= */
-
-async function editMatch(id){
-  const score=prompt("New score");
-  if(!score) return;
-  await db.collection("matches").doc(id).update({ score });
-  loadMatches();
-}
-
-/* ================= ROLLBACK ================= */
-
-async function rollbackMatch(id){
-  if(!confirm("Rollback match?")) return;
-  await db.collection("matches").doc(id).update({ rolledBack:true });
-  loadMatches();
-}
-
 </script>
 </body>
 </html>
