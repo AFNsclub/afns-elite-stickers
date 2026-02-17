@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>⚙️ Tournament Admin | AFNS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+body{margin:0;font-family:Arial;background:#050b1e;color:white;padding:20px}
+.container{max-width:800px;margin:auto}
+button{padding:10px 14px;margin:6px;border:none;border-radius:8px;background:#ffd400;color:black;font-weight:bold;cursor:pointer}
+.card{background:#0b1622;padding:12px;border-radius:12px;margin-bottom:12px}
+h2{text-align:center;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>⚙️ Tournament Admin Panel</h2>
+<button onclick="generateBracket()">🏆 Generate Bracket + Auto Matches + Announcement</button>
+<div id="bracket" style="margin-top:12px"></div>
+<div id="playersList" style="margin-top:12px"></div>
+</div>
+
+<script>
+firebase.initializeApp({apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",authDomain:"afnsclub.firebaseapp.com",projectId:"afnsclub"});
+const auth=firebase.auth(),db=firebase.firestore();
+const OWNER_EMAIL="sisaif167@gmail.com";
+auth.onAuthStateChanged(async user=>{if(!user){alert("Login Required");location.replace("admin-login.html");return;} if(user.email!==OWNER_EMAIL){alert("No Permission");location.replace("admin-dashboard.html");return;} loadPlayers();});
+async function loadPlayers(){const snap=await db.collection("tournament_registrations").orderBy("timestamp","asc").get();let html="";snap.forEach(doc=>{const data=doc.data();html+=`<div class="card"><b>${data.playerName}</b> | ${data.status}</div>`;});document.getElementById("playersList").innerHTML=html;}
+async function generateBracket(){
+const snap=await db.collection("tournament_registrations").where("status","==","approved").get();
+let players=[];snap.forEach(doc=>players.push(doc.data().playerName));
+if(players.length<2){alert("Not enough players");return;}
+players.sort(()=>Math.random()-0.5);
+let round="Quarter Final";if(players.length<=4) round="Semi Final";if(players.length<=2) round="Final";
+let html=`<h3>🏆 ${round}</h3>`;
+for(let i=0;i<players.length;i+=2){
+if(players[i+1]){
+let playerA=players[i],playerB=players[i+1];
+await db.collection("matches").add({playerA,playerB,scoreA:0,scoreB:0,winner:null,round,status:"pending",players:[playerA,playerB],createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+html+=`<div class="card">${playerA} 🆚 ${playerB}</div>`;
+}}
+document.getElementById("bracket").innerHTML=html;
+await db.collection("announcements").add({title:`🏆 ${round} Started`,message:`${round} matches created for ${players.length} players`,pinned:true,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
+alert("Bracket Generated + Matches Created!");
+}
+</script>
+</body>
+</html>
