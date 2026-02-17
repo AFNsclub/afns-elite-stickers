@@ -4,84 +4,51 @@
 <meta charset="UTF-8">
 <title>🏆 Tournament Hub | AFNS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:radial-gradient(circle at top,#0a1a4a,#050b1e);color:white;padding:20px;}
-.container{max-width:800px;margin:auto;}
-h2{text-align:center;margin-bottom:15px;}
-.stats{display:flex;justify-content:space-between;margin-bottom:15px;}
-.stat{background:rgba(255,255,255,.05);padding:12px;border-radius:10px;text-align:center;flex:1;margin-right:10px;}
-.stat:last-child{margin-right:0;}
-.stat span{display:block;font-size:22px;font-weight:bold;color:#4f8cff;}
-.button-link{text-decoration:none;display:block;background:#00c853;color:white;text-align:center;padding:12px;border-radius:8px;margin-bottom:10px;}
-.statusBox{margin-top:15px;text-align:center;padding:10px;border-radius:8px;background:#555;}
+body{margin:0;font-family:Arial;background:#050b1e;color:white;padding:20px}
+.container{max-width:800px;margin:auto}
+button{padding:10px 15px;margin:6px;border:none;border-radius:8px;background:#4f8cff;color:white;cursor:pointer}
+h2{text-align:center;margin-bottom:12px}
+.stats-box{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.stat{background:#0b1622;padding:16px;border-radius:12px;flex:1;text-align:center}
+.stat span{display:block;font-size:22px;font-weight:bold;color:#ffd400}
 </style>
 </head>
 <body>
-
 <div class="container">
-<h2 id="tournamentTitle">🏆 Tournament Hub</h2>
+<h2>🏆 Tournament Hub</h2>
 
-<div class="stats">
-  <div class="stat"><span id="playersCount">0</span>Players</div>
-  <div class="stat"><span id="matchesCount">0</span>Matches</div>
-  <div class="stat"><span id="pendingMatches">0</span>Pending</div>
+<div>
+<button onclick="go('tournament-register.html')">📝 Register</button>
+<button onclick="go('tournament-players.html')">👥 Players</button>
+<button onclick="go('my-matches.html')">🎮 My Matches</button>
+<button onclick="go('tournament-admin.html')">⚙️ Admin Panel</button>
 </div>
 
-<a href="tournament-register.html" class="button-link">📝 Register for Tournament</a>
-<a href="tournament-players.html" class="button-link">👥 Registered Players</a>
-<a href="my-matches.html" class="button-link">🎮 My Matches</a>
-
-<div id="statusBox"></div>
+<div class="stats-box">
+<div class="stat"><span id="players">0</span>Players</div>
+<div class="stat"><span id="matches">0</span>Matches</div>
+<div class="stat"><span id="pending">0</span>Pending</div>
+<div class="stat"><span id="completed">0</span>Completed</div>
+</div>
 </div>
 
 <script>
 firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
+apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+authDomain:"afnsclub.firebaseapp.com",
+projectId:"afnsclub"
 });
-const auth = firebase.auth();
-const db = firebase.firestore();
+const db=firebase.firestore();
+db.collection("players").onSnapshot(s=>document.getElementById("players").innerText=s.size);
+db.collection("matches").onSnapshot(s=>document.getElementById("matches").innerText=s.size);
+db.collection("matches").where("status","==","completed").onSnapshot(s=>document.getElementById("completed").innerText=s.size);
+db.collection("tournament_registrations").where("status","==","pending").onSnapshot(s=>document.getElementById("pending").innerText=s.size);
 
-/* Login Check */
-auth.onAuthStateChanged(async user=>{
-  if(!user){alert("Login Required"); location.replace("login.html"); return;}
-  await loadTournamentSettings();
-  loadStats();
-});
-
-/* Tournament Settings */
-async function loadTournamentSettings(){
-  const snap = await db.collection("tournament_settings").doc("current").get();
-  if(!snap.exists){document.getElementById("statusBox").innerText="Tournament Not Configured"; return;}
-  const data = snap.data();
-  document.getElementById("tournamentTitle").innerText = "🏆 " + (data.tournamentName || "Tournament Hub");
-
-  const now = new Date();
-  const deadline = data.registrationDeadline?.toDate();
-  if(!data.active || (deadline && now > deadline)){
-    document.getElementById("statusBox").innerHTML="Tournament Registration Closed";
-  }
-}
-
-/* Live Stats */
-function loadStats(){
-  db.collection("tournament_registrations").onSnapshot(s=>{
-    document.getElementById("playersCount").innerText = s.size;
-  });
-  db.collection("matches").onSnapshot(s=>{
-    let total = s.size;
-    let pending = s.docs.filter(d=>d.data().status==="pending").length;
-    document.getElementById("matchesCount").innerText = total;
-    document.getElementById("pendingMatches").innerText = pending;
-  });
-}
+function go(page){location.href=page;}
 </script>
-
 </body>
 </html>
