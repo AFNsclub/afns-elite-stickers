@@ -2,55 +2,60 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>My Matches | AFNS</title>
+<title>🎮 My Matches | AFNS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <style>
-body{margin:0;font-family:Arial;background:radial-gradient(circle at top,#0a1a4a,#050b1e);color:white;padding:20px;}
-.container{max-width:700px;margin:auto;}
-.card{background:#0b1622;padding:15px;border-radius:14px;margin-bottom:12px;}
+body{margin:0;font-family:Arial;background:#050b1e;color:white;padding:20px}
+.container{max-width:800px;margin:auto}
+.card{background:#0b1622;padding:15px;border-radius:14px;margin-bottom:12px}
+button{padding:6px 12px;border:none;border-radius:8px;background:#4f8cff;color:white;cursor:pointer;margin-top:6px}
+h2{text-align:center;margin-bottom:15px}
+input{width:60px;margin-right:6px;border-radius:6px;border:none;padding:4px}
 </style>
 </head>
 <body>
-
 <div class="container">
 <h2>🎮 My Matches</h2>
-<div id="matches"></div>
+<div id="list"></div>
 </div>
-
 <script>
-firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-/* Login Check */
-auth.onAuthStateChanged(user=>{
-  if(!user){alert("Login Required"); location.replace("login.html");}
-  else{loadMatches(user.email);}
-});
-
-/* Load Matches */
+firebase.initializeApp({apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",authDomain:"afnsclub.firebaseapp.com",projectId:"afnsclub"});
+const auth=firebase.auth(),db=firebase.firestore();
+auth.onAuthStateChanged(user=>{if(!user){alert("Login Required");location.replace("login.html");}else{loadMatches(user.email);}});
 function loadMatches(email){
-  db.collection("matches").onSnapshot(s=>{
-    const container = document.getElementById("matches");
-    container.innerHTML="";
-    s.forEach(doc=>{
-      const m = doc.data();
-      if(m.playerAEmail===email || m.playerBEmail===email || m.playerA===email || m.playerB===email){
-        container.innerHTML += `<div class="card">${m.playerA} 🆚 ${m.playerB} | Round: ${m.round} | Status: ${m.status}</div>`;
-      }
-    });
-  });
+db.collection("matches").where("players","array-contains",email).orderBy("createdAt","asc").onSnapshot(snapshot=>{
+let html="";snapshot.forEach(doc=>{
+const data=doc.data();
+html+=`<div class="card">${data.playerA} 🆚 ${data.playerB}<br>Round: ${data.round}<br>Status: ${data.status}<br>
+<input type="number" placeholder="Score A" id="scoreA-${doc.id}"><input type="number" placeholder="Score B" id="scoreB-${doc.id}">
+<button onclick="submitScore('${doc.id}')">Submit Score</button></div>`;
+});
+document.getElementById("list").innerHTML=html;
+});
+}
+async function submitScore(id){
+const scoreA=parseInt(document.getElementById(`scoreA-${id}`).value);
+const scoreB=parseInt(document.getElementById(`scoreB-${id}`).value);
+if(isNaN(scoreA)||isNaN(scoreB)){alert("Enter scores");return;}
+const matchRef=db.collection("matches").doc(id);
+await matchRef.update({scoreA,scoreB,status:"completed"});
+alert("Score Submitted!");
+checkWinner(id,scoreA,scoreB);
+}
+
+async function checkWinner(matchId,scoreA,scoreB){
+const doc=await db.collection("matches").doc(matchId).get();
+if(!doc.exists)return;
+const match=doc.data();
+let winner=null;
+if(scoreA>scoreB) winner=match.playerA;
+if(scoreB>scoreA) winner=match.playerB;
+if(!winner){alert("Draw!");return;}
+await db.collection("matches").doc(matchId).update({winner});
 }
 </script>
-
 </body>
 </html>
