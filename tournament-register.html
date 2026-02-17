@@ -2,58 +2,45 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>AFN Tournament Registration</title>
+<title>🏆 Tournament Registration | AFNS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  background:#020d1f;
-  color:white;
-  font-family:Segoe UI;
-  padding:20px;
-}
-.container{
-  max-width:420px;
-  margin:auto;
-}
-input,select{
-  width:100%;
-  padding:12px;
-  margin-bottom:12px;
-  border-radius:10px;
-  border:none;
-}
-button{
-  width:100%;
-  padding:14px;
-  background:#00f7ff;
-  border:none;
-  font-weight:bold;
-  border-radius:12px;
-}
+body{margin:0;font-family:Arial;background:radial-gradient(circle at top,#0a1a4a,#050b1e);color:white;padding:20px;}
+.container{max-width:500px;margin:auto;background:#0b1622;padding:20px;border-radius:15px;}
+input, select{width:100%;padding:10px;margin-bottom:12px;border:none;border-radius:8px;}
+button{width:100%;padding:10px;border:none;border-radius:8px;background:#00c853;color:white;font-weight:bold;cursor:pointer;}
+.statusBox{margin-top:15px;padding:10px;border-radius:8px;text-align:center;font-weight:bold;}
+.pending{background:#ffc107;color:black;}
+.approved{background:#00c853;}
+.rejected{background:#ff3d00;}
 </style>
 </head>
-
 <body>
 
 <div class="container">
-<h2>⚽ Tournament Registration</h2>
-
-<input type="text" id="playerName" placeholder="Player Name">
-<input type="text" id="gameId" placeholder="eFootball Game ID">
-<input type="text" id="teamName" placeholder="Team Name">
-
-<select id="formation">
+<h2>🏆 eFootball Tournament Registration</h2>
+<form id="regForm">
+<input type="text" id="playerName" placeholder="Your Username" required>
+<input type="text" id="gameId" placeholder="Your Game ID" required>
+<input type="text" id="teamName" placeholder="Your Team Name" required>
+<select id="formation" required>
+<option value="">Select Formation</option>
 <option>4-3-3</option>
+<option>4-2-1-3</option>
 <option>4-2-3-1</option>
-<option>4-4-2</option>
+<option>3-4-3</option>
 <option>3-5-2</option>
+<option>5-3-2</option>
 </select>
+<button type="submit">Register Now</button>
+</form>
 
-<button onclick="register()">Register Now</button>
+<div id="status"></div>
 </div>
 
 <script>
@@ -62,21 +49,49 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-function register(){
-  db.collection("tournament_registrations").add({
-    playerName:playerName.value,
-    gameId:gameId.value,
-    teamName:teamName.value,
-    formation:formation.value,
-    status:"pending",
-    timestamp:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>{
-    alert("Registration Submitted!");
+/* Login Required */
+auth.onAuthStateChanged(user=>{
+  if(!user){alert("Login Required"); location.replace("login.html");}
+  else{checkRegistration(user.email);}
+});
+
+/* Check Existing */
+async function checkRegistration(email){
+  const snap = await db.collection("tournament_registrations").where("email","==",email).get();
+  if(!snap.empty){
+    const data = snap.docs[0].data();
+    showStatus(data.status);
+    document.getElementById("regForm").style.display="none";
+  }
+}
+
+/* Submit */
+document.getElementById("regForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const user = auth.currentUser;
+  await db.collection("tournament_registrations").add({
+    playerName: document.getElementById("playerName").value.trim(),
+    gameId: document.getElementById("gameId").value,
+    teamName: document.getElementById("teamName").value,
+    formation: document.getElementById("formation").value,
+    email: user.email,
+    status: "pending",
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
   });
+  alert("Registration Submitted!");
+  location.reload();
+});
+
+/* Status */
+function showStatus(status){
+  let box = document.getElementById("status");
+  if(status==="pending") box.innerHTML=`<div class="statusBox pending">🟡 Waiting for Approval</div>`;
+  if(status==="approved") box.innerHTML=`<div class="statusBox approved">🟢 Approved! You are in Tournament</div>`;
+  if(status==="rejected") box.innerHTML=`<div class="statusBox rejected">🔴 Registration Rejected</div>`;
 }
 </script>
-
 </body>
 </html>
