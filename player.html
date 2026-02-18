@@ -155,19 +155,28 @@ auth.onAuthStateChanged(async user=>{
   fbUrl = d.facebook || "";
   document.getElementById("fbLink").classList.toggle("hidden", !fbUrl);
 
-  // 🔥 LIVE MATCH CALCULATION
-  db.collection("matches")
-  .where("status","==","approved")
-  .onSnapshot(snapshot=>{
+  // ✅ BULLETPROOF MATCH CALCULATION
+  db.collection("matches").onSnapshot(snapshot=>{
 
     let wins=0, losses=0, draws=0;
 
     snapshot.forEach(doc=>{
       const m = doc.data();
 
+      if(!m.player1 || !m.player2) return;
       if(m.player1!==username && m.player2!==username) return;
 
-      const [s1,s2] = m.score.split("-").map(Number);
+      // status থাকলে এবং approved না হলে skip
+      if(m.status && m.status !== "approved") return;
+
+      if(!m.score || !m.score.includes("-")) return;
+
+      const parts = m.score.split("-");
+      if(parts.length!==2) return;
+
+      const s1 = parseInt(parts[0]);
+      const s2 = parseInt(parts[1]);
+      if(isNaN(s1) || isNaN(s2)) return;
 
       if(s1===s2){
         draws++;
@@ -188,7 +197,6 @@ auth.onAuthStateChanged(async user=>{
     document.getElementById("losses").innerText = losses;
     document.getElementById("winRate").innerText = winRate+"%";
 
-    // rating firestore থেকে
     let r = d.rating || 1000;
     document.getElementById("rating").innerText = r;
 
