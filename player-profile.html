@@ -144,65 +144,72 @@ body{
     <script type="module">
 import { auth, db } from "./firebase-init.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-onAuthStateChanged(auth, async user=>{
+onAuthStateChanged(auth, user=>{
   if(!user){
     alert("Please login first");
     return;
   }
 
-  const userSnap = await getDoc(doc(db,"players",user.uid));
-  if(!userSnap.exists()){
-    alert("Player data not found!");
-    return;
-  }
+  // 🔥 Realtime player listener
+  onSnapshot(doc(db,"players",user.uid), async (userSnap)=>{
 
-  const p = userSnap.data();
+    if(!userSnap.exists()){
+      alert("Player data not found!");
+      return;
+    }
 
-  // ✅ Top Title Change (Player → Username)
-  document.title = p.username + " | Profile";
+    const p = userSnap.data();
 
-  // Avatar
-  document.getElementById("avatar").innerText = 
-    p.username.charAt(0).toUpperCase();
+    // Title
+    document.title = p.username + " | Profile";
 
-  // Name
-  document.getElementById("name").innerText = p.username;
+    // Avatar
+    document.getElementById("avatar").innerText =
+      p.username ? p.username.charAt(0).toUpperCase() : "P";
 
-  // Info
-  document.getElementById("device").innerText = p.deviceName || "-";
-  document.getElementById("mobile").innerText = p.phone || "-";
-  document.getElementById("email").innerText = p.email || "-";
-  document.getElementById("gameid").innerText = p.gameId || "-";
-  document.getElementById("facebook").href = p.facebook || "#";
+    // Name
+    document.getElementById("name").innerText = p.username || "Player";
 
-  // Stats
-  document.getElementById("win").innerText = p.wins || 0;
-  document.getElementById("lose").innerText = p.losses || 0;
-  document.getElementById("gf").innerText = p.wins || 0;
-  document.getElementById("ga").innerText = p.losses || 0;
-  document.getElementById("gd").innerText =
-    (p.wins || 0) - (p.losses || 0);
+    // Info
+    document.getElementById("device").innerText = p.deviceName || "-";
+    document.getElementById("mobile").innerText = p.phone || "-";
+    document.getElementById("email").innerText = p.email || "-";
+    document.getElementById("gameid").innerText = p.gameId || "-";
+    document.getElementById("facebook").href = p.facebook || "#";
 
-  // 🔥 Rank Calculation by Rating
-  const snap = await getDocs(collection(db,"players"));
-  let list = [];
+    // Stats
+    const wins = p.wins || 0;
+    const losses = p.losses || 0;
 
-  snap.forEach(d=>{
-    const x = d.data();
-    list.push({
-      id: d.id,
-      rating: x.rating || 0
+    document.getElementById("win").innerText = wins;
+    document.getElementById("lose").innerText = losses;
+
+    // তোমার system এ goal নাই, তাই wins/loss দিয়ে দেখাচ্ছি
+    document.getElementById("gf").innerText = wins;
+    document.getElementById("ga").innerText = losses;
+    document.getElementById("gd").innerText = wins - losses;
+
+    // 🔥 Rank Calculation
+    const snap = await getDocs(collection(db,"players"));
+    let list = [];
+
+    snap.forEach(d=>{
+      list.push({
+        id: d.id,
+        rating: d.data().rating || 1000
+      });
     });
+
+    list.sort((a,b)=> b.rating - a.rating);
+
+    const rank = list.findIndex(x=>x.id === user.uid) + 1;
+
+    document.getElementById("rank").innerText =
+      "🏆 Rank #" + rank + " | ⭐ " + (p.rating || 1000);
+
   });
-
-  list.sort((a,b)=> b.rating - a.rating);
-
-  const rank = list.findIndex(x=>x.id === user.uid) + 1;
-
-  document.getElementById("rank").innerText =
-    "🏆 Rank #" + rank + " | ⭐ Rating: " + (p.rating || 1000);
 
 });
 </script>
