@@ -11,12 +11,15 @@ body{
   font-family: Arial, sans-serif;
   background:#0d1117;
   color:#fff;
+  overflow-x:hidden;
 }
 
 .container{
   max-width:420px;
   margin:40px auto;
   padding:20px;
+  position:relative;
+  z-index:2;
 }
 
 .card{
@@ -24,6 +27,8 @@ body{
   border-radius:16px;
   padding:20px;
   box-shadow:0 0 20px #000;
+  position:relative;
+  z-index:2;
 }
 
 .avatar{
@@ -99,6 +104,41 @@ body{
   color:#58a6ff;
   text-decoration:none;
 }
+
+/* 🔥 Fire Animation */
+.fire-bg{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:0;
+  background:radial-gradient(circle at center,#ffae00,#ff0000,transparent 70%);
+  animation:fireRise 2s ease-out forwards;
+  z-index:1;
+}
+@keyframes fireRise{
+  0%{height:0;opacity:1}
+  50%{height:70%;opacity:.9}
+  100%{height:0;opacity:0}
+}
+
+/* Welcome Text */
+.welcome{
+  position:fixed;
+  top:40%;
+  width:100%;
+  text-align:center;
+  font-size:28px;
+  font-weight:900;
+  color:#ffd700;
+  opacity:0;
+  animation:fadeIn 2s forwards;
+  z-index:3;
+}
+@keyframes fadeIn{
+  0%{opacity:0;transform:scale(.5)}
+  100%{opacity:1;transform:scale(1)}
+}
 </style>
 </head>
 
@@ -141,36 +181,83 @@ body{
   </div>
 </div>
 
-    <script type="module">
+<script type="module">
 import { auth, db } from "./firebase-init.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-onAuthStateChanged(auth, user=>{
+// Fire + Welcome Animation
+function fireAndWelcome(username){
+  const fire=document.createElement("div");
+  fire.className="fire-bg";
+  document.body.appendChild(fire);
+
+  const welcome=document.createElement("div");
+  welcome.className="welcome";
+  welcome.innerHTML=`🔥 Welcome to <br> ${username} 🔥`;
+  document.body.appendChild(welcome);
+
+  setTimeout(()=>{fire.remove();},2000);
+}
+
+// Calculate stats from all matches (approved)
+async function calculateStats(uid, username){
+  const matchesSnap = await getDocs(query(collection(db,"matches"), where("status","==","approved")));
+  let wins=0, losses=0, draws=0, gf=0, ga=0;
+
+  matchesSnap.forEach(mDoc=>{
+    const m = mDoc.data();
+    const [s1,s2] = m.score.split("-").map(Number);
+
+    if(m.player1===username){
+      gf += s1;
+      ga += s2;
+      if(s1>s2) wins++;
+      else if(s1<s2) losses++;
+      else draws++;
+    }
+    else if(m.player2===username){
+      gf += s2;
+      ga += s1;
+      if(s2>s1) wins++;
+      else if(s2<s1) losses++;
+      else draws++;
+    }
+  });
+
+  const gd = gf - ga;
+  return {wins, losses, draws, gf, ga, gd};
+}
+
+onAuthStateChanged(auth, async user=>{
   if(!user){
     alert("Please login first");
+    location.href="login.html";
     return;
   }
 
-  // 🔥 Realtime player listener
+  // Realtime listener for player profile
   onSnapshot(doc(db,"players",user.uid), async (userSnap)=>{
-
     if(!userSnap.exists()){
       alert("Player data not found!");
       return;
     }
 
     const p = userSnap.data();
+    const username = p.username || "Player";
+
+    // Fire Welcome only on first load
+    if(!window.welcomeShown){
+      fireAndWelcome(username);
+      window.welcomeShown=true;
+    }
 
     // Title
-    document.title = p.username + " | Profile";
+    document.title = username + " | Profile";
 
-    // Avatar
-    document.getElementById("avatar").innerText =
-      p.username ? p.username.charAt(0).toUpperCase() : "P";
-
-    // Name
-    document.getElementById("name").innerText = p.username || "Player";
+    // Avatar & Name
+    document.getElementById("avatar").innerText = username.charAt(0).toUpperCase();
+    document.getElementById("name").innerText = username;
 
     // Info
     document.getElementById("device").innerText = p.deviceName || "-";
@@ -179,38 +266,28 @@ onAuthStateChanged(auth, user=>{
     document.getElementById("gameid").innerText = p.gameId || "-";
     document.getElementById("facebook").href = p.facebook || "#";
 
-    // Stats
-    const wins = p.wins || 0;
-    const losses = p.losses || 0;
+    // Stats from approved matches
+    const stats = await calculateStats(user.uid, username);
+    document.getElementById("win").innerText = stats.wins;
+    document.getElementById("lose").innerText = stats.losses;
+    document.getElementById("gf").innerText = stats.gf;
+    document.getElementById("ga").innerText = stats.ga;
+    document.getElementById("gd").innerText = stats.gd;
 
-    document.getElementById("win").innerText = wins;
-    document.getElementById("lose").innerText = losses;
-
-    // তোমার system এ goal নাই, তাই wins/loss দিয়ে দেখাচ্ছি
-    document.getElementById("gf").innerText = wins;
-    document.getElementById("ga").innerText = losses;
-    document.getElementById("gd").innerText = wins - losses;
-
-    // 🔥 Rank Calculation
+    // Rank Calculation by rating
     const snap = await getDocs(collection(db,"players"));
     let list = [];
-
     snap.forEach(d=>{
       list.push({
         id: d.id,
         rating: d.data().rating || 1000
       });
     });
-
     list.sort((a,b)=> b.rating - a.rating);
-
     const rank = list.findIndex(x=>x.id === user.uid) + 1;
-
     document.getElementById("rank").innerText =
       "🏆 Rank #" + rank + " | ⭐ " + (p.rating || 1000);
-
   });
-
 });
 </script>
 
