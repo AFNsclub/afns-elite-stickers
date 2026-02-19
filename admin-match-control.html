@@ -256,8 +256,12 @@ async function recalculateAllRatings(){
   const players=await db.collection("players").get();
 
   for(const p of players.docs){
-    await p.ref.update({rating:1000});
-  }
+  await p.ref.update({
+    rating:1000,
+    wins:0,
+    losses:0,
+    draws:0
+  });
 
   const matches=await db.collection("matches")
     .where("status","==","approved")
