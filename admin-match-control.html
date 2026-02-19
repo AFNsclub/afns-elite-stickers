@@ -126,8 +126,11 @@ async function approveMatch(id){
   const p1Doc=p1Snap.docs[0];
   const p2Doc=p2Snap.docs[0];
 
-  let r1=p1Doc.data().rating||1000;
-  let r2=p2Doc.data().rating||1000;
+  const p1=p1Doc.data();
+  const p2=p2Doc.data();
+
+  let r1=p1.rating||1000;
+  let r2=p2.rating||1000;
 
   const K=m.matchType==="tournament"?48:32;
 
@@ -137,6 +140,7 @@ async function approveMatch(id){
   const [s1,s2]=m.score.split("-").map(Number);
 
   let a1=0,a2=0;
+
   if(s1===s2){a1=0.5;a2=0.5;}
   else if(s1>s2){a1=1;a2=0;}
   else{a1=0;a2=1;}
@@ -144,19 +148,45 @@ async function approveMatch(id){
   const newR1=Math.round(r1+K*(a1-expected1));
   const newR2=Math.round(r2+K*(a2-expected2));
 
-  await p1Doc.ref.update({rating:newR1});
-  await p2Doc.ref.update({rating:newR2});
+  // 🔥 WIN LOSS UPDATE LOGIC
+  let p1Wins=p1.wins||0;
+  let p1Loss=p1.losses||0;
+  let p1Draw=p1.draws||0;
+
+  let p2Wins=p2.wins||0;
+  let p2Loss=p2.losses||0;
+  let p2Draw=p2.draws||0;
+
+  if(s1===s2){
+    p1Draw++; p2Draw++;
+  }
+  else if(s1>s2){
+    p1Wins++; p2Loss++;
+  }
+  else{
+    p2Wins++; p1Loss++;
+  }
+
+  await p1Doc.ref.update({
+    rating:newR1,
+    wins:p1Wins,
+    losses:p1Loss,
+    draws:p1Draw
+  });
+
+  await p2Doc.ref.update({
+    rating:newR2,
+    wins:p2Wins,
+    losses:p2Loss,
+    draws:p2Draw
+  });
 
   await ref.update({
     status:"approved",
-    ratingBefore1:r1,
-    ratingBefore2:r2,
-    ratingAfter1:newR1,
-    ratingAfter2:newR2,
     approvedAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  alert("Approved + Rating Updated");
+  alert("Approved + Rating + Win/Loss Updated");
   loadMatches();
 }
 
