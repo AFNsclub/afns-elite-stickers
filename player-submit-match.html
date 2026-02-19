@@ -2,102 +2,126 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Player Profile</title>
+<title>Submit Match | AFNS Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0d1117;color:#fff;}
-.container{max-width:420px;margin:40px auto;padding:20px;}
-.card{background:#161b22;border-radius:16px;padding:20px;box-shadow:0 0 20px #000;}
-.avatar{width:80px;height:80px;border-radius:50%;background:#22c55e;color:#000;font-size:32px;font-weight:bold;display:flex;align-items:center;justify-content:center;margin:auto;}
-.name{text-align:center;font-size:22px;font-weight:bold;margin-top:10px;}
-.rank{text-align:center;margin-top:5px;color:#facc15;font-weight:bold;}
-.info{margin-top:20px;font-size:14px;}
-.info div{margin:6px 0;color:#c9d1d9;}
-.stats{display:flex;justify-content:space-between;margin-top:20px;}
-.stat{background:#0d1117;border-radius:12px;padding:10px;width:30%;text-align:center;}
-.stat h3{margin:0;font-size:20px;color:#58a6ff;}
-.stat span{font-size:12px;color:#8b949e;}
-.footer{margin-top:20px;text-align:center;font-size:13px;}
-.footer a{color:#58a6ff;text-decoration:none;}
+body{margin:0;font-family:Arial;background:#0b1220;color:white;}
+.container{max-width:400px;margin:50px auto;padding:20px;background:#141c2f;border-radius:12px;}
+h2{text-align:center;color:#00eaff;}
+label{display:block;margin-top:15px;}
+input,select,button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:8px;}
+input,select{background:#0b1220;color:white;}
+button{background:#00eaff;color:black;font-weight:bold;margin-top:20px;}
+.searchBox{position:relative;}
+.dropdown{position:absolute;width:100%;background:#1a2438;max-height:150px;overflow-y:auto;border-radius:8px;z-index:1000;}
+.dropdown div{padding:10px;cursor:pointer;}
+.dropdown div:hover{background:#00eaff;color:black;}
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="card">
-    <div class="avatar" id="avatar">A</div>
-    <div class="name" id="name">Player Name</div>
-    <div class="rank" id="rank">🏆 Rank #</div>
-    <div class="info">
-      <div>📱 Device: <span id="device"></span></div>
-      <div>📞 Mobile: <span id="mobile"></span></div>
-      <div>📧 Gmail: <span id="email"></span></div>
-      <div>🎮 Owner / Game ID: <span id="gameid"></span></div>
-      <div>🔗 <a id="facebook" href="#" target="_blank">Facebook Profile</a></div>
-    </div>
-    <div class="stats">
-      <div class="stat"><h3 id="win">0</h3><span>Wins</span></div>
-      <div class="stat"><h3 id="lose">0</h3><span>Loses</span></div>
-      <div class="stat"><h3 id="gd">0</h3><span>Goal Diff</span></div>
-    </div>
-    <div class="footer">⚽ Goals: <span id="gf">0</span> - <span id="ga">0</span></div>
-  </div>
+<h2>Submit Match</h2>
+
+<label>Player 1</label>
+<div class="searchBox">
+  <input type="text" id="player1" onkeyup="filterPlayers('player1')" autocomplete="off">
+  <div class="dropdown" id="player1List"></div>
 </div>
 
-<script type="module">
-import { auth, db } from "./firebase-init.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<label>Player 2</label>
+<div class="searchBox">
+  <input type="text" id="player2" onkeyup="filterPlayers('player2')" autocomplete="off">
+  <div class="dropdown" id="player2List"></div>
+</div>
 
-onAuthStateChanged(auth, async user=>{
-  if(!user){ alert("Please login first"); return; }
+<label>Score (Example: 3-3)</label>
+<input type="text" id="score">
 
-  const userSnap = await getDoc(doc(db,"players",user.uid));
-  if(!userSnap.exists()){ alert("Player data not found!"); return; }
-  const p = userSnap.data();
+<label>Match Type</label>
+<select id="matchType" onchange="toggleTournament()">
+<option value="friendly">Friendly</option>
+<option value="tournament">Tournament</option>
+</select>
 
-  document.title = p.username + " | Profile";
-  document.getElementById("avatar").innerText = p.username.charAt(0).toUpperCase();
-  document.getElementById("name").innerText = p.username;
-  document.getElementById("device").innerText = p.deviceName || "-";
-  document.getElementById("mobile").innerText = p.phone || "-";
-  document.getElementById("email").innerText = p.email || "-";
-  document.getElementById("gameid").innerText = p.gameId || "-";
-  document.getElementById("facebook").href = p.facebook || "#";
+<div id="tournamentBox" style="display:none;">
+  <label>Tournament Name</label>
+  <input type="text" id="tournamentName">
+</div>
 
-  // ✅ Calculate stats from all approved matches
-  const matchSnap = await getDocs(query(collection(db,"matches"), where("status","==","approved")));
-  let wins=0, losses=0, draws=0, gf=0, ga=0;
-  matchSnap.forEach(doc=>{
-    const m = doc.data();
-    const [s1,s2] = m.score.split("-").map(Number);
-    if(m.player1===p.username){
-      gf += s1; ga += s2;
-      if(s1>s2) wins++;
-      else if(s1<s2) losses++;
-      else draws++;
-    } else if(m.player2===p.username){
-      gf += s2; ga += s1;
-      if(s2>s1) wins++;
-      else if(s2<s1) losses++;
-      else draws++;
-    }
+<button onclick="submitMatch()">Submit Match</button>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+const auth = firebase.auth();
+const db = firebase.firestore();
+let allPlayers=[];
+
+auth.onAuthStateChanged(user=>{
+  if(!user){location.href="login.html";}else{loadPlayers();}
+});
+
+async function loadPlayers(){
+  const snap = await db.collection("players").get();
+  snap.forEach(doc=>allPlayers.push(doc.data().username || doc.id));
+}
+
+function filterPlayers(type){
+  const input=document.getElementById(type);
+  const list=document.getElementById(type+"List");
+  const value=input.value.toLowerCase();
+  list.innerHTML="";
+  if(value.length<1) return;
+  const filtered=allPlayers.filter(name=>name.toLowerCase().includes(value)).slice(0,10);
+  filtered.forEach(name=>{
+    const div=document.createElement("div");
+    div.textContent=name;
+    div.onclick=()=>{input.value=name;list.innerHTML="";};
+    list.appendChild(div);
+  });
+}
+
+function toggleTournament(){
+  document.getElementById("tournamentBox").style.display = matchType.value==="tournament"?"block":"none";
+}
+
+async function submitMatch(){
+  const user = auth.currentUser;
+  const p1 = player1.value.trim();
+  const p2 = player2.value.trim();
+  const scoreVal = score.value.trim();
+  const type = matchType.value;
+  const tName = tournamentName.value.trim();
+
+  if(!p1||!p2||!scoreVal){alert("All fields required!");return;}
+  if(p1===p2){alert("Players cannot be same!");return;}
+  if(!scoreVal.includes("-")){alert("Invalid score format");return;}
+
+  let resultType="draw", winner=null, loser=null;
+  const parts=scoreVal.split("-").map(Number);
+  if(parts[0]>parts[1]){winner=p1;loser=p2;resultType="win";}
+  else if(parts[1]>parts[0]){winner=p2;loser=p1;resultType="win";}
+
+  await db.collection("matches").doc(Date.now().toString()).set({
+    player1:p1, player2:p2, score:scoreVal,
+    resultType, winner, loser,
+    matchType:type,
+    tournamentName:type==="tournament"?tName:null,
+    submittedBy:user.email,
+    status:"pending",
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  document.getElementById("win").innerText = wins;
-  document.getElementById("lose").innerText = losses;
-  document.getElementById("gd").innerText = gf - ga;
-  document.getElementById("gf").innerText = gf;
-  document.getElementById("ga").innerText = ga;
-
-  // 🔥 Rank by rating
-  const snapPlayers = await getDocs(collection(db,"players"));
-  let list = [];
-  snapPlayers.forEach(d=>{ const x=d.data(); list.push({id:d.id,rating:x.rating||1000}); });
-  list.sort((a,b)=>b.rating-a.rating);
-  const rank = list.findIndex(x=>x.id===user.uid)+1;
-  document.getElementById("rank").innerText = "🏆 Rank #" + rank + " | ⭐ Rating: " + (p.rating||1000);
-});
+  alert("Match submitted for approval!");
+  location.reload();
+}
 </script>
 </body>
 </html>
