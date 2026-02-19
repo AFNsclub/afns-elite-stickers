@@ -30,6 +30,7 @@ body{
     radial-gradient(circle at bottom,var(--gold),transparent 45%),
     linear-gradient(180deg,var(--bg2),var(--bg1));
   color:#fff;
+  overflow:hidden;
 }
 .card{
   width:100%;
@@ -40,6 +41,7 @@ body{
   box-shadow:
     0 0 30px rgba(0,247,255,.35),
     0 0 18px rgba(255,215,0,.25);
+  z-index:2;
 }
 .logo{
   width:110px;
@@ -77,6 +79,51 @@ button{
 }
 .error{color:#ff6b6b}
 .success{color:#4cff8f}
+
+/* 🔥 Fire Animation */
+.fire-bg{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:0;
+  background:radial-gradient(circle at center,#ffae00,#ff0000,transparent 70%);
+  animation:fireRise 2s ease-out forwards;
+  z-index:1;
+}
+@keyframes fireRise{
+  0%{height:0;opacity:1}
+  50%{height:70%;opacity:.9}
+  100%{height:0;opacity:0}
+}
+
+/* Welcome Text */
+.welcome{
+  position:fixed;
+  top:40%;
+  width:100%;
+  text-align:center;
+  font-size:28px;
+  font-weight:900;
+  color:var(--gold);
+  opacity:0;
+  animation:fadeIn 2s forwards;
+  z-index:3;
+}
+@keyframes fadeIn{
+  0%{opacity:0;transform:scale(.5)}
+  100%{opacity:1;transform:scale(1)}
+}
+
+.footer{
+  position:fixed;
+  bottom:10px;
+  width:100%;
+  text-align:center;
+  font-size:14px;
+  color:#ffd700;
+  font-weight:700;
+}
 </style>
 </head>
 
@@ -98,9 +145,12 @@ button{
   <div id="message" class="msg"></div>
 </div>
 
+<div class="footer">
+  © 2026 AFNS Elite Strikers | SI Shohan 
+</div>
+
 <script>
 
-// 🔥 Firebase Config
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
@@ -109,6 +159,26 @@ firebase.initializeApp({
 
 const auth = firebase.auth();
 const db   = firebase.firestore();
+
+function fireAndWelcome(){
+
+  const fire=document.createElement("div");
+  fire.className="fire-bg";
+  document.body.appendChild(fire);
+
+  const welcome=document.createElement("div");
+  welcome.className="welcome";
+  welcome.innerHTML="🔥 Welcome to <br> AFNS Elite Strikers 🔥";
+  document.body.appendChild(welcome);
+
+  setTimeout(()=>{
+    fire.remove();
+  },2000);
+
+  setTimeout(()=>{
+    window.location.href="player.html";
+  },3500);
+}
 
 async function createAccount(){
 
@@ -132,7 +202,6 @@ async function createAccount(){
 
   try{
 
-    // ✅ Username Duplicate Check
     const check = await db.collection("players")
       .where("usernameLower","==",username.toLowerCase())
       .get();
@@ -143,10 +212,8 @@ async function createAccount(){
       return;
     }
 
-    // ✅ Create Firebase Auth User
     const cred = await auth.createUserWithEmailAndPassword(email,password);
 
-    // ✅ Save Player Data
     await db.collection("players").doc(cred.user.uid).set({
 
       username: username,
@@ -157,22 +224,20 @@ async function createAccount(){
       gameId: gameid,
       deviceName: device,
 
-      // 🔥 Official Rating System Fields
+      // EXACTLY LIKE YOUR SCREENSHOT
       rating: 1000,
-      win: 0,
-      loss: 0,
-      draw: 0,
-      ranking: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
 
+      ownerId: cred.user.uid,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    msg.innerText="✅ Account Created Successfully!";
+    msg.innerText="✅ Account Created!";
     msg.className="msg success";
 
-    setTimeout(()=>{
-      window.location.href="player.html";
-    },1500);
+    fireAndWelcome();
 
   }catch(error){
     msg.innerText="❌ "+error.message;
