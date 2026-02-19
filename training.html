@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<title>eFootball Training & Tips | AFNS Elite Strikers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Firebase v8 -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<style>
+:root{
+  --primary:#00c6ff;
+  --secondary:#1a1a2e;
+  --highlight:#ffd700;
+  --bg:#0b1220;
+  --card:#141c2f;
+  --text:#fff;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+}
+
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
+
+header{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+header h1{
+  color:var(--highlight);
+  margin-bottom:10px;
+}
+
+header p{
+  color:var(--primary);
+}
+
+.card{
+  background:var(--card);
+  padding:20px;
+  margin-bottom:16px;
+  border-radius:16px;
+  box-shadow:0 0 20px rgba(0,198,255,0.3);
+}
+
+.card h2{
+  color:var(--primary);
+  margin-bottom:10px;
+}
+
+.card ul{
+  list-style:disc;
+  padding-left:20px;
+}
+
+.card ul li{
+  margin-bottom:8px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:10px;
+  border:none;
+  outline:none;
+}
+
+button{
+  padding:12px 20px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,var(--primary),#00ff88);
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+.msg{
+  margin-top:10px;
+  font-weight:bold;
+  text-align:center;
+}
+
+footer{
+  text-align:center;
+  margin-top:30px;
+  font-size:13px;
+  color:#888;
+}
+
+/* Responsive */
+@media(max-width:600px){
+  .container{padding:10px;}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>eFootball ট্রেনিং ও টিপস</h1>
+    <p>AFNS Elite Strikers - আপনার স্কিল ও প্রগ্রেস ট্র্যাক করুন</p>
+  </header>
+
+  <!-- Login Card -->
+  <div id="loginCard" class="card">
+    <h2>🔑 প্লেয়ার লগইন</h2>
+    <input id="email" type="email" placeholder="Gmail">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="loginPlayer()">লগইন করুন</button>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+
+  <!-- Content Card -->
+  <div id="content" style="display:none;">
+
+    <div class="card">
+      <h2>⚽ দৈনিক ট্রেনিং রুটিন</h2>
+      <ul id="trainingList">
+        <!-- Firebase থেকে লোড হবে -->
+      </ul>
+      <input id="newTraining" placeholder="নতুন ট্রেনিং যোগ করুন">
+      <button onclick="addTraining()">ট্রেনিং যোগ করুন</button>
+    </div>
+
+    <div class="card">
+      <h2>🧠 গেম টিপস ও স্ট্র্যাটেজি</h2>
+      <ul id="tipsList">
+        <!-- Firebase থেকে লোড হবে -->
+      </ul>
+      <input id="newTip" placeholder="নতুন টিপস যোগ করুন">
+      <button onclick="addTip()">টিপস যোগ করুন</button>
+    </div>
+
+    <div class="card">
+      <h2>📈 আপনার প্রগ্রেস</h2>
+      <ul>
+        <li>জয়: <span id="wins">0</span></li>
+        <li>পরাজয়: <span id="losses">0</span></li>
+        <li>ড্র: <span id="draws">0</span></li>
+        <li>রেটিং: <span id="rating">1000</span></li>
+      </ul>
+      <button onclick="updateProgress()">আপডেট প্রগ্রেস</button>
+      <div id="progressMsg" class="msg"></div>
+    </div>
+
+    <button onclick="logoutPlayer()">লগআউট</button>
+    <div id="logoutMsg" class="msg"></div>
+
+  </div>
+
+  <footer>
+    © 2026 AFNS Elite Strikers | SI Shohan
+  </footer>
+</div>
+
+<script>
+  // Firebase Initialization
+  firebase.initializeApp({
+    apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+    authDomain:"afnsclub.firebaseapp.com",
+    projectId:"afnsclub"
+  });
+
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  let currentUserUid = null;
+
+  // Login Function
+  async function loginPlayer(){
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const loginMsg = document.getElementById("loginMsg");
+    loginMsg.innerText = "⏳ লগইন হচ্ছে...";
+    try{
+      const cred = await auth.signInWithEmailAndPassword(email,password);
+      loginMsg.innerText = "✅ লগইন সফল!";
+      currentUserUid = cred.user.uid;
+      loadPlayerData(currentUserUid);
+    }catch(error){
+      loginMsg.innerText = "❌ "+error.message;
+    }
+  }
+
+  // Logout
+  function logoutPlayer(){
+    auth.signOut().then(()=>{
+      document.getElementById("content").style.display="none";
+      document.getElementById("loginCard").style.display="block";
+      document.getElementById("logoutMsg").innerText="✅ লগআউট সম্পন্ন!";
+    });
+  }
+
+  // Load player training, tips & progress
+  async function loadPlayerData(uid){
+    document.getElementById("loginCard").style.display="none";
+    document.getElementById("content").style.display="block";
+
+    try{
+      const doc = await db.collection("players").doc(uid).get();
+      if(doc.exists){
+        const data = doc.data();
+        document.getElementById("wins").innerText = data.wins || 0;
+        document.getElementById("losses").innerText = data.losses || 0;
+        document.getElementById("draws").innerText = data.draws || 0;
+        document.getElementById("rating").innerText = data.rating || 1000;
+
+        // Load training & tips
+        const trainingList = document.getElementById("trainingList");
+        trainingList.innerHTML = '';
+        if(data.training && data.training.length>0){
+          data.training.forEach(t=>{
+            const li = document.createElement("li");
+            li.textContent = t;
+            trainingList.appendChild(li);
+          });
+        }else{
+          trainingList.innerHTML = '<li>প্রতিদিন ৩০ মিনিট ড্রিবলিং ও পাসিং প্র্যাকটিস করুন।</li>';
+        }
+
+        const tipsList = document.getElementById("tipsList");
+        tipsList.innerHTML = '';
+        if(data.tips && data.tips.length>0){
+          data.tips.forEach(t=>{
+            const li = document.createElement("li");
+            li.textContent = t;
+            tipsList.appendChild(li);
+          });
+        }else{
+          tipsList.innerHTML = '<li>সঠিক পজিশনিং বজায় রাখুন এবং ঝুঁকি নেবেন না।</li>';
+        }
+      }
+    }catch(error){
+      alert("ডেটা লোড করতে সমস্যা: "+error.message);
+    }
+  }
+
+  // Add Training
+  async function addTraining(){
+    const newTraining = document.getElementById("newTraining").value.trim();
+    if(!newTraining) return;
+    try{
+      const docRef = db.collection("players").doc(currentUserUid);
+      await docRef.update({
+        training: firebase.firestore.FieldValue.arrayUnion(newTraining)
+      });
+      document.getElementById("newTraining").value='';
+      loadPlayerData(currentUserUid);
+    }catch(error){
+      alert("ট্রেনিং যোগ করতে সমস্যা: "+error.message);
+    }
+  }
+
+  // Add Tip
+  async function addTip(){
+    const newTip = document.getElementById("newTip").value.trim();
+    if(!newTip) return;
+    try{
+      const docRef = db.collection("players").doc(currentUserUid);
+      await docRef.update({
+        tips: firebase.firestore.FieldValue.arrayUnion(newTip)
+      });
+      document.getElementById("newTip").value='';
+      loadPlayerData(currentUserUid);
+    }catch(error){
+      alert("টিপস যোগ করতে সমস্যা: "+error.message);
+    }
+  }
+
+  // Update Progress
+  async function updateProgress(){
+    const wins = parseInt(prompt("জয় সংখ্যা লিখুন:","0"));
+    const losses = parseInt(prompt("পরাজয় সংখ্যা লিখুন:","0"));
+    const draws = parseInt(prompt("ড্র সংখ্যা লিখুন:","0"));
+    const rating = parseInt(prompt("রেটিং লিখুন:","1000"));
+    try{
+      await db.collection("players").doc(currentUserUid).update({
+        wins:wins,
+        losses:losses,
+        draws:draws,
+        rating:rating
+      });
+      loadPlayerData(currentUserUid);
+      document.getElementById("progressMsg").innerText="✅ প্রগ্রেস আপডেট হয়েছে!";
+    }catch(error){
+      document.getElementById("progressMsg").innerText="❌ "+error.message;
+    }
+  }
+
+</script>
+
+</body>
+  </html>
