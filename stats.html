@@ -1,120 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>AFNS Elite Strikers - Ranking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-:root{
-  --gold:#FFD700;
-  --silver:#C0C0C0;
-  --bronze:#CD7F32;
-  --dark:#020d1f;
-  --card:#0c1b2a;
-}
-
-body{
-  margin:0;
-  background:linear-gradient(180deg,#010814,#021b33);
-  font-family:Segoe UI;
-  color:white;
-  text-align:center;
-  overflow-x:hidden;
-}
-
-h1{
-  padding:20px;
-  font-size:28px;
-  letter-spacing:2px;
-  text-shadow:0 0 15px rgba(255,215,0,.6);
-}
-
-table{
-  width:95%;
-  margin:auto;
-  border-collapse:collapse;
-  margin-top:20px;
-}
-
-th{
-  background:#061423;
-  padding:15px;
-  font-size:18px;
-  text-transform:uppercase;
-  letter-spacing:1px;
-}
-
-td{
-  padding:14px;
-  border-bottom:1px solid #112b45;
-  font-weight:600;
-}
-
-tr{
-  opacity:0;
-  transform:translateY(20px);
-  animation:fadeSlide .6s forwards;
-}
-
-@keyframes fadeSlide{
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
-}
-
-tr:hover{
-  background:#0f2c4d;
-  transform:scale(1.01);
-  transition:.2s;
-}
-
-/* Top 3 Special Effects */
-.rank1{
-  background:linear-gradient(90deg,#3a2e00,#1b1400);
-  color:var(--gold);
-  box-shadow:0 0 20px rgba(255,215,0,.6);
-}
-.rank2{
-  background:linear-gradient(90deg,#2a2a2a,#111);
-  color:var(--silver);
-  box-shadow:0 0 15px rgba(192,192,192,.6);
-}
-.rank3{
-  background:linear-gradient(90deg,#3b1f00,#1c0d00);
-  color:var(--bronze);
-  box-shadow:0 0 15px rgba(205,127,50,.6);
-}
-
-.medal{
-  font-size:20px;
-  margin-right:5px;
-}
-
-/* Clickable Player */
-.player-link{
-  color:inherit;
-  text-decoration:none;
-  cursor:pointer;
-  transition:.2s;
-}
-
-.player-link:hover{
-  text-decoration:underline;
-  color:#FFD700;
-}
+:root{--gold:#FFD700;--silver:#C0C0C0;--bronze:#CD7F32;--dark:#020d1f;--card:#0c1b2a}
+body{margin:0;background:linear-gradient(180deg,#010814,#021b33);font-family:Segoe UI;color:white;text-align:center;overflow-x:hidden}
+h1{padding:20px;font-size:28px;letter-spacing:2px;text-shadow:0 0 15px rgba(255,215,0,.6)}
+table{width:95%;margin:auto;border-collapse:collapse;margin-top:20px}
+th{background:#061423;padding:15px;font-size:18px;text-transform:uppercase;letter-spacing:1px}
+td{padding:14px;border-bottom:1px solid #112b45;font-weight:600}
+tr{opacity:0;transform:translateY(20px);animation:fadeSlide .6s forwards}
+@keyframes fadeSlide{to{opacity:1;transform:translateY(0)}}
+tr:hover{background:#0f2c4d;transform:scale(1.01);transition:.2s}
+.rank1{background:linear-gradient(90deg,#3a2e00,#1b1400);color:var(--gold);box-shadow:0 0 20px rgba(255,215,0,.6)}
+.rank2{background:linear-gradient(90deg,#2a2a2a,#111);color:var(--silver);box-shadow:0 0 15px rgba(192,192,192,.6)}
+.rank3{background:linear-gradient(90deg,#3b1f00,#1c0d00);color:var(--bronze);box-shadow:0 0 15px rgba(205,127,50,.6)}
+.medal{font-size:20px;margin-right:5px}
+.player-link{color:inherit;text-decoration:none;cursor:pointer;transition:.2s}
+.player-link:hover{text-decoration:underline;color:#FFD700}
 </style>
 </head>
-
 <body>
-
 <h1>🏆 AFNS Elite Strikers Federation Ranking</h1>
-
 <table>
 <thead>
 <tr>
@@ -130,43 +44,30 @@ tr:hover{
 </table>
 
 <script>
+firebase.initializeApp({apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",authDomain:"afnsclub.firebaseapp.com",projectId:"afnsclub"});
+const db=firebase.firestore();
+const table=document.getElementById("rankingBody");
 
-// Firebase Config
-firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
-
-const db = firebase.firestore();
-const table = document.getElementById("rankingBody");
-
-db.collection("players")
-.orderBy("rating","desc")
-.onSnapshot(snapshot=>{
-  const table=document.getElementById("rankingBody");
+db.collection("players").orderBy("rating","desc").onSnapshot(snapshot=>{
   table.innerHTML="";
   let rank=1;
-
   snapshot.forEach(doc=>{
     const p=doc.data();
-    let className="", medal="";
-    if(rank===1){className="rank1"; medal="🥇";}
-    else if(rank===2){className="rank2"; medal="🥈";}
-    else if(rank===3){className="rank3"; medal="🥉";}
-
+    let className="",medal="";
+    if(rank==1){className="rank1";medal="🥇";}
+    else if(rank==2){className="rank2";medal="🥈";}
+    else if(rank==3){className="rank3";medal="🥉";}
     table.innerHTML+=`<tr class="${className}" style="animation-delay:${rank*0.1}s">
       <td><span class="medal">${medal}</span>${rank}</td>
       <td><a class="player-link" href="public-profile.html?id=${doc.id}">${p.username||"-"}</a></td>
       <td>${p.wins||0}</td>
       <td>${p.losses||0}</td>
-      <td>${p.draws||0}</td>
+      <td>${p.draw||0}</td>
       <td>${p.rating||0}</td>
     </tr>`;
     rank++;
   });
 });
 </script>
-
 </body>
 </html>
