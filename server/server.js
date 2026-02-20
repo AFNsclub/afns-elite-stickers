@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_KEY
+  apiKey: process.env.OPENAI_KEY // Render/Heroku/Vercel Environment Variable
 });
 
 app.post("/ask-ai", async (req, res) => {
@@ -25,8 +25,9 @@ app.post("/ask-ai", async (req, res) => {
     res.json({ answer: completion.choices[0].message.content });
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "AI Server Error" });
   }
 });
 
-app.listen(3000, () => console.log("Server running"));
+app.listen(process.env.PORT || 3000, () => console.log("Server running"));
