@@ -144,47 +144,27 @@ const table = document.getElementById("rankingBody");
 db.collection("players")
 .orderBy("rating","desc")
 .onSnapshot(snapshot=>{
-
+  const table=document.getElementById("rankingBody");
   table.innerHTML="";
   let rank=1;
 
   snapshot.forEach(doc=>{
-
     const p=doc.data();
-    let className="";
-    let medal="";
+    let className="", medal="";
+    if(rank===1){className="rank1"; medal="🥇";}
+    else if(rank===2){className="rank2"; medal="🥈";}
+    else if(rank===3){className="rank3"; medal="🥉";}
 
-    if(rank==1){
-      className="rank1";
-      medal="🥇";
-    }
-    else if(rank==2){
-      className="rank2";
-      medal="🥈";
-    }
-    else if(rank==3){
-      className="rank3";
-      medal="🥉";
-    }
-
-    table.innerHTML+=`
-      <tr class="${className}" style="animation-delay:${rank*0.1}s">
-        <td><span class="medal">${medal}</span>${rank}</td>
-        <td>
-          <a class="player-link" href="public-profile.html?id=${doc.id}">
-            ${p.username || "-"}
-          </a>
-        </td>
-        <td>${p.wins || 0}</td>
-        <td>${p.losses || 0}</td>
-        <td>${p.draws || 0}</td>
-        <td>${p.rating || 0}</td>
-      </tr>
-    `;
-
+    table.innerHTML+=`<tr class="${className}" style="animation-delay:${rank*0.1}s">
+      <td><span class="medal">${medal}</span>${rank}</td>
+      <td><a class="player-link" href="public-profile.html?id=${doc.id}">${p.username||"-"}</a></td>
+      <td>${p.wins||0}</td>
+      <td>${p.losses||0}</td>
+      <td>${p.draws||0}</td>
+      <td>${p.rating||0}</td>
+    </tr>`;
     rank++;
   });
-
 });
 </script>
 
