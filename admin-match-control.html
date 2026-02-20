@@ -7,6 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
 body{margin:0;background:#050b1e;color:#fff;font-family:Arial}
 .container{max-width:900px;margin:20px auto;padding:16px}
@@ -41,104 +42,64 @@ auth.onAuthStateChanged(async user => {
   if(!user){ location.href="admin-login.html"; return; }
   const snap = await db.collection("admins").doc(user.email).get();
   if(!snap.exists || snap.data().active!==true){ alert("Access denied"); location.href="admin-login.html"; return; }
-  loadMatches();
 });
-
-/* ===== LOAD MATCHES ===== */
-async function loadMatches(){
-  const list=document.getElementById("list");
-  list.innerHTML="Loading...";
-  const snap=await db.collection("matches").orderBy("createdAt","desc").get();
-  list.innerHTML="";
-  if(snap.empty){ list.innerHTML="No matches"; return; }
-  snap.forEach(doc => {
-    const m = doc.data();
-    const card = document.createElement("div");
-    card.className="card";
-    card.innerHTML = `
-      <b>${m.player1}</b> vs <b>${m.player2}</b><br>
-      Score: ${m.score || "—"}<br>
-      Type: ${m.matchType||"friendly"}<br>
-      Status: ${m.status||"pending"}<br><br>
-      ${m.status==="pending"
-        ? `<button class="approve" onclick="approveMatch('${doc.id}')">Approve</button>
-           <button class="reject" onclick="rejectMatch('${doc.id}')">Reject</button>` : ""}
-      ${m.status==="approved"
-        ? `<button class="rollback" onclick="rollbackMatch('${doc.id}')">Rollback</button>` : ""}
-      <button class="edit" onclick="editMatch('${doc.id}')">Edit Score</button>
-    `;
-    list.appendChild(card);
-  });
-}
 
 /* ===== APPROVE MATCH ===== */
 async function approveMatch(id){
-  const ref = db.collection("matches").doc(id);
-  const snap = await ref.get(); if(!snap.exists) return;
-  const m = snap.data(); if(m.status==="approved") return;
+  const ref=db.collection("matches").doc(id);
+  const snap=await ref.get(); if(!snap.exists) return;
+  const m=snap.data(); if(m.status==="approved") return;
 
-  const p1Snap = await db.collection("players").where("username","==",m.player1).get();
-  const p2Snap = await db.collection("players").where("username","==",m.player2).get();
+  const p1Snap=await db.collection("players").where("username","==",m.player1).get();
+  const p2Snap=await db.collection("players").where("username","==",m.player2).get();
   if(p1Snap.empty || p2Snap.empty){ alert("Player not found"); return; }
 
-  const p1Doc = p1Snap.docs[0], p2Doc = p2Snap.docs[0];
-  let r1 = p1Doc.data().rating||1000, r2 = p2Doc.data().rating||1000;
-  const K = m.matchType==="tournament"?48:32;
+  const p1Doc=p1Snap.docs[0], p2Doc=p2Snap.docs[0];
+  let r1=p1Doc.data().rating||1000, r2=p2Doc.data().rating||1000;
+  const K=m.matchType==="tournament"?48:32;
 
-  const expected1 = 1/(1+Math.pow(10,(r2-r1)/400));
-  const expected2 = 1/(1+Math.pow(10,(r1-r2)/400));
+  const expected1=1/(1+Math.pow(10,(r2-r1)/400));
+  const expected2=1/(1+Math.pow(10,(r1-r2)/400));
 
   if(!m.score || !m.score.includes("-")){ alert("Invalid score"); return; }
-  const [s1,s2] = m.score.split("-").map(Number); if(isNaN(s1)||isNaN(s2)){ alert("Invalid score"); return; }
+  const [s1,s2]=m.score.split("-").map(Number); if(isNaN(s1)||isNaN(s2)){ alert("Invalid score"); return; }
 
   let a1=0,a2=0;
   if(s1===s2){a1=a2=0.5;} else if(s1>s2){a1=1;a2=0;} else {a1=0;a2=1;}
-  const newR1 = Math.round(r1+K*(a1-expected1));
-  const newR2 = Math.round(r2+K*(a2-expected2));
+  const newR1=Math.round(r1+K*(a1-expected1));
+  const newR2=Math.round(r2+K*(a2-expected2));
 
-  let {wins:p1Wins=0, losses:p1Loss=0, draws:p1Draw=0} = p1Doc.data();
-  let {wins:p2Wins=0, losses:p2Loss=0, draws:p2Draw=0} = p2Doc.data();
+  let {wins:p1Wins=0,losses:p1Loss=0,draws:p1Draw=0}=p1Doc.data();
+  let {wins:p2Wins=0,losses:p2Loss=0,draws:p2Draw=0}=p2Doc.data();
 
-  if(s1===s2){p1Draw++; p2Draw++;} else if(s1>s2){p1Wins++; p2Loss++;} else{p2Wins++; p1Loss++;}
+  if(s1===s2){p1Draw++;p2Draw++;} else if(s1>s2){p1Wins++;p2Loss++;} else{p2Wins++;p1Loss++;}
 
-  await p1Doc.ref.update({rating:newR1, wins:p1Wins, losses:p1Loss, draws:p1Draw});
-  await p2Doc.ref.update({rating:newR2, wins:p2Wins, losses:p2Loss, draws:p2Draw});
+  await p1Doc.ref.update({rating:newR1,wins:p1Wins,losses:p1Loss,draws:p1Draw});
+  await p2Doc.ref.update({rating:newR2,wins:p2Wins,losses:p2Loss,draws:p2Draw});
 
-  await ref.update({
-    status:"approved",
-    ratingBefore1:r1, ratingBefore2:r2,
-    ratingAfter1:newR1, ratingAfter2:newR2,
-    approvedAt:firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  alert("Approved + Rating Updated");
-  loadMatches();
+  await ref.update({status:"approved",ratingBefore1:r1,ratingBefore2:r2,ratingAfter1:newR1,ratingAfter2:newR2,approvedAt:firebase.firestore.FieldValue.serverTimestamp()});
 }
 
 /* ===== REJECT MATCH ===== */
 async function rejectMatch(id){
   if(!confirm("Reject this match?")) return;
-  await db.collection("matches").doc(id).update({status:"rejected", rejectedAt:firebase.firestore.FieldValue.serverTimestamp()});
-  loadMatches();
+  await db.collection("matches").doc(id).update({status:"rejected",rejectedAt:firebase.firestore.FieldValue.serverTimestamp()});
 }
 
 /* ===== ROLLBACK MATCH ===== */
 async function rollbackMatch(id){
   if(!confirm("Rollback this match?")) return;
-  const ref = db.collection("matches").doc(id);
-  const snap = await ref.get(); if(!snap.exists) return;
-  const m = snap.data(); if(!m.ratingBefore1){ alert("No rating history"); return; }
+  const ref=db.collection("matches").doc(id);
+  const snap=await ref.get(); if(!snap.exists) return;
+  const m=snap.data(); if(!m.ratingBefore1){ alert("No rating history"); return; }
 
-  const p1Snap = await db.collection("players").where("username","==",m.player1).get();
-  const p2Snap = await db.collection("players").where("username","==",m.player2).get();
+  const p1Snap=await db.collection("players").where("username","==",m.player1).get();
+  const p2Snap=await db.collection("players").where("username","==",m.player2).get();
   if(p1Snap.empty||p2Snap.empty) return;
 
   await p1Snap.docs[0].ref.update({rating:m.ratingBefore1});
   await p2Snap.docs[0].ref.update({rating:m.ratingBefore2});
   await ref.update({status:"rolledback"});
-
-  alert("Rollback Complete");
-  loadMatches();
 }
 
 /* ===== EDIT SCORE ===== */
@@ -146,49 +107,42 @@ async function editMatch(id){
   const score=prompt("Enter new score (Example: 2-1)"); if(!score||!score.includes("-")) return;
   await db.collection("matches").doc(id).update({score});
   alert("Score updated. Use Recalculate if needed.");
-  loadMatches();
 }
 
 /* ===== FULL RECALCULATE ===== */
 async function recalculateAllRatings(){
   if(!confirm("Recalculate ALL ratings from zero?")) return;
   alert("Processing...");
-
   const players=await db.collection("players").get();
   for(const p of players.docs){
-    await p.ref.update({rating:1000, wins:0, losses:0, draws:0});
+    await p.ref.update({rating:1000,wins:0,losses:0,draws:0});
   }
-
   const matches=await db.collection("matches").where("status","==","approved").orderBy("createdAt","asc").get();
   for(const mDoc of matches.docs){
-    const m = mDoc.data();
-    const p1Snap = await db.collection("players").where("username","==",m.player1).get();
-    const p2Snap = await db.collection("players").where("username","==",m.player2).get();
+    const m=mDoc.data();
+    const p1Snap=await db.collection("players").where("username","==",m.player1).get();
+    const p2Snap=await db.collection("players").where("username","==",m.player2).get();
     if(p1Snap.empty||p2Snap.empty) continue;
 
     const p1Doc=p1Snap.docs[0], p2Doc=p2Snap.docs[0];
-    let r1 = p1Doc.data().rating||1000, r2 = p2Doc.data().rating||1000;
-    const K = m.matchType==="tournament"?48:32;
-
+    let r1=p1Doc.data().rating||1000, r2=p2Doc.data().rating||1000;
+    const K=m.matchType==="tournament"?48:32;
     if(!m.score || !m.score.includes("-")) continue;
-    const [s1,s2] = m.score.split("-").map(Number);
+    const [s1,s2]=m.score.split("-").map(Number);
     if(isNaN(s1)||isNaN(s2)) continue;
 
     let a1=0,a2=0;
     if(s1===s2){a1=a2=0.5;} else if(s1>s2){a1=1;a2=0;} else {a1=0;a2=1;}
-    const newR1 = Math.round(r1+K*(a1-1/(1+Math.pow(10,(r2-r1)/400))));
-    const newR2 = Math.round(r2+K*(a2-1/(1+Math.pow(10,(r1-r2)/400))));
-
+    const newR1=Math.round(r1+K*(a1-1/(1+Math.pow(10,(r2-r1)/400))));
+    const newR2=Math.round(r2+K*(a2-1/(1+Math.pow(10,(r1-r2)/400))));
     await p1Doc.ref.update({rating:newR1});
     await p2Doc.ref.update({rating:newR2});
-    await mDoc.ref.update({ratingBefore1:r1, ratingBefore2:r2, ratingAfter1:newR1, ratingAfter2:newR2});
+    await mDoc.ref.update({ratingBefore1:r1,ratingBefore2:r2,ratingAfter1:newR1,ratingAfter2:newR2});
   }
-
   alert("All Ratings Recalculated 🔥");
-  loadMatches();
 }
 
-// Load matches live
+/* ===== LOAD MATCHES LIVE ===== */
 db.collection("matches").orderBy("createdAt","desc").onSnapshot(snapshot=>{
   const list=document.getElementById("list");
   list.innerHTML="";
@@ -209,7 +163,6 @@ db.collection("matches").orderBy("createdAt","desc").onSnapshot(snapshot=>{
     list.appendChild(card);
   });
 });
-
 </script>
 </body>
 </html>
