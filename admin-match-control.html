@@ -187,6 +187,29 @@ async function recalculateAllRatings(){
   alert("All Ratings Recalculated 🔥");
   loadMatches();
 }
+
+// Load matches live
+db.collection("matches").orderBy("createdAt","desc").onSnapshot(snapshot=>{
+  const list=document.getElementById("list");
+  list.innerHTML="";
+  if(snapshot.empty){ list.innerHTML="No matches"; return; }
+
+  snapshot.forEach(doc=>{
+    const m=doc.data();
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<b>${m.player1}</b> vs <b>${m.player2}</b><br>
+                    Score: ${m.score||"—"}<br>
+                    Type: ${m.matchType||"friendly"}<br>
+                    Status: ${m.status||"pending"}<br><br>
+                    ${m.status==="pending"? `<button class="approve" onclick="approveMatch('${doc.id}')">Approve</button>
+                                             <button class="reject" onclick="rejectMatch('${doc.id}')">Reject</button>`:""}
+                    ${m.status==="approved"? `<button class="rollback" onclick="rollbackMatch('${doc.id}')">Rollback</button>`:""}
+                    <button class="edit" onclick="editMatch('${doc.id}')">Edit Score</button>`;
+    list.appendChild(card);
+  });
+});
+
 </script>
 </body>
 </html>
