@@ -66,6 +66,7 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
   margin-top:12px;
   background:linear-gradient(45deg,#ff3b3b,#ffae00);
 }
+.empty{text-align:center;margin-top:20px;opacity:.6;}
 </style>
 </head>
 
@@ -101,13 +102,12 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
   </div>
 
   <button onclick="location.href='player-submit-match.html'">Submit Match</button>
-  <button onclick="toggleHistory(true)">Match History</button>
+  <button onclick="loadHistory()">Match History</button>
   <button onclick="toggleEdit(true)">Edit Profile</button>
   <button class="secondary" onclick="logout()">Logout</button>
   <button class="home-btn" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
-<!-- Edit Profile -->
 <div id="editBox" class="hidden">
   <input id="phone" placeholder="Phone">
   <input id="ownerId" placeholder="Owner ID">
@@ -167,7 +167,6 @@ auth.onAuthStateChanged(async user=>{
 
   db.collection("players").doc(uid).onSnapshot(doc=>{
     if(!doc.exists) return;
-
     const d = doc.data();
     document.getElementById("v_username").innerText = d.username || "—";
     document.getElementById("v_phone").innerText = d.phone || "—";
@@ -198,7 +197,6 @@ auth.onAuthStateChanged(async user=>{
 
     document.getElementById("progressBar").style.width = (rating%500)/5 + "%";
   });
-
 });
 
 /* Edit Profile */
@@ -228,43 +226,47 @@ function toggleHistory(show){
   document.getElementById("historyBox").classList.toggle("hidden", !show);
 }
 function clearHistory(){
-  const historyList = document.getElementById("historyList");
-  historyList.innerHTML = "";
+  document.getElementById("historyList").innerHTML="";
 }
-
 async function loadHistory(){
+  toggleHistory(true);
   const historyList = document.getElementById("historyList");
-  historyList.innerHTML = "<div>Loading...</div>";
+  historyList.innerHTML="<div>Loading...</div>";
+
   const snap1 = await db.collection("matches").where("player1","==",uid).get();
   const snap2 = await db.collection("matches").where("player2","==",uid).get();
+
   const combined = [];
   snap1.forEach(doc=>combined.push(doc));
   snap2.forEach(doc=>combined.push(doc));
-  combined.sort((a,b)=>b.data().createdAt?.seconds - a.data().createdAt?.seconds);
-  historyList.innerHTML = "";
+
+  combined.sort((a,b)=>{
+    return (b.data().createdAt?.seconds||0) - (a.data().createdAt?.seconds||0);
+  });
+
   if(combined.length===0){
     historyList.innerHTML="<div class='empty'>No matches played yet</div>";
     return;
   }
+
+  historyList.innerHTML="";
   combined.forEach(d=>{
     const m = d.data();
-    const opponent = m.player1===uid?m.player2:m.player1;
-    let cls = "draw";
+    const opponent = m.player1===uid ? m.player2 : m.player1;
+    let cls="draw";
     if(m.resultType==="win" && m.winner===uid) cls="win";
     else if(m.resultType==="win" && m.loser===uid) cls="loss";
-    historyList.innerHTML += `
+
+    historyList.innerHTML+=`
       <div class="match-card ${cls}">
         <b>${m.resultType.toUpperCase()}</b> vs ${opponent}<br>
-        Score: ${m.score}<br>
+        Score: ${m.score || "—"}<br>
         ${m.tournamentName?`<span class="small">Tournament: ${m.tournamentName}</span>`:""}<br>
         <span class="small">${m.createdAt?.toDate().toLocaleString() || ""}</span>
       </div>
     `;
   });
 }
-
-// Load history when button clicked
-document.querySelector("button[onclick=\"toggleHistory(true)\"]").addEventListener("click", loadHistory);
 </script>
 
 </body>
