@@ -39,14 +39,14 @@ body{
   width:300%;
   height:300%;
   background:radial-gradient(circle at center,#ff0077, #ff5500, transparent 70%);
-  animation:flare 3s infinite;
-  opacity:0.1;
+  animation:flare 4s infinite;
+  opacity:0.12;
   pointer-events:none;
   z-index:0;
 }
 @keyframes flare{
   0%{transform:translateX(-50%) scale(1);}
-  50%{transform:translateX(-50%) scale(1.2);}
+  50%{transform:translateX(-50%) scale(1.15);}
   100%{transform:translateX(-50%) scale(1);}
 }
 
@@ -59,29 +59,31 @@ body{
   border-radius:50%;
   opacity:0.8;
   pointer-events:none;
-  animation:rise 2s linear infinite;
+  animation:rise 2.5s linear infinite;
 }
 @keyframes rise{
   0%{transform:translateY(0) scale(1);opacity:0.8;}
-  100%{transform:translateY(-150px) scale(0.3);opacity:0;}
+  100%{transform:translateY(-180px) scale(0.3);opacity:0;}
 }
 
-/* Logo */
+/* Logo PNG style */
 .logo{
   width:120px;
   margin:20px auto;
   display:block;
-  filter:drop-shadow(0 0 20px var(--neon-cyan));
+  filter:drop-shadow(0 0 25px var(--neon-cyan));
   z-index:2;
   position:relative;
 }
 
 /* Title */
 h1{
-  font-size:36px;
+  font-size:38px;
   margin:10px 0 30px;
-  color:var(--neon-cyan);
-  text-shadow:0 0 20px var(--neon-cyan),0 0 10px var(--neon-pink);
+  background:linear-gradient(45deg,#ff0000,#0055ff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 0 15px rgba(255,0,0,.5),0 0 15px rgba(0,85,255,.5);
   font-weight:900;
   z-index:2;
   position:relative;
@@ -94,7 +96,7 @@ h1{
   margin:auto 0 50px;
   border-radius:15px;
   overflow:hidden;
-  box-shadow:0 0 30px rgba(0,255,255,0.2);
+  box-shadow:0 0 35px rgba(0,255,255,0.25);
   z-index:2;
   position:relative;
   background:var(--card-bg);
@@ -137,14 +139,10 @@ tr:hover{
   background:rgba(0,255,255,0.08);
 }
 
-/* Top 3 Neon Jersey Pulse */
-@keyframes pulseGlow{
-  0%,100%{box-shadow:0 0 15px #fff;}
-  50%{box-shadow:0 0 30px #fff;}
-}
-.rank1{background:linear-gradient(120deg,#ff6b6b,#ffb86b); color:#000; animation:pulseGlow 1.5s infinite;}
-.rank2{background:linear-gradient(120deg,#6bafff,#6bffea); color:#000; animation:pulseGlow 1.5s infinite;}
-.rank3{background:linear-gradient(120deg,#ff6bff,#ff6bff); color:#000; animation:pulseGlow 1.5s infinite;}
+/* Top 3 Neon Jersey based on Rank */
+.rank1{background:linear-gradient(120deg,#FFD700,#ffdd55); color:#000; box-shadow:0 0 20px #FFD700;}
+.rank2{background:linear-gradient(120deg,#C0C0C0,#e0e0e0); color:#000; box-shadow:0 0 15px #C0C0C0;}
+.rank3{background:linear-gradient(120deg,#CD7F32,#e1a55c); color:#000; box-shadow:0 0 15px #CD7F32;}
 
 .medal{font-size:18px;margin-right:5px;}
 
@@ -179,10 +177,8 @@ footer{
 </head>
 <body>
 
-<!-- 🔥 Fire Flare Background -->
 <div class="fire-bg"></div>
 
-<!-- Logo -->
 <img src="logo.png" alt="AFNS Logo" class="logo">
 
 <h1>🏆 AFNS ELITE STRIKERS RANKINGS</h1>
@@ -226,7 +222,7 @@ function createSparks(num){
     document.body.appendChild(spark);
   }
 }
-createSparks(20);
+createSparks(25);
 
 db.collection("players").orderBy("rating","desc").onSnapshot(snapshot=>{
   table.innerHTML="";
