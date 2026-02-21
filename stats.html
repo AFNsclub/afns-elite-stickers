@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Strikers Player Rankings</title>
+<title>AFNS Elite Strikers - Player Rankings</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase -->
@@ -11,69 +11,70 @@
 
 <style>
 :root{
-  --red:#ff0033;
-  --blue:#00aaff;
-  --gold:#FFD700;
-  --silver:#C0C0C0;
-  --bronze:#CD7F32;
-  --dark:#020d1f;
-  --card:#0c1b2a;
-  --neon:#00f7ff;
+  --bg-dark:#0a0f21;
+  --card-bg:rgba(0,0,0,0.6);
+  --neon-cyan:#00f7ff;
+  --neon-pink:#ff44aa;
   --text:#fff;
+  --highlight:#ffbb33;
 }
 
-/* Body & Title */
+/* Body & Background */
 body{
   margin:0;
-  font-family:Segoe UI, sans-serif;
-  background:radial-gradient(circle at top,var(--dark),#010814);
+  font-family:'Segoe UI',sans-serif;
+  background:linear-gradient(180deg,#0a0f21,#020419);
   color:var(--text);
   text-align:center;
   overflow-x:hidden;
 }
 
+/* Title */
 h1{
-  padding:25px 10px;
-  font-size:32px;
-  letter-spacing:2px;
-  background:linear-gradient(90deg,var(--red),var(--blue));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  text-shadow:0 0 25px var(--red),0 0 20px var(--blue),0 0 15px var(--gold);
+  font-size:34px;
+  padding:30px 10px;
   margin:0;
+  color:var(--neon-cyan);
+  text-shadow:0 0 20px var(--neon-cyan),0 0 10px var(--neon-pink);
+  letter-spacing:2px;
+  font-weight:900;
+}
+
+/* Table container */
+.table-container{
+  width:95%;
+  max-width:900px;
+  margin:20px auto 40px;
+  border-radius:15px;
+  overflow:hidden;
+  box-shadow:0 0 30px rgba(0,255,255,0.2);
 }
 
 /* Table Styling */
 table{
-  width:95%;
-  margin:auto;
+  width:100%;
   border-collapse:collapse;
-  margin-top:20px;
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:0 0 25px rgba(0,247,255,.3);
 }
 
 th{
-  background:linear-gradient(90deg,var(--red),var(--blue));
   padding:16px;
-  font-size:18px;
+  font-size:16px;
   text-transform:uppercase;
-  letter-spacing:1px;
-  text-shadow:0 0 8px var(--neon);
+  background:rgba(10,20,40,0.7);
+  color:var(--neon-pink);
+  text-shadow:0 0 5px var(--neon-pink);
 }
 
 td{
   padding:14px;
-  border-bottom:1px solid #112b45;
   font-weight:600;
+  border-bottom:1px solid rgba(255,255,255,0.1);
 }
 
-/* Row Animations */
 tr{
   opacity:0;
-  transform:translateY(20px);
-  animation:fadeSlide .6s forwards;
+  transform:translateY(15px);
+  animation:fadeSlide .5s forwards;
 }
 
 @keyframes fadeSlide{
@@ -81,73 +82,52 @@ tr{
 }
 
 tr:hover{
-  background:#0f2c4d;
   transform:scale(1.02);
+  background:rgba(0,255,255,0.08);
   transition:.2s;
 }
 
-/* Top 3 Players Jersy Style */
-.rank1{
-  background:linear-gradient(135deg,#ff0000,#0000ff);
-  color:#fff;
-  box-shadow:0 0 25px #FFD700;
-  background-image:url('jersey1.png');
-  background-size:cover;
-  background-blend-mode:soft-light;
-}
-.rank2{
-  background:linear-gradient(135deg,#0000ff,#ff0000);
-  color:#fff;
-  box-shadow:0 0 20px #C0C0C0;
-  background-image:url('jersey2.png');
-  background-size:cover;
-  background-blend-mode:soft-light;
-}
-.rank3{
-  background:linear-gradient(135deg,#ff0033,#00aaff);
-  color:#fff;
-  box-shadow:0 0 20px #CD7F32;
-  background-image:url('jersey3.png');
-  background-size:cover;
-  background-blend-mode:soft-light;
-}
+/* Highlight Top 3 players with fresh colors */
+.rank1{background:linear-gradient(120deg,#ff6b6b,#ffb86b); color:#000; box-shadow:0 0 20px #ff6b6b;}
+.rank2{background:linear-gradient(120deg,#6bafff,#6bffea); color:#000; box-shadow:0 0 15px #6bafff;}
+.rank3{background:linear-gradient(120deg,#ff6bff,#ff6bff); color:#000; box-shadow:0 0 15px #ff6bff;}
 
-.medal{font-size:22px;margin-right:5px;}
+.medal{font-size:18px;margin-right:5px;}
 
-/* Player Link */
+/* Player link hover */
 .player-link{
   color:inherit;
   text-decoration:none;
-  cursor:pointer;
   transition:.2s;
 }
 .player-link:hover{
   text-decoration:underline;
-  color:var(--gold);
+  color:var(--highlight);
 }
 
 /* Footer */
 footer{
   text-align:center;
-  margin-top:25px;
-  font-size:13px;
-  color:var(--gold);
+  font-size:14px;
+  margin-bottom:20px;
+  color:var(--highlight);
   font-weight:700;
-  padding-bottom:15px;
-  text-shadow:0 0 5px var(--neon);
+  text-shadow:0 0 8px var(--neon-cyan);
 }
 
 /* Responsive */
 @media(max-width:500px){
-  th,td{font-size:14px;padding:10px;}
+  th,td{font-size:13px;padding:10px;}
   h1{font-size:26px;padding:20px 5px;}
 }
 </style>
 </head>
+
 <body>
 
-<h1>🏆 AFNS ELITE STRIKERS PLAYER RANKINGS</h1>
+<h1>🏆 AFNS ELITE STRIKERS RANKING</h1>
 
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -161,10 +141,9 @@ footer{
 </thead>
 <tbody id="rankingBody"></tbody>
 </table>
+</div>
 
-<footer>
-© 2026 AFNS Elite Strikers | SI Shohan
-</footer>
+<footer>© 2026 AFNS Elite Strikers | SI Shohan</footer>
 
 <script>
 firebase.initializeApp({
