@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Strikers - Ranking</title>
+<title>AFNS Elite Strikers - Player Rankings</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase -->
@@ -32,7 +32,7 @@ h1{
   padding:20px;
   font-size:28px;
   letter-spacing:2px;
-  text-shadow:0 0 20px var(--neon),0 0 10px var(--gold);
+  text-shadow:0 0 25px var(--neon),0 0 15px var(--gold);
 }
 
 table{
@@ -40,9 +40,9 @@ table{
   margin:auto;
   border-collapse:collapse;
   margin-top:20px;
-  box-shadow:0 0 15px rgba(0,247,255,.3);
   border-radius:12px;
   overflow:hidden;
+  box-shadow:0 0 25px rgba(0,247,255,.3);
 }
 
 th{
@@ -75,10 +75,33 @@ tr:hover{
   transition:.2s;
 }
 
-.rank1{background:linear-gradient(90deg,#3a2e00,#1b1400);color:var(--gold);box-shadow:0 0 20px var(--gold);}
-.rank2{background:linear-gradient(90deg,#2a2a2a,#111);color:var(--silver);box-shadow:0 0 15px var(--silver);}
-.rank3{background:linear-gradient(90deg,#3b1f00,#1c0d00);color:var(--bronze);box-shadow:0 0 15px var(--bronze);}
-.medal{font-size:20px;margin-right:5px;}
+/* Top 3 Player Jerseys */
+.rank1{
+  background:linear-gradient(90deg,#FFD700,#FFA500);
+  color:#000;
+  box-shadow:0 0 25px #FFD700;
+  background-image:url('jersey1.png');
+  background-size:cover;
+  background-blend-mode:soft-light;
+}
+.rank2{
+  background:linear-gradient(90deg,#C0C0C0,#AAAAAA);
+  color:#000;
+  box-shadow:0 0 20px #C0C0C0;
+  background-image:url('jersey2.png');
+  background-size:cover;
+  background-blend-mode:soft-light;
+}
+.rank3{
+  background:linear-gradient(90deg,#CD7F32,#B87333);
+  color:#000;
+  box-shadow:0 0 20px #CD7F32;
+  background-image:url('jersey3.png');
+  background-size:cover;
+  background-blend-mode:soft-light;
+}
+
+.medal{font-size:22px;margin-right:5px;}
 
 .player-link{
   color:inherit;
@@ -88,10 +111,9 @@ tr:hover{
 }
 .player-link:hover{
   text-decoration:underline;
-  color:var(--gold);
+  color:#FFD700;
 }
 
-/* Responsive Table */
 @media(max-width:500px){
   th,td{font-size:14px;padding:10px;}
 }
@@ -99,7 +121,7 @@ tr:hover{
 </head>
 <body>
 
-<h1>🏆 AFNS Elite Strikers Federation Ranking</h1>
+<h1>🏆 AFNS Elite Strikers Player Rankings</h1>
 
 <table>
 <thead>
