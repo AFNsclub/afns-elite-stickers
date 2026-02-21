@@ -5,7 +5,6 @@
 <title>AFNS Elite Player Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -34,8 +33,6 @@ header img{width:90px;}
 }
 .progress{background:#0c223f;border-radius:10px;overflow:hidden;height:10px;margin:12px 0;}
 .progress-bar{height:100%;background:linear-gradient(90deg,#4db8ff,#ffd34d);width:0%;transition:.5s;}
-.info-line{margin:8px 0;font-size:14px;}
-.info-line span{color:#4db8ff;}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:15px;}
 .stat{
   background:linear-gradient(145deg,#132f55,#0d203a);
@@ -49,22 +46,14 @@ button{
   color:#fff;
 }
 button.secondary{background:#1a1a1a;color:#ccc;}
+.home-btn{background:linear-gradient(45deg,#ff9800,#ff3d00);}
 .hidden{display:none;}
-input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
-.success{color:#00ff88;margin-top:10px;}
-.fb-link{color:#4db8ff;text-decoration:underline;cursor:pointer;}
-.home-btn{
-  background:linear-gradient(45deg,#ff9800,#ff3d00);
-}
-.match-history{
-  margin-top:20px;
-}
+.match-history{margin-top:20px;}
 .match-card{
   background:linear-gradient(145deg,#0f2545,#081a2e);
   padding:12px;
   border-radius:12px;
   margin-bottom:10px;
-  box-shadow:0 0 12px rgba(0,0,0,.5);
 }
 .win{border-left:5px solid #4cff8f;}
 .loss{border-left:5px solid #ff6b6b;}
@@ -76,8 +65,9 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 
 <body>
 <div class="container">
+
 <header>
-  <img src="logo.png" alt="AFNS Logo">
+  <img src="logo.png">
   <h2>AFNS Elite Player Profile</h2>
 </header>
 
@@ -90,14 +80,6 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
     <div class="progress-bar" id="progressBar"></div>
   </div>
 
-  <div class="info-line">🌐 Facebook:
-    <span id="fbLink" class="fb-link hidden" onclick="openFb()">View Profile</span>
-  </div>
-
-  <div class="info-line">📱 Phone: <span id="v_phone">—</span></div>
-  <div class="info-line">👑 Owner ID: <span id="v_ownerId">—</span></div>
-  <div class="info-line">💻 Device: <span id="v_device">—</span></div>
-
   <div class="stats">
     <div class="stat"><div>Rating</div><h3 id="rating">0</h3></div>
     <div class="stat"><div>Wins</div><h3 id="wins">0</h3></div>
@@ -105,29 +87,17 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
     <div class="stat"><div>Win Rate</div><h3 id="winRate">0%</h3></div>
   </div>
 
-  <button onclick="location.href='player-submit-match.html'">Submit Match</button>
-  <button onclick="toggleHistory(true)">Match History</button>
-  <button onclick="toggleEdit(true)">Edit Profile</button>
+  <button onclick="toggleHistory(true)">📜 Match History</button>
   <button class="secondary" onclick="logout()">Logout</button>
   <button class="home-btn" onclick="location.href='index.html'">🏠 Home</button>
-</div>
-
-<div id="editBox" class="hidden">
-  <input id="phone" placeholder="Phone">
-  <input id="ownerId" placeholder="Owner ID">
-  <input id="facebook" placeholder="Facebook link">
-  <input id="deviceName" placeholder="Device name">
-  <button onclick="saveProfile()">Save</button>
-  <button class="secondary" onclick="toggleEdit(false)">Cancel</button>
 </div>
 
 <div class="match-history hidden" id="matchHistory">
   <h3>📜 Match History</h3>
   <div id="matchList"></div>
-  <button class="secondary" onclick="toggleHistory(false)">Close History</button>
+  <button class="secondary" onclick="toggleHistory(false)">Close</button>
 </div>
 
-<div id="msg"></div>
 </div>
 
 <script>
@@ -139,7 +109,8 @@ firebase.initializeApp({
 
 const auth = firebase.auth();
 const db = firebase.firestore();
-let uid, fbUrl="", username="";
+
+let username="";
 
 // AUTH CHECK
 auth.onAuthStateChanged(async user=>{
@@ -147,139 +118,97 @@ auth.onAuthStateChanged(async user=>{
     location.replace("login.html");
     return;
   }
-  uid = user.uid;
-  username = user.email.split("@")[0]; // username from email
 
-  document.getElementById("v_email").innerText = user.email;
+  const uid=user.uid;
+  document.getElementById("v_email").innerText=user.email;
 
-  const docRef = db.collection("players").doc(uid);
-  let docSnap = await docRef.get();
+  const playerRef=db.collection("players").doc(uid);
+  let doc=await playerRef.get();
 
-  if(!docSnap.exists){
-    await docRef.set({
-      username: username,
-      rating: 1000,
-      wins: 0,
-      losses: 0,
-      draws: 0,
-      phone: "",
-      ownerId: "",
-      facebook: "",
-      deviceName: ""
+  if(!doc.exists){
+    await playerRef.set({
+      username:user.email.split("@")[0],
+      rating:1000,wins:0,losses:0,draws:0
     });
+    doc=await playerRef.get();
   }
 
-  db.collection("players").doc(uid).onSnapshot(doc=>{
-    if(!doc.exists) return;
-    const d = doc.data();
+  const data=doc.data();
+  username=data.username;
 
-    document.getElementById("v_username").innerText = d.username || "—";
-    document.getElementById("v_phone").innerText = d.phone || "—";
-    document.getElementById("v_ownerId").innerText = d.ownerId || "—";
-    document.getElementById("v_device").innerText = d.deviceName || "—";
+  document.getElementById("v_username").innerText=data.username;
+  document.getElementById("rating").innerText=data.rating||1000;
+  document.getElementById("wins").innerText=data.wins||0;
+  document.getElementById("losses").innerText=data.losses||0;
 
-    fbUrl = d.facebook || "";
-    document.getElementById("fbLink").classList.toggle("hidden", !fbUrl);
+  const total=(data.wins||0)+(data.losses||0)+(data.draws||0);
+  document.getElementById("winRate").innerText=
+    total?Math.round((data.wins/total)*100)+"%":"0%";
 
-    const rating = d.rating || 1000;
-    const wins = d.wins || 0;
-    const losses = d.losses || 0;
-    const draws = d.draws || 0;
+  document.getElementById("rankBadge").innerText=
+    (data.rating>=2000?"👑 Legend":
+     data.rating>=1500?"🔥 Elite":
+     data.rating>=1000?"⭐ Pro":
+     "Unranked");
 
-    document.getElementById("rating").innerText = rating;
-    document.getElementById("wins").innerText = wins;
-    document.getElementById("losses").innerText = losses;
-
-    const total = wins + losses + draws;
-    const winRate = total ? Math.round((wins/total)*100) : 0;
-    document.getElementById("winRate").innerText = winRate + "%";
-
-    document.getElementById("rankBadge").innerText =
-      rating>=2000?"👑 Legend":
-      rating>=1500?"🔥 Elite":
-      rating>=1000?"⭐ Pro":
-      rating>=500?"🥉 Rising":"Unranked";
-
-    document.getElementById("progressBar").style.width = (rating%500)/5 + "%";
-  });
-
+  document.getElementById("progressBar").style.width=
+    Math.min((data.rating%500)/5,100)+"%";
 });
-
-// EDIT PROFILE
-function toggleEdit(edit){
-  document.getElementById("viewBox").classList.toggle("hidden", edit);
-  document.getElementById("editBox").classList.toggle("hidden", !edit);
-}
-
-function saveProfile(){
-  db.collection("players").doc(uid).update({
-    phone: document.getElementById("phone").value.trim(),
-    ownerId: document.getElementById("ownerId").value.trim(),
-    facebook: document.getElementById("facebook").value.trim(),
-    deviceName: document.getElementById("deviceName").value.trim()
-  }).then(()=>{
-    document.getElementById("msg").innerHTML =
-      "<div class='success'>Profile Updated</div>";
-    toggleEdit(false);
-  });
-}
-
-function openFb(){
-  if(fbUrl) window.open(fbUrl,"_blank");
-}
-
-function logout(){
-  auth.signOut().then(()=>{location.replace("login.html");});
-}
 
 // MATCH HISTORY
 function toggleHistory(show){
-  document.getElementById("matchHistory").classList.toggle("hidden", !show);
-  document.getElementById("viewBox").classList.toggle("hidden", show);
-
-  if(show) loadMatchHistory();
+  document.getElementById("matchHistory").classList.toggle("hidden",!show);
+  document.getElementById("viewBox").classList.toggle("hidden",show);
+  if(show) loadMatches();
 }
 
-async function loadMatchHistory(){
-  const listDiv = document.getElementById("matchList");
-  listDiv.innerHTML = "";
+async function loadMatches(){
+  const list=document.getElementById("matchList");
+  list.innerHTML="";
 
-  const snap = await db.collection("matches")
-    .where("player1","==",username)
+  const snap=await db.collection("matches")
+    .where("status","==","approved")
     .get();
 
-  const snap2 = await db.collection("matches")
-    .where("player2","==",username)
-    .get();
+  const myMatches=snap.docs.filter(d=>{
+    const m=d.data();
+    return m.player1===username||m.player2===username;
+  });
 
-  const allMatches = [...snap.docs, ...snap2.docs]
-    .sort((a,b)=>b.data().createdAt?.toDate() - a.data().createdAt?.toDate());
-
-  if(allMatches.length===0){
-    listDiv.innerHTML = `<div class="empty">No matches played yet</div>`;
+  if(myMatches.length===0){
+    list.innerHTML=`<div class="empty">No matches played yet</div>`;
     return;
   }
 
-  allMatches.forEach(d=>{
-    const m = d.data();
-    const opponent = m.player1===username ? m.player2 : m.player1;
-    let resultClass = "draw";
-    if(m.resultType==="win" && m.winner===username) resultClass="win";
-    else if(m.resultType==="win" && m.loser===username) resultClass="loss";
+  myMatches
+  .sort((a,b)=>{
+    const da=a.data().createdAt?.toDate?.()||new Date(0);
+    const dbb=b.data().createdAt?.toDate?.()||new Date(0);
+    return dbb-da;
+  })
+  .forEach(d=>{
+    const m=d.data();
+    const opponent=m.player1===username?m.player2:m.player1;
 
-    listDiv.innerHTML += `
-      <div class="match-card ${resultClass}">
-        <b>${m.resultType.toUpperCase()}</b> vs ${opponent}<br>
+    let cls="draw",text="DRAW";
+    if(m.winner===username){cls="win";text="WIN";}
+    else if(m.loser===username){cls="loss";text="LOSS";}
+
+    list.innerHTML+=`
+      <div class="match-card ${cls}">
+        <b>${text}</b> vs ${opponent}<br>
         Score: ${m.score}
-        ${m.tournamentName ? `<div class="small">Tournament: ${m.tournamentName}</div>` : ``}
         <div class="small">
-          ${m.createdAt?.toDate().toLocaleString() || ""}
+          ${m.createdAt?.toDate?.().toLocaleString()||""}
         </div>
-      </div>
-    `;
+      </div>`;
   });
+}
+
+function logout(){
+  auth.signOut().then(()=>location.replace("login.html"));
 }
 </script>
 
 </body>
-</html>
+    </html>
