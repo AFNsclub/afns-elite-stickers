@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Strikers - Player Rankings</title>
+<title>AFNS Elite Strikers - Rankings</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase -->
@@ -15,39 +15,89 @@
   --card-bg:rgba(0,0,0,0.6);
   --neon-cyan:#00f7ff;
   --neon-pink:#ff44aa;
+  --neon-yellow:#ffbb33;
   --text:#fff;
-  --highlight:#ffbb33;
 }
 
 /* Body & Background */
 body{
   margin:0;
   font-family:'Segoe UI',sans-serif;
-  background:linear-gradient(180deg,#0a0f21,#020419);
+  background:#0a0f21;
   color:var(--text);
   text-align:center;
   overflow-x:hidden;
+  position:relative;
+}
+
+/* 🔥 Fire Flare Background */
+.fire-bg{
+  position:fixed;
+  top:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:300%;
+  height:300%;
+  background:radial-gradient(circle at center,#ff0077, #ff5500, transparent 70%);
+  animation:flare 3s infinite;
+  opacity:0.1;
+  pointer-events:none;
+  z-index:0;
+}
+@keyframes flare{
+  0%{transform:translateX(-50%) scale(1);}
+  50%{transform:translateX(-50%) scale(1.2);}
+  100%{transform:translateX(-50%) scale(1);}
+}
+
+/* Mini Sparks */
+.spark{
+  position:absolute;
+  width:4px;
+  height:4px;
+  background:var(--neon-yellow);
+  border-radius:50%;
+  opacity:0.8;
+  pointer-events:none;
+  animation:rise 2s linear infinite;
+}
+@keyframes rise{
+  0%{transform:translateY(0) scale(1);opacity:0.8;}
+  100%{transform:translateY(-150px) scale(0.3);opacity:0;}
+}
+
+/* Logo */
+.logo{
+  width:120px;
+  margin:20px auto;
+  display:block;
+  filter:drop-shadow(0 0 20px var(--neon-cyan));
+  z-index:2;
+  position:relative;
 }
 
 /* Title */
 h1{
-  font-size:34px;
-  padding:30px 10px;
-  margin:0;
+  font-size:36px;
+  margin:10px 0 30px;
   color:var(--neon-cyan);
   text-shadow:0 0 20px var(--neon-cyan),0 0 10px var(--neon-pink);
-  letter-spacing:2px;
   font-weight:900;
+  z-index:2;
+  position:relative;
 }
 
-/* Table container */
+/* Table Container */
 .table-container{
   width:95%;
   max-width:900px;
-  margin:20px auto 40px;
+  margin:auto 0 50px;
   border-radius:15px;
   overflow:hidden;
   box-shadow:0 0 30px rgba(0,255,255,0.2);
+  z-index:2;
+  position:relative;
+  background:var(--card-bg);
 }
 
 /* Table Styling */
@@ -75,6 +125,7 @@ tr{
   opacity:0;
   transform:translateY(15px);
   animation:fadeSlide .5s forwards;
+  transition:0.3s;
 }
 
 @keyframes fadeSlide{
@@ -84,13 +135,16 @@ tr{
 tr:hover{
   transform:scale(1.02);
   background:rgba(0,255,255,0.08);
-  transition:.2s;
 }
 
-/* Highlight Top 3 players with fresh colors */
-.rank1{background:linear-gradient(120deg,#ff6b6b,#ffb86b); color:#000; box-shadow:0 0 20px #ff6b6b;}
-.rank2{background:linear-gradient(120deg,#6bafff,#6bffea); color:#000; box-shadow:0 0 15px #6bafff;}
-.rank3{background:linear-gradient(120deg,#ff6bff,#ff6bff); color:#000; box-shadow:0 0 15px #ff6bff;}
+/* Top 3 Neon Jersey Pulse */
+@keyframes pulseGlow{
+  0%,100%{box-shadow:0 0 15px #fff;}
+  50%{box-shadow:0 0 30px #fff;}
+}
+.rank1{background:linear-gradient(120deg,#ff6b6b,#ffb86b); color:#000; animation:pulseGlow 1.5s infinite;}
+.rank2{background:linear-gradient(120deg,#6bafff,#6bffea); color:#000; animation:pulseGlow 1.5s infinite;}
+.rank3{background:linear-gradient(120deg,#ff6bff,#ff6bff); color:#000; animation:pulseGlow 1.5s infinite;}
 
 .medal{font-size:18px;margin-right:5px;}
 
@@ -102,7 +156,7 @@ tr:hover{
 }
 .player-link:hover{
   text-decoration:underline;
-  color:var(--highlight);
+  color:var(--neon-yellow);
 }
 
 /* Footer */
@@ -110,7 +164,7 @@ footer{
   text-align:center;
   font-size:14px;
   margin-bottom:20px;
-  color:var(--highlight);
+  color:var(--neon-yellow);
   font-weight:700;
   text-shadow:0 0 8px var(--neon-cyan);
 }
@@ -118,14 +172,20 @@ footer{
 /* Responsive */
 @media(max-width:500px){
   th,td{font-size:13px;padding:10px;}
-  h1{font-size:26px;padding:20px 5px;}
+  h1{font-size:28px;margin-bottom:20px;}
+  .logo{width:90px;}
 }
 </style>
 </head>
-
 <body>
 
-<h1>🏆 AFNS ELITE STRIKERS RANKING</h1>
+<!-- 🔥 Fire Flare Background -->
+<div class="fire-bg"></div>
+
+<!-- Logo -->
+<img src="logo.png" alt="AFNS Logo" class="logo">
+
+<h1>🏆 AFNS ELITE STRIKERS RANKINGS</h1>
 
 <div class="table-container">
 <table>
@@ -154,6 +214,19 @@ firebase.initializeApp({
 
 const db=firebase.firestore();
 const table=document.getElementById("rankingBody");
+
+/* Mini Sparks Generator */
+function createSparks(num){
+  for(let i=0;i<num;i++){
+    const spark=document.createElement('div');
+    spark.className='spark';
+    spark.style.left=Math.random()*100+'%';
+    spark.style.top=100+Math.random()*50+'%';
+    spark.style.animationDuration=(1+Math.random()*2)+'s';
+    document.body.appendChild(spark);
+  }
+}
+createSparks(20);
 
 db.collection("players").orderBy("rating","desc").onSnapshot(snapshot=>{
   table.innerHTML="";
