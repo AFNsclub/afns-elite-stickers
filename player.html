@@ -52,6 +52,9 @@ button.secondary{background:#1a1a1a;color:#ccc;}
 input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 .success{color:#00ff88;margin-top:10px;}
 .fb-link{color:#4db8ff;text-decoration:underline;cursor:pointer;}
+.home-btn{
+  background:linear-gradient(45deg,#ff9800,#ff3d00);
+}
 </style>
 </head>
 
@@ -91,6 +94,7 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
   <button onclick="location.href='match-history.html'">Match History</button>
   <button onclick="toggleEdit(true)">Edit Profile</button>
   <button class="secondary" onclick="logout()">Logout</button>
+  <button class="home-btn" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
 <div id="editBox" class="hidden">
@@ -142,72 +146,41 @@ auth.onAuthStateChanged(async user=>{
       facebook: "",
       deviceName: ""
     });
-    docSnap = await docRef.get();
   }
 
-  const d = docSnap.data();
+  db.collection("players").doc(uid).onSnapshot(doc=>{
+    if(!doc.exists) return;
 
-  document.getElementById("v_username").innerText = d.username || "—";
-  document.getElementById("v_phone").innerText = d.phone || "—";
-  document.getElementById("v_ownerId").innerText = d.ownerId || "—";
-  document.getElementById("v_device").innerText = d.deviceName || "—";
+    const d = doc.data();
 
-  fbUrl = d.facebook || "";
-  document.getElementById("fbLink").classList.toggle("hidden", !fbUrl);
+    document.getElementById("v_username").innerText = d.username || "—";
+    document.getElementById("v_phone").innerText = d.phone || "—";
+    document.getElementById("v_ownerId").innerText = d.ownerId || "—";
+    document.getElementById("v_device").innerText = d.deviceName || "—";
 
-  // ✅ BULLETPROOF MATCH CALCULATION
-  db.collection("matches").onSnapshot(snapshot=>{
+    fbUrl = d.facebook || "";
+    document.getElementById("fbLink").classList.toggle("hidden", !fbUrl);
 
-    let wins=0, losses=0, draws=0;
+    const rating = d.rating || 1000;
+    const wins = d.wins || 0;
+    const losses = d.losses || 0;
+    const draws = d.draws || 0;
 
-    snapshot.forEach(doc=>{
-      const m = doc.data();
-
-      if(!m.player1 || !m.player2) return;
-      if(m.player1!==username && m.player2!==username) return;
-
-      // status থাকলে এবং approved না হলে skip
-      if(m.status && m.status !== "approved") return;
-
-      if(!m.score || !m.score.includes("-")) return;
-
-      const parts = m.score.split("-");
-      if(parts.length!==2) return;
-
-      const s1 = parseInt(parts[0]);
-      const s2 = parseInt(parts[1]);
-      if(isNaN(s1) || isNaN(s2)) return;
-
-      if(s1===s2){
-        draws++;
-      }else{
-        const isWin =
-          (m.player1===username && s1>s2) ||
-          (m.player2===username && s2>s1);
-
-        if(isWin) wins++;
-        else losses++;
-      }
-    });
-
-    const total = wins+losses+draws;
-    const winRate = total?Math.round((wins/total)*100):0;
-
+    document.getElementById("rating").innerText = rating;
     document.getElementById("wins").innerText = wins;
     document.getElementById("losses").innerText = losses;
-    document.getElementById("winRate").innerText = winRate+"%";
 
-    let r = d.rating || 1000;
-    document.getElementById("rating").innerText = r;
+    const total = wins + losses + draws;
+    const winRate = total ? Math.round((wins/total)*100) : 0;
+    document.getElementById("winRate").innerText = winRate + "%";
 
     document.getElementById("rankBadge").innerText =
-      r>=2000?"👑 Legend":
-      r>=1500?"🔥 Elite":
-      r>=1000?"⭐ Pro":
-      r>=500?"🥉 Rising":"Unranked";
+      rating>=2000?"👑 Legend":
+      rating>=1500?"🔥 Elite":
+      rating>=1000?"⭐ Pro":
+      rating>=500?"🥉 Rising":"Unranked";
 
-    document.getElementById("progressBar").style.width = (r%500)/5+"%";
-
+    document.getElementById("progressBar").style.width = (rating%500)/5 + "%";
   });
 
 });
@@ -227,7 +200,6 @@ function saveProfile(){
     document.getElementById("msg").innerHTML =
       "<div class='success'>Profile Updated</div>";
     toggleEdit(false);
-    location.reload();
   });
 }
 
@@ -243,4 +215,4 @@ function logout(){
 </script>
 
 </body>
-</html>
+    </html>
