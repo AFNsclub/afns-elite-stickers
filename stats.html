@@ -21,6 +21,9 @@
   --text:#fff;
   --rank-up:#4cff8f;
   --rank-down:#ff6b6b;
+  --gold:#FFD700;
+  --silver:#C0C0C0;
+  --bronze:#CD7F32;
 }
 body{
   margin:0;
@@ -57,10 +60,7 @@ th,td{
   border-bottom:1px solid rgba(255,255,255,0.1);
   text-align:center;
 }
-th{
-  background:rgba(0,0,0,0.5);
-  color:var(--neon);
-}
+th{background:rgba(0,0,0,0.5); color:var(--neon);}
 .rank-up{color:var(--rank-up);font-weight:bold;}
 .rank-down{color:var(--rank-down);font-weight:bold;}
 .card{
@@ -91,10 +91,19 @@ canvas{background:var(--card);border-radius:12px;}
   display:block;
   filter:drop-shadow(0 0 25px var(--accent));
 }
-@media(max-width:600px){
-  th,td{font-size:12px;padding:8px;}
-  h1{font-size:28px;}
-  .logo{width:90px;}
+.rank1{background:var(--gold); color:#000;}
+.rank2{background:var(--silver); color:#000;}
+.rank3{background:var(--bronze); color:#000;}
+.medal{margin-right:5px;}
+.toggle-btn{
+  margin:10px 5px;
+  padding:6px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  background:#00f7ff;
+  color:#000;
+  font-weight:600;
 }
 </style>
 </head>
@@ -106,6 +115,9 @@ canvas{background:var(--card);border-radius:12px;}
 <div class="card">
 <h2>Select Season</h2>
 <select id="seasonSelect"></select>
+<br>
+<button class="toggle-btn" id="modeToggle">Toggle Dark/Light Mode</button>
+<button class="toggle-btn" id="chartToggle">Toggle Chart: Bar/Line</button>
 </div>
 
 <div class="card table-container">
@@ -165,7 +177,19 @@ const seasonSelect = document.getElementById("seasonSelect");
 const seasonRanking = document.getElementById("seasonRanking");
 const alltimeRanking = document.getElementById("alltimeRanking");
 const hofSection = document.getElementById("hofSection");
-let ratingChart;
+let ratingChart, chartType="bar";
+
+// Dark/Light Mode Toggle
+document.getElementById("modeToggle").addEventListener("click",()=>{
+  document.body.classList.toggle("light");
+});
+
+// Chart Type Toggle
+document.getElementById("chartToggle").addEventListener("click",()=>{
+  chartType = chartType==="bar"?"line":"bar";
+  const selectedSeason = seasonSelect.value;
+  if(selectedSeason) loadComparisonChart(selectedSeason);
+});
 
 // Load Seasons
 async function loadSeasons(){
@@ -188,10 +212,14 @@ async function loadSeasonRanking(seasonId){
   snap.forEach(doc=>{
     const p = doc.data();
     const prevRank = p.prevRank||rank;
-    let delta = prevRank - rank;
+    const delta = prevRank - rank;
+    let rankClass="";
+    if(rank===1) rankClass="rank1";
+    else if(rank===2) rankClass="rank2";
+    else if(rank===3) rankClass="rank3";
     seasonRanking.innerHTML+=`
-      <tr>
-        <td>${rank}</td>
+      <tr class="${rankClass}">
+        <td><span class="medal">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':''}</span>${rank}</td>
         <td>${p.username||"-"}</td>
         <td>${p.wins||0}</td>
         <td>${p.losses||0}</td>
@@ -203,7 +231,7 @@ async function loadSeasonRanking(seasonId){
     rank++;
   });
   await loadAlltimeRanking();
-  await loadComparisonChart();
+  await loadComparisonChart(seasonId);
   await loadHallOfFame();
 }
 
@@ -229,7 +257,7 @@ async function loadAlltimeRanking(){
 }
 
 // Load Seasonal & Historical Comparison Chart
-async function loadComparisonChart(){
+async function loadComparisonChart(selectedSeason){
   const seasonsSnap = await db.collection("seasons").orderBy("year","asc").get();
   const seasons = seasonsSnap.docs.map(d=>d.id);
   const playersSnap = await db.collection("players").get();
@@ -248,14 +276,15 @@ async function loadComparisonChart(){
       label:player,
       data:data,
       borderColor:`hsl(${idx*40 % 360}, 70%, 60%)`,
-      backgroundColor:'transparent'
+      backgroundColor: chartType==="bar"?`hsla(${idx*40 % 360},70%,60%,0.5)`:'transparent',
+      tension:0.3
     });
   });
 
   const ctx = document.getElementById("ratingChart").getContext("2d");
   if(ratingChart) ratingChart.destroy();
   ratingChart = new Chart(ctx,{
-    type:'line',
+    type: chartType,
     data:{labels, datasets},
     options:{responsive:true, plugins:{legend:{position:'bottom'}}, scales:{y:{beginAtZero:true}}}
   });
@@ -284,4 +313,4 @@ loadSeasons();
 </script>
 
 </body>
-</html>
+</html>,
