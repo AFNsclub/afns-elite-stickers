@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Strikers - Player Rankings</title>
+<title>AFNS Elite Strikers Player Rankings</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase -->
@@ -11,30 +11,39 @@
 
 <style>
 :root{
+  --red:#ff0033;
+  --blue:#00aaff;
   --gold:#FFD700;
   --silver:#C0C0C0;
   --bronze:#CD7F32;
   --dark:#020d1f;
   --card:#0c1b2a;
   --neon:#00f7ff;
+  --text:#fff;
 }
 
+/* Body & Title */
 body{
   margin:0;
   font-family:Segoe UI, sans-serif;
   background:radial-gradient(circle at top,var(--dark),#010814);
-  color:white;
+  color:var(--text);
   text-align:center;
   overflow-x:hidden;
 }
 
 h1{
-  padding:20px;
-  font-size:28px;
+  padding:25px 10px;
+  font-size:32px;
   letter-spacing:2px;
-  text-shadow:0 0 25px var(--neon),0 0 15px var(--gold);
+  background:linear-gradient(90deg,var(--red),var(--blue));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 0 25px var(--red),0 0 20px var(--blue),0 0 15px var(--gold);
+  margin:0;
 }
 
+/* Table Styling */
 table{
   width:95%;
   margin:auto;
@@ -46,11 +55,12 @@ table{
 }
 
 th{
-  background:linear-gradient(90deg,#061423,#0c1b2a);
-  padding:15px;
+  background:linear-gradient(90deg,var(--red),var(--blue));
+  padding:16px;
   font-size:18px;
   text-transform:uppercase;
   letter-spacing:1px;
+  text-shadow:0 0 8px var(--neon);
 }
 
 td{
@@ -59,6 +69,7 @@ td{
   font-weight:600;
 }
 
+/* Row Animations */
 tr{
   opacity:0;
   transform:translateY(20px);
@@ -71,30 +82,30 @@ tr{
 
 tr:hover{
   background:#0f2c4d;
-  transform:scale(1.01);
+  transform:scale(1.02);
   transition:.2s;
 }
 
-/* Top 3 Player Jerseys */
+/* Top 3 Players Jersy Style */
 .rank1{
-  background:linear-gradient(90deg,#FFD700,#FFA500);
-  color:#000;
+  background:linear-gradient(135deg,#ff0000,#0000ff);
+  color:#fff;
   box-shadow:0 0 25px #FFD700;
   background-image:url('jersey1.png');
   background-size:cover;
   background-blend-mode:soft-light;
 }
 .rank2{
-  background:linear-gradient(90deg,#C0C0C0,#AAAAAA);
-  color:#000;
+  background:linear-gradient(135deg,#0000ff,#ff0000);
+  color:#fff;
   box-shadow:0 0 20px #C0C0C0;
   background-image:url('jersey2.png');
   background-size:cover;
   background-blend-mode:soft-light;
 }
 .rank3{
-  background:linear-gradient(90deg,#CD7F32,#B87333);
-  color:#000;
+  background:linear-gradient(135deg,#ff0033,#00aaff);
+  color:#fff;
   box-shadow:0 0 20px #CD7F32;
   background-image:url('jersey3.png');
   background-size:cover;
@@ -103,6 +114,7 @@ tr:hover{
 
 .medal{font-size:22px;margin-right:5px;}
 
+/* Player Link */
 .player-link{
   color:inherit;
   text-decoration:none;
@@ -111,17 +123,30 @@ tr:hover{
 }
 .player-link:hover{
   text-decoration:underline;
-  color:#FFD700;
+  color:var(--gold);
 }
 
+/* Footer */
+footer{
+  text-align:center;
+  margin-top:25px;
+  font-size:13px;
+  color:var(--gold);
+  font-weight:700;
+  padding-bottom:15px;
+  text-shadow:0 0 5px var(--neon);
+}
+
+/* Responsive */
 @media(max-width:500px){
   th,td{font-size:14px;padding:10px;}
+  h1{font-size:26px;padding:20px 5px;}
 }
 </style>
 </head>
 <body>
 
-<h1>🏆 AFNS Elite Strikers Player Rankings</h1>
+<h1>🏆 AFNS ELITE STRIKERS PLAYER RANKINGS</h1>
 
 <table>
 <thead>
@@ -136,6 +161,10 @@ tr:hover{
 </thead>
 <tbody id="rankingBody"></tbody>
 </table>
+
+<footer>
+© 2026 AFNS Elite Strikers | SI Shohan
+</footer>
 
 <script>
 firebase.initializeApp({
