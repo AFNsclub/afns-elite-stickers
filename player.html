@@ -24,7 +24,6 @@ header img{width:90px;}
   background:linear-gradient(145deg,#0f2545,#081a2e);
   padding:20px;border-radius:22px;
   box-shadow:0 0 25px rgba(255,215,0,.15),0 0 40px rgba(0,120,255,.15);
-  margin-bottom:15px;
 }
 .name{font-size:22px;font-weight:bold;color:#ffd34d;}
 .email{opacity:.85;margin-bottom:8px;}
@@ -36,7 +35,7 @@ header img{width:90px;}
 .progress{background:#0c223f;border-radius:10px;overflow:hidden;height:10px;margin:12px 0;}
 .progress-bar{height:100%;background:linear-gradient(90deg,#4db8ff,#ffd34d);width:0%;transition:.5s;}
 .info-line{margin:8px 0;font-size:14px;}
-.info-line span{color:#4db8ff;cursor:pointer;}
+.info-line span{color:#4db8ff;}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:15px;}
 .stat{
   background:linear-gradient(145deg,#132f55,#0d203a);
@@ -53,20 +52,25 @@ button.secondary{background:#1a1a1a;color:#ccc;}
 .hidden{display:none;}
 input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 .success{color:#00ff88;margin-top:10px;}
-.match-history{margin-top:20px;}
+.fb-link{color:#4db8ff;text-decoration:underline;cursor:pointer;}
+.home-btn{
+  background:linear-gradient(45deg,#ff9800,#ff3d00);
+}
+.match-history{
+  margin-top:20px;
+}
 .match-card{
   background:linear-gradient(145deg,#0f2545,#081a2e);
-  padding:12px;border-radius:12px;margin-top:10px;
-  box-shadow:0 0 12px rgba(0,247,255,.2);
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:10px;
+  box-shadow:0 0 12px rgba(0,0,0,.5);
 }
 .win{border-left:5px solid #4cff8f;}
 .loss{border-left:5px solid #ff6b6b;}
 .draw{border-left:5px solid #ffd700;}
-.clear-btn{
-  margin-top:12px;
-  background:linear-gradient(45deg,#ff3b3b,#ffae00);
-}
-.empty{text-align:center;margin-top:20px;opacity:.6;}
+.small{font-size:12px;color:#aaa;margin-top:4px;}
+.empty{text-align:center;opacity:.6;margin-top:20px;}
 </style>
 </head>
 
@@ -74,11 +78,10 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 <div class="container">
 <header>
   <img src="logo.png" alt="AFNS Logo">
-  <h2>AFNS Elite Profile</h2>
+  <h2>AFNS Elite Player Profile</h2>
 </header>
 
-<div class="card">
-<div id="viewBox">
+<div class="card" id="viewBox">
   <div class="name" id="v_username">Loading...</div>
   <div class="email" id="v_email">—</div>
   <div id="rankBadge" class="rank-badge">Unranked</div>
@@ -88,8 +91,9 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
   </div>
 
   <div class="info-line">🌐 Facebook:
-    <span id="fbLink" class="hidden" onclick="openFb()">View Profile</span>
+    <span id="fbLink" class="fb-link hidden" onclick="openFb()">View Profile</span>
   </div>
+
   <div class="info-line">📱 Phone: <span id="v_phone">—</span></div>
   <div class="info-line">👑 Owner ID: <span id="v_ownerId">—</span></div>
   <div class="info-line">💻 Device: <span id="v_device">—</span></div>
@@ -102,7 +106,7 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
   </div>
 
   <button onclick="location.href='player-submit-match.html'">Submit Match</button>
-  <button onclick="loadHistory()">Match History</button>
+  <button onclick="toggleHistory(true)">Match History</button>
   <button onclick="toggleEdit(true)">Edit Profile</button>
   <button class="secondary" onclick="logout()">Logout</button>
   <button class="home-btn" onclick="location.href='index.html'">🏠 Home</button>
@@ -117,10 +121,9 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
   <button class="secondary" onclick="toggleEdit(false)">Cancel</button>
 </div>
 
-<!-- Match History -->
-<div id="historyBox" class="hidden match-history">
-  <button class="clear-btn" onclick="clearHistory()">Clear History</button>
-  <div id="historyList"></div>
+<div class="match-history hidden" id="matchHistory">
+  <h3>📜 Match History</h3>
+  <div id="matchList"></div>
   <button class="secondary" onclick="toggleHistory(false)">Close History</button>
 </div>
 
@@ -136,18 +139,19 @@ firebase.initializeApp({
 
 const auth = firebase.auth();
 const db = firebase.firestore();
-let uid, fbUrl="";
+let uid, fbUrl="", username="";
 
+// AUTH CHECK
 auth.onAuthStateChanged(async user=>{
   if(!user){
     location.replace("login.html");
     return;
   }
-
   uid = user.uid;
+  username = user.email.split("@")[0]; // username from email
+
   document.getElementById("v_email").innerText = user.email;
 
-  const username = user.email.split("@")[0];
   const docRef = db.collection("players").doc(uid);
   let docSnap = await docRef.get();
 
@@ -168,6 +172,7 @@ auth.onAuthStateChanged(async user=>{
   db.collection("players").doc(uid).onSnapshot(doc=>{
     if(!doc.exists) return;
     const d = doc.data();
+
     document.getElementById("v_username").innerText = d.username || "—";
     document.getElementById("v_phone").innerText = d.phone || "—";
     document.getElementById("v_ownerId").innerText = d.ownerId || "—";
@@ -197,13 +202,15 @@ auth.onAuthStateChanged(async user=>{
 
     document.getElementById("progressBar").style.width = (rating%500)/5 + "%";
   });
+
 });
 
-/* Edit Profile */
+// EDIT PROFILE
 function toggleEdit(edit){
   document.getElementById("viewBox").classList.toggle("hidden", edit);
   document.getElementById("editBox").classList.toggle("hidden", !edit);
 }
+
 function saveProfile(){
   db.collection("players").doc(uid).update({
     phone: document.getElementById("phone").value.trim(),
@@ -216,53 +223,58 @@ function saveProfile(){
     toggleEdit(false);
   });
 }
+
 function openFb(){
   if(fbUrl) window.open(fbUrl,"_blank");
 }
-function logout(){ auth.signOut().then(()=>{ location.replace("login.html"); }); }
 
-/* Match History */
+function logout(){
+  auth.signOut().then(()=>{location.replace("login.html");});
+}
+
+// MATCH HISTORY
 function toggleHistory(show){
-  document.getElementById("historyBox").classList.toggle("hidden", !show);
+  document.getElementById("matchHistory").classList.toggle("hidden", !show);
+  document.getElementById("viewBox").classList.toggle("hidden", show);
+
+  if(show) loadMatchHistory();
 }
-function clearHistory(){
-  document.getElementById("historyList").innerHTML="";
-}
-async function loadHistory(){
-  toggleHistory(true);
-  const historyList = document.getElementById("historyList");
-  historyList.innerHTML="<div>Loading...</div>";
 
-  const snap1 = await db.collection("matches").where("player1","==",uid).get();
-  const snap2 = await db.collection("matches").where("player2","==",uid).get();
+async function loadMatchHistory(){
+  const listDiv = document.getElementById("matchList");
+  listDiv.innerHTML = "";
 
-  const combined = [];
-  snap1.forEach(doc=>combined.push(doc));
-  snap2.forEach(doc=>combined.push(doc));
+  const snap = await db.collection("matches")
+    .where("player1","==",username)
+    .get();
 
-  combined.sort((a,b)=>{
-    return (b.data().createdAt?.seconds||0) - (a.data().createdAt?.seconds||0);
-  });
+  const snap2 = await db.collection("matches")
+    .where("player2","==",username)
+    .get();
 
-  if(combined.length===0){
-    historyList.innerHTML="<div class='empty'>No matches played yet</div>";
+  const allMatches = [...snap.docs, ...snap2.docs]
+    .sort((a,b)=>b.data().createdAt?.toDate() - a.data().createdAt?.toDate());
+
+  if(allMatches.length===0){
+    listDiv.innerHTML = `<div class="empty">No matches played yet</div>`;
     return;
   }
 
-  historyList.innerHTML="";
-  combined.forEach(d=>{
+  allMatches.forEach(d=>{
     const m = d.data();
-    const opponent = m.player1===uid ? m.player2 : m.player1;
-    let cls="draw";
-    if(m.resultType==="win" && m.winner===uid) cls="win";
-    else if(m.resultType==="win" && m.loser===uid) cls="loss";
+    const opponent = m.player1===username ? m.player2 : m.player1;
+    let resultClass = "draw";
+    if(m.resultType==="win" && m.winner===username) resultClass="win";
+    else if(m.resultType==="win" && m.loser===username) resultClass="loss";
 
-    historyList.innerHTML+=`
-      <div class="match-card ${cls}">
+    listDiv.innerHTML += `
+      <div class="match-card ${resultClass}">
         <b>${m.resultType.toUpperCase()}</b> vs ${opponent}<br>
-        Score: ${m.score || "—"}<br>
-        ${m.tournamentName?`<span class="small">Tournament: ${m.tournamentName}</span>`:""}<br>
-        <span class="small">${m.createdAt?.toDate().toLocaleString() || ""}</span>
+        Score: ${m.score}
+        ${m.tournamentName ? `<div class="small">Tournament: ${m.tournamentName}</div>` : ``}
+        <div class="small">
+          ${m.createdAt?.toDate().toLocaleString() || ""}
+        </div>
       </div>
     `;
   });
