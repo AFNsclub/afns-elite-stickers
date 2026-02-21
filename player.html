@@ -2,9 +2,10 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>AFN Elite Player Profile</title>
+<title>AFNS Elite Player Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -23,6 +24,7 @@ header img{width:90px;}
   background:linear-gradient(145deg,#0f2545,#081a2e);
   padding:20px;border-radius:22px;
   box-shadow:0 0 25px rgba(255,215,0,.15),0 0 40px rgba(0,120,255,.15);
+  margin-bottom:15px;
 }
 .name{font-size:22px;font-weight:bold;color:#ffd34d;}
 .email{opacity:.85;margin-bottom:8px;}
@@ -34,7 +36,7 @@ header img{width:90px;}
 .progress{background:#0c223f;border-radius:10px;overflow:hidden;height:10px;margin:12px 0;}
 .progress-bar{height:100%;background:linear-gradient(90deg,#4db8ff,#ffd34d);width:0%;transition:.5s;}
 .info-line{margin:8px 0;font-size:14px;}
-.info-line span{color:#4db8ff;}
+.info-line span{color:#4db8ff;cursor:pointer;}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:15px;}
 .stat{
   background:linear-gradient(145deg,#132f55,#0d203a);
@@ -51,9 +53,18 @@ button.secondary{background:#1a1a1a;color:#ccc;}
 .hidden{display:none;}
 input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 .success{color:#00ff88;margin-top:10px;}
-.fb-link{color:#4db8ff;text-decoration:underline;cursor:pointer;}
-.home-btn{
-  background:linear-gradient(45deg,#ff9800,#ff3d00);
+.match-history{margin-top:20px;}
+.match-card{
+  background:linear-gradient(145deg,#0f2545,#081a2e);
+  padding:12px;border-radius:12px;margin-top:10px;
+  box-shadow:0 0 12px rgba(0,247,255,.2);
+}
+.win{border-left:5px solid #4cff8f;}
+.loss{border-left:5px solid #ff6b6b;}
+.draw{border-left:5px solid #ffd700;}
+.clear-btn{
+  margin-top:12px;
+  background:linear-gradient(45deg,#ff3b3b,#ffae00);
 }
 </style>
 </head>
@@ -61,8 +72,8 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 <body>
 <div class="container">
 <header>
-  <img src="logo.png">
-  <h2>AFN Elite Profile</h2>
+  <img src="logo.png" alt="AFNS Logo">
+  <h2>AFNS Elite Profile</h2>
 </header>
 
 <div class="card">
@@ -76,9 +87,8 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
   </div>
 
   <div class="info-line">🌐 Facebook:
-    <span id="fbLink" class="fb-link hidden" onclick="openFb()">View Profile</span>
+    <span id="fbLink" class="hidden" onclick="openFb()">View Profile</span>
   </div>
-
   <div class="info-line">📱 Phone: <span id="v_phone">—</span></div>
   <div class="info-line">👑 Owner ID: <span id="v_ownerId">—</span></div>
   <div class="info-line">💻 Device: <span id="v_device">—</span></div>
@@ -91,12 +101,13 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
   </div>
 
   <button onclick="location.href='player-submit-match.html'">Submit Match</button>
-  <button onclick="location.href='match-history.html'">Match History</button>
+  <button onclick="toggleHistory(true)">Match History</button>
   <button onclick="toggleEdit(true)">Edit Profile</button>
   <button class="secondary" onclick="logout()">Logout</button>
   <button class="home-btn" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
+<!-- Edit Profile -->
 <div id="editBox" class="hidden">
   <input id="phone" placeholder="Phone">
   <input id="ownerId" placeholder="Owner ID">
@@ -106,8 +117,14 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
   <button class="secondary" onclick="toggleEdit(false)">Cancel</button>
 </div>
 
-<div id="msg"></div>
+<!-- Match History -->
+<div id="historyBox" class="hidden match-history">
+  <button class="clear-btn" onclick="clearHistory()">Clear History</button>
+  <div id="historyList"></div>
+  <button class="secondary" onclick="toggleHistory(false)">Close History</button>
 </div>
+
+<div id="msg"></div>
 </div>
 
 <script>
@@ -152,7 +169,6 @@ auth.onAuthStateChanged(async user=>{
     if(!doc.exists) return;
 
     const d = doc.data();
-
     document.getElementById("v_username").innerText = d.username || "—";
     document.getElementById("v_phone").innerText = d.phone || "—";
     document.getElementById("v_ownerId").innerText = d.ownerId || "—";
@@ -185,11 +201,11 @@ auth.onAuthStateChanged(async user=>{
 
 });
 
+/* Edit Profile */
 function toggleEdit(edit){
   document.getElementById("viewBox").classList.toggle("hidden", edit);
   document.getElementById("editBox").classList.toggle("hidden", !edit);
 }
-
 function saveProfile(){
   db.collection("players").doc(uid).update({
     phone: document.getElementById("phone").value.trim(),
@@ -202,17 +218,54 @@ function saveProfile(){
     toggleEdit(false);
   });
 }
-
 function openFb(){
   if(fbUrl) window.open(fbUrl,"_blank");
 }
+function logout(){ auth.signOut().then(()=>{ location.replace("login.html"); }); }
 
-function logout(){
-  auth.signOut().then(()=>{
-    location.replace("login.html");
+/* Match History */
+function toggleHistory(show){
+  document.getElementById("historyBox").classList.toggle("hidden", !show);
+}
+function clearHistory(){
+  const historyList = document.getElementById("historyList");
+  historyList.innerHTML = "";
+}
+
+async function loadHistory(){
+  const historyList = document.getElementById("historyList");
+  historyList.innerHTML = "<div>Loading...</div>";
+  const snap1 = await db.collection("matches").where("player1","==",uid).get();
+  const snap2 = await db.collection("matches").where("player2","==",uid).get();
+  const combined = [];
+  snap1.forEach(doc=>combined.push(doc));
+  snap2.forEach(doc=>combined.push(doc));
+  combined.sort((a,b)=>b.data().createdAt?.seconds - a.data().createdAt?.seconds);
+  historyList.innerHTML = "";
+  if(combined.length===0){
+    historyList.innerHTML="<div class='empty'>No matches played yet</div>";
+    return;
+  }
+  combined.forEach(d=>{
+    const m = d.data();
+    const opponent = m.player1===uid?m.player2:m.player1;
+    let cls = "draw";
+    if(m.resultType==="win" && m.winner===uid) cls="win";
+    else if(m.resultType==="win" && m.loser===uid) cls="loss";
+    historyList.innerHTML += `
+      <div class="match-card ${cls}">
+        <b>${m.resultType.toUpperCase()}</b> vs ${opponent}<br>
+        Score: ${m.score}<br>
+        ${m.tournamentName?`<span class="small">Tournament: ${m.tournamentName}</span>`:""}<br>
+        <span class="small">${m.createdAt?.toDate().toLocaleString() || ""}</span>
+      </div>
+    `;
   });
 }
+
+// Load history when button clicked
+document.querySelector("button[onclick=\"toggleHistory(true)\"]").addEventListener("click", loadHistory);
 </script>
 
 </body>
-    </html>
+</html>
