@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <title>Submit Match | AFNS Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
 body{margin:0;font-family:Arial;background:#0b1220;color:white;}
 .container{max-width:400px;margin:50px auto;padding:20px;background:#141c2f;border-radius:12px;}
@@ -14,13 +16,14 @@ h2{text-align:center;color:#00eaff;}
 label{display:block;margin-top:15px;}
 input,select,button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:8px;}
 input,select{background:#0b1220;color:white;}
-button{background:#00eaff;color:black;font-weight:bold;margin-top:20px;}
+button{background:#00eaff;color:black;font-weight:bold;margin-top:20px;cursor:pointer;}
 .searchBox{position:relative;}
 .dropdown{position:absolute;width:100%;background:#1a2438;max-height:150px;overflow-y:auto;border-radius:8px;z-index:1000;}
 .dropdown div{padding:10px;cursor:pointer;}
 .dropdown div:hover{background:#00eaff;color:black;}
 </style>
 </head>
+
 <body>
 <div class="container">
 <h2>Submit Match</h2>
@@ -37,7 +40,7 @@ button{background:#00eaff;color:black;font-weight:bold;margin-top:20px;}
   <div class="dropdown" id="player2List"></div>
 </div>
 
-<label>Score (Example: 3-3)</label>
+<label>Score (Example: 3-2)</label>
 <input type="text" id="score">
 
 <label>Match Type</label>
@@ -60,58 +63,113 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 let allPlayers=[];
 
+/* ===== AUTH CHECK ===== */
 auth.onAuthStateChanged(user=>{
-  if(!user){location.href="login.html";}else{loadPlayers();}
+  if(!user){
+    location.href="login.html";
+  }else{
+    loadPlayers();
+  }
 });
 
+/* ===== LOAD PLAYERS ===== */
 async function loadPlayers(){
+  allPlayers=[];
   const snap = await db.collection("players").get();
-  snap.forEach(doc=>allPlayers.push(doc.data().username || doc.id));
+  snap.forEach(doc=>{
+    allPlayers.push(doc.data().username || doc.id);
+  });
 }
 
+/* ===== SEARCH FILTER ===== */
 function filterPlayers(type){
   const input=document.getElementById(type);
   const list=document.getElementById(type+"List");
   const value=input.value.toLowerCase();
   list.innerHTML="";
   if(value.length<1) return;
-  const filtered=allPlayers.filter(name=>name.toLowerCase().includes(value)).slice(0,10);
+
+  const filtered=allPlayers
+    .filter(name=>name.toLowerCase().includes(value))
+    .slice(0,10);
+
   filtered.forEach(name=>{
     const div=document.createElement("div");
     div.textContent=name;
-    div.onclick=()=>{input.value=name;list.innerHTML="";};
+    div.onclick=()=>{
+      input.value=name;
+      list.innerHTML="";
+    };
     list.appendChild(div);
   });
 }
 
+/* ===== TOGGLE TOURNAMENT ===== */
 function toggleTournament(){
-  document.getElementById("tournamentBox").style.display = matchType.value==="tournament"?"block":"none";
+  const type=document.getElementById("matchType").value;
+  document.getElementById("tournamentBox").style.display =
+    type==="tournament" ? "block" : "none";
 }
 
+/* ===== SUBMIT MATCH ===== */
 async function submitMatch(){
-  const user = auth.currentUser;
-  const p1 = player1.value.trim();
-  const p2 = player2.value.trim();
-  const scoreVal = score.value.trim();
-  const type = matchType.value;
-  const tName = tournamentName.value.trim();
 
-  if(!p1||!p2||!scoreVal){alert("All fields required!");return;}
-  if(p1===p2){alert("Players cannot be same!");return;}
-  if(!scoreVal.includes("-")){alert("Invalid score format");return;}
+  const user = auth.currentUser;
+  const p1 = document.getElementById("player1").value.trim();
+  const p2 = document.getElementById("player2").value.trim();
+  const scoreVal = document.getElementById("score").value.trim();
+  const type = document.getElementById("matchType").value;
+  const tName = document.getElementById("tournamentName").value.trim();
+
+  if(!p1 || !p2 || !scoreVal){
+    alert("All fields required!");
+    return;
+  }
+
+  if(p1===p2){
+    alert("Players cannot be same!");
+    return;
+  }
+
+  if(!allPlayers.includes(p1) || !allPlayers.includes(p2)){
+    alert("Invalid player name!");
+    return;
+  }
+
+  const scorePattern=/^\d+-\d+$/;
+  if(!scorePattern.test(scoreVal)){
+    alert("Invalid score format (Example: 3-2)");
+    return;
+  }
+
+  if(type==="tournament" && !tName){
+    alert("Tournament name required!");
+    return;
+  }
+
+  const parts=scoreVal.split("-").map(Number);
 
   let resultType="draw", winner=null, loser=null;
-  const parts=scoreVal.split("-").map(Number);
-  if(parts[0]>parts[1]){winner=p1;loser=p2;resultType="win";}
-  else if(parts[1]>parts[0]){winner=p2;loser=p1;resultType="win";}
+
+  if(parts[0]>parts[1]){
+    winner=p1; loser=p2; resultType="win";
+  }
+  else if(parts[1]>parts[0]){
+    winner=p2; loser=p1; resultType="win";
+  }
 
   await db.collection("matches").doc(Date.now().toString()).set({
-    player1:p1, player2:p2, score:scoreVal,
-    resultType, winner, loser,
+    player1:p1,
+    player2:p2,
+    score:scoreVal,
+    resultType,
+    winner,
+    loser,
     matchType:type,
     tournamentName:type==="tournament"?tName:null,
     submittedBy:user.email,
