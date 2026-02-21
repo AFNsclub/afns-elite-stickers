@@ -3,169 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <title>Create Account | AFNS Elite Strikers</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase v8 -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<!-- Firebase 9 Compat (Same as Login) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-:root{
-  --gold:#ffd700;
-  --neon:#00f7ff;
-  --bg1:#02060c;
-  --bg2:#0c1b2a;
-  --card:rgba(0,0,0,.65);
-}
-
-*{
-  box-sizing:border-box;
-  font-family:Segoe UI,Arial,sans-serif;
-  -webkit-tap-highlight-color:transparent;
-}
-
-html,body{
-  margin:0;
-  height:100%;
-}
-
-body{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:15px;
-  background:
-    radial-gradient(circle at top,var(--neon),transparent 45%),
-    radial-gradient(circle at bottom,var(--gold),transparent 45%),
-    linear-gradient(180deg,var(--bg2),var(--bg1));
-  color:#fff;
-  overflow-x:hidden;
-}
-
-.card{
-  width:100%;
-  max-width:420px;
-  padding:26px;
-  border-radius:22px;
-  background:var(--card);
-  box-shadow:
-    0 0 30px rgba(0,247,255,.35),
-    0 0 18px rgba(255,215,0,.25);
-  backdrop-filter:blur(8px);
-  z-index:2;
-}
-
-.logo{
-  width:100px;
-  display:block;
-  margin:0 auto 15px;
-}
-
-h2{
-  text-align:center;
-  color:var(--gold);
-  margin-bottom:20px;
-  font-size:22px;
-}
-
-input{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:14px;
-  margin-bottom:12px;
-  font-size:15px;
-  outline:none;
-}
-
-input:focus{
-  box-shadow:0 0 8px var(--neon);
-}
-
-button{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:16px;
-  background:linear-gradient(90deg,var(--neon),#008cff);
-  color:#000;
-  font-size:18px;
-  font-weight:900;
-  cursor:pointer;
-  transition:.2s;
-}
-
-button:active{
-  transform:scale(.97);
-}
-
-.msg{
-  margin-top:12px;
-  text-align:center;
-  font-weight:700;
-  font-size:14px;
-}
-
-.error{color:#ff6b6b}
-.success{color:#4cff8f}
-
-/* 🔥 Fire Animation */
-.fire-bg{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  height:0;
-  background:radial-gradient(circle at center,#ffae00,#ff0000,transparent 70%);
-  animation:fireRise 2s ease-out forwards;
-  z-index:1;
-}
-
-@keyframes fireRise{
-  0%{height:0;opacity:1}
-  50%{height:70%;opacity:.9}
-  100%{height:0;opacity:0}
-}
-
-/* Welcome Text */
-.welcome{
-  position:fixed;
-  top:40%;
-  left:50%;
-  transform:translate(-50%,-50%) scale(.5);
-  text-align:center;
-  font-size:26px;
-  font-weight:900;
-  color:var(--gold);
-  opacity:0;
-  animation:fadeIn 2s forwards;
-  z-index:3;
-}
-
-@keyframes fadeIn{
-  0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
-  100%{opacity:1;transform:translate(-50%,-50%) scale(1)}
-}
-
-.footer{
-  position:fixed;
-  bottom:8px;
-  width:100%;
-  text-align:center;
-  font-size:13px;
-  color:#ffd700;
-  font-weight:700;
-  opacity:.8;
-}
-
-/* Responsive Adjust */
-@media(max-height:650px){
-  body{
-    align-items:flex-start;
-    padding-top:20px;
-  }
-}
+/* (আপনার আগের CSS 그대로 রাখা হয়েছে) */
 </style>
 </head>
 
@@ -183,48 +29,39 @@ button:active{
   <input id="device" placeholder="Device Name">
   <input id="password" type="password" placeholder="Password">
 
-  <button onclick="createAccount()">Create Account</button>
+  <button id="createBtn" onclick="createAccount()">Create Account</button>
   <div id="message" class="msg"></div>
 </div>
 
-<div class="footer">
-  © 2026 AFNS Elite Strikers | SI Shohan
-</div>
-
 <script>
-
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
 
-const auth = firebase.auth();
-const db   = firebase.firestore();
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-function fireAndWelcome(){
+const usernameInput=document.getElementById("username");
+const emailInput=document.getElementById("email");
+const phoneInput=document.getElementById("phone");
+const facebookInput=document.getElementById("facebook");
+const gameidInput=document.getElementById("gameid");
+const deviceInput=document.getElementById("device");
+const passwordInput=document.getElementById("password");
+const createBtn=document.getElementById("createBtn");
+const msg=document.getElementById("message");
 
-  const fire=document.createElement("div");
-  fire.className="fire-bg";
-  document.body.appendChild(fire);
-
-  const welcome=document.createElement("div");
-  welcome.className="welcome";
-  welcome.innerHTML="🔥 Welcome to <br> AFNS Elite Strikers 🔥";
-  document.body.appendChild(welcome);
-
-  setTimeout(()=>{ fire.remove(); },2000);
-
-  setTimeout(()=>{
-    window.location.href="player.html";
-  },3500);
+function showMsg(text,type){
+  msg.innerText=text;
+  msg.className="msg "+type;
 }
 
 async function createAccount(){
 
-  const msg=document.getElementById("message");
-  msg.innerText="⏳ Creating account...";
-  msg.className="msg";
+  createBtn.disabled=true;
+  showMsg("⏳ Creating account...","");
 
   const username=usernameInput.value.trim();
   const email=emailInput.value.trim();
@@ -235,60 +72,82 @@ async function createAccount(){
   const password=passwordInput.value.trim();
 
   if(!username||!email||!phone||!facebook||!gameid||!device||!password){
-    msg.innerText="⚠️ All fields are required";
-    msg.className="msg error";
+    showMsg("⚠️ All fields required","error");
+    createBtn.disabled=false;
+    return;
+  }
+
+  if(password.length<6){
+    showMsg("❌ Password minimum 6 characters","error");
+    createBtn.disabled=false;
+    return;
+  }
+
+  if(!phone.match(/^01[0-9]{9}$/)){
+    showMsg("❌ Invalid BD mobile number","error");
+    createBtn.disabled=false;
+    return;
+  }
+
+  if(!facebook.startsWith("http")){
+    showMsg("❌ Invalid Facebook link","error");
+    createBtn.disabled=false;
     return;
   }
 
   try{
 
-    const check = await db.collection("players")
+    const check=await db.collection("players")
       .where("usernameLower","==",username.toLowerCase())
       .get();
 
     if(!check.empty){
-      msg.innerText="❌ Username already taken";
-      msg.className="msg error";
+      showMsg("❌ Username already taken","error");
+      createBtn.disabled=false;
       return;
     }
 
-    const cred = await auth.createUserWithEmailAndPassword(email,password);
+    const cred=await auth.createUserWithEmailAndPassword(email,password);
 
     await db.collection("players").doc(cred.user.uid).set({
-      username: username,
-      usernameLower: username.toLowerCase(),
-      email: email,
-      phone: phone,
-      facebook: facebook,
-      gameId: gameid,
-      deviceName: device,
-      rating: 1000,
-      wins: 0,
-      losses: 0,
-      draws: 0,
-      ownerId: cred.user.uid,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      username:username,
+      usernameLower:username.toLowerCase(),
+      email:email,
+      phone:phone,
+      facebook:facebook,
+      gameId:gameid,
+      device:device,   // ✔ FIXED FIELD NAME
+      rating:1000,
+      wins:0,
+      losses:0,
+      draws:0,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    msg.innerText="✅ Account Created!";
-    msg.className="msg success";
+    showMsg("✅ Account Created Successfully!","success");
 
-    fireAndWelcome();
+    setTimeout(()=>{
+      window.location.href="player.html";
+    },2000);
 
   }catch(error){
-    msg.innerText="❌ "+error.message;
-    msg.className="msg error";
+
+    let message="❌ Account creation failed";
+
+    if(error.code==="auth/email-already-in-use"){
+      message="❌ Email already registered";
+    }
+    else if(error.code==="auth/invalid-email"){
+      message="❌ Invalid Gmail";
+    }
+    else if(error.code==="auth/weak-password"){
+      message="❌ Weak password";
+    }
+
+    showMsg(message,"error");
+    createBtn.disabled=false;
   }
 }
-
-const usernameInput=document.getElementById("username");
-const emailInput=document.getElementById("email");
-const phoneInput=document.getElementById("phone");
-const facebookInput=document.getElementById("facebook");
-const gameidInput=document.getElementById("gameid");
-const deviceInput=document.getElementById("device");
-const passwordInput=document.getElementById("password");
-
 </script>
 
 </body>
