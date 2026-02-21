@@ -144,7 +144,7 @@ canvas{background:var(--card);border-radius:12px;}
 </div>
 
 <div class="card">
-<h2>Rating Comparison Chart</h2>
+<h2>Seasonal Rating Comparison</h2>
 <canvas id="ratingChart" height="150"></canvas>
 </div>
 
@@ -202,9 +202,9 @@ async function loadSeasonRanking(seasonId){
     `;
     rank++;
   });
-  loadAlltimeRanking();
-  loadCharts(seasonId);
-  loadHallOfFame();
+  await loadAlltimeRanking();
+  await loadComparisonChart();
+  await loadHallOfFame();
 }
 
 // Load All-time Ranking
@@ -228,21 +228,36 @@ async function loadAlltimeRanking(){
   });
 }
 
-// Load Charts
-async function loadCharts(seasonId){
-  const snap = await db.collection("players").where("seasonId","==",seasonId).orderBy("rating","desc").get();
-  const labels=[], ratings=[];
-  snap.forEach(doc=>{
+// Load Seasonal & Historical Comparison Chart
+async function loadComparisonChart(){
+  const seasonsSnap = await db.collection("seasons").orderBy("year","asc").get();
+  const seasons = seasonsSnap.docs.map(d=>d.id);
+  const playersSnap = await db.collection("players").get();
+  const playerData = {};
+  playersSnap.forEach(doc=>{
     const p = doc.data();
-    labels.push(p.username||"-");
-    ratings.push(p.rating||0);
+    if(!playerData[p.username]) playerData[p.username] = {};
+    playerData[p.username][p.seasonId] = p.rating;
   });
-  if(ratingChart) ratingChart.destroy();
+
+  const labels = seasons;
+  const datasets = [];
+  Object.keys(playerData).forEach((player, idx)=>{
+    const data = seasons.map(season=>playerData[player][season]||0);
+    datasets.push({
+      label:player,
+      data:data,
+      borderColor:`hsl(${idx*40 % 360}, 70%, 60%)`,
+      backgroundColor:'transparent'
+    });
+  });
+
   const ctx = document.getElementById("ratingChart").getContext("2d");
+  if(ratingChart) ratingChart.destroy();
   ratingChart = new Chart(ctx,{
-    type:"bar",
-    data:{labels, datasets:[{label:"Rating", data:ratings, backgroundColor:"#00f7ff"}]},
-    options:{responsive:true, scales:{y:{beginAtZero:true}}}
+    type:'line',
+    data:{labels, datasets},
+    options:{responsive:true, plugins:{legend:{position:'bottom'}}, scales:{y:{beginAtZero:true}}}
   });
 }
 
