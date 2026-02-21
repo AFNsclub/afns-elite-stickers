@@ -5,26 +5,72 @@
 <title>Submit Match | AFNS Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase 9 Compat -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b1220;color:white;}
-.container{max-width:400px;margin:50px auto;padding:20px;background:#141c2f;border-radius:12px;}
-h2{text-align:center;color:#00eaff;}
-label{display:block;margin-top:15px;}
-input,select,button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:8px;}
-input,select{background:#0b1220;color:white;}
-button{background:#00eaff;color:black;font-weight:bold;margin-top:20px;cursor:pointer;}
+:root{
+  --neon:#00f7ff;
+  --gold:#ffd700;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
+  --card:rgba(0,0,0,.65);
+}
+
+body{
+  margin:0; min-height:100vh;
+  display:flex; justify-content:center; align-items:flex-start;
+  padding:30px;
+  background: radial-gradient(circle at top,var(--neon),transparent 40%),
+              radial-gradient(circle at bottom,var(--gold),transparent 40%),
+              linear-gradient(180deg,var(--bg2),var(--bg1));
+  font-family:Segoe UI,Arial,sans-serif; color:white;
+}
+
+.container{
+  width:100%; max-width:450px; background:var(--card);
+  border-radius:20px; padding:25px 30px; margin-top:30px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 0 40px rgba(0,247,255,.35),0 0 20px rgba(255,215,0,.25);
+  animation:fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)}}
+
+h2{text-align:center;color:var(--gold); font-size:22px; text-shadow:0 0 15px rgba(255,215,0,.6); margin-bottom:20px;}
+
+label{display:block; margin-top:12px; font-weight:700;}
+input, select, button{width:100%; padding:12px; margin-top:6px; border:none; border-radius:12px;}
+input, select{background:#021420; color:#fff; font-size:15px;}
+input:focus, select:focus{box-shadow:0 0 10px var(--neon); outline:none;}
+button{background:linear-gradient(90deg,var(--neon),#008cff); color:#000; font-weight:900; cursor:pointer; transition:.2s;}
+button:hover{box-shadow:0 0 15px var(--neon);}
+button:active{transform:scale(.96);}
+button:disabled{opacity:.6; cursor:not-allowed;}
+
 .searchBox{position:relative;}
-.dropdown{position:absolute;width:100%;background:#1a2438;max-height:150px;overflow-y:auto;border-radius:8px;z-index:1000;}
-.dropdown div{padding:10px;cursor:pointer;}
-.dropdown div:hover{background:#00eaff;color:black;}
+.dropdown{position:absolute;width:100%; background:#1a2438; max-height:150px; overflow-y:auto; border-radius:8px; z-index:1000;}
+.dropdown div{padding:10px; cursor:pointer;}
+.dropdown div:hover{background:var(--neon); color:black;}
+
+.msg{margin-top:14px; text-align:center; font-weight:700; font-size:14px; min-height:20px;}
+.error{color:#ff6b6b;}
+.success{color:#4cff8f;}
+
+.fire-bg{position:fixed; bottom:0; left:0; width:100%; height:0; background:radial-gradient(circle at center,#ffae00,#ff0000,transparent 70%); animation:fireRise 2s ease-out forwards; z-index:1;}
+@keyframes fireRise{0%{height:0;opacity:1}50%{height:70%;opacity:.9}100%{height:0;opacity:0}}
+
+.welcome{position:fixed; top:40%; left:50%; transform:translate(-50%,-50%) scale(.5); text-align:center; font-size:26px; font-weight:900; color:var(--gold); opacity:0; animation:fadeInWelcome 2s forwards; z-index:3;}
+@keyframes fadeInWelcome{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+
+.footer{position:fixed; bottom:10px; width:100%; text-align:center; font-size:13px; color:var(--gold); font-weight:700; opacity:.8;}
 </style>
 </head>
 
 <body>
+
 <div class="container">
 <h2>Submit Match</h2>
 
@@ -40,7 +86,7 @@ button{background:#00eaff;color:black;font-weight:bold;margin-top:20px;cursor:po
   <div class="dropdown" id="player2List"></div>
 </div>
 
-<label>Score (Example: 3-2)</label>
+<label>Score (e.g., 3-2)</label>
 <input type="text" id="score">
 
 <label>Match Type</label>
@@ -55,6 +101,11 @@ button{background:#00eaff;color:black;font-weight:bold;margin-top:20px;cursor:po
 </div>
 
 <button onclick="submitMatch()">Submit Match</button>
+<div id="message" class="msg"></div>
+</div>
+
+<div class="footer">
+Design by SI Shohan | © 2026 AFNS Elite Strikers
 </div>
 
 <script>
@@ -64,29 +115,24 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+const auth=firebase.auth();
+const db=firebase.firestore();
 let allPlayers=[];
 
-/* ===== AUTH CHECK ===== */
+/* Auth Check */
 auth.onAuthStateChanged(user=>{
-  if(!user){
-    location.href="login.html";
-  }else{
-    loadPlayers();
-  }
+  if(!user) location.href="login.html"; 
+  else loadPlayers();
 });
 
-/* ===== LOAD PLAYERS ===== */
+/* Load Players */
 async function loadPlayers(){
   allPlayers=[];
-  const snap = await db.collection("players").get();
-  snap.forEach(doc=>{
-    allPlayers.push(doc.data().username || doc.id);
-  });
+  const snap=await db.collection("players").get();
+  snap.forEach(doc=>{allPlayers.push(doc.data().username || doc.id);});
 }
 
-/* ===== SEARCH FILTER ===== */
+/* Filter Players */
 function filterPlayers(type){
   const input=document.getElementById(type);
   const list=document.getElementById(type+"List");
@@ -94,92 +140,55 @@ function filterPlayers(type){
   list.innerHTML="";
   if(value.length<1) return;
 
-  const filtered=allPlayers
-    .filter(name=>name.toLowerCase().includes(value))
-    .slice(0,10);
-
+  const filtered=allPlayers.filter(name=>name.toLowerCase().includes(value)).slice(0,10);
   filtered.forEach(name=>{
     const div=document.createElement("div");
     div.textContent=name;
-    div.onclick=()=>{
-      input.value=name;
-      list.innerHTML="";
-    };
+    div.onclick=()=>{input.value=name; list.innerHTML="";}
     list.appendChild(div);
   });
 }
 
-/* ===== TOGGLE TOURNAMENT ===== */
+/* Toggle Tournament Input */
 function toggleTournament(){
-  const type=document.getElementById("matchType").value;
-  document.getElementById("tournamentBox").style.display =
-    type==="tournament" ? "block" : "none";
+  document.getElementById("tournamentBox").style.display=
+    document.getElementById("matchType").value==="tournament" ? "block" : "none";
 }
 
-/* ===== SUBMIT MATCH ===== */
+/* Submit Match */
 async function submitMatch(){
+  const user=auth.currentUser;
+  const p1=document.getElementById("player1").value.trim();
+  const p2=document.getElementById("player2").value.trim();
+  const score=document.getElementById("score").value.trim();
+  const type=document.getElementById("matchType").value;
+  const tName=document.getElementById("tournamentName").value.trim();
 
-  const user = auth.currentUser;
-  const p1 = document.getElementById("player1").value.trim();
-  const p2 = document.getElementById("player2").value.trim();
-  const scoreVal = document.getElementById("score").value.trim();
-  const type = document.getElementById("matchType").value;
-  const tName = document.getElementById("tournamentName").value.trim();
+  if(!p1||!p2||!score){alert("All fields required!"); return;}
+  if(p1===p2){alert("Players cannot be same!"); return;}
+  if(!allPlayers.includes(p1)||!allPlayers.includes(p2)){alert("Invalid player name!"); return;}
+  if(!/^\d+-\d+$/.test(score)){alert("Invalid score format!"); return;}
+  if(type==="tournament"&&!tName){alert("Tournament name required!"); return;}
 
-  if(!p1 || !p2 || !scoreVal){
-    alert("All fields required!");
-    return;
-  }
-
-  if(p1===p2){
-    alert("Players cannot be same!");
-    return;
-  }
-
-  if(!allPlayers.includes(p1) || !allPlayers.includes(p2)){
-    alert("Invalid player name!");
-    return;
-  }
-
-  const scorePattern=/^\d+-\d+$/;
-  if(!scorePattern.test(scoreVal)){
-    alert("Invalid score format (Example: 3-2)");
-    return;
-  }
-
-  if(type==="tournament" && !tName){
-    alert("Tournament name required!");
-    return;
-  }
-
-  const parts=scoreVal.split("-").map(Number);
-
+  const parts=score.split("-").map(Number);
   let resultType="draw", winner=null, loser=null;
-
-  if(parts[0]>parts[1]){
-    winner=p1; loser=p2; resultType="win";
-  }
-  else if(parts[1]>parts[0]){
-    winner=p2; loser=p1; resultType="win";
-  }
+  if(parts[0]>parts[1]){winner=p1; loser=p2; resultType="win";}
+  else if(parts[1]>parts[0]){winner=p2; loser=p1; resultType="win";}
 
   await db.collection("matches").doc(Date.now().toString()).set({
-    player1:p1,
-    player2:p2,
-    score:scoreVal,
-    resultType,
-    winner,
-    loser,
-    matchType:type,
-    tournamentName:type==="tournament"?tName:null,
-    submittedBy:user.email,
-    status:"pending",
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    player1:p1, player2:p2, score, resultType, winner, loser,
+    matchType:type, tournamentName:type==="tournament"?tName:null,
+    submittedBy:user.email, status:"pending", createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  alert("Match submitted for approval!");
-  location.reload();
+  // Fire + Welcome
+  const fire=document.createElement("div"); fire.className="fire-bg"; document.body.appendChild(fire);
+  const welcome=document.createElement("div"); welcome.className="welcome"; welcome.innerHTML="🔥 Match Submitted 🔥"; document.body.appendChild(welcome);
+
+  document.getElementById("message").innerText="✅ Match submitted for approval!"; 
+  setTimeout(()=>{location.reload();},2200);
 }
 </script>
+
 </body>
 </html>
