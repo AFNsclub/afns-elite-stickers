@@ -2,38 +2,74 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Match History</title>
+<title>📜 Match History | AFNS Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  background:#050b14;
-  color:#fff;
-  font-family:Segoe UI,sans-serif;
+:root{
+  --bg:#050b14;
+  --card:#0b1622;
+  --win:#4cff8f;
+  --loss:#ff6b6b;
+  --draw:#ffd700;
+  --text:#fff;
 }
+
+body{
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', sans-serif;
+  margin:0;
+  padding:0;
+}
+
 .container{
   max-width:500px;
-  margin:auto;
+  margin:50px auto;
   padding:20px;
 }
+
+h2{
+  text-align:center;
+  font-size:24px;
+  margin-bottom:20px;
+  text-shadow:0 0 10px #00f7ff, 0 0 5px #ffd700;
+}
+
 .card{
-  background:#0b1622;
+  background: var(--card);
   padding:14px;
   border-radius:14px;
   margin-top:12px;
-  box-shadow:0 0 10px rgba(0,0,0,.4);
+  box-shadow:0 0 12px rgba(0,0,0,.5);
+  transition: transform .2s, box-shadow .2s;
 }
-.win{border-left:5px solid #4cff8f}
-.loss{border-left:5px solid #ff6b6b}
-.small{font-size:12px;color:#aaa;margin-top:4px}
+
+.card:hover{
+  transform: scale(1.02);
+  box-shadow:0 0 20px rgba(0,247,255,.3);
+}
+
+.win{border-left:5px solid var(--win);}
+.loss{border-left:5px solid var(--loss);}
+.draw{border-left:5px solid var(--draw);}
+
+.small{
+  font-size:12px;
+  color:#aaa;
+  margin-top:4px;
+}
+
 .empty{
   text-align:center;
   opacity:.6;
   margin-top:40px;
+  font-size:16px;
 }
 </style>
 </head>
@@ -51,7 +87,9 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const auth=firebase.auth(), db=firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
+const list = document.getElementById("list");
 
 auth.onAuthStateChanged(user=>{
   if(!user){
@@ -60,25 +98,30 @@ auth.onAuthStateChanged(user=>{
   }
 
   db.collection("matches")
-    .where("playerId","==",user.uid)
-    .orderBy("time","desc")
+    .where("player1","==",user.email)
+    .orderBy("createdAt","desc")
     .onSnapshot(snap=>{
-      list.innerHTML="";
+      list.innerHTML = "";
 
       if(snap.empty){
-        list.innerHTML=`<div class="empty">No matches played yet</div>`;
+        list.innerHTML = `<div class="empty">No matches played yet</div>`;
         return;
       }
 
       snap.forEach(d=>{
-        const m=d.data();
-        list.innerHTML+=`
-          <div class="card ${m.result}">
-            <b>${m.result.toUpperCase()}</b> vs ${m.opponent}<br>
+        const m = d.data();
+        const opponent = m.player1===user.email ? m.player2 : m.player1;
+        let resultClass = "draw";
+        if(m.resultType==="win" && m.winner===user.email) resultClass = "win";
+        else if(m.resultType==="win" && m.loser===user.email) resultClass = "loss";
+
+        list.innerHTML += `
+          <div class="card ${resultClass}">
+            <b>${m.resultType.toUpperCase()}</b> vs ${opponent}<br>
             Score: ${m.score}
-            ${m.season ? `<div class="small">Season: ${m.season}</div>` : ``}
+            ${m.tournamentName ? `<div class="small">Tournament: ${m.tournamentName}</div>` : ``}
             <div class="small">
-              ${m.time?.toDate().toLocaleString()}
+              ${m.createdAt?.toDate().toLocaleString() || ""}
             </div>
           </div>
         `;
