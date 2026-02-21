@@ -35,7 +35,9 @@ button{
   font-weight:700;
   font-size:15px;
   cursor:pointer;
+  transition:.3s;
 }
+button:hover{background:#ff4b4b;}
 .info{
   font-size:13px;
   color:#aaa;
@@ -89,13 +91,13 @@ async function resetSeason(){
   msg.innerHTML="⏳ Processing season reset...";
 
   try{
-    /* CURRENT ACTIVE SEASON (TO ARCHIVE) */
+    /* CURRENT ACTIVE SEASON */
     const activeSnap = await db.collection("seasons")
       .where("active","==",true).limit(1).get();
 
     const oldSeasonId = activeSnap.empty ? null : activeSnap.docs[0].id;
 
-    /* 🔥 AUTO HALL OF FAME ENTRY */
+    /* 🔥 HALL OF FAME ENTRY */
     if(oldSeasonId){
       const topSnap = await db.collection("players")
         .where("seasonId","==",oldSeasonId)
@@ -108,7 +110,7 @@ async function resetSeason(){
         const p = doc.data();
         champions.push({
           uid: doc.id,
-          name: p.name || "Player",
+          name: p.username || "Player",
           rating: p.rating || 0
         });
       });
@@ -124,13 +126,11 @@ async function resetSeason(){
       }
     }
 
-    /* CREATE NEW SEASON */
+    /* 🗓 CREATE NEW SEASON */
     const seasonId = await getAutoSeason();
 
+    /* 🔄 RESET ALL PLAYERS */
     const playersSnap = await db.collection("players").get();
-    const matchesSnap = await db.collection("matches")
-      .where("seasonId","==",seasonId).get();
-
     const batch = db.batch();
 
     playersSnap.forEach(doc=>{
@@ -138,19 +138,19 @@ async function resetSeason(){
         rating:50,
         wins:0,
         losses:0,
+        draws:0,
         rank:"Bronze 🟤",
         seasonId:seasonId
       });
     });
 
-    /* 🔄 APPLY RESET */
     await batch.commit();
 
-    /* 📊 SEASON SUMMARY SNAPSHOT */
+    /* 📊 SEASON SNAPSHOT */
     await db.collection("season_snapshots").doc(seasonId).set({
       seasonId: seasonId,
       totalPlayers: playersSnap.size,
-      totalMatches: matchesSnap.size,
+      totalMatches: 0,
       avgRating: 50,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -167,10 +167,11 @@ async function resetSeason(){
 
   }catch(e){
     msg.innerHTML=`<div class="error">❌ ${e}</div>`;
+    console.error(e);
   }
 }
 
-/* 🗓️ AUTO SEASON (3x PER YEAR) */
+/* 🗓 AUTO SEASON (3x PER YEAR) */
 async function getAutoSeason(){
   const now = new Date();
   const year = now.getFullYear();
@@ -185,8 +186,10 @@ async function getAutoSeason(){
   const snap = await seasonRef.get();
 
   if(!snap.exists){
-    const old = await db.collection("seasons").where("active","==",true).get();
-    old.forEach(d=>d.ref.update({active:false}));
+    const activeSnap = await db.collection("seasons").where("active","==",true).get();
+    const batch = db.batch();
+    activeSnap.forEach(d=>batch.update(d.ref,{active:false}));
+    await batch.commit();
 
     await seasonRef.set({
       name:seasonId,
