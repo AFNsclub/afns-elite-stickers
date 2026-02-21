@@ -5,30 +5,24 @@
 <title>AFNS Elite Strikers | Player Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
 :root{--gold:#FFD700;--neon:#00f7ff;--bg1:#010814;--bg2:#021b33}
 *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
-body{min-height:100vh;background:radial-gradient(circle at top,var(--bg2),var(--bg1));color:#fff;overflow-x:hidden}
-body::before{content:"";position:fixed;width:400px;height:400px;background:radial-gradient(circle,var(--gold),transparent 70%);top:-100px;left:-100px;opacity:.08;animation:rotateGlow 12s linear infinite}
-@keyframes rotateGlow{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}
-.container{max-width:500px;margin:auto;padding:25px;animation:fadeIn 1s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)}}
+body{min-height:100vh;background:radial-gradient(circle at top,var(--bg2),var(--bg1));color:#fff}
+.container{max-width:500px;margin:auto;padding:25px}
 header{text-align:center;margin-bottom:20px}
-header img{width:100px;filter:drop-shadow(0 0 20px rgba(255,215,0,.7));animation:pulse 2s infinite}
-@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
-h1{margin:10px 0;color:var(--gold);text-shadow:0 0 15px rgba(255,215,0,.6)}
-.subtitle{font-size:13px;color:var(--neon)}
-.rank-badge{display:inline-block;margin-top:10px;padding:6px 14px;border-radius:20px;background:linear-gradient(90deg,#3a2e00,#1b1400);color:var(--gold);font-weight:700;box-shadow:0 0 15px rgba(255,215,0,.6);animation:fadeIn 1.5s ease}
-.card{margin-top:20px;background:rgba(255,255,255,.05);padding:20px;border-radius:20px;backdrop-filter:blur(8px);box-shadow:0 0 25px rgba(0,247,255,.2);animation:fadeIn 1.2s ease}
+header img{width:100px}
+h1{margin:10px 0;color:var(--gold)}
+.rank-badge{display:inline-block;margin-top:10px;padding:6px 14px;border-radius:20px;background:#1b1400;color:var(--gold);font-weight:700}
+.card{margin-top:20px;background:rgba(255,255,255,.05);padding:20px;border-radius:20px}
 .row{margin-bottom:14px}
 .label{font-size:12px;color:#aaa}
 .value{font-size:15px;font-weight:700}
 .stats{margin-top:20px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.stat-box{background:rgba(0,0,0,.4);padding:12px;border-radius:14px;text-align:center;box-shadow:0 0 10px rgba(0,247,255,.2);animation:fadeIn 1.5s ease}
+.stat-box{background:rgba(0,0,0,.4);padding:12px;border-radius:14px;text-align:center}
 .stat-title{font-size:12px;color:#aaa}
 .stat-value{font-size:18px;font-weight:700;margin-top:4px}
 footer{margin-top:30px;text-align:center;font-size:12px;color:#aaa}
@@ -38,11 +32,11 @@ footer a{color:var(--neon);text-decoration:none;font-weight:700}
 
 <body>
 <div class="container" id="app">
+
 <header>
   <img src="logo.png">
   <h1 id="username">Player</h1>
-  <div class="subtitle">AFNS Elite Strikers Federation</div>
-  <div id="rankBadge" class="rank-badge">Rank #--</div>
+  <div class="rank-badge" id="rankBadge">Rank #--</div>
 </header>
 
 <div class="card">
@@ -54,46 +48,82 @@ footer a{color:var(--neon);text-decoration:none;font-weight:700}
     <div class="stat-box"><div class="stat-title">Rating</div><div class="stat-value" id="rating">0</div></div>
     <div class="stat-box"><div class="stat-title">Wins</div><div class="stat-value" id="wins">0</div></div>
     <div class="stat-box"><div class="stat-title">Losses</div><div class="stat-value" id="losses">0</div></div>
-    <div class="stat-box"><div class="stat-title">Draw</div><div class="stat-value" id="draw">0</div></div>
+    <div class="stat-box"><div class="stat-title">Draw</div><div class="stat-value" id="draws">0</div></div>
     <div class="stat-box"><div class="stat-title">Win Rate</div><div class="stat-value" id="winrate">0%</div></div>
   </div>
 </div>
 
 <footer>
-  AFNS Elite Strikers | <a href="https://www.facebook.com/share/1CTCywTQAj/" target="_blank">SI Shohan</a>
+  AFNS Elite Strikers
 </footer>
+
 </div>
 
 <script>
-firebase.initializeApp({apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",authDomain:"afnsclub.firebaseapp.com",projectId:"afnsclub"});
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
 const db=firebase.firestore();
 const params=new URLSearchParams(location.search);
 const playerId=params.get("id");
-if(!playerId){document.getElementById("app").innerHTML="<h2 style='text-align:center'>Invalid Profile</h2>";throw new Error("ID Missing");}
 
+if(!playerId){
+  document.getElementById("app").innerHTML="<h2 style='text-align:center'>Invalid Profile</h2>";
+  throw new Error("ID Missing");
+}
+
+/* ===== LOAD PLAYER ===== */
 db.collection("players").doc(playerId).get().then(doc=>{
-  if(!doc.exists){document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>";return;}
+  if(!doc.exists){
+    document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>";
+    return;
+  }
+
   const d=doc.data();
-  username.innerText=d.username||"Player";
-  gameId.innerText=d.gameId||"—";
-  device.innerText=d.device||"—";
-  rating.innerText=d.rating||0;
-  wins.innerText=d.win||0;
-  losses.innerText=d.loss||0;
-  draw.innerText=d.draw||0;
-  const total=(d.win||0)+(d.loss||0)+(d.draw||0);
-  const winRate=total>0?((d.win/total)*100).toFixed(1):0;
-  winrate.innerText=winRate+"%";
-  if(d.facebook){facebook.href=d.facebook;facebook.innerText="View Facebook Profile";}else{facebook.innerText="—";}
+
+  document.getElementById("username").innerText=d.username||"Player";
+  document.getElementById("gameId").innerText=d.gameId||"—";
+  document.getElementById("device").innerText=d.device||"—";
+  document.getElementById("rating").innerText=d.rating||1000;
+
+  const wins=d.wins||0;
+  const losses=d.losses||0;
+  const draws=d.draws||0;
+
+  document.getElementById("wins").innerText=wins;
+  document.getElementById("losses").innerText=losses;
+  document.getElementById("draws").innerText=draws;
+
+  const total=wins+losses+draws;
+  const winRate=total>0?((wins/total)*100).toFixed(1):0;
+  document.getElementById("winrate").innerText=winRate+"%";
+
+  if(d.facebook && d.facebook.startsWith("http")){
+    const fb=document.getElementById("facebook");
+    fb.href=d.facebook;
+    fb.innerText="View Facebook Profile";
+  }else{
+    document.getElementById("facebook").innerText="—";
+  }
 });
 
-db.collection("players").orderBy("rating","desc").get().then(snapshot=>{
-  let rank=1;
-  snapshot.forEach(doc=>{
-    if(doc.id===playerId){rankBadge.innerText="Rank #"+rank;}
-    rank++;
-  });
+/* ===== CALCULATE RANK SAFE ===== */
+db.collection("players")
+  .orderBy("rating","desc")
+  .get()
+  .then(snapshot=>{
+    let rank=1;
+    snapshot.forEach(doc=>{
+      if(doc.id===playerId){
+        document.getElementById("rankBadge").innerText="Rank #"+rank;
+      }
+      rank++;
+    });
 });
 </script>
+
 </body>
-                            </html>
+</html>
