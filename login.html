@@ -30,7 +30,7 @@ body{
   box-shadow:0 0 35px rgba(0,247,255,.45);
 }
 .logo{text-align:center;margin-bottom:10px}
-.logo img{width:90px;filter:drop-shadow(0 0 18px rgba(255,215,0,.6))}
+.logo img{width:90px}
 h2{text-align:center;color:var(--gold);margin-bottom:18px}
 input{
   width:100%;
@@ -64,13 +64,15 @@ button{
   background:linear-gradient(145deg,#081c2c,#020c14);
   color:var(--neon);
 }
-.error{
-  color:#ff6b6b;
+button:disabled{opacity:.6;cursor:not-allowed}
+.message{
   font-size:14px;
   margin-bottom:12px;
   display:none;
   text-align:center;
 }
+.error{color:#ff6b6b;}
+.success{color:#00ff99;}
 .links{text-align:center;margin-top:16px;font-size:14px}
 .links a{color:var(--neon);text-decoration:none;font-weight:700}
 footer{text-align:center;font-size:12px;color:#aaa;margin-top:16px}
@@ -86,7 +88,7 @@ footer{text-align:center;font-size:12px;color:#aaa;margin-top:16px}
 
   <h2>Player Login</h2>
 
-  <div id="errorBox" class="error"></div>
+  <div id="msgBox" class="message"></div>
 
   <input type="email" id="email" placeholder="Gmail">
 
@@ -95,7 +97,7 @@ footer{text-align:center;font-size:12px;color:#aaa;margin-top:16px}
     <span class="toggle" onclick="togglePassword()">Show</span>
   </div>
 
-  <button onclick="login()">Login</button>
+  <button id="loginBtn" onclick="login()">Login</button>
 
   <div class="links">
     <a href="#" onclick="forgotPassword()">Forgot Password?</a><br><br>
@@ -106,7 +108,6 @@ footer{text-align:center;font-size:12px;color:#aaa;margin-top:16px}
   <footer>© 2026 AFN's Elite Strikers</footer>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
@@ -117,92 +118,100 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const auth = firebase.auth();
+const auth=firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-const email = document.getElementById("email");
-const password = document.getElementById("password");
-const errorBox = document.getElementById("errorBox");
+const email=document.getElementById("email");
+const password=document.getElementById("password");
+const msgBox=document.getElementById("msgBox");
+const loginBtn=document.getElementById("loginBtn");
 
-function showError(msg){
-  errorBox.innerText = msg;
-  errorBox.style.display = "block";
+function showMessage(msg,type){
+  msgBox.innerText=msg;
+  msgBox.className="message "+type;
+  msgBox.style.display="block";
 }
 
-function clearError(){
-  errorBox.style.display = "none";
+function clearMessage(){
+  msgBox.style.display="none";
 }
 
 function togglePassword(){
-  const toggle = document.querySelector(".toggle");
-  if(password.type === "password"){
-    password.type = "text";
-    toggle.innerText = "Hide";
+  const toggle=document.querySelector(".toggle");
+  if(password.type==="password"){
+    password.type="text";
+    toggle.innerText="Hide";
   }else{
-    password.type = "password";
-    toggle.innerText = "Show";
+    password.type="password";
+    toggle.innerText="Show";
   }
 }
 
-/* ✅ AUTO REDIRECT IF ALREADY LOGGED IN */
+/* Enter Key Login */
+password.addEventListener("keypress",e=>{
+  if(e.key==="Enter") login();
+});
+
+/* Auto Redirect */
 auth.onAuthStateChanged(user=>{
   if(user){
-    window.location.href = "player.html";
+    window.location.href="player.html";
   }
 });
 
-/* 🔐 Player Login */
 function login(){
-  clearError();
+  clearMessage();
 
-  if(!email.value || !password.value){
-    showError("⚠️ Gmail এবং Password দিতে হবে");
+  const emailVal=email.value.trim();
+  const passVal=password.value.trim();
+
+  if(!emailVal||!passVal){
+    showMessage("⚠️ Gmail এবং Password দিতে হবে","error");
     return;
   }
 
-  auth.signInWithEmailAndPassword(
-    email.value.trim(),
-    password.value
-  )
+  if(!emailVal.includes("@")){
+    showMessage("❌ Gmail ঠিক নাই","error");
+    return;
+  }
+
+  loginBtn.disabled=true;
+
+  auth.signInWithEmailAndPassword(emailVal,passVal)
   .then(()=>{
-    window.location.href = "player.html";
+    window.location.href="player.html";
   })
   .catch(error=>{
     let msg="❌ Login failed";
 
-    if(
-      error.code==="auth/invalid-login-credentials" ||
-      error.code==="auth/wrong-password" ||
-      error.code==="auth/user-not-found"
-    ){
+    if(error.code==="auth/too-many-requests"){
+      msg="⏳ অনেকবার ভুল চেষ্টা করা হয়েছে, পরে আবার চেষ্টা করুন";
+    }else{
       msg="❌ Gmail অথবা Password ভুল";
     }
-    else if(error.code==="auth/invalid-email"){
-      msg="❌ Gmail ঠিক নাই";
-    }
-    else if(error.code==="auth/too-many-requests"){
-      msg="⏳ অনেকবার ভুল চেষ্টা করা হয়েছে, পরে আবার চেষ্টা করুন";
-    }
 
-    showError(msg);
+    showMessage(msg,"error");
+    loginBtn.disabled=false;
   });
 }
 
-/* 🔁 Password Reset */
 function forgotPassword(){
-  clearError();
+  clearMessage();
 
-  if(!email.value){
-    showError("📧 আগে Gmail লিখুন");
+  const emailVal=email.value.trim();
+
+  if(!emailVal){
+    showMessage("📧 আগে Gmail লিখুন","error");
     return;
   }
 
-  auth.sendPasswordResetEmail(email.value.trim())
-    .then(()=>{
-      showError("✅ Password reset link Gmail এ পাঠানো হয়েছে");
-    })
-    .catch(()=>{
-      showError("❌ Gmail পাওয়া যায়নি");
-    });
+  auth.sendPasswordResetEmail(emailVal)
+  .then(()=>{
+    showMessage("✅ Password reset link Gmail এ পাঠানো হয়েছে","success");
+  })
+  .catch(()=>{
+    showMessage("❌ Gmail পাওয়া যায়নি","error");
+  });
 }
 </script>
 
