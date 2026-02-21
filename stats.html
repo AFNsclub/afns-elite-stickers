@@ -2,220 +2,156 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Strikers - Rankings</title>
+<title>AFNS Elite Strikers Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 :root{
-  --bg-dark:#0a0f21;
-  --card-bg:rgba(0,0,0,0.6);
-  --neon-cyan:#00f7ff;
-  --neon-pink:#ff44aa;
-  --neon-yellow:#ffbb33;
+  --bg:#0a0f21;
+  --card:#0d1835;
+  --accent:#00f7ff;
+  --neon:#ff44aa;
   --text:#fff;
+  --rank-up:#4cff8f;
+  --rank-down:#ff6b6b;
 }
-
-/* Body & Background */
 body{
   margin:0;
   font-family:'Segoe UI',sans-serif;
-  background:#0a0f21;
+  background:var(--bg);
   color:var(--text);
   text-align:center;
-  overflow-x:hidden;
-  position:relative;
 }
-
-/* 🔥 Fire Flare Background */
-.fire-bg{
-  position:fixed;
-  top:0;
-  left:50%;
-  transform:translateX(-50%);
-  width:300%;
-  height:300%;
-  background:radial-gradient(circle at center,#ff0077, #ff5500, transparent 70%);
-  animation:flare 4s infinite;
-  opacity:0.12;
-  pointer-events:none;
-  z-index:0;
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
 }
-@keyframes flare{
-  0%{transform:translateX(-50%) scale(1);}
-  50%{transform:translateX(-50%) scale(1.15);}
-  100%{transform:translateX(-50%) scale(1);}
-}
-
-/* Mini Sparks */
-.spark{
-  position:absolute;
-  width:4px;
-  height:4px;
-  background:var(--neon-yellow);
-  border-radius:50%;
-  opacity:0.8;
-  pointer-events:none;
-  animation:rise 2.5s linear infinite;
-}
-@keyframes rise{
-  0%{transform:translateY(0) scale(1);opacity:0.8;}
-  100%{transform:translateY(-180px) scale(0.3);opacity:0;}
-}
-
-/* Logo */
-.logo{
-  width:120px;
-  margin:20px auto;
-  display:block;
-  filter:drop-shadow(0 0 25px var(--neon-cyan));
-  z-index:2;
-  position:relative;
-}
-
-/* Title */
-h1{
-  font-size:38px;
-  margin:10px 0 10px;
-  background:linear-gradient(45deg,#ff0000,#0055ff);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  text-shadow:0 0 15px rgba(255,0,0,.5),0 0 15px rgba(0,85,255,.5);
-  font-weight:900;
-  z-index:2;
-  position:relative;
-}
-
-/* Season Selector */
-#seasonSelect{
-  margin:12px auto 20px;
-  padding:8px 14px;
-  border-radius:12px;
+h1,h2{color:var(--accent);text-shadow:0 0 8px var(--neon);}
+select{
+  padding:8px 12px;
+  border-radius:6px;
   border:none;
-  background:rgba(0,0,0,0.7);
-  color:#fff;
+  margin-bottom:20px;
+  background:var(--card);
+  color:var(--text);
   font-weight:600;
-  cursor:pointer;
 }
-
-/* Table Container */
 .table-container{
-  width:95%;
-  max-width:900px;
-  margin:auto 0 50px;
-  border-radius:15px;
-  overflow:hidden;
-  box-shadow:0 0 35px rgba(0,255,255,0.25);
-  z-index:2;
-  position:relative;
-  background:var(--card-bg);
+  overflow-x:auto;
+  margin-bottom:30px;
 }
-
-/* Table Styling */
 table{
   width:100%;
   border-collapse:collapse;
 }
-
-th{
-  padding:16px;
-  font-size:16px;
-  text-transform:uppercase;
-  background:rgba(10,20,40,0.7);
-  color:var(--neon-pink);
-  text-shadow:0 0 5px var(--neon-pink);
-}
-
-td{
-  padding:14px;
-  font-weight:600;
+th,td{
+  padding:12px;
   border-bottom:1px solid rgba(255,255,255,0.1);
-}
-
-tr{
-  opacity:0;
-  transform:translateY(15px);
-  animation:fadeSlide .5s forwards;
-  transition:0.3s;
-}
-
-@keyframes fadeSlide{
-  to{opacity:1;transform:translateY(0);}
-}
-
-tr:hover{
-  transform:scale(1.02);
-  background:rgba(0,255,255,0.08);
-}
-
-/* Top 3 Neon */
-.rank1{background:linear-gradient(120deg,#FFD700,#ffdd55); color:#000; box-shadow:0 0 20px #FFD700;}
-.rank2{background:linear-gradient(120deg,#C0C0C0,#e0e0e0); color:#000; box-shadow:0 0 15px #C0C0C0;}
-.rank3{background:linear-gradient(120deg,#CD7F32,#e1a55c); color:#000; box-shadow:0 0 15px #CD7F32;}
-
-.medal{font-size:18px;margin-right:5px;}
-
-/* Player link hover */
-.player-link{
-  color:inherit;
-  text-decoration:none;
-  transition:.2s;
-}
-.player-link:hover{
-  text-decoration:underline;
-  color:var(--neon-yellow);
-}
-
-/* Footer */
-footer{
   text-align:center;
-  font-size:14px;
-  margin-bottom:20px;
-  color:var(--neon-yellow);
-  font-weight:700;
-  text-shadow:0 0 8px var(--neon-cyan);
 }
-
-/* Responsive */
-@media(max-width:500px){
-  th,td{font-size:13px;padding:10px;}
-  h1{font-size:28px;margin-bottom:20px;}
+th{
+  background:rgba(0,0,0,0.5);
+  color:var(--neon);
+}
+.rank-up{color:var(--rank-up);font-weight:bold;}
+.rank-down{color:var(--rank-down);font-weight:bold;}
+.card{
+  background:var(--card);
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:30px;
+  box-shadow:0 0 20px rgba(0,255,255,0.2);
+}
+canvas{background:var(--card);border-radius:12px;}
+.hof-card{
+  display:flex;
+  justify-content:space-around;
+  flex-wrap:wrap;
+  gap:20px;
+}
+.hof-player{
+  background:rgba(255,255,255,0.05);
+  padding:12px;
+  border-radius:10px;
+  flex:1 1 120px;
+  text-align:center;
+}
+.hof-player h3{margin:6px 0;color:var(--accent);}
+.logo{
+  width:120px;
+  margin:20px auto;
+  display:block;
+  filter:drop-shadow(0 0 25px var(--accent));
+}
+@media(max-width:600px){
+  th,td{font-size:12px;padding:8px;}
+  h1{font-size:28px;}
   .logo{width:90px;}
 }
 </style>
 </head>
 <body>
 
-<div class="fire-bg"></div>
-
 <img src="logo.png" alt="AFNS Logo" class="logo">
+<h1>🏆 AFNS Elite Strikers Dashboard</h1>
 
-<h1>🏆 AFNS ELITE STRIKERS</h1>
+<div class="card">
+<h2>Select Season</h2>
+<select id="seasonSelect"></select>
+</div>
 
-<select id="seasonSelect">
-  <option value="all">All-time Ranking</option>
-</select>
-
-<div class="table-container">
+<div class="card table-container">
+<h2>Seasonal Ranking</h2>
 <table>
 <thead>
 <tr>
 <th>Rank</th>
 <th>Player</th>
-<th>Win</th>
-<th>Loss</th>
-<th>Draw</th>
+<th>Wins</th>
+<th>Losses</th>
+<th>Draws</th>
 <th>Rating</th>
+<th>Δ Rank</th>
 </tr>
 </thead>
-<tbody id="rankingBody"></tbody>
+<tbody id="seasonRanking"></tbody>
 </table>
 </div>
 
-<footer>© 2026 AFNS Elite Strikers | SI Shohan</footer>
+<div class="card table-container">
+<h2>All-time Ranking</h2>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Player</th>
+<th>Wins</th>
+<th>Losses</th>
+<th>Draws</th>
+<th>Rating</th>
+</tr>
+</thead>
+<tbody id="alltimeRanking"></tbody>
+</table>
+</div>
+
+<div class="card">
+<h2>Rating Comparison Chart</h2>
+<canvas id="ratingChart" height="150"></canvas>
+</div>
+
+<div class="card">
+<h2>Hall of Fame</h2>
+<div class="hof-card" id="hofSection"></div>
+</div>
 
 <script>
 firebase.initializeApp({
@@ -224,75 +160,112 @@ firebase.initializeApp({
   projectId:"afnsclub"
 });
 
-const db=firebase.firestore();
-const table=document.getElementById("rankingBody");
-const seasonSelect=document.getElementById("seasonSelect");
+const db = firebase.firestore();
+const seasonSelect = document.getElementById("seasonSelect");
+const seasonRanking = document.getElementById("seasonRanking");
+const alltimeRanking = document.getElementById("alltimeRanking");
+const hofSection = document.getElementById("hofSection");
+let ratingChart;
 
-let lastRatings={};
-
-// 🔥 Sparks Generator
-function createSparks(num){
-  for(let i=0;i<num;i++){
-    const spark=document.createElement('div');
-    spark.className='spark';
-    spark.style.left=Math.random()*100+'%';
-    spark.style.top=100+Math.random()*50+'%';
-    spark.style.animationDuration=(1+Math.random()*2)+'s';
-    document.body.appendChild(spark);
-  }
-}
-createSparks(25);
-
-// Load seasons
-db.collection("seasons").orderBy("year","desc").get().then(snap=>{
+// Load Seasons
+async function loadSeasons(){
+  const snap = await db.collection("seasons").orderBy("year","desc").get();
   snap.forEach(doc=>{
-    const s = doc.data();
-    const opt=document.createElement("option");
-    opt.value=doc.id;
-    opt.text=s.name;
+    const opt = document.createElement("option");
+    opt.value = doc.id;
+    opt.textContent = doc.id;
     seasonSelect.appendChild(opt);
   });
-});
+  if(snap.docs.length) loadSeasonRanking(snap.docs[0].id);
+}
+seasonSelect.addEventListener("change",()=>loadSeasonRanking(seasonSelect.value));
 
-// Load rankings based on season
-seasonSelect.addEventListener("change",()=>loadRanking(seasonSelect.value));
-
-function loadRanking(seasonId){
-  let query=db.collection("players");
-  if(seasonId!=="all") query=query.where("seasonId","==",seasonId);
-  query.orderBy("rating","desc").onSnapshot(snapshot=>{
-    table.innerHTML="";
-    let rank=1;
-    snapshot.forEach(doc=>{
-      const p=doc.data();
-      let className="",medal="";
-      if(rank===1){className="rank1";medal="🥇";}
-      else if(rank===2){className="rank2";medal="🥈";}
-      else if(rank===3){className="rank3";medal="🥉";}
-
-      // Rating arrow
-      let arrow="➡️";
-      if(lastRatings[doc.id]!==undefined){
-        if(p.rating>lastRatings[doc.id]) arrow="⬆️";
-        else if(p.rating<lastRatings[doc.id]) arrow="⬇️";
-      }
-      lastRatings[doc.id]=p.rating;
-
-      table.innerHTML+=`<tr class="${className}" style="animation-delay:${rank*0.1}s">
-        <td><span class="medal">${medal}</span>${rank}</td>
-        <td><a class="player-link" href="public-profile.html?id=${doc.id}">${p.username||"-"}</a></td>
+// Load Seasonal Ranking
+async function loadSeasonRanking(seasonId){
+  const snap = await db.collection("players").where("seasonId","==",seasonId).orderBy("rating","desc").get();
+  seasonRanking.innerHTML="";
+  let rank=1;
+  snap.forEach(doc=>{
+    const p = doc.data();
+    const prevRank = p.prevRank||rank;
+    let delta = prevRank - rank;
+    seasonRanking.innerHTML+=`
+      <tr>
+        <td>${rank}</td>
+        <td>${p.username||"-"}</td>
         <td>${p.wins||0}</td>
         <td>${p.losses||0}</td>
         <td>${p.draws||0}</td>
-        <td>${p.rating||0} ${arrow}</td>
-      </tr>`;
-      rank++;
+        <td>${p.rating||0}</td>
+        <td class="${delta>0?'rank-up':delta<0?'rank-down':''}">${delta>0?`🔼${delta}`:delta<0?`🔽${-delta}`:'-'}</td>
+      </tr>
+    `;
+    rank++;
+  });
+  loadAlltimeRanking();
+  loadCharts(seasonId);
+  loadHallOfFame();
+}
+
+// Load All-time Ranking
+async function loadAlltimeRanking(){
+  const snap = await db.collection("players").orderBy("rating","desc").get();
+  alltimeRanking.innerHTML="";
+  let rank=1;
+  snap.forEach(doc=>{
+    const p = doc.data();
+    alltimeRanking.innerHTML+=`
+      <tr>
+        <td>${rank}</td>
+        <td>${p.username||"-"}</td>
+        <td>${p.wins||0}</td>
+        <td>${p.losses||0}</td>
+        <td>${p.draws||0}</td>
+        <td>${p.rating||0}</td>
+      </tr>
+    `;
+    rank++;
+  });
+}
+
+// Load Charts
+async function loadCharts(seasonId){
+  const snap = await db.collection("players").where("seasonId","==",seasonId).orderBy("rating","desc").get();
+  const labels=[], ratings=[];
+  snap.forEach(doc=>{
+    const p = doc.data();
+    labels.push(p.username||"-");
+    ratings.push(p.rating||0);
+  });
+  if(ratingChart) ratingChart.destroy();
+  const ctx = document.getElementById("ratingChart").getContext("2d");
+  ratingChart = new Chart(ctx,{
+    type:"bar",
+    data:{labels, datasets:[{label:"Rating", data:ratings, backgroundColor:"#00f7ff"}]},
+    options:{responsive:true, scales:{y:{beginAtZero:true}}}
+  });
+}
+
+// Hall of Fame
+async function loadHallOfFame(){
+  const snap = await db.collection("hall_of_fame").orderBy("createdAt","desc").get();
+  hofSection.innerHTML="";
+  snap.forEach(doc=>{
+    const season = doc.data();
+    season.champions.forEach(ch=>{
+      hofSection.innerHTML+=`
+        <div class="hof-player">
+          <h3>${ch.name}</h3>
+          <p>Rating: ${ch.rating}</p>
+          <p>Season: ${season.season}</p>
+        </div>
+      `;
     });
   });
 }
 
-// Initial load
-loadRanking("all");
+// Init
+loadSeasons();
 </script>
 
 </body>
