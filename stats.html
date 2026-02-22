@@ -9,20 +9,85 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-:root{--gold:#FFD700;--silver:#C0C0C0;--bronze:#CD7F32}
-body{margin:0;background:linear-gradient(180deg,#010814,#021b33);font-family:Segoe UI;color:white;text-align:center}
-h1{padding:15px;text-shadow:0 0 15px rgba(255,215,0,.6)}
-h2{margin-top:30px;color:#FFD700}
-table{width:95%;margin:auto;border-collapse:collapse;margin-top:15px}
-th{background:#061423;padding:12px;color:white}
-td{padding:10px;border-bottom:1px solid #112b45;color:white}
-.rank1{background:#2a2100;color:var(--gold)}
-.rank2{background:#1c1c1c;color:var(--silver)}
-.rank3{background:#2b1600;color:var(--bronze)}
-button{margin:10px;padding:8px 18px;font-weight:bold;cursor:pointer}
-.player-link{color:white;text-decoration:none}
-.player-link:hover{color:#FFD700}
-.section{margin-top:40px}
+:root{
+  --gold:#FFD700;
+  --silver:#C0C0C0;
+  --bronze:#CD7F32;
+  --bg-dark:#010814;
+  --card:#0c1b2a;
+  --text:#ffffff;
+  --hover:#0f2c4d;
+}
+
+body{
+  margin:0;
+  background:linear-gradient(180deg,#010814,#021b33);
+  font-family:Segoe UI, sans-serif;
+  color:var(--text);
+  text-align:center;
+}
+h1{
+  padding:15px;
+  font-size:1.8rem;
+  text-shadow:0 0 15px rgba(255,215,0,.6);
+}
+h2{
+  margin-top:25px;
+  color:#FFD700;
+}
+table{
+  width:95%;
+  margin:auto;
+  border-collapse:collapse;
+  margin-top:15px;
+  overflow-x:auto;
+}
+th{
+  background:#061423;
+  padding:12px;
+  color:white;
+}
+td{
+  padding:10px;
+  border-bottom:1px solid #112b45;
+}
+.rank1{background:#2a2100;color:var(--gold);}
+.rank2{background:#1c1c1c;color:var(--silver);}
+.rank3{background:#2b1600;color:var(--bronze);}
+button{
+  margin:15px;
+  padding:10px 22px;
+  font-weight:bold;
+  cursor:pointer;
+  border:none;
+  border-radius:5px;
+  background:#FFD700;
+  color:#020d1f;
+  font-size:1rem;
+  transition:0.2s;
+}
+button:hover{
+  background:#e6c200;
+}
+.player-link{
+  color:white;
+  text-decoration:none;
+}
+.player-link:hover{color:#FFD700;}
+.section{margin-top:40px;}
+tr{
+  opacity:0;
+  transform:translateY(20px);
+  animation:fadeSlide .5s forwards;
+}
+@keyframes fadeSlide{
+  to{opacity:1;transform:translateY(0);}
+}
+@media(max-width:600px){
+  th,td{font-size:0.85rem;padding:8px;}
+  h1{font-size:1.5rem;}
+  button{font-size:0.9rem;padding:8px 16px;}
+}
 </style>
 </head>
 
@@ -87,8 +152,8 @@ let mode = "season";
 let unsubscribeRanking = null;
 
 function getSeasonIndex(month){
-  if(month >= 8) return 3;
-  if(month >= 4) return 2;
+  if(month>=8) return 3;
+  if(month>=4) return 2;
   return 1;
 }
 
@@ -137,7 +202,7 @@ function loadRanking(){
       let className = rank===1?"rank1":rank===2?"rank2":rank===3?"rank3":"";
       const rating = mode==="season"?p.ratingSeason||0:p.ratingAllTime||0;
       rankingBody.innerHTML += `
-        <tr class="${className}">
+        <tr class="${className}" style="animation-delay:${rank*0.08}s">
           <td>${rank}</td>
           <td><a class="player-link" href="public-profile.html?id=${doc.id}">${p.username||"-"}</a></td>
           <td>${p.wins||0}</td>
@@ -161,7 +226,7 @@ toggleBtn.onclick = function(){
   loadRanking();
 };
 
-/* ========== Match History ========== */
+/* Match History */
 db.collection("matches")
 .orderBy("createdAt","desc")
 .limit(50)
@@ -175,7 +240,7 @@ db.collection("matches")
     const m = doc.data();
     const date = m.createdAt ? m.createdAt.toDate().toLocaleDateString() : "-";
     matchBody.innerHTML += `
-      <tr>
+      <tr style="animation-delay:0.05s">
         <td>${date}</td>
         <td>${m.playerAName||"-"}</td>
         <td>${m.playerBName||"-"}</td>
