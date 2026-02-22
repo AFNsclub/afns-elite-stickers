@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Head To Head | AFNS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{margin:0;background:#081a2e;color:#fff;font-family:Arial}
+.container{max-width:1000px;margin:auto;padding:20px}
+.card{background:#0f2545;padding:20px;border-radius:18px;margin-bottom:20px}
+select,button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:12px}
+button{background:#00c6ff;font-weight:bold;cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:20px}
+.stat{background:#132f55;padding:15px;border-radius:12px;text-align:center}
+.match{background:#0b1f38;padding:12px;border-radius:10px;margin-bottom:8px}
+.win{border-left:5px solid #4cff8f}
+.loss{border-left:5px solid #ff6b6b}
+.draw{border-left:5px solid #ffd700}
+h2{text-align:center}
+.filterRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="card">
+<h2>⚔ Player vs Player</h2>
+
+<select id="p1"></select>
+<select id="p2"></select>
+
+<div class="filterRow">
+<select id="mode">
+<option value="all">All Time</option>
+<option value="season">Current Season Only</option>
+</select>
+
+<select id="typeFilter">
+<option value="all">All Matches</option>
+<option value="tournament">Tournament Only</option>
+<option value="friendly">Friendly Only</option>
+</select>
+</div>
+
+<button onclick="loadH2H()">Compare</button>
+</div>
+
+<div id="resultBox" class="hidden card"></div>
+
+</div>
+
+<script>
+firebase.initializeApp({
+apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+authDomain:"afnsclub.firebaseapp.com",
+projectId:"afnsclub"
+});
+
+const db=firebase.firestore();
+let players=[];
+let currentSeason="S1"; // change dynamically if needed
+
+async function loadPlayers(){
+const snap=await db.collection("players").get();
+players=snap.docs.map(d=>({id:d.id,...d.data()}));
+const p1=document.getElementById("p1");
+const p2=document.getElementById("p2");
+
+players.forEach(p=>{
+p1.innerHTML+=`<option value="${p.id}">${p.username}</option>`;
+p2.innerHTML+=`<option value="${p.id}">${p.username}</option>`;
+});
+}
+loadPlayers();
+
+async function loadH2H(){
+
+const id1=p1.value;
+const id2=p2.value;
+const mode=document.getElementById("mode").value;
+const typeFilter=document.getElementById("typeFilter").value;
+
+if(id1===id2) return alert("Select different players");
+
+const player1=players.find(p=>p.id===id1);
+const player2=players.find(p=>p.id===id2);
+
+const snap=await db.collection("matches")
+.where("status","==","approved")
+.get();
+
+let matches=[];
+
+snap.forEach(doc=>{
+const m=doc.data();
+
+if(
+(m.player1Id===id1 && m.player2Id===id2) ||
+(m.player1Id===id2 && m.player2Id===id1)
+){
+if(typeFilter!=="all" && m.matchType!==typeFilter) return;
+if(mode==="season" && m.seasonId!==currentSeason) return;
+matches.push(m);
+}
+});
+
+let p1Wins=0,p2Wins=0,draws=0;
+
+matches.forEach(m=>{
+if(!m.winner) draws++;
+else if(m.winner===player1.username) p1Wins++;
+else if(m.winner===player2.username) p2Wins++;
+});
+
+const total=matches.length;
+
+const box=document.getElementById("resultBox");
+box.classList.remove("hidden");
+
+box.innerHTML=`
+<h2>${player1.username} vs ${player2.username}</h2>
+
+<div class="stats">
+<div class="stat">
+All Time Rating
+<h3>${player1.ratingAllTime||1000} - ${player2.ratingAllTime||1000}</h3>
+</div>
+<div class="stat">
+Season Rating
+<h3>${player1.ratingSeason||1000} - ${player2.ratingSeason||1000}</h3>
+</div>
+<div class="stat">
+Total Matches
+<h3>${total}</h3>
+</div>
+</div>
+
+<div class="stats">
+<div class="stat">
+${player1.username} Wins
+<h3>${p1Wins}</h3>
+</div>
+<div class="stat">
+Draws
+<h3>${draws}</h3>
+</div>
+<div class="stat">
+${player2.username} Wins
+<h3>${p2Wins}</h3>
+</div>
+</div>
+
+<div class="stats">
+<div class="stat">
+${player1.username} Win %
+<h3>${total?Math.round((p1Wins/total)*100):0}%</h3>
+</div>
+<div class="stat">
+${player2.username} Win %
+<h3>${total?Math.round((p2Wins/total)*100):0}%</h3>
+</div>
+<div class="stat">
+Dominance
+<h3>${
+p1Wins>p2Wins?player1.username:
+p2Wins>p1Wins?player2.username:
+"Even"
+}</h3>
+</div>
+</div>
+
+<h3 style="margin-top:25px">Match List</h3>
+`;
+
+matches.sort((a,b)=>{
+const at=a.createdAt?.toDate()?.getTime()||0;
+const bt=b.createdAt?.toDate()?.getTime()||0;
+return bt-at;
+});
+
+matches.forEach(m=>{
+let cls="draw";
+if(m.winner===player1.username) cls="win";
+else if(m.winner===player2.username) cls="loss";
+
+box.innerHTML+=`
+<div class="match ${cls}">
+${m.score} | ${m.matchType||"friendly"}
+<br><small>${m.tournamentName||""}</small>
+</div>`;
+});
+}
+</script>
+
+</body>
+</html>
