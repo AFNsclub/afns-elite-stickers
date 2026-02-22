@@ -1,73 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Strikers Dashboard</title>
+<title>AFNS Pro Multi-Season Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{margin:0;font-family:Segoe UI;background:#0a0f21;color:#fff;text-align:center;}
-.card{background:#0d1835;padding:20px;margin:20px;border-radius:12px;}
-table{width:100%;border-collapse:collapse;}
-th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.1);}
-th{color:#ff44aa;}
-.rank1{background:#FFD700;color:#000;}
-.rank2{background:#C0C0C0;color:#000;}
-.rank3{background:#CD7F32;color:#000;}
-.rank-up{color:#4cff8f;font-weight:bold;}
-.rank-down{color:#ff6b6b;font-weight:bold;}
-button{padding:6px 12px;margin:5px;border:none;border-radius:6px;cursor:pointer;background:#00f7ff;color:#000;}
+:root{
+  --bg:#0a0f21; --card:#0d1835; --accent:#00f7ff; --text:#fff;
+  --gold:#FFD700; --silver:#C0C0C0; --bronze:#CD7F32;
+  --rank-up:#4cff8f; --rank-down:#ff6b6b;
+}
+body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);text-align:center;}
+.logo{width:120px;margin:20px auto;display:block;filter:drop-shadow(0 0 25px var(--accent));}
+.card{background:var(--card);padding:20px;border-radius:12px;margin:20px auto;max-width:1000px;box-shadow:0 0 20px rgba(0,255,255,0.2);}
+button{padding:10px 16px;margin:5px;border:none;border-radius:8px;background:var(--accent);color:#000;font-weight:700;cursor:pointer;}
+select{padding:6px 10px;border-radius:6px;border:none;background:var(--card);color:var(--text);}
+table{width:100%;border-collapse:collapse;margin-top:12px;}
+th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.1);text-align:center;}
+th{background:rgba(0,0,0,0.5);}
+.rank1{background:var(--gold);color:#000;} .rank2{background:var(--silver);color:#000;} .rank3{background:var(--bronze);color:#000;}
+.rank-up{color:var(--rank-up);font-weight:bold;} .rank-down{color:var(--rank-down);font-weight:bold;}
+.hof-card{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;margin-top:12px;}
+.hof-player{background:rgba(255,255,255,0.05);padding:12px;border-radius:10px;width:120px;text-align:center;}
+.hof-player h3{color:var(--accent);margin:6px 0;}
+canvas{background:var(--card);border-radius:12px;margin-top:10px;}
 </style>
 </head>
 <body>
 
-<h1>🏆 AFNS Elite Strikers Dashboard</h1>
+<img src="logo.png" class="logo" alt="AFNS Logo">
+<h1>🏆 AFNS Pro Multi-Season Dashboard</h1>
 
 <div class="card">
-<h2>Select Season</h2>
-<select id="seasonSelect"></select>
-<button onclick="toggleChart()">Toggle Chart</button>
+  <h2>Season Manager</h2>
+  <button id="manualReset">🔄 Manual Season Reset</button>
+  <p id="currentSeason" style="margin-top:8px;"></p>
 </div>
 
 <div class="card">
-<h2>Seasonal Ranking</h2>
-<table>
-<thead>
-<tr>
-<th>Rank</th>
-<th>Player</th>
-<th>Wins</th>
-<th>Losses</th>
-<th>Draws</th>
-<th>Rating</th>
-<th>Δ</th>
-</tr>
-</thead>
-<tbody id="seasonRanking"></tbody>
-</table>
+  <h2>Select Season</h2>
+  <select id="seasonSelect"></select>
 </div>
 
 <div class="card">
-<h2>All-time Ranking</h2>
-<table>
-<thead>
-<tr>
-<th>Rank</th>
-<th>Player</th>
-<th>Rating</th>
-</tr>
-</thead>
-<tbody id="allRanking"></tbody>
-</table>
+  <h2>Seasonal Ranking</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th><th>Player</th><th>Wins</th><th>Losses</th><th>Draws</th><th>Rating</th><th>Δ Rank</th>
+      </tr>
+    </thead>
+    <tbody id="seasonRanking"></tbody>
+  </table>
 </div>
 
 <div class="card">
-<h2>Historical Rating Chart</h2>
-<canvas id="chart"></canvas>
+  <h2>All-time Ranking</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th><th>Player</th><th>Wins</th><th>Losses</th><th>Draws</th><th>Rating</th>
+      </tr>
+    </thead>
+    <tbody id="alltimeRanking"></tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Δ Rank Historical Chart</h2>
+  <canvas id="ratingChart" height="150"></canvas>
+</div>
+
+<div class="card">
+  <h2>Hall of Fame</h2>
+  <div class="hof-card" id="hofSection"></div>
 </div>
 
 <script>
@@ -79,133 +93,127 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 const seasonSelect = document.getElementById("seasonSelect");
-let chartType="bar";
-let chartInstance;
+const seasonRanking = document.getElementById("seasonRanking");
+const alltimeRanking = document.getElementById("alltimeRanking");
+const hofSection = document.getElementById("hofSection");
+const currentSeasonP = document.getElementById("currentSeason");
+let ratingChart;
+const BASE_RATING=50;
+const SEASON_START_MONTHS=[0,4,8]; // Jan, May, Sep
 
-// 🔥 Load Seasons (RULES COMPATIBLE → season)
-async function loadSeasons(){
-  const snap = await db.collection("season").get();
-  snap.forEach(doc=>{
-    const opt=document.createElement("option");
-    opt.value=doc.id;
-    opt.textContent=doc.id;
-    seasonSelect.appendChild(opt);
-  });
+function getSeasonIndex(month){if(month>=8) return 3;if(month>=4) return 2;return 1;}
+function getCurrentSeasonId(){const now=new Date();return `${now.getFullYear()}-S${getSeasonIndex(now.getMonth())}`;}
 
-  if(snap.docs.length){
-    loadSeasonRanking(snap.docs[0].id);
-  }
-}
-
-seasonSelect.addEventListener("change",()=>{
-  loadSeasonRanking(seasonSelect.value);
+// Manual Reset
+document.getElementById("manualReset").addEventListener("click",async()=>{
+  if(!confirm("⚠️ Reset current season ratings?")) return;
+  await ensureSeason();
+  alert("✅ Season Reset Done");
 });
 
-// 🔥 Seasonal Ranking
+// Ensure season & reset players safely
+async function ensureSeason(){
+  const seasonId=getCurrentSeasonId();
+  currentSeasonP.textContent="Current Active Season: "+seasonId;
+  const seasonRef=db.collection("seasons").doc(seasonId);
+  const snap=await seasonRef.get();
+  if(snap.exists && snap.data().active) return seasonId;
+
+  const batchLimit=400;
+  await db.runTransaction(async t=>{
+    const activeSnap=await t.get(db.collection("seasons").where("active","==",true));
+    activeSnap.forEach(doc=>t.update(doc.ref,{active:false,endedAt:firebase.firestore.FieldValue.serverTimestamp()}));
+    t.set(seasonRef,{seasonId,active:true,startedAt:firebase.firestore.FieldValue.serverTimestamp(),baseRating:BASE_RATING});
+
+    const playersSnap=await db.collection("players").get();
+    let counter=0;
+    for(const p of playersSnap.docs){
+      t.update(p.ref,{rating:BASE_RATING,wins:0,losses:0,seasonId});
+      counter++; if(counter>=batchLimit) break;
+    }
+  });
+  return seasonId;
+}
+
+// Load Seasons & Rankings
+async function loadSeasons(){
+  const snap=await db.collection("seasons").orderBy("year","desc").get();
+  seasonSelect.innerHTML="";
+  snap.forEach(doc=>{const opt=document.createElement("option");opt.value=doc.id;opt.textContent=doc.id;seasonSelect.appendChild(opt);});
+  const activeSeason=await ensureSeason();
+  seasonSelect.value=activeSeason;
+  loadSeasonRanking(activeSeason);
+}
+seasonSelect.addEventListener("change",()=>loadSeasonRanking(seasonSelect.value));
+
 async function loadSeasonRanking(seasonId){
-
-  const snap = await db.collection("players")
-  .where("seasonId","==",seasonId)
-  .orderBy("rating","desc")
-  .get();
-
-  const tbody=document.getElementById("seasonRanking");
-  tbody.innerHTML="";
-
-  let rank=1;
+  const snap=await db.collection("players").where("seasonId","==",seasonId).orderBy("rating","desc").get();
+  seasonRanking.innerHTML=""; let rank=1;
   snap.forEach(doc=>{
     const p=doc.data();
-    const prev=p.prevRank||rank;
-    const delta=prev-rank;
-
+    const prevRank=p.prevRank||rank;
+    const delta=prevRank-rank;
     let cls="";
-    if(rank==1) cls="rank1";
-    if(rank==2) cls="rank2";
-    if(rank==3) cls="rank3";
-
-    tbody.innerHTML+=`
-    <tr class="${cls}">
+    if(rank===1) cls="rank1"; else if(rank===2) cls="rank2"; else if(rank===3) cls="rank3";
+    seasonRanking.innerHTML+=`<tr class="${cls}">
       <td>${rank}</td>
       <td>${p.username||"-"}</td>
       <td>${p.wins||0}</td>
       <td>${p.losses||0}</td>
       <td>${p.draws||0}</td>
       <td>${p.rating||0}</td>
-      <td class="${delta>0?'rank-up':delta<0?'rank-down':''}">
-      ${delta>0?'▲'+delta:delta<0?'▼'+(-delta):'-'}
-      </td>
-    </tr>
-    `;
-    rank++;
+      <td class="${delta>0?'rank-up':delta<0?'rank-down':''}">${delta>0?'🔼'+delta:delta<0?'🔽'+(-delta):'-'}</td>
+    </tr>`; rank++;
   });
-
-  loadAllRanking();
-  loadChart();
+  loadAlltimeRanking(); loadComparisonChart(); loadHallOfFame();
 }
 
-// 🔥 All Time Ranking
-async function loadAllRanking(){
-  const snap=await db.collection("players")
-  .orderBy("rating","desc")
-  .get();
-
-  const tbody=document.getElementById("allRanking");
-  tbody.innerHTML="";
-  let rank=1;
+async function loadAlltimeRanking(){
+  const snap=await db.collection("players").orderBy("rating","desc").get();
+  alltimeRanking.innerHTML=""; let rank=1;
   snap.forEach(doc=>{
     const p=doc.data();
-    tbody.innerHTML+=`
-    <tr>
-      <td>${rank}</td>
-      <td>${p.username}</td>
-      <td>${p.rating}</td>
-    </tr>`;
-    rank++;
+    alltimeRanking.innerHTML+=`<tr><td>${rank}</td><td>${p.username||"-"}</td><td>${p.wins||0}</td><td>${p.losses||0}</td><td>${p.draws||0}</td><td>${p.rating||0}</td></tr>`; rank++;
   });
 }
 
-// 🔥 Historical Chart
-async function loadChart(){
-
-  const seasonSnap=await db.collection("season").get();
-  const seasons=seasonSnap.docs.map(d=>d.id);
-
+async function loadComparisonChart(){
+  const seasonsSnap=await db.collection("seasons").orderBy("year","asc").get();
+  const seasons=seasonsSnap.docs.map(d=>d.id);
   const playersSnap=await db.collection("players").get();
-  const dataMap={};
-
+  const playerData={};
   playersSnap.forEach(doc=>{
     const p=doc.data();
-    if(!dataMap[p.username]) dataMap[p.username]={};
-    dataMap[p.username][p.seasonId]=p.rating;
+    if(!playerData[p.username]) playerData[p.username]={};
+    playerData[p.username][p.seasonId]=p.rating;
   });
 
+  const labels=seasons;
   const datasets=[];
-  let i=0;
-  Object.keys(dataMap).forEach(name=>{
-    const data=seasons.map(s=>dataMap[name][s]||0);
-    datasets.push({
-      label:name,
-      data:data,
-      borderColor:`hsl(${i*40},70%,60%)`,
-      backgroundColor:`hsla(${i*40},70%,60%,0.5)`
+  let idx=0;
+  Object.keys(playerData).forEach(player=>{
+    const data=seasons.map(season=>playerData[player][season]||0);
+    datasets.push({label:player,data:data,borderColor:`hsl(${idx*40%360},70%,60%)`,backgroundColor:`hsla(${idx*40%360},70%,60%,0.5)`,tension:0.3});
+    idx++;
+  });
+
+  const ctx=document.getElementById("ratingChart").getContext("2d");
+  if(ratingChart) ratingChart.destroy();
+  ratingChart=new Chart(ctx,{type:'line',data:{labels,datasets},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true}}}});
+}
+
+async function loadHallOfFame(){
+  const snap=await db.collection("hall_of_fame").orderBy("createdAt","desc").get();
+  hofSection.innerHTML="";
+  snap.forEach(doc=>{
+    const season=doc.data();
+    season.champions.forEach(ch=>{
+      hofSection.innerHTML+=`<div class="hof-player"><h3>${ch.name}</h3><p>Rating: ${ch.rating}</p><p>Season: ${season.season}</p></div>`;
     });
-    i++;
-  });
-
-  if(chartInstance) chartInstance.destroy();
-
-  chartInstance=new Chart(document.getElementById("chart"),{
-    type:chartType,
-    data:{labels:seasons,datasets:datasets},
-    options:{responsive:true}
   });
 }
 
-function toggleChart(){
-  chartType=chartType==="bar"?"line":"bar";
-  loadChart();
-}
-
+// Init
 loadSeasons();
 </script>
 
