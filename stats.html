@@ -14,8 +14,8 @@ body{margin:0;background:linear-gradient(180deg,#010814,#021b33);font-family:Seg
 h1{padding:15px;text-shadow:0 0 15px rgba(255,215,0,.6)}
 h2{margin-top:30px;color:#FFD700}
 table{width:95%;margin:auto;border-collapse:collapse;margin-top:15px}
-th{background:#061423;padding:12px}
-td{padding:10px;border-bottom:1px solid #112b45}
+th{background:#061423;padding:12px;color:white}
+td{padding:10px;border-bottom:1px solid #112b45;color:white}
 .rank1{background:#2a2100;color:var(--gold)}
 .rank2{background:#1c1c1c;color:var(--silver)}
 .rank3{background:#2b1600;color:var(--bronze)}
@@ -46,7 +46,9 @@ button{margin:10px;padding:8px 18px;font-weight:bold;cursor:pointer}
 <th>Rating</th>
 </tr>
 </thead>
-<tbody id="rankingBody"></tbody>
+<tbody id="rankingBody">
+<tr><td colspan="6">Loading...</td></tr>
+</tbody>
 </table>
 </div>
 
@@ -61,133 +63,129 @@ button{margin:10px;padding:8px 18px;font-weight:bold;cursor:pointer}
 <th>Winner</th>
 </tr>
 </thead>
-<tbody id="matchBody"></tbody>
+<tbody id="matchBody">
+<tr><td colspan="4">Loading...</td></tr>
+</tbody>
 </table>
 </div>
 
 <script>
 firebase.initializeApp({
-apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-authDomain:"afnsclub.firebaseapp.com",
-projectId:"afnsclub"
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
 });
 
-const db=firebase.firestore();
-const rankingBody=document.getElementById("rankingBody");
-const matchBody=document.getElementById("matchBody");
-const toggleBtn=document.getElementById("toggleBtn");
-const seasonTitle=document.getElementById("seasonTitle");
-const rankingTitle=document.getElementById("rankingTitle");
+const db = firebase.firestore();
+const rankingBody = document.getElementById("rankingBody");
+const matchBody = document.getElementById("matchBody");
+const toggleBtn = document.getElementById("toggleBtn");
+const seasonTitle = document.getElementById("seasonTitle");
+const rankingTitle = document.getElementById("rankingTitle");
 
-let mode="season";
-let unsubscribeRanking=null;
+let mode = "season";
+let unsubscribeRanking = null;
 
 function getSeasonIndex(month){
-if(month>=8)return 3;
-if(month>=4)return 2;
-return 1;
+  if(month >= 8) return 3;
+  if(month >= 4) return 2;
+  return 1;
 }
 
 function getCurrentSeasonId(){
-const now=new Date();
-return now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());
+  const now = new Date();
+  return now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());
 }
 
 function seasonName(seasonId){
-const parts=seasonId.split("-");
-const year=parts[0];
-const s=parts[1];
-if(s==="S1") return year+" Season 1 (Jan-Apr)";
-if(s==="S2") return year+" Season 2 (May-Aug)";
-return year+" Season 3 (Sep-Dec)";
+  const parts = seasonId.split("-");
+  const year = parts[0];
+  const s = parts[1];
+  if(s==="S1") return year+" Season 1 (Jan-Apr)";
+  if(s==="S2") return year+" Season 2 (May-Aug)";
+  return year+" Season 3 (Sep-Dec)";
 }
 
 function loadRanking(){
+  if(unsubscribeRanking) unsubscribeRanking();
 
-if(unsubscribeRanking)unsubscribeRanking();
+  rankingBody.innerHTML="<tr><td colspan='6'>Loading...</td></tr>";
 
-rankingBody.innerHTML="<tr><td colspan='6'>Loading...</td></tr>";
+  let query = db.collection("players");
 
-let query=db.collection("players");
+  if(mode==="season"){
+    const currentSeason = getCurrentSeasonId();
+    seasonTitle.innerText = "Current Season: " + seasonName(currentSeason);
+    rankingTitle.innerText = "Season Ranking";
+    query = query.where("seasonId","==",currentSeason)
+                 .orderBy("ratingSeason","desc");
+  } else {
+    seasonTitle.innerText = "All Time Leaderboard";
+    rankingTitle.innerText = "All Time Ranking";
+    query = query.orderBy("ratingAllTime","desc");
+  }
 
-if(mode==="season"){
-const currentSeason=getCurrentSeasonId();
-seasonTitle.innerText="Current Season: "+seasonName(currentSeason);
-rankingTitle.innerText="Season Ranking";
-query=query.where("seasonId","==",currentSeason)
-.orderBy("ratingSeason","desc");
-}else{
-seasonTitle.innerText="All Time Leaderboard";
-rankingTitle.innerText="All Time Ranking";
-query=query.orderBy("ratingAllTime","desc");
+  unsubscribeRanking = query.onSnapshot(snapshot=>{
+    rankingBody.innerHTML="";
+    if(snapshot.empty){
+      rankingBody.innerHTML="<tr><td colspan='6'>No players found</td></tr>";
+      return;
+    }
+    let rank=1;
+    snapshot.forEach(doc=>{
+      const p = doc.data();
+      let className = rank===1?"rank1":rank===2?"rank2":rank===3?"rank3":"";
+      const rating = mode==="season"?p.ratingSeason||0:p.ratingAllTime||0;
+      rankingBody.innerHTML += `
+        <tr class="${className}">
+          <td>${rank}</td>
+          <td><a class="player-link" href="public-profile.html?id=${doc.id}">${p.username||"-"}</a></td>
+          <td>${p.wins||0}</td>
+          <td>${p.losses||0}</td>
+          <td>${p.draws||0}</td>
+          <td>${rating}</td>
+        </tr>`;
+      rank++;
+    });
+  });
 }
 
-unsubscribeRanking=query.onSnapshot(snapshot=>{
-rankingBody.innerHTML="";
-let rank=1;
-
-snapshot.forEach(doc=>{
-const p=doc.data();
-let className="";
-if(rank===1)className="rank1";
-else if(rank===2)className="rank2";
-else if(rank===3)className="rank3";
-
-const rating=mode==="season"?p.ratingSeason||0:p.ratingAllTime||0;
-
-rankingBody.innerHTML+=`
-<tr class="${className}">
-<td>${rank}</td>
-<td><a class="player-link" href="public-profile.html?id=${doc.id}">
-${p.username||"-"}</a></td>
-<td>${p.wins||0}</td>
-<td>${p.losses||0}</td>
-<td>${p.draws||0}</td>
-<td>${rating}</td>
-</tr>`;
-rank++;
-});
-
-if(snapshot.empty){
-rankingBody.innerHTML="<tr><td colspan='6'>No players found</td></tr>";
-}
-
-});
-}
-
-toggleBtn.onclick=function(){
-if(mode==="season"){
-mode="alltime";
-toggleBtn.innerText="Switch to Season";
-}else{
-mode="season";
-toggleBtn.innerText="Switch to All Time";
-}
-loadRanking();
+toggleBtn.onclick = function(){
+  if(mode==="season"){
+    mode="alltime";
+    toggleBtn.innerText="Switch to Season";
+  } else {
+    mode="season";
+    toggleBtn.innerText="Switch to All Time";
+  }
+  loadRanking();
 };
 
-/* ================= MATCH HISTORY ================= */
-
+/* ========== Match History ========== */
 db.collection("matches")
 .orderBy("createdAt","desc")
 .limit(50)
 .onSnapshot(snapshot=>{
-matchBody.innerHTML="";
-snapshot.forEach(doc=>{
-const m=doc.data();
-const date=m.createdAt?m.createdAt.toDate().toLocaleDateString():"-";
-matchBody.innerHTML+=`
-<tr>
-<td>${date}</td>
-<td>${m.playerAName||"-"}</td>
-<td>${m.playerBName||"-"}</td>
-<td>${m.winnerName||"Draw"}</td>
-</tr>`;
-});
+  matchBody.innerHTML="";
+  if(snapshot.empty){
+    matchBody.innerHTML="<tr><td colspan='4'>No matches found</td></tr>";
+    return;
+  }
+  snapshot.forEach(doc=>{
+    const m = doc.data();
+    const date = m.createdAt ? m.createdAt.toDate().toLocaleDateString() : "-";
+    matchBody.innerHTML += `
+      <tr>
+        <td>${date}</td>
+        <td>${m.playerAName||"-"}</td>
+        <td>${m.playerBName||"-"}</td>
+        <td>${m.winnerName||"Draw"}</td>
+      </tr>`;
+  });
 });
 
 loadRanking();
 </script>
 
 </body>
-  </html>
+</html>
