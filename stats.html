@@ -2,21 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Pro Multi-Season Dashboard</title>
+<title>AFNS Multi-Season Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 :root{
   --bg:#0a0f21; --card:#0d1835; --accent:#00f7ff; --text:#fff;
   --gold:#FFD700; --silver:#C0C0C0; --bronze:#CD7F32;
-  --rank-up:#4cff8f; --rank-down:#ff6b6b;
 }
 body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);text-align:center;}
 .logo{width:120px;margin:20px auto;display:block;filter:drop-shadow(0 0 25px var(--accent));}
@@ -27,7 +23,6 @@ table{width:100%;border-collapse:collapse;margin-top:12px;}
 th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.1);text-align:center;}
 th{background:rgba(0,0,0,0.5);}
 .rank1{background:var(--gold);color:#000;} .rank2{background:var(--silver);color:#000;} .rank3{background:var(--bronze);color:#000;}
-.rank-up{color:var(--rank-up);font-weight:bold;} .rank-down{color:var(--rank-down);font-weight:bold;}
 .hof-card{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;margin-top:12px;}
 .hof-player{background:rgba(255,255,255,0.05);padding:12px;border-radius:10px;width:120px;text-align:center;}
 .hof-player h3{color:var(--accent);margin:6px 0;}
@@ -37,7 +32,7 @@ canvas{background:var(--card);border-radius:12px;margin-top:10px;}
 <body>
 
 <img src="logo.png" class="logo" alt="AFNS Logo">
-<h1>🏆 AFNS Pro Multi-Season Dashboard</h1>
+<h1>🏆 AFNS Multi-Season Dashboard</h1>
 
 <div class="card">
   <h2>Season Manager</h2>
@@ -75,7 +70,7 @@ canvas{background:var(--card);border-radius:12px;margin-top:10px;}
 </div>
 
 <div class="card">
-  <h2>Δ Rank Historical Chart</h2>
+  <h2>Rating Comparison Chart</h2>
   <canvas id="ratingChart" height="150"></canvas>
 </div>
 
@@ -84,6 +79,7 @@ canvas{background:var(--card);border-radius:12px;margin-top:10px;}
   <div class="hof-card" id="hofSection"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
@@ -98,89 +94,120 @@ const alltimeRanking = document.getElementById("alltimeRanking");
 const hofSection = document.getElementById("hofSection");
 const currentSeasonP = document.getElementById("currentSeason");
 let ratingChart;
-const BASE_RATING=50;
-const SEASON_START_MONTHS=[0,4,8]; // Jan, May, Sep
+
+// =======================
+// Multi-Season Logic
+// =======================
+const BASE_RATING = 50;
+const SEASON_START_MONTHS = [0,4,8]; // Jan, May, Sep
 
 function getSeasonIndex(month){if(month>=8) return 3;if(month>=4) return 2;return 1;}
 function getCurrentSeasonId(){const now=new Date();return `${now.getFullYear()}-S${getSeasonIndex(now.getMonth())}`;}
 
-// Manual Reset
+// Manual Reset Button
 document.getElementById("manualReset").addEventListener("click",async()=>{
   if(!confirm("⚠️ Reset current season ratings?")) return;
   await ensureSeason();
   alert("✅ Season Reset Done");
 });
 
-// Ensure season & reset players safely
+// Ensure season exists & reset players safely
 async function ensureSeason(){
-  const seasonId=getCurrentSeasonId();
-  currentSeasonP.textContent="Current Active Season: "+seasonId;
-  const seasonRef=db.collection("seasons").doc(seasonId);
-  const snap=await seasonRef.get();
+  const seasonId = getCurrentSeasonId();
+  currentSeasonP.textContent = "Current Active Season: "+seasonId;
+  const seasonRef = db.collection("seasons").doc(seasonId);
+  const snap = await seasonRef.get();
+
   if(snap.exists && snap.data().active) return seasonId;
 
-  const batchLimit=400;
+  const batchLimit = 400; // Free Firebase safe limit
   await db.runTransaction(async t=>{
-    const activeSnap=await t.get(db.collection("seasons").where("active","==",true));
+    const activeSnap = await t.get(db.collection("seasons").where("active","==",true));
     activeSnap.forEach(doc=>t.update(doc.ref,{active:false,endedAt:firebase.firestore.FieldValue.serverTimestamp()}));
+
     t.set(seasonRef,{seasonId,active:true,startedAt:firebase.firestore.FieldValue.serverTimestamp(),baseRating:BASE_RATING});
 
-    const playersSnap=await db.collection("players").get();
-    let counter=0;
+    // Reset all players
+    const playersSnap = await db.collection("players").get();
+    let counter = 0;
     for(const p of playersSnap.docs){
       t.update(p.ref,{rating:BASE_RATING,wins:0,losses:0,seasonId});
-      counter++; if(counter>=batchLimit) break;
+      counter++;
+      if(counter>=batchLimit) break; // avoid Free tier transaction limit
     }
   });
+
   return seasonId;
 }
 
+// =======================
 // Load Seasons & Rankings
+// =======================
 async function loadSeasons(){
-  const snap=await db.collection("seasons").orderBy("year","desc").get();
+  const snap = await db.collection("seasons").orderBy("year","desc").get();
   seasonSelect.innerHTML="";
-  snap.forEach(doc=>{const opt=document.createElement("option");opt.value=doc.id;opt.textContent=doc.id;seasonSelect.appendChild(opt);});
-  const activeSeason=await ensureSeason();
-  seasonSelect.value=activeSeason;
+  snap.forEach(doc=>{
+    const opt = document.createElement("option");
+    opt.value = doc.id; opt.textContent = doc.id;
+    seasonSelect.appendChild(opt);
+  });
+  const activeSeason = await ensureSeason();
+  seasonSelect.value = activeSeason;
   loadSeasonRanking(activeSeason);
 }
 seasonSelect.addEventListener("change",()=>loadSeasonRanking(seasonSelect.value));
 
 async function loadSeasonRanking(seasonId){
-  const snap=await db.collection("players").where("seasonId","==",seasonId).orderBy("rating","desc").get();
+  const snap = await db.collection("players").where("seasonId","==",seasonId).orderBy("rating","desc").get();
   seasonRanking.innerHTML=""; let rank=1;
   snap.forEach(doc=>{
     const p=doc.data();
-    const prevRank=p.prevRank||rank;
-    const delta=prevRank-rank;
+    const prevRank = p.prevRank||rank;
+    const delta = prevRank - rank;
     let cls="";
     if(rank===1) cls="rank1"; else if(rank===2) cls="rank2"; else if(rank===3) cls="rank3";
-    seasonRanking.innerHTML+=`<tr class="${cls}">
-      <td>${rank}</td>
-      <td>${p.username||"-"}</td>
-      <td>${p.wins||0}</td>
-      <td>${p.losses||0}</td>
-      <td>${p.draws||0}</td>
-      <td>${p.rating||0}</td>
-      <td class="${delta>0?'rank-up':delta<0?'rank-down':''}">${delta>0?'🔼'+delta:delta<0?'🔽'+(-delta):'-'}</td>
-    </tr>`; rank++;
+    seasonRanking.innerHTML+=`
+      <tr class="${cls}">
+        <td>${rank}</td>
+        <td>${p.username||"-"}</td>
+        <td>${p.wins||0}</td>
+        <td>${p.losses||0}</td>
+        <td>${p.draws||0}</td>
+        <td>${p.rating||0}</td>
+        <td>${delta>0?'🔼'+delta:delta<0?'🔽'+(-delta):'-'}</td>
+      </tr>`;
+    rank++;
   });
-  loadAlltimeRanking(); loadComparisonChart(); loadHallOfFame();
+  loadAlltimeRanking();
+  loadComparisonChart();
+  loadHallOfFame();
 }
 
 async function loadAlltimeRanking(){
-  const snap=await db.collection("players").orderBy("rating","desc").get();
+  const snap = await db.collection("players").orderBy("rating","desc").get();
   alltimeRanking.innerHTML=""; let rank=1;
   snap.forEach(doc=>{
-    const p=doc.data();
-    alltimeRanking.innerHTML+=`<tr><td>${rank}</td><td>${p.username||"-"}</td><td>${p.wins||0}</td><td>${p.losses||0}</td><td>${p.draws||0}</td><td>${p.rating||0}</td></tr>`; rank++;
+    const p = doc.data();
+    alltimeRanking.innerHTML+=`
+      <tr>
+        <td>${rank}</td>
+        <td>${p.username||"-"}</td>
+        <td>${p.wins||0}</td>
+        <td>${p.losses||0}</td>
+        <td>${p.draws||0}</td>
+        <td>${p.rating||0}</td>
+      </tr>`;
+    rank++;
   });
 }
 
+// =======================
+// Historical Rating Chart
+// =======================
 async function loadComparisonChart(){
-  const seasonsSnap=await db.collection("seasons").orderBy("year","asc").get();
-  const seasons=seasonsSnap.docs.map(d=>d.id);
-  const playersSnap=await db.collection("players").get();
+  const seasonsSnap = await db.collection("seasons").orderBy("year","asc").get();
+  const seasons = seasonsSnap.docs.map(d=>d.id);
+  const playersSnap = await db.collection("players").get();
   const playerData={};
   playersSnap.forEach(doc=>{
     const p=doc.data();
@@ -188,32 +215,42 @@ async function loadComparisonChart(){
     playerData[p.username][p.seasonId]=p.rating;
   });
 
-  const labels=seasons;
+  const labels = seasons;
   const datasets=[];
   let idx=0;
   Object.keys(playerData).forEach(player=>{
-    const data=seasons.map(season=>playerData[player][season]||0);
+    const data = seasons.map(season=>playerData[player][season]||0);
     datasets.push({label:player,data:data,borderColor:`hsl(${idx*40%360},70%,60%)`,backgroundColor:`hsla(${idx*40%360},70%,60%,0.5)`,tension:0.3});
     idx++;
   });
 
-  const ctx=document.getElementById("ratingChart").getContext("2d");
+  const ctx = document.getElementById("ratingChart").getContext("2d");
   if(ratingChart) ratingChart.destroy();
-  ratingChart=new Chart(ctx,{type:'line',data:{labels,datasets},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true}}}});
+  ratingChart = new Chart(ctx,{type:'bar',data:{labels,datasets},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true}}}});
 }
 
+// =======================
+// Hall of Fame
+// =======================
 async function loadHallOfFame(){
-  const snap=await db.collection("hall_of_fame").orderBy("createdAt","desc").get();
+  const snap = await db.collection("hall_of_fame").orderBy("createdAt","desc").get();
   hofSection.innerHTML="";
   snap.forEach(doc=>{
-    const season=doc.data();
+    const season = doc.data();
     season.champions.forEach(ch=>{
-      hofSection.innerHTML+=`<div class="hof-player"><h3>${ch.name}</h3><p>Rating: ${ch.rating}</p><p>Season: ${season.season}</p></div>`;
+      hofSection.innerHTML+=`
+        <div class="hof-player">
+          <h3>${ch.name}</h3>
+          <p>Rating: ${ch.rating}</p>
+          <p>Season: ${season.season}</p>
+        </div>`;
     });
   });
 }
 
+// =======================
 // Init
+// =======================
 loadSeasons();
 </script>
 
