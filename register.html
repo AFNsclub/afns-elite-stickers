@@ -82,11 +82,14 @@ const createBtn=document.getElementById("createBtn");
 const msg=document.getElementById("message");
 const seasonMsg=document.getElementById("seasonMsg");
 
-const SEASON_MONTHS=[0,4,8]; // Jan, May, Sep
 const BASE_RATING=50;
 
 function showMsg(el,text,type){el.innerText=text; el.className="msg "+type;}
 function togglePassword(){passwordInput.type = passwordInput.type==="password"?"text":"password";}
+
+// ====================
+// SEASON SYSTEM
+// ====================
 function getSeasonIndex(month){if(month>=8)return 3;if(month>=4)return 2;return 1;}
 function getCurrentSeasonId(){const now=new Date(); return `${now.getFullYear()}-S${getSeasonIndex(now.getMonth())}`;}
 
@@ -116,9 +119,9 @@ async function manualSeasonReset(){
   }catch(e){seasonMsg.innerText="❌ "+e;}
 }
 
-// ========================
-// Create Account
-// ========================
+// ====================
+// CREATE PLAYER
+// ====================
 async function createAccount(){
   createBtn.disabled=true;
   showMsg(msg,"⏳ Creating account...","");
@@ -144,12 +147,11 @@ async function createAccount(){
 
     const cred=await auth.createUserWithEmailAndPassword(email,password);
 
-    // Auto assign badge & rating
     const initialRating=BASE_RATING;
     let badge="🛡️ Rookie";
 
-    await ensureSeason().then(seasonId=>{
-      db.collection("players").doc(cred.user.uid).set({
+    await ensureSeason().then(async seasonId=>{
+      await db.collection("players").doc(cred.user.uid).set({
         username, usernameLower:username.toLowerCase(), email, phone, facebook,
         gameId:gameid, device,
         rating:initialRating, wins:0, losses:0, draws:0,
@@ -158,7 +160,7 @@ async function createAccount(){
       });
     });
 
-    // Fire + Welcome
+    // Fire + Welcome Animation
     const fire=document.createElement("div"); fire.className="fire-bg"; document.body.appendChild(fire);
     const welcome=document.createElement("div"); welcome.className="welcome"; welcome.innerHTML="🔥 Welcome "+username+" 🔥"; document.body.appendChild(welcome);
 
@@ -171,6 +173,5 @@ async function createAccount(){
   }
 }
 </script>
-
 </body>
 </html>
