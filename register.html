@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Strikers | Player Registration</title>
+<title>Create Account | AFNS Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Firebase 9 Compat -->
@@ -11,31 +11,86 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-:root{--gold:#ffd700;--neon:#00f7ff;--bg1:#02060c;--bg2:#0c1b2a;--card:rgba(0,0,0,.65);}
+:root{
+  --gold:#ffd700;
+  --neon:#00f7ff;
+  --bg1:#02060c;
+  --bg2:#0c1b2a;
+  --card:rgba(0,0,0,.65);
+}
+
 *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,Arial,sans-serif;}
-body{min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px;
-  background: radial-gradient(circle at top,var(--neon),transparent 40%), radial-gradient(circle at bottom,var(--gold),transparent 40%), linear-gradient(180deg,var(--bg2),var(--bg1)); color:#fff;}
-.card{width:100%; max-width:420px; padding:30px; border-radius:24px; background:var(--card); backdrop-filter:blur(12px);}
-.logo{width:95px; display:block; margin:0 auto 15px;}
-h2{text-align:center;color:var(--gold);margin-bottom:22px;font-size:22px;}
+body{
+  min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px;
+  background: radial-gradient(circle at top,var(--neon),transparent 40%),
+              radial-gradient(circle at bottom,var(--gold),transparent 40%),
+              linear-gradient(180deg,var(--bg2),var(--bg1));
+  color:#fff;
+}
+
+.card{
+  width:100%; max-width:420px; padding:30px; border-radius:24px; background:var(--card);
+  backdrop-filter:blur(12px); box-shadow:0 0 40px rgba(0,247,255,.35),0 0 20px rgba(255,215,0,.25);
+  animation:fadeIn .8s ease;
+}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)}}
+
+.logo{width:95px; display:block; margin:0 auto 15px; filter:drop-shadow(0 0 20px rgba(255,215,0,.6));}
+h2{text-align:center;color:var(--gold);margin-bottom:22px;font-size:22px;text-shadow:0 0 15px rgba(255,215,0,.6);}
+
 .input-group{position:relative;margin-bottom:14px;}
-input{width:100%; padding:14px 15px; border:none; border-radius:14px; background:#021420; color:#fff; font-size:15px;}
-.toggle{position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:13px; color:var(--neon); font-weight:700;}
-button{width:100%; padding:15px; border:none; border-radius:18px; background:linear-gradient(90deg,var(--neon),#008cff); color:#000; font-size:17px; font-weight:900; cursor:pointer; margin-top:10px;}
+input{
+  width:100%; padding:14px 15px; border:none; border-radius:14px;
+  background:#021420; color:#fff; font-size:15px; transition:.2s;
+}
+input:focus{box-shadow:0 0 10px var(--neon); transform:scale(1.02);}
+
+.toggle{
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  cursor:pointer; font-size:13px; color:var(--neon); font-weight:700;
+}
+
+button{
+  width:100%; padding:15px; border:none; border-radius:18px;
+  background:linear-gradient(90deg,var(--neon),#008cff); color:#000; font-size:17px; font-weight:900;
+  cursor:pointer; margin-top:10px; transition:.2s;
+}
+button:hover{box-shadow:0 0 15px var(--neon);}
+button:active{transform:scale(.96);}
+button:disabled{opacity:.6; cursor:not-allowed;}
+
 .msg{margin-top:14px; text-align:center; font-weight:700; font-size:14px; min-height:20px;}
-.success{color:#4cff8f;} .error{color:#ff6b6b;}
-.footer{position:fixed; bottom:10px; width:100%; text-align:center; font-size:13px; color:var(--gold); font-weight:700; opacity:.8;}
-.fire-bg{position:fixed; bottom:0; left:0; width:100%; height:0; background:radial-gradient(circle at center,#ffae00,#ff0000,transparent 70%); animation:fireRise 2s ease-out forwards; z-index:1;}
+.error{color:#ff6b6b;}
+.success{color:#4cff8f;}
+
+.footer{
+  position:fixed; bottom:10px; width:100%; text-align:center; font-size:13px; color:var(--gold);
+  font-weight:700; opacity:.8;
+}
+
+.fire-bg{
+  position:fixed; bottom:0; left:0; width:100%; height:0;
+  background:radial-gradient(circle at center,#ffae00,#ff0000,transparent 70%);
+  animation:fireRise 2s ease-out forwards; z-index:1;
+}
 @keyframes fireRise{0%{height:0;opacity:1}50%{height:70%;opacity:.9}100%{height:0;opacity:0}}
-.welcome{position:fixed; top:40%; left:50%; transform:translate(-50%,-50%) scale(.5); text-align:center; font-size:26px; font-weight:900; color:var(--gold); opacity:0; animation:fadeInWelcome 2s forwards; z-index:3;}
+
+.welcome{
+  position:fixed; top:40%; left:50%; transform:translate(-50%,-50%) scale(.5);
+  text-align:center; font-size:26px; font-weight:900; color:var(--gold);
+  opacity:0; animation:fadeInWelcome 2s forwards; z-index:3;
+}
 @keyframes fadeInWelcome{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 </style>
 </head>
+
 <body>
 
 <div class="card">
   <img src="logo.png" class="logo">
   <h2>Create Player Account</h2>
+
   <div class="input-group"><input id="username" placeholder="Player Username"></div>
   <div class="input-group"><input id="email" type="email" placeholder="Gmail"></div>
   <div class="input-group"><input id="phone" placeholder="Mobile Number (BD)"></div>
@@ -46,11 +101,14 @@ button{width:100%; padding:15px; border:none; border-radius:18px; background:lin
     <input id="password" type="password" placeholder="Password">
     <span class="toggle" onclick="togglePassword()">Show</span>
   </div>
+
   <button id="createBtn" onclick="createAccount()">Create Account</button>
   <div id="message" class="msg"></div>
 </div>
 
-<div class="footer">Design by SI Shohan | © 2026 AFNS Elite Strikers</div>
+<div class="footer">
+  Design by SI Shohan | © 2026 AFNS Elite Strikers
+</div>
 
 <script>
 firebase.initializeApp({
@@ -72,78 +130,147 @@ const passwordInput = document.getElementById("password");
 const createBtn = document.getElementById("createBtn");
 const msg = document.getElementById("message");
 
-const BASE_RATING = 50;
+function showMsg(text,type){
+  msg.innerText=text;
+  msg.className="msg "+type;
+}
 
-function showMsg(el,text,type){ el.innerText=text; el.className="msg "+type; }
-function togglePassword(){ passwordInput.type = passwordInput.type==='password'?'text':'password'; }
+function togglePassword(){
+  passwordInput.type = passwordInput.type==="password"?"text":"password";
+}
 
-function getSeasonIndex(month){ if(month>=8) return 3; if(month>=4) return 2; return 1; }
-function getCurrentSeasonId(){ const now = new Date(); return `${now.getFullYear()}-S${getSeasonIndex(now.getMonth())}`; }
+/* ===============================
+   AUTO SEASON SYSTEM
+================================ */
+
+function getSeasonIndex(month){
+  if(month>=8) return 3;
+  if(month>=4) return 2;
+  return 1;
+}
 
 async function ensureSeason(){
-  const seasonId = getCurrentSeasonId();
-  const seasonRef = db.collection("seasons").doc(seasonId);
-  const snap = await seasonRef.get();
-  if(snap.exists && snap.data().active) return seasonId;
+  const now=new Date();
+  const seasonId = now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());
+  const ref = db.collection("seasons").doc(seasonId);
 
-  await db.runTransaction(async t=>{
-    const active = await t.get(db.collection("seasons").where("active","==",true));
-    active.forEach(doc=> t.update(doc.ref,{active:false, endedAt:firebase.firestore.FieldValue.serverTimestamp()}));
-    t.set(seasonRef,{active:true, seasonId, startedAt:firebase.firestore.FieldValue.serverTimestamp(), baseRating:BASE_RATING},{merge:true});
-  });
+  const snap = await ref.get();
+  if(!snap.exists){
+    await ref.set({
+      seasonId,
+      active:true,
+      startedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      baseRating:1000
+    });
+  }
 
-  console.log("✅ New Season Activated:",seasonId);
   return seasonId;
 }
 
+/* ===============================
+   ACCOUNT CREATE
+================================ */
+
 async function createAccount(){
   createBtn.disabled=true;
-  showMsg(msg,"⏳ Creating account...","");
+  showMsg("⏳ Creating account...","");
 
-  const username = usernameInput.value.trim();
-  const email = emailInput.value.trim();
-  const phone = phoneInput.value.trim();
-  const facebook = facebookInput.value.trim();
-  const gameid = gameidInput.value.trim();
-  const device = deviceInput.value.trim();
-  const password = passwordInput.value.trim();
+  const username=usernameInput.value.trim();
+  const email=emailInput.value.trim();
+  const phone=phoneInput.value.trim();
+  const facebook=facebookInput.value.trim();
+  const gameid=gameidInput.value.trim();
+  const device=deviceInput.value.trim();
+  const password=passwordInput.value.trim();
 
   if(!username||!email||!phone||!facebook||!gameid||!device||!password){
-    showMsg(msg,"⚠️ All fields required","error"); createBtn.disabled=false; return;
+    showMsg("⚠️ All fields required","error");
+    createBtn.disabled=false;
+    return;
   }
-  if(!phone.match(/^01[0-9]{9}$/)){showMsg(msg,"❌ Invalid BD mobile number","error"); createBtn.disabled=false; return;}
-  if(!facebook.startsWith("http")){showMsg(msg,"❌ Invalid Facebook link","error"); createBtn.disabled=false; return;}
-  if(password.length<6){showMsg(msg,"❌ Password minimum 6 characters","error"); createBtn.disabled=false; return;}
+
+  if(!phone.match(/^01[0-9]{9}$/)){
+    showMsg("❌ Invalid BD mobile number","error");
+    createBtn.disabled=false;
+    return;
+  }
+
+  if(password.length<6){
+    showMsg("❌ Password minimum 6 characters","error");
+    createBtn.disabled=false;
+    return;
+  }
 
   try{
-    const check = await db.collection("players").where("usernameLower","==",username.toLowerCase()).get();
-    if(!check.empty){ showMsg(msg,"❌ Username already taken","error"); createBtn.disabled=false; return; }
 
+    // Username unique check
+    const check = await db.collection("players")
+      .where("usernameLower","==",username.toLowerCase())
+      .get();
+
+    if(!check.empty){
+      showMsg("❌ Username already taken","error");
+      createBtn.disabled=false;
+      return;
+    }
+
+    // Create Auth User
     const cred = await auth.createUserWithEmailAndPassword(email,password);
+    const uid = cred.user.uid;
 
+    // Ensure Season
     const seasonId = await ensureSeason();
-    const initialRating = BASE_RATING;
-    const badge = "🛡️ Rookie";
 
-    await db.collection("players").doc(cred.user.uid).set({
-      username, usernameLower:username.toLowerCase(), email, phone, facebook,
-      gameId:gameid, device,
-      rating:initialRating, wins:0, losses:0, draws:0,
-      badge, seasonId,
+    // Auto badge
+    const initialRating = 1000;
+    let badge="🛡️ Rookie";
+    if(initialRating>=2000) badge="👑 Legend";
+    else if(initialRating>=1500) badge="🔥 Elite";
+    else if(initialRating>=1200) badge="🎖 Pro";
+
+    // Create Firestore Player Doc
+    await db.collection("players").doc(uid).set({
+      username,
+      usernameLower:username.toLowerCase(),
+      email,
+      phone,
+      facebook,
+      gameId:gameid,
+      device,
+      ratingSeason:initialRating,
+      ratingAllTime:initialRating,
+      wins:0,
+      losses:0,
+      draws:0,
+      badge,
+      seasonId,
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    const fire = document.createElement("div"); fire.className="fire-bg"; document.body.appendChild(fire);
-    const welcome = document.createElement("div"); welcome.className="welcome"; welcome.innerHTML="🔥 Welcome "+username+" 🔥"; document.body.appendChild(welcome);
+    showMsg("✅ Account Created Successfully!","success");
 
-    showMsg(msg,"✅ Account Created Successfully!","success");
+    const fire=document.createElement("div");
+    fire.className="fire-bg";
+    document.body.appendChild(fire);
+
+    const welcome=document.createElement("div");
+    welcome.className="welcome";
+    welcome.innerHTML="🔥 Welcome "+username+" 🔥";
+    document.body.appendChild(welcome);
+
     setTimeout(()=>{window.location.href="player.html";},2500);
 
   }catch(error){
-    showMsg(msg,"❌ "+error.message,"error"); createBtn.disabled=false;
+
+    // যদি Firestore fail করে → Auth user delete
+    if(auth.currentUser){
+      try{ await auth.currentUser.delete(); }catch(e){}
+    }
+
+    showMsg("❌ "+error.message,"error");
+    createBtn.disabled=false;
   }
 }
 </script>
-
 </body>
 </html>
