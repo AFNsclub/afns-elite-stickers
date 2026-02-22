@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Admin | Match Control</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -16,200 +17,175 @@ button{padding:8px 12px;border:none;border-radius:10px;font-weight:700;cursor:po
 .approve{background:#00ff99}
 .reject{background:#ff9900}
 .rollback{background:#ff4444;color:#fff}
-.edit{background:#00eaff}
 .recalc{background:#00c853;margin-bottom:15px}
 </style>
 </head>
 <body>
+
 <div class="container">
-  <h2>🛠 Match Control Panel</h2>
-  <button class="recalc" onclick="recalculateAllRatings()">🔥 Recalculate All Ratings</button>
-  <div id="list"></div>
+<h2>🛠 Match Control Panel</h2>
+<button class="recalc" onclick="recalculateAllRatings()">🔥 Recalculate All Ratings</button>
+<div id="list"></div>
 </div>
 
 <script>
 firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
+apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+authDomain:"afnsclub.firebaseapp.com",
+projectId:"afnsclub"
 });
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-/* ===== AUTH CHECK ===== */
-auth.onAuthStateChanged(async user => {
-  if(!user){ location.href="admin-login.html"; return; }
-  const snap = await db.collection("admins").doc(user.email).get();
-  if(!snap.exists || snap.data().active!==true){
-    alert("Access denied");
-    location.href="admin-login.html";
-    return;
-  }
-});
+/* ===== BADGE UPDATE ===== */
+function updateBadge(wins){
+if(wins>=8) return "👑 Elite";
+if(wins>=3) return "⚔ Pro";
+return "🛡 Rookie";
+}
 
-/* ===== APPROVE MATCH ===== */
+/* ===== APPROVE ===== */
 async function approveMatch(id){
-  const ref=db.collection("matches").doc(id);
-  const snap=await ref.get();
-  if(!snap.exists) return;
 
-  const m=snap.data();
-  if(m.status==="approved"){ alert("Already approved"); return; }
+const ref=db.collection("matches").doc(id);
+const snap=await ref.get();
+if(!snap.exists) return;
 
-  if(!m.score || !m.score.includes("-")){ alert("Invalid score"); return; }
-  const [s1,s2]=m.score.split("-").map(Number);
-  if(isNaN(s1)||isNaN(s2)){ alert("Invalid score"); return; }
+const m=snap.data();
+if(m.status==="approved") return alert("Already approved");
 
-  const p1Snap=await db.collection("players").where("username","==",m.player1).get();
-  const p2Snap=await db.collection("players").where("username","==",m.player2).get();
-  if(p1Snap.empty||p2Snap.empty){ alert("Player not found"); return; }
+const p1Ref=db.collection("players").doc(m.player1Id);
+const p2Ref=db.collection("players").doc(m.player2Id);
 
-  const p1Doc=p1Snap.docs[0];
-  const p2Doc=p2Snap.docs[0];
+const p1Snap=await p1Ref.get();
+const p2Snap=await p2Ref.get();
+if(!p1Snap.exists||!p2Snap.exists) return alert("Player missing");
 
-  let p1={wins:0,losses:0,draws:0,...p1Doc.data()};
-  let p2={wins:0,losses:0,draws:0,...p2Doc.data()};
+let p1=p1Snap.data();
+let p2=p2Snap.data();
 
-  let r1=p1.rating||1000;
-  let r2=p2.rating||1000;
+let r1All=p1.ratingAllTime||1000;
+let r2All=p2.ratingAllTime||1000;
 
-  const K=m.matchType==="tournament"?48:32;
+let r1Season=p1.ratingSeason||1000;
+let r2Season=p2.ratingSeason||1000;
 
-  const expected1=1/(1+Math.pow(10,(r2-r1)/400));
-  const expected2=1/(1+Math.pow(10,(r1-r2)/400));
+const [s1,s2]=m.score.split("-").map(Number);
+const K=m.matchType==="tournament"?48:32;
 
-  let a1=0,a2=0;
-  if(s1===s2){a1=a2=0.5;}
-  else if(s1>s2){a1=1;a2=0;}
-  else{a1=0;a2=1;}
-
-  const newR1=Math.round(r1+K*(a1-expected1));
-  const newR2=Math.round(r2+K*(a2-expected2));
-
-  if(s1===s2){p1.draws++;p2.draws++;}
-  else if(s1>s2){p1.wins++;p2.losses++;}
-  else{p2.wins++;p1.losses++;}
-
-  await p1Doc.ref.update({rating:newR1,wins:p1.wins,losses:p1.losses,draws:p1.draws});
-  await p2Doc.ref.update({rating:newR2,wins:p2.wins,losses:p2.losses,draws:p2.draws});
-
-  await ref.update({
-    status:"approved",
-    ratingBefore1:r1,
-    ratingBefore2:r2,
-    ratingAfter1:newR1,
-    ratingAfter2:newR2,
-    approvedAt:firebase.firestore.FieldValue.serverTimestamp()
-  });
+function calc(rA,rB,scoreA){
+const expected=1/(1+Math.pow(10,(rB-rA)/400));
+return Math.round(rA+K*(scoreA-expected));
 }
 
-/* ===== REJECT MATCH ===== */
-async function rejectMatch(id){
-  if(!confirm("Reject this match?")) return;
-  await db.collection("matches").doc(id).update({
-    status:"rejected",
-    rejectedAt:firebase.firestore.FieldValue.serverTimestamp()
-  });
-}
+let a1=0,a2=0;
+if(s1===s2){a1=a2=0.5;}
+else if(s1>s2){a1=1;a2=0;}
+else{a1=0;a2=1;}
 
-/* ===== ROLLBACK MATCH ===== */
-async function rollbackMatch(id){
-  if(!confirm("Rollback this match?")) return;
+/* Update ratings */
+const newAll1=calc(r1All,r2All,a1);
+const newAll2=calc(r2All,r1All,a2);
 
-  const ref=db.collection("matches").doc(id);
-  const snap=await ref.get();
-  if(!snap.exists) return;
+const newSeason1=calc(r1Season,r2Season,a1);
+const newSeason2=calc(r2Season,r1Season,a2);
 
-  const m=snap.data();
-  if(m.status!=="approved"){ alert("Not approved match"); return; }
+/* Update stats */
+if(s1===s2){p1.draws++;p2.draws++;}
+else if(s1>s2){p1.wins++;p2.losses++;}
+else{p2.wins++;p1.losses++;}
 
-  const p1Snap=await db.collection("players").where("username","==",m.player1).get();
-  const p2Snap=await db.collection("players").where("username","==",m.player2).get();
-  if(p1Snap.empty||p2Snap.empty) return;
-
-  const p1Doc=p1Snap.docs[0];
-  const p2Doc=p2Snap.docs[0];
-
-  let p1=p1Doc.data();
-  let p2=p2Doc.data();
-
-  const [s1,s2]=m.score.split("-").map(Number);
-
-  if(s1===s2){p1.draws--;p2.draws--;}
-  else if(s1>s2){p1.wins--;p2.losses--;}
-  else{p2.wins--;p1.losses--;}
-
-  await p1Doc.ref.update({
-    rating:m.ratingBefore1,
-    wins:Math.max(0,p1.wins),
-    losses:Math.max(0,p1.losses),
-    draws:Math.max(0,p1.draws)
-  });
-
-  await p2Doc.ref.update({
-    rating:m.ratingBefore2,
-    wins:Math.max(0,p2.wins),
-    losses:Math.max(0,p2.losses),
-    draws:Math.max(0,p2.draws)
-  });
-
-  await ref.update({status:"rolledback"});
-}
-
-/* ===== FULL RECALCULATE ===== */
-async function recalculateAllRatings(){
-  if(!confirm("Recalculate ALL ratings from zero?")) return;
-
-  alert("Processing...");
-
-  const players=await db.collection("players").get();
-  for(const p of players.docs){
-    await p.ref.update({rating:1000,wins:0,losses:0,draws:0});
-  }
-
-  const matches=await db.collection("matches")
-    .where("status","==","approved")
-    .orderBy("createdAt","asc")
-    .get();
-
-  for(const mDoc of matches.docs){
-    await mDoc.ref.update({status:"pending"});
-    await approveMatch(mDoc.id);
-  }
-
-  alert("All Ratings Recalculated 🔥");
-}
-
-/* ===== LOAD MATCHES LIVE ===== */
-db.collection("matches").orderBy("createdAt","desc").onSnapshot(snapshot=>{
-  const list=document.getElementById("list");
-  list.innerHTML="";
-  if(snapshot.empty){ list.innerHTML="No matches"; return; }
-
-  snapshot.forEach(doc=>{
-    const m=doc.data();
-    const card=document.createElement("div");
-    card.className="card";
-    card.innerHTML=`<b>${m.player1}</b> vs <b>${m.player2}</b><br>
-                    Score: ${m.score||"—"}<br>
-                    Type: ${m.matchType||"friendly"}<br>
-                    Status: ${m.status||"pending"}<br><br>
-                    ${m.status==="pending"? `<button class="approve" onclick="approveMatch('${doc.id}')">Approve</button>
-                                             <button class="reject" onclick="rejectMatch('${doc.id}')">Reject</button>`:""}
-                    ${m.status==="approved"? `<button class="rollback" onclick="rollbackMatch('${doc.id}')">Rollback</button>`:""}
-                    <button class="edit" onclick="editMatch('${doc.id}')">Edit Score</button>`;
-    list.appendChild(card);
-  });
+await p1Ref.update({
+ratingAllTime:newAll1,
+ratingSeason:newSeason1,
+wins:p1.wins,
+losses:p1.losses,
+draws:p1.draws,
+badge:updateBadge(p1.wins)
 });
 
-/* ===== EDIT SCORE ===== */
-async function editMatch(id){
-  const score=prompt("Enter new score (Example: 2-1)");
-  if(!score||!score.includes("-")) return;
-  await db.collection("matches").doc(id).update({score});
-  alert("Score updated.");
+await p2Ref.update({
+ratingAllTime:newAll2,
+ratingSeason:newSeason2,
+wins:p2.wins,
+losses:p2.losses,
+draws:p2.draws,
+badge:updateBadge(p2.wins)
+});
+
+await ref.update({
+status:"approved",
+ratingBefore1:r1All,
+ratingBefore2:r2All,
+ratingAfter1:newAll1,
+ratingAfter2:newAll2,
+approvedAt:firebase.firestore.FieldValue.serverTimestamp()
+});
 }
+
+/* ===== REJECT ===== */
+async function rejectMatch(id){
+await db.collection("matches").doc(id).update({status:"rejected"});
+}
+
+/* ===== ROLLBACK ===== */
+async function rollbackMatch(id){
+
+const ref=db.collection("matches").doc(id);
+const snap=await ref.get();
+if(!snap.exists) return;
+
+const m=snap.data();
+if(m.status!=="approved") return alert("Not approved");
+
+const p1Ref=db.collection("players").doc(m.player1Id);
+const p2Ref=db.collection("players").doc(m.player2Id);
+
+const p1=await p1Ref.get();
+const p2=await p2Ref.get();
+
+let d1=p1.data();
+let d2=p2.data();
+
+await p1Ref.update({
+ratingAllTime:m.ratingBefore1,
+ratingSeason:1000,
+wins:Math.max(0,d1.wins-1)
+});
+await p2Ref.update({
+ratingAllTime:m.ratingBefore2,
+ratingSeason:1000,
+wins:Math.max(0,d2.wins-1)
+});
+
+await ref.update({status:"rolledback"});
+}
+
+/* ===== LIVE LOAD ===== */
+db.collection("matches").orderBy("createdAt","desc")
+.onSnapshot(snapshot=>{
+const list=document.getElementById("list");
+list.innerHTML="";
+snapshot.forEach(doc=>{
+const m=doc.data();
+const card=document.createElement("div");
+card.className="card";
+card.innerHTML=`
+<b>${m.player1}</b> vs <b>${m.player2}</b><br>
+Score: ${m.score}<br>
+Type: ${m.matchType}<br>
+Status: ${m.status}<br><br>
+${m.status==="pending"?`
+<button class="approve" onclick="approveMatch('${doc.id}')">Approve</button>
+<button class="reject" onclick="rejectMatch('${doc.id}')">Reject</button>`:""}
+${m.status==="approved"?`
+<button class="rollback" onclick="rollbackMatch('${doc.id}')">Rollback</button>`:""}
+`;
+list.appendChild(card);
+});
+});
 </script>
+
 </body>
 </html>
