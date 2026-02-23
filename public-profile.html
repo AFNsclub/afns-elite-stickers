@@ -16,6 +16,9 @@
   --bg1:#010814;
   --bg2:#021b33;
   --card:rgba(0,0,0,.65);
+  --win:#4cff8f;
+  --lose:#ff4c4c;
+  --draw:#ffd166;
 }
 *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
 body{
@@ -92,6 +95,15 @@ th,td{
 }
 th{color:var(--gold);}
 tr:nth-child(even){background:rgba(255,255,255,.05);}
+.result-badge{
+  padding:4px 10px;
+  border-radius:12px;
+  font-weight:700;
+  color:#000;
+}
+.result-win{background:var(--win);}
+.result-lose{background:var(--lose);}
+.result-draw{background:var(--draw);}
 footer{
   margin-top:30px;
   text-align:center;
@@ -155,13 +167,15 @@ footer a{color:var(--neon); text-decoration:none; font-weight:700;}
 </div>
 
 <script>
+// Firebase Init
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
-
 const db=firebase.firestore();
+
+// Player ID
 const params=new URLSearchParams(location.search);
 const playerId=params.get("id");
 if(!playerId){
@@ -169,7 +183,7 @@ if(!playerId){
   throw new Error("ID Missing");
 }
 
-/* Player Info */
+/* --- PLAYER INFO --- */
 db.collection("players").doc(playerId).onSnapshot(doc=>{
   if(!doc.exists){
     document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>";
@@ -196,8 +210,8 @@ db.collection("players").doc(playerId).onSnapshot(doc=>{
   }
 });
 
-/* Rank */
-db.collection("players").orderBy("rating","desc").onSnapshot(snapshot=>{
+/* --- RANK --- */
+db.collection("players").orderBy("rating","desc").get().then(snapshot=>{
   let rank=1;
   snapshot.forEach(doc=>{
     if(doc.id===playerId){
@@ -207,7 +221,7 @@ db.collection("players").orderBy("rating","desc").onSnapshot(snapshot=>{
   });
 });
 
-/* Recent Matches */
+/* --- RECENT MATCHES WITH BADGES --- */
 db.collection("matches")
 .where("status","==","approved")
 .orderBy("createdAt","desc")
@@ -217,29 +231,32 @@ db.collection("matches")
   tbody.innerHTML="";
   snapshot.forEach(doc=>{
     const m=doc.data();
-    let opponent="";
-    let result="";
+    let opponent="", result="", badgeClass="";
     if(m.player1Id===playerId){opponent=m.player2; result=(m.winner===playerId)?"Win":(m.winner===null?"Draw":"Lose");}
     else if(m.player2Id===playerId){opponent=m.player1; result=(m.winner===playerId)?"Win":(m.winner===null?"Draw":"Lose");}
     else return;
 
-    const date=m.createdAt?m.createdAt.toDate().toLocaleDateString():"-";
+    badgeClass=result==="Win"?"result-win":result==="Lose"?"result-lose":"result-draw";
+    const date=m.createdAt ? m.createdAt.toDate().toLocaleDateString() : "-";
+
     tbody.innerHTML+=`<tr>
       <td>${date}</td>
       <td>${opponent}</td>
-      <td>${result}</td>
+      <td><span class="result-badge ${badgeClass}">${result}</span></td>
       <td>${m.score}</td>
     </tr>`;
   });
+  if(tbody.innerHTML==="") tbody.innerHTML="<tr><td colspan='4'>No recent matches</td></tr>";
 });
 
-/* Rating Chart */
+/* --- RATING CHART --- */
 const ctx=document.getElementById("ratingChart").getContext("2d");
 const ratingChart=new Chart(ctx,{
   type:'line',
   data:{labels:[],datasets:[{label:'Rating',data:[],borderColor:'#FFD700',backgroundColor:'rgba(255,215,0,0.2)',tension:0.4,fill:true}]},
   options:{
     responsive:true,
+    plugins:{tooltip:{mode:'index',intersect:false}},
     animation:{duration:1000,easing:'easeOutQuart'},
     scales:{y:{beginAtZero:false}}
   }
@@ -253,7 +270,7 @@ db.collection("ratingHistory")
   snapshot.forEach(doc=>{
     const r=doc.data();
     const ts=r.timestamp;
-    const date=ts.seconds?new Date(ts.seconds*1000).toLocaleDateString():new Date(ts).toLocaleDateString();
+    const date=ts.seconds ? new Date(ts.seconds*1000).toLocaleDateString() : new Date(ts).toLocaleDateString();
     labels.push(date);
     data.push(r.rating);
   });
@@ -263,4 +280,4 @@ db.collection("ratingHistory")
 });
 </script>
 </body>
-            </html>
+</html>
