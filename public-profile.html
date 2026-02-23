@@ -5,11 +5,8 @@
 <title>AFNS Elite Strikers | Player Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase 9 Compat -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -167,11 +164,17 @@ firebase.initializeApp({
 const db=firebase.firestore();
 const params=new URLSearchParams(location.search);
 const playerId=params.get("id");
-if(!playerId){document.getElementById("app").innerHTML="<h2 style='text-align:center'>Invalid Profile</h2>"; throw new Error("ID Missing");}
+if(!playerId){
+  document.getElementById("app").innerHTML="<h2 style='text-align:center'>Invalid Profile</h2>";
+  throw new Error("ID Missing");
+}
 
-/* Load Player Info */
-db.collection("players").doc(playerId).get().then(doc=>{
-  if(!doc.exists){document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>"; return;}
+/* Player Info */
+db.collection("players").doc(playerId).onSnapshot(doc=>{
+  if(!doc.exists){
+    document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>";
+    return;
+  }
   const d=doc.data();
   document.getElementById("username").innerText=d.username||"Player";
   document.getElementById("gameId").innerText=d.gameId||"—";
@@ -197,20 +200,29 @@ db.collection("players").doc(playerId).get().then(doc=>{
 db.collection("players").orderBy("rating","desc").onSnapshot(snapshot=>{
   let rank=1;
   snapshot.forEach(doc=>{
-    if(doc.id===playerId){document.getElementById("rankBadge").innerText="Rank #"+rank;}
+    if(doc.id===playerId){
+      document.getElementById("rankBadge").innerText="Rank #"+rank;
+    }
     rank++;
   });
 });
 
 /* Recent Matches */
-db.collection("matches").where("status","==","approved").orderBy("createdAt","desc").limit(10).onSnapshot(snapshot=>{
+db.collection("matches")
+.where("status","==","approved")
+.orderBy("createdAt","desc")
+.limit(10)
+.onSnapshot(snapshot=>{
   const tbody=document.getElementById("matchesBody");
   tbody.innerHTML="";
   snapshot.forEach(doc=>{
     const m=doc.data();
     let opponent="";
-    if(m.player1Id===playerId){opponent=m.player2;} else if(m.player2Id===playerId){opponent=m.player1;}
-    const result=(m.winner===playerId)?"Win":(m.winner===null?"Draw":"Lose");
+    let result="";
+    if(m.player1Id===playerId){opponent=m.player2; result=(m.winner===playerId)?"Win":(m.winner===null?"Draw":"Lose");}
+    else if(m.player2Id===playerId){opponent=m.player1; result=(m.winner===playerId)?"Win":(m.winner===null?"Draw":"Lose");}
+    else return;
+
     const date=m.createdAt?m.createdAt.toDate().toLocaleDateString():"-";
     tbody.innerHTML+=`<tr>
       <td>${date}</td>
@@ -221,7 +233,7 @@ db.collection("matches").where("status","==","approved").orderBy("createdAt","de
   });
 });
 
-/* Rating History Graph */
+/* Rating Chart */
 const ctx=document.getElementById("ratingChart").getContext("2d");
 const ratingChart=new Chart(ctx,{
   type:'line',
@@ -233,11 +245,16 @@ const ratingChart=new Chart(ctx,{
   }
 });
 
-db.collection("ratingHistory").where("playerId","==",playerId).orderBy("timestamp","asc").onSnapshot(snapshot=>{
+db.collection("ratingHistory")
+.where("playerId","==",playerId)
+.orderBy("timestamp","asc")
+.onSnapshot(snapshot=>{
   const labels=[]; const data=[];
   snapshot.forEach(doc=>{
     const r=doc.data();
-    labels.push(new Date(r.timestamp.seconds*1000).toLocaleDateString());
+    const ts=r.timestamp;
+    const date=ts.seconds?new Date(ts.seconds*1000).toLocaleDateString():new Date(ts).toLocaleDateString();
+    labels.push(date);
     data.push(r.rating);
   });
   ratingChart.data.labels=labels;
@@ -246,4 +263,4 @@ db.collection("ratingHistory").where("playerId","==",playerId).orderBy("timestam
 });
 </script>
 </body>
-</html>
+            </html>
