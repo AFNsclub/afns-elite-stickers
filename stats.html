@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Dashboard</title>
+<title>AFNS Elite Strikers | Leaderboard & Player Stats</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
+<!-- Firebase 9 Compat -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- Chart.js -->
+<!-- Chart.js for Graphs -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -17,93 +17,150 @@
   --gold:#FFD700;
   --silver:#C0C0C0;
   --bronze:#CD7F32;
-  --bg-dark:#010814;
-  --card:#0c1b2a;
-  --text:#ffffff;
-  --hover:#0f2c4d;
   --neon:#00f7ff;
+  --bg-dark:#010814;
+  --card:rgba(0,0,0,.65);
+  --text:#ffffff;
 }
+
 body{
   margin:0;
-  font-family:Segoe UI, sans-serif;
-  background:linear-gradient(180deg,#010814,#021b33);
+  font-family:Segoe UI,sans-serif;
+  background:linear-gradient(180deg,var(--bg-dark),#021b33);
   color:var(--text);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  padding:20px;
 }
-h1,h2{margin:10px; text-align:center;}
-h1{color:var(--gold); text-shadow:0 0 15px rgba(255,215,0,.6);}
-h2{color:var(--gold);}
-.container{max-width:1200px;margin:auto;padding:15px;}
-.card{background:var(--card);border-radius:20px;padding:20px;margin:20px 0;box-shadow:0 0 25px rgba(0,247,255,.2);}
-button{padding:8px 16px;margin:10px;cursor:pointer;border:none;border-radius:8px;background:var(--gold);color:#010814;font-weight:bold;transition:0.2s;}
-button:hover{background:#e6c200;}
-table{width:100%;border-collapse:collapse; margin-top:10px;}
-th,td{padding:10px;text-align:center;}
-th{background:#061423;}
-tr:nth-child(even){background:#081a33;}
-.rank1{background:#2a2100;color:var(--gold);}
-.rank2{background:#1c1c1c;color:var(--silver);}
-.rank3{background:#2b1600;color:var(--bronze);}
-.player-link{color:white;text-decoration:none;}
+
+h1,h2{
+  text-align:center;
+  margin:10px 0;
+}
+h1{color:var(--gold);}
+h2{color:var(--neon); margin-top:30px;}
+
+.container{
+  max-width:900px;
+  width:100%;
+  background:var(--card);
+  border-radius:20px;
+  padding:25px 30px;
+  backdrop-filter:blur(12px);
+  margin-bottom:30px;
+  box-shadow:0 0 40px rgba(0,247,255,.3),0 0 20px rgba(255,215,0,.25);
+}
+
+button{
+  padding:10px 20px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  margin:10px;
+  font-weight:700;
+  background:linear-gradient(90deg,var(--neon),#008cff);
+  color:#000;
+  transition:.3s;
+}
+button:hover{
+  background:linear-gradient(90deg,#008cff,var(--neon));
+  color:#fff;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+}
+th,td{
+  padding:12px;
+  text-align:center;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+th{background:rgba(0,0,0,.3);}
+tr:hover{background:rgba(0,0,0,.4);}
+.rank1{background:var(--gold); color:#000;}
+.rank2{background:var(--silver); color:#000;}
+.rank3{background:var(--bronze); color:#000;}
+.player-link{color:var(--neon); text-decoration:none;}
 .player-link:hover{color:var(--gold);}
-.chart-container{position:relative;width:100%;height:300px;margin-top:20px;}
-.rating-box{
-  font-size:2.5rem;font-weight:bold;padding:15px 30px;margin:15px auto;width:200px;
-  background:#081a33;border-radius:15px;box-shadow:0 0 20px rgba(0,247,255,.3);
-  transition:all 0.8s ease;text-align:center;
+
+/* Chart Container */
+.chart-container{
+  position:relative;
+  width:100%;
+  max-width:800px;
+  margin-top:20px;
 }
-.up{color:#00ff88;}
-.down{color:#ff5555;}
-@media(max-width:800px){table,th,td{font-size:0.8rem;}}
+
+/* H2H Table */
+.h2h-table{
+  width:100%;
+  margin-top:15px;
+  border-collapse:collapse;
+}
+.h2h-table th, .h2h-table td{
+  padding:10px;
+  border:1px solid rgba(255,255,255,.2);
+  text-align:center;
+}
 </style>
 </head>
 
 <body>
+
+<h1>🏆 AFNS Elite Strikers</h1>
+
 <div class="container">
-<h1>🏆 AFNS Elite Dashboard</h1>
-
-<!-- Leaderboard -->
-<div class="card">
-<h2 id="rankingTitle">Season Ranking</h2>
-<button id="toggleBtn">Switch to All Time</button>
-<table>
-<thead>
-<tr>
-<th>Rank</th>
-<th>Player</th>
-<th>Win</th>
-<th>Loss</th>
-<th>Draw</th>
-<th>Rating</th>
-</tr>
-</thead>
-<tbody id="rankingBody"><tr><td colspan="6">Loading...</td></tr></tbody>
-</table>
+  <h2 id="seasonTitle">Season Ranking</h2>
+  <button id="toggleBtn">Switch to All Time</button>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Player</th>
+        <th>Wins</th>
+        <th>Losses</th>
+        <th>Draws</th>
+        <th>Rating</th>
+      </tr>
+    </thead>
+    <tbody id="rankingBody">
+      <tr><td colspan="6">Loading...</td></tr>
+    </tbody>
+  </table>
 </div>
 
-<!-- Player Rating Animation -->
-<div class="card">
-<h2>🔥 Realtime Rating</h2>
-<div class="rating-box" id="ratingBox">1000</div>
+<div class="container">
+  <h2>Player Rating Graph</h2>
+  <div class="chart-container">
+    <canvas id="ratingChart"></canvas>
+  </div>
 </div>
 
-<!-- Player Rating History Graph -->
-<div class="card">
-<h2>📈 Rating History Graph</h2>
-<div class="chart-container">
-<canvas id="ratingChart"></canvas>
-</div>
-</div>
-
-<!-- Recent Matches -->
-<div class="card">
-<h2>📜 Recent Matches</h2>
-<table>
-<thead>
-<tr><th>Date</th><th>Player A</th><th>Player B</th><th>Winner</th></tr>
-</thead>
-<tbody id="matchBody"><tr><td colspan="4">Loading...</td></tr></tbody>
-</table>
-</div>
+<div class="container">
+  <h2>Head-to-Head Comparison</h2>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+    <input type="text" id="playerA" placeholder="Player A" />
+    <input type="text" id="playerB" placeholder="Player B" />
+    <button onclick="loadH2H()">Compare</button>
+  </div>
+  <table class="h2h-table" id="h2hTable">
+    <thead>
+      <tr>
+        <th>Match</th>
+        <th>Player A</th>
+        <th>Player B</th>
+        <th>Score</th>
+        <th>Winner</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="5">Enter players to see H2H matches</td></tr>
+    </tbody>
+  </table>
 </div>
 
 <script>
@@ -114,39 +171,49 @@ firebase.initializeApp({
 });
 
 const db = firebase.firestore();
+
 const rankingBody = document.getElementById("rankingBody");
-const matchBody = document.getElementById("matchBody");
 const toggleBtn = document.getElementById("toggleBtn");
-const rankingTitle = document.getElementById("rankingTitle");
-const ratingBox = document.getElementById("ratingBox");
-const ratingChartCtx = document.getElementById("ratingChart").getContext("2d");
-
+const seasonTitle = document.getElementById("seasonTitle");
 let mode = "season";
-let unsubscribeRanking = null;
 
-function getSeasonIndex(month){if(month>=8) return 3;if(month>=4) return 2;return 1;}
-function getCurrentSeasonId(){const now = new Date();return now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());}
+// --- Leaderboard ---
+function getSeasonIndex(month){
+  if(month>=8) return 3;
+  if(month>=4) return 2;
+  return 1;
+}
+function getCurrentSeasonId(){
+  const now = new Date();
+  return now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());
+}
+function seasonName(seasonId){
+  const parts = seasonId.split("-");
+  const year = parts[0];
+  const s = parts[1];
+  if(s==="S1") return year+" Season 1 (Jan-Apr)";
+  if(s==="S2") return year+" Season 2 (May-Aug)";
+  return year+" Season 3 (Sep-Dec)";
+}
 
-// Leaderboard
 function loadRanking(){
-  if(unsubscribeRanking) unsubscribeRanking();
   rankingBody.innerHTML="<tr><td colspan='6'>Loading...</td></tr>";
-
   let query = db.collection("players");
-
   if(mode==="season"){
-    rankingTitle.innerText = "Season Ranking";
-    const currentSeason = getCurrentSeasonId();
-    query = query.where("seasonId","==",currentSeason).orderBy("ratingSeason","desc");
+    const seasonId = getCurrentSeasonId();
+    seasonTitle.innerText = "Season Ranking: "+seasonName(seasonId);
+    query = query.orderBy("ratingSeason","desc");
   } else {
-    rankingTitle.innerText = "All Time Ranking";
+    seasonTitle.innerText = "All Time Leaderboard";
     query = query.orderBy("ratingAllTime","desc");
   }
-
-  unsubscribeRanking = query.onSnapshot(snapshot=>{
+  query.get().then(snapshot=>{
     rankingBody.innerHTML="";
-    if(snapshot.empty){ rankingBody.innerHTML="<tr><td colspan='6'>No players found</td></tr>"; return; }
-    let rank=1;
+    if(snapshot.empty){
+      rankingBody.innerHTML="<tr><td colspan='6'>No players found</td></tr>";
+      return;
+    }
+    let rank = 1;
     snapshot.forEach(doc=>{
       const p = doc.data();
       const className = rank===1?"rank1":rank===2?"rank2":rank===3?"rank3":"";
@@ -159,94 +226,86 @@ function loadRanking(){
           <td>${p.losses||0}</td>
           <td>${p.draws||0}</td>
           <td>${rating}</td>
-        </tr>`;
+        </tr>
+      `;
       rank++;
     });
   });
 }
 
-toggleBtn.onclick = function(){
+toggleBtn.onclick = ()=>{
   mode = mode==="season"?"alltime":"season";
   toggleBtn.innerText = mode==="season"?"Switch to All Time":"Switch to Season";
   loadRanking();
-};
-
+}
 loadRanking();
 
-// Player Rating History Graph
-const ratingChart = new Chart(ratingChartCtx,{
-  type:'line',
-  data:{labels:[],datasets:[{label:'Rating',data:[],borderColor:'#00f7ff',backgroundColor:'rgba(0,247,255,0.2)',tension:0.3,fill:true,pointRadius:3} ]},
-  options:{responsive:true,scales:{y:{beginAtZero:true,min:0},x:{display:true}},plugins:{legend:{display:true,labels:{color:'#FFD700'}}},animation:{duration:800}}
-});
-
-// Recent Matches
-db.collection("matches").orderBy("createdAt","desc").limit(50).onSnapshot(snapshot=>{
-  matchBody.innerHTML="";
-  if(snapshot.empty){ matchBody.innerHTML="<tr><td colspan='4'>No matches found</td></tr>"; return; }
-  snapshot.forEach(doc=>{
-    const m = doc.data();
-    const date = m.createdAt?.toDate().toLocaleDateString()||"-";
-    matchBody.innerHTML += `<tr><td>${date}</td><td>${m.player1||m.playerAName||"-"}</td><td>${m.player2||m.playerBName||"-"}</td><td>${m.winner||m.winnerName||"Draw"}</td></tr>`;
+// --- Rating Graph ---
+let ratingChart = null;
+function loadRatingGraph(){
+  db.collection("players").get().then(snapshot=>{
+    const labels = [];
+    const ratings = [];
+    snapshot.forEach(doc=>{
+      labels.push(doc.data().username||"-");
+      ratings.push(doc.data().rating||1000);
+    });
+    if(ratingChart) ratingChart.destroy();
+    const ctx = document.getElementById("ratingChart").getContext("2d");
+    ratingChart = new Chart(ctx,{
+      type:"bar",
+      data:{
+        labels:labels,
+        datasets:[{
+          label:"Rating",
+          data:ratings,
+          backgroundColor:"rgba(0,247,255,0.7)",
+          borderColor:"rgba(0,247,255,1)",
+          borderWidth:1
+        }]
+      },
+      options:{
+        responsive:true,
+        animation:{duration:1000,easing:"easeOutBounce"},
+        scales:{y:{beginAtZero:true}}
+      }
+    });
   });
-});
+}
+loadRatingGraph();
 
-// Realtime Rating Animation (Top Player for example)
-let topPlayerId = null;
-db.collection("players").orderBy("ratingAllTime","desc").limit(1).onSnapshot(snap=>{
-  if(!snap.empty){ topPlayerId = snap.docs[0].id; listenRating(topPlayerId); }
-});
-
-let currentRating = 1000;
-function listenRating(playerId){
-  db.collection("players").doc(playerId).onSnapshot(doc=>{
-    if(!doc.exists) return;
-    const r = doc.data().rating || 1000;
-    ratingBox.classList.remove("up","down");
-    if(r>currentRating) ratingBox.classList.add("up");
-    else if(r<currentRating) ratingBox.classList.add("down");
-    currentRating = r;
-
-    // Animate number
-    let start = parseInt(ratingBox.innerText);
-    let end = r;
-    let duration = 1000;
-    let startTime = null;
-    function animateNumber(timestamp){
-      if(!startTime) startTime = timestamp;
-      const progress = timestamp - startTime;
-      const val = Math.round(start + (end-start)*(progress/duration));
-      ratingBox.innerText = val;
-      if(progress<duration) requestAnimationFrame(animateNumber);
-      else ratingBox.innerText = end;
-    }
-    requestAnimationFrame(animateNumber);
-
-    // Update Graph
-    db.collection("matches").where("status","==","approved")
-      .where("player1Id","==",playerId).orderBy("createdAt")
-      .onSnapshot(snap1=>{
-        db.collection("matches").where("status","==","approved")
-          .where("player2Id","==",playerId).orderBy("createdAt")
-          .onSnapshot(snap2=>{
-            const matches = [...snap1.docs,...snap2.docs].sort((a,b)=>{
-              return (a.data().createdAt?.toDate()||0) - (b.data().createdAt?.toDate()||0);
-            });
-            const labels=[], data=[];
-            let currentR = 1000;
-            matches.forEach(m=>{
-              const d = m.data();
-              const val = d.player1Id===playerId?d.ratingAfter1:d.ratingAfter2||currentR;
-              currentR = val;
-              labels.push(d.createdAt?.toDate().toLocaleDateString()||"-");
-              data.push(currentR);
-            });
-            ratingChart.data.labels = labels;
-            ratingChart.data.datasets[0].data = data;
-            ratingChart.update();
-          });
+// --- Head-to-Head ---
+function loadH2H(){
+  const a = document.getElementById("playerA").value.trim();
+  const b = document.getElementById("playerB").value.trim();
+  if(!a||!b){
+    alert("Enter both players!");
+    return;
+  }
+  db.collection("matches")
+    .where("status","==","approved")
+    .get().then(snapshot=>{
+      const tbody = document.querySelector("#h2hTable tbody");
+      tbody.innerHTML="";
+      let count=1;
+      snapshot.forEach(doc=>{
+        const m = doc.data();
+        if((m.player1===a && m.player2===b)||(m.player1===b && m.player2===a)){
+          tbody.innerHTML += `
+            <tr>
+              <td>${count}</td>
+              <td>${m.player1}</td>
+              <td>${m.player2}</td>
+              <td>${m.score}</td>
+              <td>${m.winner||"Draw"}</td>
+            </tr>`;
+          count++;
+        }
       });
-  });
+      if(count===1){
+        tbody.innerHTML="<tr><td colspan='5'>No matches found between these players</td></tr>";
+      }
+    });
 }
 </script>
 
