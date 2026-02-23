@@ -10,7 +10,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-/* SAME DESIGN — untouched */
 :root{
   --neon:#00f7ff;
   --gold:#ffd700;
@@ -49,7 +48,6 @@ button{background:linear-gradient(90deg,var(--neon),#008cff);color:#000;font-wei
 </head>
 
 <body>
-
 <div class="container">
 <h2>Submit Match</h2>
 
@@ -85,139 +83,137 @@ button{background:linear-gradient(90deg,var(--neon),#008cff);color:#000;font-wei
 
 <script>
 firebase.initializeApp({
-apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-authDomain:"afnsclub.firebaseapp.com",
-projectId:"afnsclub"
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
 });
 
 const auth=firebase.auth();
 const db=firebase.firestore();
-
 let allPlayers=[];
 let playerMap={}; // username -> docId
 
 /* Season Helper */
 function getSeasonIndex(month){
-if(month>=8) return 3;
-if(month>=4) return 2;
-return 1;
+  if(month>=8) return 3;
+  if(month>=4) return 2;
+  return 1;
 }
 function getCurrentSeasonId(){
-const now=new Date();
-return now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());
+  const now=new Date();
+  return now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());
 }
 
 /* Auth */
 auth.onAuthStateChanged(user=>{
-if(!user) location.href="login.html";
-else loadPlayers();
+  if(!user) location.href="login.html";
+  else loadPlayers();
 });
 
 /* Load Players with doc ID */
 async function loadPlayers(){
-const snap=await db.collection("players").get();
-snap.forEach(doc=>{
-const data=doc.data();
-const username=data.username||doc.id;
-allPlayers.push(username);
-playerMap[username]=doc.id;
-});
+  const snap=await db.collection("players").get();
+  snap.forEach(doc=>{
+    const data=doc.data();
+    const username=data.username||doc.id;
+    allPlayers.push(username);
+    playerMap[username]=doc.id;
+  });
 }
 
 /* Search */
 function filterPlayers(type){
-const input=document.getElementById(type);
-const list=document.getElementById(type+"List");
-const value=input.value.toLowerCase();
-list.innerHTML="";
-if(value.length<1) return;
-allPlayers.filter(name=>name.toLowerCase().includes(value)).slice(0,10)
-.forEach(name=>{
-const div=document.createElement("div");
-div.textContent=name;
-div.onclick=()=>{input.value=name;list.innerHTML="";};
-list.appendChild(div);
-});
+  const input=document.getElementById(type);
+  const list=document.getElementById(type+"List");
+  const value=input.value.toLowerCase();
+  list.innerHTML="";
+  if(value.length<1) return;
+  allPlayers.filter(name=>name.toLowerCase().includes(value)).slice(0,10)
+    .forEach(name=>{
+      const div=document.createElement("div");
+      div.textContent=name;
+      div.onclick=()=>{input.value=name; list.innerHTML="";};
+      list.appendChild(div);
+    });
 }
 
 function toggleTournament(){
-document.getElementById("tournamentBox").style.display=
-document.getElementById("matchType").value==="tournament"?"block":"none";
+  document.getElementById("tournamentBox").style.display =
+    document.getElementById("matchType").value==="tournament"?"block":"none";
 }
 
 /* Submit */
 async function submitMatch(){
-const btn=document.getElementById("submitBtn");
-const msg=document.getElementById("message");
-btn.disabled=true;
-msg.innerHTML="";
+  const btn=document.getElementById("submitBtn");
+  const msg=document.getElementById("message");
+  btn.disabled=true;
+  msg.innerHTML="";
 
-const user=auth.currentUser;
-const p1=document.getElementById("player1").value.trim();
-const p2=document.getElementById("player2").value.trim();
-const score=document.getElementById("score").value.trim();
-const type=document.getElementById("matchType").value;
-const tName=document.getElementById("tournamentName").value.trim();
+  const user=auth.currentUser;
+  const p1=document.getElementById("player1").value.trim();
+  const p2=document.getElementById("player2").value.trim();
+  const score=document.getElementById("score").value.trim();
+  const type=document.getElementById("matchType").value;
+  const tName=document.getElementById("tournamentName").value.trim();
 
-if(!p1||!p2||!score){
-msg.innerHTML="<span class='error'>All fields required!</span>";
-btn.disabled=false; return;
-}
-if(p1===p2){
-msg.innerHTML="<span class='error'>Players cannot be same!</span>";
-btn.disabled=false; return;
-}
-if(!allPlayers.includes(p1)||!allPlayers.includes(p2)){
-msg.innerHTML="<span class='error'>Invalid player name!</span>";
-btn.disabled=false; return;
-}
-if(!/^\d+-\d+$/.test(score)){
-msg.innerHTML="<span class='error'>Invalid score format!</span>";
-btn.disabled=false; return;
-}
-if(type==="tournament"&&!tName){
-msg.innerHTML="<span class='error'>Tournament name required!</span>";
-btn.disabled=false; return;
-}
+  if(!p1||!p2||!score){
+    msg.innerHTML="<span class='error'>All fields required!</span>";
+    btn.disabled=false; return;
+  }
+  if(p1===p2){
+    msg.innerHTML="<span class='error'>Players cannot be same!</span>";
+    btn.disabled=false; return;
+  }
+  if(!allPlayers.includes(p1)||!allPlayers.includes(p2)){
+    msg.innerHTML="<span class='error'>Invalid player name!</span>";
+    btn.disabled=false; return;
+  }
+  if(!/^\d+-\d+$/.test(score)){
+    msg.innerHTML="<span class='error'>Invalid score format!</span>";
+    btn.disabled=false; return;
+  }
+  if(type==="tournament"&&!tName){
+    msg.innerHTML="<span class='error'>Tournament name required!</span>";
+    btn.disabled=false; return;
+  }
 
-const parts=score.split("-").map(Number);
-let winner=null, loser=null, resultType="draw";
+  const parts=score.split("-").map(Number);
+  let winner=null, loser=null, resultType="draw";
+  if(parts[0]>parts[1]){ winner=p1; loser=p2; resultType="win"; }
+  else if(parts[1]>parts[0]){ winner=p2; loser=p1; resultType="win"; }
+  else { winner=null; loser=null; resultType="draw"; }
 
-if(parts[0]>parts[1]){winner=p1; loser=p2; resultType="win";}
-else if(parts[1]>parts[0]){winner=p2; loser=p1; resultType="win";}
+  /* Prevent duplicate match (unordered) */
+  const dup1=await db.collection("matches")
+    .where("player1","in",[p1,p2])
+    .where("player2","in",[p1,p2])
+    .where("score","==",score)
+    .get();
+  if(!dup1.empty){
+    msg.innerHTML="<span class='error'>Duplicate match detected!</span>";
+    btn.disabled=false; return;
+  }
 
-/* Prevent duplicate match */
-const duplicateCheck=await db.collection("matches")
-.where("player1","in",[p1,p2])
-.where("player2","in",[p1,p2])
-.where("score","==",score)
-.get();
+  /* Save match */
+  await db.collection("matches").add({
+    player1: p1,
+    player2: p2,
+    player1Id: playerMap[p1],
+    player2Id: playerMap[p2],
+    score: score,
+    winner: winner,
+    loser: loser,
+    resultType: resultType,
+    seasonId: getCurrentSeasonId(),
+    matchType: type,
+    tournamentName:type==="tournament"?tName:null,
+    submittedBy:user.email,
+    status:"pending",
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
 
-if(!duplicateCheck.empty){
-msg.innerHTML="<span class='error'>Duplicate match detected!</span>";
-btn.disabled=false; return;
-}
-
-/* Save */
-await db.collection("matches").add({
-player1:p1,
-player2:p2,
-player1Id:playerMap[p1],
-player2Id:playerMap[p2],
-score,
-winner,
-loser,
-resultType,
-seasonId:getCurrentSeasonId(),
-matchType:type,
-tournamentName:type==="tournament"?tName:null,
-submittedBy:user.email,
-status:"pending",
-createdAt:firebase.firestore.FieldValue.serverTimestamp()
-});
-
-msg.innerHTML="<span class='success'>Match submitted for approval!</span>";
-setTimeout(()=>location.reload(),1500);
+  msg.innerHTML="<span class='success'>Match submitted for approval!</span>";
+  setTimeout(()=>location.reload(),1500);
 }
 </script>
 
