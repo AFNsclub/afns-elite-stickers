@@ -40,7 +40,7 @@ body{
   box-shadow:0 0 40px rgba(0,247,255,.35),0 0 20px rgba(255,215,0,.25);
 }
 header{text-align:center;margin-bottom:20px;}
-header img{width:100px; filter:drop-shadow(0 0 20px var(--gold));}
+header img{width:100px;}
 h1{margin:10px 0;color:var(--gold);}
 .rank-badge{
   display:inline-block;
@@ -93,7 +93,6 @@ th,td{
   border-bottom:1px solid rgba(255,255,255,.2);
 }
 th{color:var(--gold);}
-tr:nth-child(even){background:rgba(255,255,255,.05);}
 .result-badge{
   padding:4px 10px;
   border-radius:12px;
@@ -108,16 +107,15 @@ footer{
   text-align:center;
   font-size:13px;
   color:var(--gold);
-  font-weight:700;
 }
 </style>
 </head>
-<body>
 
+<body>
 <div class="container" id="app">
 
 <header>
-  <img src="logo.png">
+  <img src="logo.png" alt="Logo">
   <h1 id="username">Player</h1>
   <div class="rank-badge" id="rankBadge">Rank #--</div>
 </header>
@@ -178,36 +176,47 @@ const db = firebase.firestore();
 
 const params = new URLSearchParams(location.search);
 const playerId = params.get("id");
-
 if(!playerId){
-  document.getElementById("app").innerHTML="<h2>Invalid Profile</h2>";
+  document.getElementById("app").innerHTML="<h2 style='text-align:center'>Invalid Profile</h2>";
   throw new Error("Missing ID");
 }
 
-/* PLAYER INFO */
-db.collection("players").doc(playerId).onSnapshot(doc=>{
-  if(!doc.exists) return;
-  const d = doc.data();
-  document.getElementById("username").innerText = d.username || "Player";
-  document.getElementById("gameId").innerText = d.gameId || "—";
-  document.getElementById("device").innerText = d.deviceName || "—";
-  document.getElementById("rating").innerText = d.ratingAllTime || 1000;
-
-  const wins=d.wins||0, losses=d.losses||0, draws=d.draws||0;
-  document.getElementById("wins").innerText=wins;
-  document.getElementById("losses").innerText=losses;
-  document.getElementById("draws").innerText=draws;
-
-  const total=wins+losses+draws;
-  document.getElementById("winrate").innerText=
-    total?((wins/total)*100).toFixed(1)+"%":"0%";
+/* PLAYER INFO + RANK */
+db.collection("players").onSnapshot(snapshot=>{
+  let players=[];
+  snapshot.forEach(doc=>{
+    players.push({id:doc.id,rating:doc.data().ratingAllTime||1000});
+  });
+  players.sort((a,b)=>b.rating-a.rating);
+  const rankIndex=players.findIndex(p=>p.id===playerId);
+  if(rankIndex!==-1){
+    document.getElementById("rankBadge").innerText="Rank #"+(rankIndex+1);
+  }
 });
 
-/* MATCHES + CHART */
+db.collection("players").doc(playerId).onSnapshot(doc=>{
+  if(!doc.exists){
+    document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>";
+    return;
+  }
+  const d=doc.data();
+  document.getElementById("username").innerText=d.username||"Player";
+  document.getElementById("gameId").innerText=d.gameId||"—";
+  document.getElementById("device").innerText=d.deviceName||"—";
+  document.getElementById("rating").innerText=d.ratingAllTime||1000;
+  document.getElementById("wins").innerText=d.wins||0;
+  document.getElementById("losses").innerText=d.losses||0;
+  document.getElementById("draws").innerText=d.draws||0;
+});
+
+/* RECENT MATCHES + CHART */
+const seasonFilter=document.getElementById("seasonFilter");
+let allMatches=[];
+
 const ctx=document.getElementById("ratingChart").getContext("2d");
-const chart=new Chart(ctx,{
+const ratingChart=new Chart(ctx,{
   type:'line',
-  data:{labels:[],datasets:[{data:[],borderWidth:3,tension:.4}]},
+  data:{labels:[],datasets:[{data:[],borderWidth:3,tension:.4,fill:false}]},
   options:{
     responsive:true,
     animation:{duration:1200},
@@ -215,91 +224,114 @@ const chart=new Chart(ctx,{
       legend:{display:false},
       tooltip:{
         callbacks:{
-          label:function(c){
-            return "Rating: "+c.raw.rating+" ("+
-            (c.raw.change>0?"+":"")+c.raw.change+")";
+          label:function(context){
+            const raw=context.raw;
+            const sign=raw.change>0?"+":"";
+            return "Rating: "+raw.rating+" ("+sign+raw.change+")";
           }
         }
       }
-    }
+    },
+    scales:{y:{beginAtZero:false}}
   }
 });
 
-let allMatches=[];
-const seasonFilter=document.getElementById("seasonFilter");
-
-db.collection("matches")
-.where("status","==","approved")
-.orderBy("createdAt","asc")
-.onSnapshot(snap=>{
-  allMatches=[];
-  const tbody=document.getElementById("matchesBody");
-  tbody.innerHTML="";
+function updateSeasonOptions(){
   const seasons=new Set();
-
-  snap.forEach(doc=>{
-    const m=doc.data();
-    if(m.player1Id!==playerId && m.player2Id!==playerId) return;
-
-    allMatches.push(m);
-    if(m.seasonId) seasons.add(m.seasonId);
-
-    let opponent = m.player1Id===playerId?m.player2:m.player1;
-    let result = m.winner===playerId?"Win":
-                 m.winner===null?"Draw":"Lose";
-
-    let badge = result==="Win"?"result-win":
-                result==="Lose"?"result-lose":"result-draw";
-
-    const date = m.createdAt?
-      m.createdAt.toDate().toLocaleDateString():"-";
-
-    tbody.innerHTML+=`
-      <tr>
-        <td>${date}</td>
-        <td>${opponent||"-"}</td>
-        <td><span class="result-badge ${badge}">${result}</span></td>
-        <td>${m.score||"-"}</td>
-      </tr>
-    `;
-  });
-
+  allMatches.forEach(m=>{if(m.seasonId)seasons.add(m.seasonId);});
   seasons.forEach(s=>{
-    const opt=document.createElement("option");
-    opt.value=s; opt.innerText=s;
-    seasonFilter.appendChild(opt);
+    if(!document.querySelector(`option[value="${s}"]`)){
+      const opt=document.createElement("option");
+      opt.value=s;
+      opt.innerText=s;
+      seasonFilter.appendChild(opt);
+    }
   });
-
-  updateChart();
-});
+}
 
 function updateChart(){
   const selected=seasonFilter.value;
-  const labels=[],data=[];
+  const labels=[];
+  const data=[];
   allMatches.forEach(m=>{
-    if(selected!=="all" && m.seasonId!==selected) return;
-    const after = m.player1Id===playerId?m.ratingAfter1:m.ratingAfter2;
-    const before = m.player1Id===playerId?m.ratingBefore1:m.ratingBefore2;
-    if(!after||!before) return;
+    if(selected!=="all"&&m.seasonId!==selected)return;
+    if(m.player1Id!==playerId&&m.player2Id!==playerId)return;
+
+    let after,before;
+    if(m.player1Id===playerId){
+      after=m.ratingAfter1;
+      before=m.ratingBefore1;
+    }else{
+      after=m.ratingAfter2;
+      before=m.ratingBefore2;
+    }
+    if(!after||!before)return;
     const change=after-before;
     labels.push(m.createdAt.toDate().toLocaleDateString());
     data.push({rating:after,change:change});
   });
 
-  chart.data.labels=labels;
-  chart.data.datasets[0].data=data;
+  ratingChart.data.labels=labels;
+  ratingChart.data.datasets[0].data=data;
 
   if(data.length){
     const last=data[data.length-1];
-    chart.data.datasets[0].borderColor=
+    ratingChart.data.datasets[0].borderColor=
       last.change>0?"#4cff8f":
       last.change<0?"#ff4c4c":"#ffd166";
   }
 
-  chart.update();
+  ratingChart.update();
 }
+
+db.collection("matches")
+.where("status","==","approved")
+.orderBy("createdAt","asc")
+.onSnapshot(snapshot=>{
+  allMatches=[];
+  snapshot.forEach(doc=>allMatches.push(doc.data()));
+  updateSeasonOptions();
+  updateChart();
+
+  const tbody=document.getElementById("matchesBody");
+  tbody.innerHTML="";
+  let count=0;
+
+  allMatches.slice().reverse().forEach(m=>{
+    if(m.player1Id!==playerId&&m.player2Id!==playerId)return;
+    if(count>=20)return;
+    count++;
+
+    let opponent,result,badgeClass;
+    if(m.player1Id===playerId){
+      opponent=m.player2;
+      result=(m.winner===playerId)?"Win":
+             (m.winner===null)?"Draw":"Lose";
+    }else{
+      opponent=m.player1;
+      result=(m.winner===playerId)?"Win":
+             (m.winner===null)?"Draw":"Lose";
+    }
+    badgeClass=result==="Win"?"result-win":
+               result==="Lose"?"result-lose":"result-draw";
+
+    const date=m.createdAt.toDate().toLocaleDateString();
+
+    tbody.innerHTML+=`
+      <tr>
+        <td>${date}</td>
+        <td>${opponent||"-"}</td>
+        <td><span class="result-badge ${badgeClass}">${result}</span></td>
+        <td>${m.score||"-"}</td>
+      </tr>`;
+  });
+
+  if(count===0){
+    tbody.innerHTML="<tr><td colspan='4'>No recent matches</td></tr>";
+  }
+});
 
 seasonFilter.addEventListener("change",updateChart);
 </script>
 </body>
-                   </html>
+</html>
