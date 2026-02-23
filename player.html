@@ -10,6 +10,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- Chart.js for Win% Graph -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body{
   margin:0;
@@ -55,21 +58,14 @@ button{
 }
 button:hover{transform: scale(1.05);}
 button.secondary{background:#1a1a1a;color:#ccc;}
+.home-btn{background:linear-gradient(45deg,#ff9800,#ff3d00);}
 .hidden{display:none;}
 input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
-.success{color:#00ff88;margin-top:10px;transition:all 0.6s ease;}
+.success{color:#00ff88;margin-top:10px;}
 .fb-link{color:#4db8ff;text-decoration:underline;cursor:pointer;}
-.home-btn{
-  background:linear-gradient(45deg,#ff9800,#ff3d00);
-}
-.match-history{
-  margin-top:20px;
-}
 .match-card{
   background:linear-gradient(145deg,#0f2545,#081a2e);
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:10px;
+  padding:12px;border-radius:12px;margin-bottom:10px;
   box-shadow:0 0 12px rgba(0,0,0,.5);
   transform: translateY(20px);
   opacity: 0;
@@ -83,6 +79,18 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 .draw{border-left:5px solid #ffd700;}
 .small{font-size:12px;color:#aaa;margin-top:4px;}
 .empty{text-align:center;opacity:.6;margin-top:20px;}
+.filter-btns button{
+  width:auto;
+  padding:6px 14px;
+  margin:4px;
+  border-radius:20px;
+  font-size:13px;
+}
+.active-filter{background:#ffd700 !important;color:#000 !important;}
+.streak-box{margin-bottom:10px;font-weight:bold;color:#4cff8f;}
+.rating-plus{color:#4cff8f;font-weight:bold;}
+.rating-minus{color:#ff6b6b;font-weight:bold;}
+#winChart{margin-top:20px;background:#081a2e;padding:10px;border-radius:12px;}
 </style>
 </head>
 
@@ -97,15 +105,11 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
   <div class="name" id="v_username">Loading...</div>
   <div class="email" id="v_email">—</div>
   <div id="rankBadge" class="rank-badge">Unranked</div>
-
-  <div class="progress">
-    <div class="progress-bar" id="progressBar"></div>
-  </div>
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 
   <div class="info-line">🌐 Facebook:
     <span id="fbLink" class="fb-link hidden" onclick="openFb()">View Profile</span>
   </div>
-
   <div class="info-line">📱 Phone: <span id="v_phone">—</span></div>
   <div class="info-line">👑 Owner ID: <span id="v_ownerId">—</span></div>
   <div class="info-line">💻 Device: <span id="v_device">—</span></div>
@@ -134,9 +138,25 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 </div>
 
 <div class="match-history hidden" id="matchHistory">
-  <h3>📜 Match History</h3>
-  <div id="matchList"></div>
-  <button class="secondary" onclick="toggleHistory(false)">Close History</button>
+<h3>📜 Match History</h3>
+
+<div>
+<button onclick="setSeason('all')">All Season</button>
+<button onclick="setSeason('S1')">Season 1</button>
+<button onclick="setSeason('S2')">Season 2</button>
+</div>
+
+<div class="filter-btns">
+<button onclick="setFilter('all')" id="f_all">All</button>
+<button onclick="setFilter('win')" id="f_win">Win</button>
+<button onclick="setFilter('draw')" id="f_draw">Draw</button>
+<button onclick="setFilter('loss')" id="f_loss">Loss</button>
+</div>
+
+<div class="streak-box" id="streakBox"></div>
+<canvas id="winChart" height="120"></canvas>
+<div id="matchList"></div>
+<button class="secondary" onclick="toggleHistory(false)">Close History</button>
 </div>
 
 <div id="msg"></div>
@@ -144,175 +164,155 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain: "afnsclub.firebaseapp.com",
-  projectId: "afnsclub"
+apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+authDomain:"afnsclub.firebaseapp.com",
+projectId:"afnsclub"
 });
 
-const auth = firebase.auth();
-const db = firebase.firestore();
-let uid, fbUrl="", username="";
+const auth=firebase.auth();
+const db=firebase.firestore();
+let uid,username="",fbUrl="";
+let currentFilter="all",currentSeason="all";
+let chart;
 
-// AUTH CHECK
 auth.onAuthStateChanged(async user=>{
-  if(!user){
-    location.replace("login.html");
-    return;
-  }
-  uid = user.uid;
+if(!user){location="login.html";return;}
+uid=user.uid;
 
-  const docRef = db.collection("players").doc(uid);
-  let docSnap = await docRef.get();
+const docRef=db.collection("players").doc(uid);
+let snap=await docRef.get();
+username=snap.data()?.username||user.email.split("@")[0];
+document.getElementById("v_email").innerText=user.email;
 
-  username = docSnap.data()?.username || user.email.split("@")[0];
+db.collection("players").doc(uid).onSnapshot(doc=>{
+const d=doc.data();
+animateValue("rating",+rating.innerText,d.rating||1000,500);
+animateValue("wins",+wins.innerText,d.wins||0,500);
+animateValue("losses",+losses.innerText,d.losses||0,500);
+const total=(d.wins||0)+(d.losses||0)+(d.draws||0);
+animateValue("winRate",+winRate.innerText.replace("%",""),total?Math.round((d.wins/total)*100):0,500,"%");
 
-  document.getElementById("v_email").innerText = user.email;
+v_username.innerText=d.username||"—";
+v_phone.innerText=d.phone||"—";
+v_ownerId.innerText=d.ownerId||"—";
+v_device.innerText=d.deviceName||"—";
 
-  if(!docSnap.exists){
-    await docRef.set({
-      username: username,
-      rating: 1000,
-      wins: 0,
-      losses: 0,
-      draws: 0,
-      phone: "",
-      ownerId: "",
-      facebook: "",
-      deviceName: ""
-    });
-  }
+fbUrl=d.facebook||"";
+fbLink.classList.toggle("hidden",!fbUrl);
 
-  db.collection("players").doc(uid).onSnapshot(doc=>{
-    if(!doc.exists) return;
-    const d = doc.data();
+rankBadge.innerText=
+d.rating>=2000?"👑 Legend":
+d.rating>=1500?"🔥 Elite":
+d.rating>=1000?"⭐ Pro":"🥉 Rising";
 
-    // Smooth stats animation
-    animateValue("rating", +document.getElementById("rating").innerText, d.rating||1000, 500);
-    animateValue("wins", +document.getElementById("wins").innerText, d.wins||0, 500);
-    animateValue("losses", +document.getElementById("losses").innerText, d.losses||0, 500);
-    const total = (d.wins||0)+(d.losses||0)+(d.draws||0);
-    animateValue("winRate", +document.getElementById("winRate").innerText.replace("%",""), total?Math.round((d.wins/total)*100):0,500,"%");
-
-    document.getElementById("v_username").innerText = d.username || "—";
-    document.getElementById("v_phone").innerText = d.phone || "—";
-    document.getElementById("v_ownerId").innerText = d.ownerId || "—";
-    document.getElementById("v_device").innerText = d.deviceName || "—";
-
-    fbUrl = d.facebook || "";
-    document.getElementById("fbLink").classList.toggle("hidden", !fbUrl);
-
-    document.getElementById("rankBadge").innerText =
-      d.rating>=2000?"👑 Legend":
-      d.rating>=1500?"🔥 Elite":
-      d.rating>=1000?"⭐ Pro":
-      d.rating>=500?"🥉 Rising":"Unranked";
-
-    let progressWidth = Math.min(100, (d.rating%500)/5);
-    document.getElementById("progressBar").style.width = progressWidth + "%";
-  });
-
+progressBar.style.width=Math.min(100,(d.rating%500)/5)+"%";
+});
 });
 
-// Animate number values
-function animateValue(id, start, end, duration, suffix=""){
-  const obj = document.getElementById(id);
-  let startTime = null;
-  function step(timestamp){
-    if(!startTime) startTime=timestamp;
-    const progress = Math.min((timestamp-startTime)/duration,1);
-    obj.innerText = Math.floor(start + (end-start)*progress) + suffix;
-    if(progress<1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
+function animateValue(id,start,end,duration,suffix=""){
+const obj=document.getElementById(id);
+let startTime=null;
+function step(timestamp){
+if(!startTime)startTime=timestamp;
+const progress=Math.min((timestamp-startTime)/duration,1);
+obj.innerText=Math.floor(start+(end-start)*progress)+suffix;
+if(progress<1)requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
 }
 
-// EDIT PROFILE
-function toggleEdit(edit){
-  document.getElementById("viewBox").classList.toggle("hidden", edit);
-  document.getElementById("editBox").classList.toggle("hidden", !edit);
-}
-
-function saveProfile(){
-  db.collection("players").doc(uid).update({
-    phone: document.getElementById("phone").value.trim(),
-    ownerId: document.getElementById("ownerId").value.trim(),
-    facebook: document.getElementById("facebook").value.trim(),
-    deviceName: document.getElementById("deviceName").value.trim()
-  }).then(()=>{
-    const msgDiv = document.getElementById("msg");
-    msgDiv.innerHTML = "<div class='success'>Profile Updated</div>";
-    msgDiv.firstChild.animate([{opacity:0},{opacity:1},{opacity:0}],{duration:1500,easing:"ease"});
-    toggleEdit(false);
-  });
-}
-
-function openFb(){
-  if(fbUrl) window.open(fbUrl,"_blank");
-}
-
-function logout(){
-  auth.signOut().then(()=>{location.replace("login.html");});
-}
-
-// MATCH HISTORY
 function toggleHistory(show){
-  document.getElementById("matchHistory").classList.toggle("hidden", !show);
-  document.getElementById("viewBox").classList.toggle("hidden", show);
+matchHistory.classList.toggle("hidden",!show);
+viewBox.classList.toggle("hidden",show);
+if(show)loadMatchHistory();
+}
 
-  if(show) loadMatchHistory();
+function setFilter(type){
+currentFilter=type;
+document.querySelectorAll(".filter-btns button")
+.forEach(b=>b.classList.remove("active-filter"));
+document.getElementById("f_"+type).classList.add("active-filter");
+loadMatchHistory();
+}
+
+function setSeason(season){
+currentSeason=season;
+loadMatchHistory();
 }
 
 async function loadMatchHistory(){
-  const listDiv = document.getElementById("matchList");
-  listDiv.innerHTML = "";
+matchList.innerHTML="Loading...";
+streakBox.innerHTML="";
+const snap1=await db.collection("matches")
+.where("player1","==",username)
+.where("status","==","approved").get();
+const snap2=await db.collection("matches")
+.where("player2","==",username)
+.where("status","==","approved").get();
 
-  const snap1 = await db.collection("matches")
-    .where("player1","==",username)
-    .where("status","==","approved")
-    .get();
+let all=[...snap1.docs,...snap2.docs]
+.sort((a,b)=>b.data().createdAt?.seconds-a.data().createdAt?.seconds);
 
-  const snap2 = await db.collection("matches")
-    .where("player2","==",username)
-    .where("status","==","approved")
-    .get();
+if(!all.length){matchList.innerHTML="<div class='empty'>No matches</div>";return;}
 
-  const allMatches = [...snap1.docs, ...snap2.docs]
-    .sort((a,b)=>{
-      const aTime = a.data().createdAt?.toDate()?.getTime() || 0;
-      const bTime = b.data().createdAt?.toDate()?.getTime() || 0;
-      return bTime - aTime;
-    });
+let streak=0,maxStreak=0,winData=[];
+matchList.innerHTML="";
 
-  if(allMatches.length===0){
-    listDiv.innerHTML = `<div class="empty">No matches played yet</div>`;
-    return;
-  }
+all.forEach(d=>{
+const m=d.data();
+if(currentSeason!=="all"&&m.season!==currentSeason)return;
+const opponent=m.player1===username?m.player2:m.player1;
 
-  allMatches.forEach(d=>{
-    const m = d.data();
-    const opponent = m.player1 === username ? m.player2 : m.player1;
+let my=0,opp=0;
+if(m.score?.includes("-")){
+const s=m.score.split("-");
+if(m.player1===username){my=parseInt(s[0]);opp=parseInt(s[1]);}
+else{my=parseInt(s[1]);opp=parseInt(s[0]);}
+}
 
-    let resultClass = "draw";
-    if(m.resultType?.toLowerCase() === "win"){
-      if(m.winner === username) resultClass = "win";
-      else if(m.winner === opponent) resultClass = "loss";
-    } else if(m.resultType?.toLowerCase() === "draw"){
-      resultClass = "draw";
-    }
+let result="DRAW",cls="draw";
+if(my>opp){result="WIN";cls="win";streak++;maxStreak=Math.max(maxStreak,streak);}
+else if(my<opp){result="LOSS";cls="loss";streak=0;}
+else{streak=0;}
 
-    listDiv.innerHTML += `
-      <div class="match-card ${resultClass}">
-        <b>${m.resultType.toUpperCase()}</b> vs ${opponent}<br>
-        Score: ${m.score}
-        ${m.tournamentName ? `<div class="small">Tournament: ${m.tournamentName}</div>` : ``}
-        <div class="small">
-          ${m.createdAt?.toDate().toLocaleString() || ""}
-        </div>
-      </div>
-    `;
-  });
+if(currentFilter!=="all"&&currentFilter!==cls)return;
+
+const ratingChange=m.ratingChange?.[username]||0;
+matchList.innerHTML+=`
+<div class="match-card ${cls}">
+<b>${result}</b> vs ${opponent}<br>
+Score: ${m.score}
+<div class="${ratingChange>=0?'rating-plus':'rating-minus'}">
+Rating ${ratingChange>=0?'+':''}${ratingChange}
+</div>
+<div class="small">${m.createdAt?.toDate().toLocaleString()||""}</div>
+</div>`;
+
+winData.push(cls==="win"?1:0);
+});
+
+streakBox.innerHTML="🔥 Winning Streak: "+maxStreak;
+
+// Update Chart
+const ctx=document.getElementById('winChart').getContext('2d');
+const labels=winData.map((_,i)=>i+1);
+const data={labels, datasets:[{label:'Win %', data:winData.map((v,i)=>
+Math.round(winData.slice(0,i+1).reduce((a,b)=>a+b,0)/(i+1)*100)), borderColor:'#4cff8f', backgroundColor:'rgba(76,255,143,0.2)', tension:0.3}]};
+if(chart) chart.destroy();
+chart=new Chart(ctx,{type:'line',data,options:{responsive:true, plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
+}
+
+function logout(){auth.signOut().then(()=>location="login.html");}
+function openFb(){if(fbUrl)window.open(fbUrl,"_blank");}
+function toggleEdit(edit){viewBox.classList.toggle("hidden",edit);editBox.classList.toggle("hidden",!edit);}
+function saveProfile(){
+db.collection("players").doc(uid).update({
+phone:phone.value.trim(),
+ownerId:ownerId.value.trim(),
+facebook:facebook.value.trim(),
+deviceName:deviceName.value.trim()
+}).then(()=>toggleEdit(false));
 }
 </script>
-
 </body>
-</html>
+  </html>
