@@ -2,70 +2,108 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Strikers - Leaderboard</title>
+<title>AFNS Elite Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 :root{
-  --gold:#FFD700; --silver:#C0C0C0; --bronze:#CD7F32;
-  --bg-dark:#010814; --card:#0c1b2a; --text:#ffffff; --hover:#0f2c4d;
+  --gold:#FFD700;
+  --silver:#C0C0C0;
+  --bronze:#CD7F32;
+  --bg-dark:#010814;
+  --card:#0c1b2a;
+  --text:#ffffff;
+  --hover:#0f2c4d;
+  --neon:#00f7ff;
 }
 body{
-  margin:0; background:linear-gradient(180deg,#010814,#021b33);
-  font-family:Segoe UI,sans-serif; color:var(--text); text-align:center;
+  margin:0;
+  font-family:Segoe UI, sans-serif;
+  background:linear-gradient(180deg,#010814,#021b33);
+  color:var(--text);
 }
-h1{padding:15px;font-size:1.8rem;text-shadow:0 0 15px rgba(255,215,0,.6);}
-h2{margin-top:25px;color:#FFD700;}
-table{width:95%;margin:auto;border-collapse:collapse;margin-top:15px;overflow-x:auto;}
-th{background:#061423;padding:12px;color:white;}
-td{padding:10px;border-bottom:1px solid #112b45;}
+h1,h2{margin:10px; text-align:center;}
+h1{color:var(--gold); text-shadow:0 0 15px rgba(255,215,0,.6);}
+h2{color:var(--gold);}
+.container{max-width:1200px;margin:auto;padding:15px;}
+.card{background:var(--card);border-radius:20px;padding:20px;margin:20px 0;box-shadow:0 0 25px rgba(0,247,255,.2);}
+button{padding:8px 16px;margin:10px;cursor:pointer;border:none;border-radius:8px;background:var(--gold);color:#010814;font-weight:bold;transition:0.2s;}
+button:hover{background:#e6c200;}
+table{width:100%;border-collapse:collapse; margin-top:10px;}
+th,td{padding:10px;text-align:center;}
+th{background:#061423;}
+tr:nth-child(even){background:#081a33;}
 .rank1{background:#2a2100;color:var(--gold);}
 .rank2{background:#1c1c1c;color:var(--silver);}
 .rank3{background:#2b1600;color:var(--bronze);}
-button{margin:15px;padding:10px 22px;font-weight:bold;cursor:pointer;border:none;border-radius:5px;background:#FFD700;color:#020d1f;font-size:1rem;transition:0.2s;}
-button:hover{background:#e6c200;}
 .player-link{color:white;text-decoration:none;}
-.player-link:hover{color:#FFD700;}
-.section{margin-top:40px;}
-tr{opacity:0;transform:translateY(20px);animation:fadeSlide .5s forwards;}
-@keyframes fadeSlide{to{opacity:1;transform:translateY(0);}}
-@media(max-width:600px){
-  th,td{font-size:0.85rem;padding:8px;}
-  h1{font-size:1.5rem;}
-  button{font-size:0.9rem;padding:8px 16px;}
+.player-link:hover{color:var(--gold);}
+.chart-container{position:relative;width:100%;height:300px;margin-top:20px;}
+.rating-box{
+  font-size:2.5rem;font-weight:bold;padding:15px 30px;margin:15px auto;width:200px;
+  background:#081a33;border-radius:15px;box-shadow:0 0 20px rgba(0,247,255,.3);
+  transition:all 0.8s ease;text-align:center;
 }
+.up{color:#00ff88;}
+.down{color:#ff5555;}
+@media(max-width:800px){table,th,td{font-size:0.8rem;}}
 </style>
 </head>
+
 <body>
+<div class="container">
+<h1>🏆 AFNS Elite Dashboard</h1>
 
-<h1>🏆 AFNS Elite Strikers</h1>
-<h2 id="seasonTitle"></h2>
-<button id="toggleBtn">Switch to All Time</button>
-
-<div class="section">
+<!-- Leaderboard -->
+<div class="card">
 <h2 id="rankingTitle">Season Ranking</h2>
+<button id="toggleBtn">Switch to All Time</button>
 <table>
 <thead>
 <tr>
-<th>Rank</th><th>Player</th><th>Win</th><th>Loss</th><th>Draw</th><th>Rating</th>
+<th>Rank</th>
+<th>Player</th>
+<th>Win</th>
+<th>Loss</th>
+<th>Draw</th>
+<th>Rating</th>
 </tr>
 </thead>
-<tbody id="rankingBody">
-<tr><td colspan="6">Loading...</td></tr>
-</tbody>
+<tbody id="rankingBody"><tr><td colspan="6">Loading...</td></tr></tbody>
 </table>
 </div>
 
-<div class="section">
-<h2>Recent Matches</h2>
+<!-- Player Rating Animation -->
+<div class="card">
+<h2>🔥 Realtime Rating</h2>
+<div class="rating-box" id="ratingBox">1000</div>
+</div>
+
+<!-- Player Rating History Graph -->
+<div class="card">
+<h2>📈 Rating History Graph</h2>
+<div class="chart-container">
+<canvas id="ratingChart"></canvas>
+</div>
+</div>
+
+<!-- Recent Matches -->
+<div class="card">
+<h2>📜 Recent Matches</h2>
 <table>
-<thead><tr><th>Date</th><th>Player A</th><th>Player B</th><th>Winner</th></tr></thead>
-<tbody id="matchBody">
-<tr><td colspan="4">Loading...</td></tr>
-</tbody>
+<thead>
+<tr><th>Date</th><th>Player A</th><th>Player B</th><th>Winner</th></tr>
+</thead>
+<tbody id="matchBody"><tr><td colspan="4">Loading...</td></tr></tbody>
 </table>
+</div>
 </div>
 
 <script>
@@ -74,79 +112,143 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
+
 const db = firebase.firestore();
-const rankingBody=document.getElementById("rankingBody");
-const matchBody=document.getElementById("matchBody");
-const toggleBtn=document.getElementById("toggleBtn");
-const seasonTitle=document.getElementById("seasonTitle");
-const rankingTitle=document.getElementById("rankingTitle");
-let mode="season"; let unsubscribeRanking=null;
+const rankingBody = document.getElementById("rankingBody");
+const matchBody = document.getElementById("matchBody");
+const toggleBtn = document.getElementById("toggleBtn");
+const rankingTitle = document.getElementById("rankingTitle");
+const ratingBox = document.getElementById("ratingBox");
+const ratingChartCtx = document.getElementById("ratingChart").getContext("2d");
 
-function getSeasonIndex(month){if(month>=8) return 3;if(month>=4) return 2; return 1;}
-function getCurrentSeasonId(){const now=new Date(); return now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());}
-function seasonName(seasonId){
-  const parts=seasonId.split("-"); const year=parts[0]; const s=parts[1];
-  if(s==="S1") return year+" Season 1 (Jan-Apr)";
-  if(s==="S2") return year+" Season 2 (May-Aug)";
-  return year+" Season 3 (Sep-Dec)";
-}
+let mode = "season";
+let unsubscribeRanking = null;
 
+function getSeasonIndex(month){if(month>=8) return 3;if(month>=4) return 2;return 1;}
+function getCurrentSeasonId(){const now = new Date();return now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());}
+
+// Leaderboard
 function loadRanking(){
   if(unsubscribeRanking) unsubscribeRanking();
   rankingBody.innerHTML="<tr><td colspan='6'>Loading...</td></tr>";
-  let query=db.collection("players");
+
+  let query = db.collection("players");
+
   if(mode==="season"){
-    const currentSeason=getCurrentSeasonId();
-    seasonTitle.innerText="Current Season: "+seasonName(currentSeason);
-    rankingTitle.innerText="Season Ranking";
-    query=query.where("seasonId","==",currentSeason).orderBy("ratingSeason","desc");
+    rankingTitle.innerText = "Season Ranking";
+    const currentSeason = getCurrentSeasonId();
+    query = query.where("seasonId","==",currentSeason).orderBy("ratingSeason","desc");
   } else {
-    seasonTitle.innerText="All Time Leaderboard";
-    rankingTitle.innerText="All Time Ranking";
-    query=query.orderBy("ratingAllTime","desc");
+    rankingTitle.innerText = "All Time Ranking";
+    query = query.orderBy("ratingAllTime","desc");
   }
-  unsubscribeRanking=query.onSnapshot(snapshot=>{
+
+  unsubscribeRanking = query.onSnapshot(snapshot=>{
     rankingBody.innerHTML="";
-    if(snapshot.empty){rankingBody.innerHTML="<tr><td colspan='6'>No players found</td></tr>";return;}
+    if(snapshot.empty){ rankingBody.innerHTML="<tr><td colspan='6'>No players found</td></tr>"; return; }
     let rank=1;
     snapshot.forEach(doc=>{
-      const p=doc.data();
-      let className=rank===1?"rank1":rank===2?"rank2":rank===3?"rank3":"";
-      const rating=mode==="season"?p.ratingSeason||0:p.ratingAllTime||0;
-      rankingBody.innerHTML+=`<tr class="${className}" style="animation-delay:${rank*0.08}s">
-        <td>${rank}</td>
-        <td><a class="player-link" href="player-dashboard.html?id=${doc.id}">${p.username||"-"}</a></td>
-        <td>${p.wins||0}</td><td>${p.losses||0}</td><td>${p.draws||0}</td>
-        <td>${rating}</td>
-      </tr>`;
+      const p = doc.data();
+      const className = rank===1?"rank1":rank===2?"rank2":rank===3?"rank3":"";
+      const rating = mode==="season"?p.ratingSeason||0:p.ratingAllTime||0;
+      rankingBody.innerHTML += `
+        <tr class="${className}">
+          <td>${rank}</td>
+          <td><a class="player-link" href="public-profile.html?id=${doc.id}">${p.username||"-"}</a></td>
+          <td>${p.wins||0}</td>
+          <td>${p.losses||0}</td>
+          <td>${p.draws||0}</td>
+          <td>${rating}</td>
+        </tr>`;
       rank++;
     });
   });
 }
 
-toggleBtn.onclick=function(){
-  mode=mode==="season"?"alltime":"season";
-  toggleBtn.innerText=mode==="season"?"Switch to All Time":"Switch to Season";
+toggleBtn.onclick = function(){
+  mode = mode==="season"?"alltime":"season";
+  toggleBtn.innerText = mode==="season"?"Switch to All Time":"Switch to Season";
   loadRanking();
-}
+};
 
-/* Recent Matches */
+loadRanking();
+
+// Player Rating History Graph
+const ratingChart = new Chart(ratingChartCtx,{
+  type:'line',
+  data:{labels:[],datasets:[{label:'Rating',data:[],borderColor:'#00f7ff',backgroundColor:'rgba(0,247,255,0.2)',tension:0.3,fill:true,pointRadius:3} ]},
+  options:{responsive:true,scales:{y:{beginAtZero:true,min:0},x:{display:true}},plugins:{legend:{display:true,labels:{color:'#FFD700'}}},animation:{duration:800}}
+});
+
+// Recent Matches
 db.collection("matches").orderBy("createdAt","desc").limit(50).onSnapshot(snapshot=>{
   matchBody.innerHTML="";
-  if(snapshot.empty){matchBody.innerHTML="<tr><td colspan='4'>No matches found</td></tr>";return;}
+  if(snapshot.empty){ matchBody.innerHTML="<tr><td colspan='4'>No matches found</td></tr>"; return; }
   snapshot.forEach(doc=>{
-    const m=doc.data();
-    const date=m.createdAt?m.createdAt.toDate().toLocaleDateString():"-";
-    matchBody.innerHTML+=`<tr style="animation-delay:0.05s">
-      <td>${date}</td>
-      <td>${m.player1||"-"}</td>
-      <td>${m.player2||"-"}</td>
-      <td>${m.winner||"Draw"}</td>
-    </tr>`;
+    const m = doc.data();
+    const date = m.createdAt?.toDate().toLocaleDateString()||"-";
+    matchBody.innerHTML += `<tr><td>${date}</td><td>${m.player1||m.playerAName||"-"}</td><td>${m.player2||m.playerBName||"-"}</td><td>${m.winner||m.winnerName||"Draw"}</td></tr>`;
   });
 });
 
-loadRanking();
+// Realtime Rating Animation (Top Player for example)
+let topPlayerId = null;
+db.collection("players").orderBy("ratingAllTime","desc").limit(1).onSnapshot(snap=>{
+  if(!snap.empty){ topPlayerId = snap.docs[0].id; listenRating(topPlayerId); }
+});
+
+let currentRating = 1000;
+function listenRating(playerId){
+  db.collection("players").doc(playerId).onSnapshot(doc=>{
+    if(!doc.exists) return;
+    const r = doc.data().rating || 1000;
+    ratingBox.classList.remove("up","down");
+    if(r>currentRating) ratingBox.classList.add("up");
+    else if(r<currentRating) ratingBox.classList.add("down");
+    currentRating = r;
+
+    // Animate number
+    let start = parseInt(ratingBox.innerText);
+    let end = r;
+    let duration = 1000;
+    let startTime = null;
+    function animateNumber(timestamp){
+      if(!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      const val = Math.round(start + (end-start)*(progress/duration));
+      ratingBox.innerText = val;
+      if(progress<duration) requestAnimationFrame(animateNumber);
+      else ratingBox.innerText = end;
+    }
+    requestAnimationFrame(animateNumber);
+
+    // Update Graph
+    db.collection("matches").where("status","==","approved")
+      .where("player1Id","==",playerId).orderBy("createdAt")
+      .onSnapshot(snap1=>{
+        db.collection("matches").where("status","==","approved")
+          .where("player2Id","==",playerId).orderBy("createdAt")
+          .onSnapshot(snap2=>{
+            const matches = [...snap1.docs,...snap2.docs].sort((a,b)=>{
+              return (a.data().createdAt?.toDate()||0) - (b.data().createdAt?.toDate()||0);
+            });
+            const labels=[], data=[];
+            let currentR = 1000;
+            matches.forEach(m=>{
+              const d = m.data();
+              const val = d.player1Id===playerId?d.ratingAfter1:d.ratingAfter2||currentR;
+              currentR = val;
+              labels.push(d.createdAt?.toDate().toLocaleDateString()||"-");
+              data.push(currentR);
+            });
+            ratingChart.data.labels = labels;
+            ratingChart.data.datasets[0].data = data;
+            ratingChart.update();
+          });
+      });
+  });
+}
 </script>
+
 </body>
 </html>
