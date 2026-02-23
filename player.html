@@ -24,30 +24,36 @@ header img{width:90px;}
   background:linear-gradient(145deg,#0f2545,#081a2e);
   padding:20px;border-radius:22px;
   box-shadow:0 0 25px rgba(255,215,0,.15),0 0 40px rgba(0,120,255,.15);
+  transition: transform 0.3s ease;
 }
-.name{font-size:22px;font-weight:bold;color:#ffd34d;}
+.card:hover{transform: translateY(-4px);}
+.name{font-size:22px;font-weight:bold;color:#ffd34d;transition: all 0.5s ease;}
 .email{opacity:.85;margin-bottom:8px;}
 .rank-badge{
   display:inline-block;padding:6px 14px;border-radius:25px;
   background:linear-gradient(45deg,#ff3b3b,#ffae00);
   color:#fff;font-weight:bold;margin-top:6px;
+  transition: all 0.5s ease;
 }
 .progress{background:#0c223f;border-radius:10px;overflow:hidden;height:10px;margin:12px 0;}
-.progress-bar{height:100%;background:linear-gradient(90deg,#4db8ff,#ffd34d);width:0%;transition:.5s;}
+.progress-bar{height:100%;background:linear-gradient(90deg,#4db8ff,#ffd34d);width:0%;transition:.7s ease;}
 .info-line{margin:8px 0;font-size:14px;}
 .info-line span{color:#4db8ff;}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:15px;}
 .stat{
   background:linear-gradient(145deg,#132f55,#0d203a);
   padding:14px;border-radius:14px;text-align:center;
+  transition: all 0.5s ease;
 }
-.stat h3{margin:5px 0;color:#ffd34d;}
+.stat h3{margin:5px 0;color:#ffd34d;transition: all 0.5s ease;}
 button{
   width:100%;padding:12px;margin-top:10px;border:none;
   border-radius:12px;cursor:pointer;font-weight:bold;
   background:linear-gradient(45deg,#1e5eff,#00c6ff);
   color:#fff;
+  transition: transform 0.2s ease, background 0.3s ease;
 }
+button:hover{transform: scale(1.05);}
 button.secondary{background:#1a1a1a;color:#ccc;}
 .hidden{display:none;}
 input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
@@ -65,6 +71,12 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
   border-radius:12px;
   margin-bottom:10px;
   box-shadow:0 0 12px rgba(0,0,0,.5);
+  transform: translateY(20px);
+  opacity: 0;
+  animation: fadeUp 0.5s forwards;
+}
+@keyframes fadeUp{
+  to{transform: translateY(0); opacity:1;}
 }
 .win{border-left:5px solid #4cff8f;}
 .loss{border-left:5px solid #ff6b6b;}
@@ -174,6 +186,13 @@ auth.onAuthStateChanged(async user=>{
     if(!doc.exists) return;
     const d = doc.data();
 
+    // Smooth stats animation
+    animateValue("rating", +document.getElementById("rating").innerText, d.rating||1000, 500);
+    animateValue("wins", +document.getElementById("wins").innerText, d.wins||0, 500);
+    animateValue("losses", +document.getElementById("losses").innerText, d.losses||0, 500);
+    const total = (d.wins||0)+(d.losses||0)+(d.draws||0);
+    animateValue("winRate", +document.getElementById("winRate").innerText.replace("%",""), total?Math.round((d.wins/total)*100):0,500,"%");
+
     document.getElementById("v_username").innerText = d.username || "—";
     document.getElementById("v_phone").innerText = d.phone || "—";
     document.getElementById("v_ownerId").innerText = d.ownerId || "—";
@@ -182,30 +201,30 @@ auth.onAuthStateChanged(async user=>{
     fbUrl = d.facebook || "";
     document.getElementById("fbLink").classList.toggle("hidden", !fbUrl);
 
-    const rating = d.rating || 1000;
-    const wins = d.wins || 0;
-    const losses = d.losses || 0;
-    const draws = d.draws || 0;
-
-    document.getElementById("rating").innerText = rating;
-    document.getElementById("wins").innerText = wins;
-    document.getElementById("losses").innerText = losses;
-
-    const total = wins + losses + draws;
-    const winRate = total ? Math.round((wins/total)*100) : 0;
-    document.getElementById("winRate").innerText = winRate + "%";
-
     document.getElementById("rankBadge").innerText =
-      rating>=2000?"👑 Legend":
-      rating>=1500?"🔥 Elite":
-      rating>=1000?"⭐ Pro":
-      rating>=500?"🥉 Rising":"Unranked";
+      d.rating>=2000?"👑 Legend":
+      d.rating>=1500?"🔥 Elite":
+      d.rating>=1000?"⭐ Pro":
+      d.rating>=500?"🥉 Rising":"Unranked";
 
-    let progressWidth = Math.min(100, (rating%500)/5);
+    let progressWidth = Math.min(100, (d.rating%500)/5);
     document.getElementById("progressBar").style.width = progressWidth + "%";
   });
 
 });
+
+// Animate number values
+function animateValue(id, start, end, duration, suffix=""){
+  const obj = document.getElementById(id);
+  let startTime = null;
+  function step(timestamp){
+    if(!startTime) startTime=timestamp;
+    const progress = Math.min((timestamp-startTime)/duration,1);
+    obj.innerText = Math.floor(start + (end-start)*progress) + suffix;
+    if(progress<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 
 // EDIT PROFILE
 function toggleEdit(edit){
@@ -222,7 +241,6 @@ function saveProfile(){
   }).then(()=>{
     const msgDiv = document.getElementById("msg");
     msgDiv.innerHTML = "<div class='success'>Profile Updated</div>";
-    msgDiv.firstChild.style.opacity = 0;
     msgDiv.firstChild.animate([{opacity:0},{opacity:1},{opacity:0}],{duration:1500,easing:"ease"});
     toggleEdit(false);
   });
@@ -297,4 +315,4 @@ async function loadMatchHistory(){
 </script>
 
 </body>
-  </html>
+</html>
