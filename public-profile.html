@@ -38,12 +38,10 @@ body{
   padding:25px 30px;
   backdrop-filter:blur(12px);
   box-shadow:0 0 40px rgba(0,247,255,.35),0 0 20px rgba(255,215,0,.25);
-  animation:fadeIn 0.8s ease;
 }
-@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 header{text-align:center;margin-bottom:20px;}
-header img{width:100px; filter:drop-shadow(0 0 20px var(--gold));}
-h1{margin:10px 0;color:var(--gold); text-shadow:0 0 15px var(--gold);}
+header img{width:100px;}
+h1{margin:10px 0;color:var(--gold);}
 .rank-badge{
   display:inline-block;
   margin-top:10px;
@@ -52,7 +50,6 @@ h1{margin:10px 0;color:var(--gold); text-shadow:0 0 15px var(--gold);}
   background:rgba(27,20,0,.7);
   color:var(--gold);
   font-weight:700;
-  box-shadow:0 0 10px var(--neon);
 }
 .card{margin-top:20px;background:rgba(255,255,255,.05);padding:20px;border-radius:20px;}
 .row{margin-bottom:14px;}
@@ -69,11 +66,6 @@ h1{margin:10px 0;color:var(--gold); text-shadow:0 0 15px var(--gold);}
   padding:12px;
   border-radius:14px;
   text-align:center;
-  transition:.3s;
-}
-.stat-box:hover{
-  transform:scale(1.05);
-  box-shadow:0 0 12px var(--neon);
 }
 .stat-title{font-size:12px;color:#aaa;}
 .stat-value{font-size:18px;font-weight:700;margin-top:4px;}
@@ -82,6 +74,13 @@ h1{margin:10px 0;color:var(--gold); text-shadow:0 0 15px var(--gold);}
   background:rgba(0,0,0,.3);
   padding:15px;
   border-radius:20px;
+}
+select{
+  padding:6px 10px;
+  border-radius:10px;
+  background:#000;
+  color:#FFD700;
+  border:1px solid #FFD700;
 }
 table{
   width:100%;
@@ -94,7 +93,6 @@ th,td{
   border-bottom:1px solid rgba(255,255,255,.2);
 }
 th{color:var(--gold);}
-tr:nth-child(even){background:rgba(255,255,255,.05);}
 .result-badge{
   padding:4px 10px;
   border-radius:12px;
@@ -109,10 +107,7 @@ footer{
   text-align:center;
   font-size:13px;
   color:var(--gold);
-  font-weight:700;
-  opacity:.8;
 }
-footer a{color:var(--neon); text-decoration:none; font-weight:700;}
 </style>
 </head>
 
@@ -140,6 +135,11 @@ footer a{color:var(--neon); text-decoration:none; font-weight:700;}
 </div>
 
 <div class="chart-container">
+  <div style="text-align:right;margin-bottom:10px;">
+    <select id="seasonFilter">
+      <option value="all">All Seasons</option>
+    </select>
+  </div>
   <canvas id="ratingChart" height="200"></canvas>
 </div>
 
@@ -161,13 +161,12 @@ footer a{color:var(--neon); text-decoration:none; font-weight:700;}
 </div>
 
 <footer>
-  Design by <a href="#">SI Shohan</a> | © 2026 AFNS Elite Strikers
+  © 2026 AFNS Elite Strikers
 </footer>
 
 </div>
 
 <script>
-// Firebase Init
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
@@ -175,188 +174,164 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-// Get Player ID
 const params = new URLSearchParams(location.search);
 const playerId = params.get("id");
-
 if(!playerId){
   document.getElementById("app").innerHTML="<h2 style='text-align:center'>Invalid Profile</h2>";
   throw new Error("Missing ID");
 }
 
-/* ===============================
-   PLAYER INFO + REALTIME RANK
-================================ */
+/* PLAYER INFO + RANK */
 db.collection("players").onSnapshot(snapshot=>{
-
-  let players = [];
+  let players=[];
   snapshot.forEach(doc=>{
-    const data = doc.data();
-    players.push({
-      id: doc.id,
-      rating: data.ratingAllTime || 1000
-    });
+    players.push({id:doc.id,rating:doc.data().ratingAllTime||1000});
   });
-
-  // Sort for Rank
-  players.sort((a,b)=> b.rating - a.rating);
-
-  const rankIndex = players.findIndex(p=> p.id===playerId);
-
-  if(rankIndex !== -1){
-    document.getElementById("rankBadge").innerText = "Rank #" + (rankIndex+1);
+  players.sort((a,b)=>b.rating-a.rating);
+  const rankIndex=players.findIndex(p=>p.id===playerId);
+  if(rankIndex!==-1){
+    document.getElementById("rankBadge").innerText="Rank #"+(rankIndex+1);
   }
-
 });
 
 db.collection("players").doc(playerId).onSnapshot(doc=>{
-
   if(!doc.exists){
     document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>";
     return;
   }
-
-  const d = doc.data();
-
-  document.getElementById("username").innerText = d.username || "Player";
-  document.getElementById("gameId").innerText = d.gameId || "—";
-  document.getElementById("device").innerText = d.deviceName || "—";
-
-  const rating = d.ratingAllTime || 1000;
-  document.getElementById("rating").innerText = rating;
-
-  const wins = d.wins || 0;
-  const losses = d.losses || 0;
-  const draws = d.draws || 0;
-
-  document.getElementById("wins").innerText = wins;
-  document.getElementById("losses").innerText = losses;
-  document.getElementById("draws").innerText = draws;
-
-  const total = wins + losses + draws;
-  document.getElementById("winrate").innerText =
-    total > 0 ? ((wins/total)*100).toFixed(1)+"%" : "0%";
-
-  // Facebook
-  const fb = document.getElementById("facebook");
-  if(d.facebook && d.facebook.startsWith("http")){
-    fb.href = d.facebook;
-    fb.innerText = "View Facebook Profile";
-  } else {
-    fb.innerText = "—";
-  }
-
+  const d=doc.data();
+  document.getElementById("username").innerText=d.username||"Player";
+  document.getElementById("gameId").innerText=d.gameId||"—";
+  document.getElementById("device").innerText=d.deviceName||"—";
+  document.getElementById("rating").innerText=d.ratingAllTime||1000;
+  document.getElementById("wins").innerText=d.wins||0;
+  document.getElementById("losses").innerText=d.losses||0;
+  document.getElementById("draws").innerText=d.draws||0;
 });
 
-/* ===============================
-   RECENT MATCHES (Player Only)
-================================ */
+/* RECENT MATCHES + CHART */
+const seasonFilter=document.getElementById("seasonFilter");
+let allMatches=[];
+
+const ctx=document.getElementById("ratingChart").getContext("2d");
+const ratingChart=new Chart(ctx,{
+  type:'line',
+  data:{labels:[],datasets:[{data:[],borderWidth:3,tension:.4,fill:false}]},
+  options:{
+    responsive:true,
+    animation:{duration:1200},
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        callbacks:{
+          label:function(context){
+            const raw=context.raw;
+            const sign=raw.change>0?"+":"";
+            return "Rating: "+raw.rating+" ("+sign+raw.change+")";
+          }
+        }
+      }
+    },
+    scales:{y:{beginAtZero:false}}
+  }
+});
+
+function updateSeasonOptions(){
+  const seasons=new Set();
+  allMatches.forEach(m=>{if(m.seasonId)seasons.add(m.seasonId);});
+  seasons.forEach(s=>{
+    if(!document.querySelector(`option[value="${s}"]`)){
+      const opt=document.createElement("option");
+      opt.value=s;
+      opt.innerText=s;
+      seasonFilter.appendChild(opt);
+    }
+  });
+}
+
+function updateChart(){
+  const selected=seasonFilter.value;
+  const labels=[];
+  const data=[];
+  allMatches.forEach(m=>{
+    if(selected!=="all"&&m.seasonId!==selected)return;
+    if(m.player1Id!==playerId&&m.player2Id!==playerId)return;
+
+    let after,before;
+    if(m.player1Id===playerId){
+      after=m.ratingAfter1;
+      before=m.ratingBefore1;
+    }else{
+      after=m.ratingAfter2;
+      before=m.ratingBefore2;
+    }
+    if(!after||!before)return;
+    const change=after-before;
+    labels.push(m.createdAt.toDate().toLocaleDateString());
+    data.push({rating:after,change:change});
+  });
+
+  ratingChart.data.labels=labels;
+  ratingChart.data.datasets[0].data=data;
+
+  if(data.length){
+    const last=data[data.length-1];
+    ratingChart.data.datasets[0].borderColor=
+      last.change>0?"#4cff8f":
+      last.change<0?"#ff4c4c":"#ffd166";
+  }
+
+  ratingChart.update();
+}
+
 db.collection("matches")
 .where("status","==","approved")
-.orderBy("createdAt","desc")
-.limit(20)
+.orderBy("createdAt","asc")
 .onSnapshot(snapshot=>{
+  allMatches=[];
+  snapshot.forEach(doc=>allMatches.push(doc.data()));
+  updateSeasonOptions();
+  updateChart();
 
-  const tbody = document.getElementById("matchesBody");
-  tbody.innerHTML = "";
-  let count = 0;
+  const tbody=document.getElementById("matchesBody");
+  tbody.innerHTML="";
+  let count=0;
 
-  snapshot.forEach(doc=>{
-    const m = doc.data();
-
-    if(m.player1Id !== playerId && m.player2Id !== playerId) return;
-
+  allMatches.slice().reverse().forEach(m=>{
+    if(m.player1Id!==playerId&&m.player2Id!==playerId)return;
+    if(count>=20)return;
     count++;
 
-    let opponent = "";
-    let result = "";
-    let badgeClass = "";
-
-    if(m.player1Id === playerId){
-      opponent = m.player2;
-      result = (m.winner === playerId) ? "Win" :
-               (m.winner === null) ? "Draw" : "Lose";
-    } else {
-      opponent = m.player1;
-      result = (m.winner === playerId) ? "Win" :
-               (m.winner === null) ? "Draw" : "Lose";
+    let opponent,result,badgeClass;
+    if(m.player1Id===playerId){
+      opponent=m.player2;
+      result=(m.winner===playerId)?"Win":
+             (m.winner===null)?"Draw":"Lose";
+    }else{
+      opponent=m.player1;
+      result=(m.winner===playerId)?"Win":
+             (m.winner===null)?"Draw":"Lose";
     }
+    badgeClass=result==="Win"?"result-win":
+               result==="Lose"?"result-lose":"result-draw";
 
-    badgeClass =
-      result==="Win" ? "result-win" :
-      result==="Lose" ? "result-lose" :
-      "result-draw";
+    const date=m.createdAt.toDate().toLocaleDateString();
 
-    const date = m.createdAt
-      ? m.createdAt.toDate().toLocaleDateString()
-      : "-";
-
-    tbody.innerHTML += `
+    tbody.innerHTML+=`
       <tr>
         <td>${date}</td>
-        <td>${opponent || "-"}</td>
+        <td>${opponent||"-"}</td>
         <td><span class="result-badge ${badgeClass}">${result}</span></td>
-        <td>${m.score || "-"}</td>
-      </tr>
-    `;
+        <td>${m.score||"-"}</td>
+      </tr>`;
   });
 
   if(count===0){
     tbody.innerHTML="<tr><td colspan='4'>No recent matches</td></tr>";
   }
-
 });
 
-/* ===============================
-   RATING CHART
-================================ */
-const ctx = document.getElementById("ratingChart").getContext("2d");
-
-const ratingChart = new Chart(ctx,{
-  type:'line',
-  data:{
-    labels:[],
-    datasets:[{
-      label:'Rating',
-      data:[],
-      borderColor:'#FFD700',
-      backgroundColor:'rgba(255,215,0,0.2)',
-      tension:0.4,
-      fill:true
-    }]
-  },
-  options:{
-    responsive:true,
-    plugins:{legend:{display:false}},
-    scales:{y:{beginAtZero:false}}
-  }
-});
-
-db.collection("ratingHistory")
-.where("playerId","==",playerId)
-.orderBy("timestamp","asc")
-.onSnapshot(snapshot=>{
-
-  const labels=[];
-  const data=[];
-
-  snapshot.forEach(doc=>{
-    const r = doc.data();
-    if(!r.timestamp) return;
-
-    const date = r.timestamp.seconds
-      ? new Date(r.timestamp.seconds*1000).toLocaleDateString()
-      : new Date(r.timestamp).toLocaleDateString();
-
-    labels.push(date);
-    data.push(r.rating);
-  });
-
-  ratingChart.data.labels = labels;
-  ratingChart.data.datasets[0].data = data;
-  ratingChart.update();
-
-});
-    </script>
+seasonFilter.addEventListener("change",updateChart);
+</script>
 </body>
 </html>
