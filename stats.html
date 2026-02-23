@@ -2,224 +2,151 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Submit Match | AFNS Elite Strikers</title>
+<title>AFNS Elite Strikers - Leaderboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-/* SAME DESIGN — untouched */
 :root{
-  --neon:#00f7ff;
-  --gold:#ffd700;
-  --bg1:#02060c;
-  --bg2:#0c1b2a;
-  --card:rgba(0,0,0,.65);
+  --gold:#FFD700; --silver:#C0C0C0; --bronze:#CD7F32;
+  --bg-dark:#010814; --card:#0c1b2a; --text:#ffffff; --hover:#0f2c4d;
 }
 body{
-  margin:0; min-height:100vh;
-  display:flex; justify-content:center; align-items:flex-start;
-  padding:30px;
-  background: radial-gradient(circle at top,var(--neon),transparent 40%),
-              radial-gradient(circle at bottom,var(--gold),transparent 40%),
-              linear-gradient(180deg,var(--bg2),var(--bg1));
-  font-family:Segoe UI,Arial,sans-serif; color:white;
+  margin:0; background:linear-gradient(180deg,#010814,#021b33);
+  font-family:Segoe UI,sans-serif; color:var(--text); text-align:center;
 }
-.container{
-  width:100%; max-width:450px; background:var(--card);
-  border-radius:20px; padding:25px 30px; margin-top:30px;
-  backdrop-filter:blur(12px);
-  box-shadow:0 0 40px rgba(0,247,255,.35),0 0 20px rgba(255,215,0,.25);
+h1{padding:15px;font-size:1.8rem;text-shadow:0 0 15px rgba(255,215,0,.6);}
+h2{margin-top:25px;color:#FFD700;}
+table{width:95%;margin:auto;border-collapse:collapse;margin-top:15px;overflow-x:auto;}
+th{background:#061423;padding:12px;color:white;}
+td{padding:10px;border-bottom:1px solid #112b45;}
+.rank1{background:#2a2100;color:var(--gold);}
+.rank2{background:#1c1c1c;color:var(--silver);}
+.rank3{background:#2b1600;color:var(--bronze);}
+button{margin:15px;padding:10px 22px;font-weight:bold;cursor:pointer;border:none;border-radius:5px;background:#FFD700;color:#020d1f;font-size:1rem;transition:0.2s;}
+button:hover{background:#e6c200;}
+.player-link{color:white;text-decoration:none;}
+.player-link:hover{color:#FFD700;}
+.section{margin-top:40px;}
+tr{opacity:0;transform:translateY(20px);animation:fadeSlide .5s forwards;}
+@keyframes fadeSlide{to{opacity:1;transform:translateY(0);}}
+@media(max-width:600px){
+  th,td{font-size:0.85rem;padding:8px;}
+  h1{font-size:1.5rem;}
+  button{font-size:0.9rem;padding:8px 16px;}
 }
-h2{text-align:center;color:var(--gold);}
-label{display:block;margin-top:12px;font-weight:700;}
-input,select,button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:12px;}
-input,select{background:#021420;color:#fff;}
-button{background:linear-gradient(90deg,var(--neon),#008cff);color:#000;font-weight:900;cursor:pointer;}
-.msg{margin-top:14px;text-align:center;font-weight:700;font-size:14px;min-height:20px;}
-.error{color:#ff6b6b;}
-.success{color:#4cff8f;}
-.searchBox{position:relative;}
-.dropdown{position:absolute;width:100%;background:#1a2438;max-height:150px;overflow-y:auto;border-radius:8px;z-index:1000;}
-.dropdown div{padding:10px;cursor:pointer;}
-.dropdown div:hover{background:var(--neon);color:black;}
 </style>
 </head>
-
 <body>
 
-<div class="container">
-<h2>Submit Match</h2>
+<h1>🏆 AFNS Elite Strikers</h1>
+<h2 id="seasonTitle"></h2>
+<button id="toggleBtn">Switch to All Time</button>
 
-<label>Player 1</label>
-<div class="searchBox">
-<input type="text" id="player1" onkeyup="filterPlayers('player1')" autocomplete="off">
-<div class="dropdown" id="player1List"></div>
+<div class="section">
+<h2 id="rankingTitle">Season Ranking</h2>
+<table>
+<thead>
+<tr>
+<th>Rank</th><th>Player</th><th>Win</th><th>Loss</th><th>Draw</th><th>Rating</th>
+</tr>
+</thead>
+<tbody id="rankingBody">
+<tr><td colspan="6">Loading...</td></tr>
+</tbody>
+</table>
 </div>
 
-<label>Player 2</label>
-<div class="searchBox">
-<input type="text" id="player2" onkeyup="filterPlayers('player2')" autocomplete="off">
-<div class="dropdown" id="player2List"></div>
-</div>
-
-<label>Score (e.g., 3-2)</label>
-<input type="text" id="score">
-
-<label>Match Type</label>
-<select id="matchType" onchange="toggleTournament()">
-<option value="friendly">Friendly</option>
-<option value="tournament">Tournament</option>
-</select>
-
-<div id="tournamentBox" style="display:none;">
-<label>Tournament Name</label>
-<input type="text" id="tournamentName">
-</div>
-
-<button id="submitBtn" onclick="submitMatch()">Submit Match</button>
-<div id="message" class="msg"></div>
+<div class="section">
+<h2>Recent Matches</h2>
+<table>
+<thead><tr><th>Date</th><th>Player A</th><th>Player B</th><th>Winner</th></tr></thead>
+<tbody id="matchBody">
+<tr><td colspan="4">Loading...</td></tr>
+</tbody>
+</table>
 </div>
 
 <script>
 firebase.initializeApp({
-apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-authDomain:"afnsclub.firebaseapp.com",
-projectId:"afnsclub"
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+const db = firebase.firestore();
+const rankingBody=document.getElementById("rankingBody");
+const matchBody=document.getElementById("matchBody");
+const toggleBtn=document.getElementById("toggleBtn");
+const seasonTitle=document.getElementById("seasonTitle");
+const rankingTitle=document.getElementById("rankingTitle");
+let mode="season"; let unsubscribeRanking=null;
+
+function getSeasonIndex(month){if(month>=8) return 3;if(month>=4) return 2; return 1;}
+function getCurrentSeasonId(){const now=new Date(); return now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());}
+function seasonName(seasonId){
+  const parts=seasonId.split("-"); const year=parts[0]; const s=parts[1];
+  if(s==="S1") return year+" Season 1 (Jan-Apr)";
+  if(s==="S2") return year+" Season 2 (May-Aug)";
+  return year+" Season 3 (Sep-Dec)";
+}
+
+function loadRanking(){
+  if(unsubscribeRanking) unsubscribeRanking();
+  rankingBody.innerHTML="<tr><td colspan='6'>Loading...</td></tr>";
+  let query=db.collection("players");
+  if(mode==="season"){
+    const currentSeason=getCurrentSeasonId();
+    seasonTitle.innerText="Current Season: "+seasonName(currentSeason);
+    rankingTitle.innerText="Season Ranking";
+    query=query.where("seasonId","==",currentSeason).orderBy("ratingSeason","desc");
+  } else {
+    seasonTitle.innerText="All Time Leaderboard";
+    rankingTitle.innerText="All Time Ranking";
+    query=query.orderBy("ratingAllTime","desc");
+  }
+  unsubscribeRanking=query.onSnapshot(snapshot=>{
+    rankingBody.innerHTML="";
+    if(snapshot.empty){rankingBody.innerHTML="<tr><td colspan='6'>No players found</td></tr>";return;}
+    let rank=1;
+    snapshot.forEach(doc=>{
+      const p=doc.data();
+      let className=rank===1?"rank1":rank===2?"rank2":rank===3?"rank3":"";
+      const rating=mode==="season"?p.ratingSeason||0:p.ratingAllTime||0;
+      rankingBody.innerHTML+=`<tr class="${className}" style="animation-delay:${rank*0.08}s">
+        <td>${rank}</td>
+        <td><a class="player-link" href="player-dashboard.html?id=${doc.id}">${p.username||"-"}</a></td>
+        <td>${p.wins||0}</td><td>${p.losses||0}</td><td>${p.draws||0}</td>
+        <td>${rating}</td>
+      </tr>`;
+      rank++;
+    });
+  });
+}
+
+toggleBtn.onclick=function(){
+  mode=mode==="season"?"alltime":"season";
+  toggleBtn.innerText=mode==="season"?"Switch to All Time":"Switch to Season";
+  loadRanking();
+}
+
+/* Recent Matches */
+db.collection("matches").orderBy("createdAt","desc").limit(50).onSnapshot(snapshot=>{
+  matchBody.innerHTML="";
+  if(snapshot.empty){matchBody.innerHTML="<tr><td colspan='4'>No matches found</td></tr>";return;}
+  snapshot.forEach(doc=>{
+    const m=doc.data();
+    const date=m.createdAt?m.createdAt.toDate().toLocaleDateString():"-";
+    matchBody.innerHTML+=`<tr style="animation-delay:0.05s">
+      <td>${date}</td>
+      <td>${m.player1||"-"}</td>
+      <td>${m.player2||"-"}</td>
+      <td>${m.winner||"Draw"}</td>
+    </tr>`;
+  });
 });
 
-const auth=firebase.auth();
-const db=firebase.firestore();
-
-let allPlayers=[];
-let playerMap={}; // username -> docId
-
-/* Season Helper */
-function getSeasonIndex(month){
-if(month>=8) return 3;
-if(month>=4) return 2;
-return 1;
-}
-function getCurrentSeasonId(){
-const now=new Date();
-return now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());
-}
-
-/* Auth */
-auth.onAuthStateChanged(user=>{
-if(!user) location.href="login.html";
-else loadPlayers();
-});
-
-/* Load Players with doc ID */
-async function loadPlayers(){
-const snap=await db.collection("players").get();
-snap.forEach(doc=>{
-const data=doc.data();
-const username=data.username||doc.id;
-allPlayers.push(username);
-playerMap[username]=doc.id;
-});
-}
-
-/* Search */
-function filterPlayers(type){
-const input=document.getElementById(type);
-const list=document.getElementById(type+"List");
-const value=input.value.toLowerCase();
-list.innerHTML="";
-if(value.length<1) return;
-allPlayers.filter(name=>name.toLowerCase().includes(value)).slice(0,10)
-.forEach(name=>{
-const div=document.createElement("div");
-div.textContent=name;
-div.onclick=()=>{input.value=name;list.innerHTML="";};
-list.appendChild(div);
-});
-}
-
-function toggleTournament(){
-document.getElementById("tournamentBox").style.display=
-document.getElementById("matchType").value==="tournament"?"block":"none";
-}
-
-/* Submit */
-async function submitMatch(){
-const btn=document.getElementById("submitBtn");
-const msg=document.getElementById("message");
-btn.disabled=true;
-msg.innerHTML="";
-
-const user=auth.currentUser;
-const p1=document.getElementById("player1").value.trim();
-const p2=document.getElementById("player2").value.trim();
-const score=document.getElementById("score").value.trim();
-const type=document.getElementById("matchType").value;
-const tName=document.getElementById("tournamentName").value.trim();
-
-if(!p1||!p2||!score){
-msg.innerHTML="<span class='error'>All fields required!</span>";
-btn.disabled=false; return;
-}
-if(p1===p2){
-msg.innerHTML="<span class='error'>Players cannot be same!</span>";
-btn.disabled=false; return;
-}
-if(!allPlayers.includes(p1)||!allPlayers.includes(p2)){
-msg.innerHTML="<span class='error'>Invalid player name!</span>";
-btn.disabled=false; return;
-}
-if(!/^\d+-\d+$/.test(score)){
-msg.innerHTML="<span class='error'>Invalid score format!</span>";
-btn.disabled=false; return;
-}
-if(type==="tournament"&&!tName){
-msg.innerHTML="<span class='error'>Tournament name required!</span>";
-btn.disabled=false; return;
-}
-
-const parts=score.split("-").map(Number);
-let winner=null, loser=null, resultType="draw";
-
-if(parts[0]>parts[1]){winner=p1; loser=p2; resultType="win";}
-else if(parts[1]>parts[0]){winner=p2; loser=p1; resultType="win";}
-
-/* Prevent duplicate match */
-const duplicateCheck=await db.collection("matches")
-.where("player1","in",[p1,p2])
-.where("player2","in",[p1,p2])
-.where("score","==",score)
-.get();
-
-if(!duplicateCheck.empty){
-msg.innerHTML="<span class='error'>Duplicate match detected!</span>";
-btn.disabled=false; return;
-}
-
-/* Save */
-await db.collection("matches").add({
-player1:p1,
-player2:p2,
-player1Id:playerMap[p1],
-player2Id:playerMap[p2],
-score,
-winner,
-loser,
-resultType,
-seasonId:getCurrentSeasonId(),
-matchType:type,
-tournamentName:type==="tournament"?tName:null,
-submittedBy:user.email,
-status:"pending",
-createdAt:firebase.firestore.FieldValue.serverTimestamp()
-});
-
-msg.innerHTML="<span class='success'>Match submitted for approval!</span>";
-setTimeout(()=>location.reload(),1500);
-}
+loadRanking();
 </script>
-
 </body>
 </html>
