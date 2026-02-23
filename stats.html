@@ -1,8 +1,15 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>AFNS Elite Strikers | Realtime Leaderboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- Firebase 9 Compat --><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script><!-- Chart.js --><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Firebase 9 Compat -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
 :root{
   --gold:#FFD700;
   --silver:#C0C0C0;
@@ -26,8 +33,20 @@ table{width:100%;border-collapse:collapse;margin-top:15px;}th,td{padding:12px;te
 .chart-container{position:relative;width:100%;max-width:800px;margin-top:20px;}
 .h2h-table{width:100%;margin-top:15px;border-collapse:collapse;}
 .h2h-table th, .h2h-table td{padding:10px;border:1px solid rgba(255,255,255,.2);text-align:center;}
-</style></head><body>
-<h1>🏆 AFNS Elite Strikers</h1><div class="container">
+.autocomplete-suggestions{
+  position:absolute; background:#0c1b2a; max-height:150px; overflow-y:auto; border-radius:5px; z-index:10;
+}
+.autocomplete-suggestions div{
+  padding:6px 10px; cursor:pointer; color:#fff;
+}
+.autocomplete-suggestions div:hover{background:rgba(0,247,255,.3);}
+.autocomplete-wrapper{position:relative; flex:1;}
+</style>
+</head>
+<body>
+<h1>🏆 AFNS Elite Strikers</h1>
+
+<div class="container">
   <h2 id="seasonTitle">Season Ranking</h2>
   <button id="toggleBtn">Switch to All Time</button>
   <table>
@@ -43,14 +62,24 @@ table{width:100%;border-collapse:collapse;margin-top:15px;}th,td{padding:12px;te
     </thead>
     <tbody id="rankingBody"><tr><td colspan="6">Loading...</td></tr></tbody>
   </table>
-</div><div class="container">
+</div>
+
+<div class="container">
   <h2>Player Rating Graph</h2>
   <div class="chart-container"><canvas id="ratingChart"></canvas></div>
-</div><div class="container">
+</div>
+
+<div class="container">
   <h2>Head-to-Head Comparison</h2>
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
-    <input type="text" id="playerA" placeholder="Player A" />
-    <input type="text" id="playerB" placeholder="Player B" />
+    <div class="autocomplete-wrapper">
+      <input type="text" id="playerA" placeholder="Player A" autocomplete="off"/>
+      <div class="autocomplete-suggestions" id="suggestionsA" style="display:none;"></div>
+    </div>
+    <div class="autocomplete-wrapper">
+      <input type="text" id="playerB" placeholder="Player B" autocomplete="off"/>
+      <div class="autocomplete-suggestions" id="suggestionsB" style="display:none;"></div>
+    </div>
     <button onclick="loadH2H()">Compare</button>
   </div>
   <table class="h2h-table" id="h2hTable">
@@ -65,15 +94,18 @@ table{width:100%;border-collapse:collapse;margin-top:15px;}th,td{padding:12px;te
     </thead>
     <tbody><tr><td colspan="5">Enter players to see H2H matches</td></tr></tbody>
   </table>
-</div><script>
+</div>
+
+<script>
 firebase.initializeApp({apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",authDomain:"afnsclub.firebaseapp.com",projectId:"afnsclub"});
 const db=firebase.firestore();
 const rankingBody=document.getElementById("rankingBody"),toggleBtn=document.getElementById("toggleBtn"),seasonTitle=document.getElementById("seasonTitle");
-let mode="season",ratingChart=null;
+let mode="season",ratingChart=null,playerList=[];
 
-function getSeasonIndex(month){if(month>=8)return 3;if(month>=4)return 2;return 1;}
-function getCurrentSeasonId(){const now=new Date();return now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());}
-function seasonName(seasonId){const parts=seasonId.split("-");const year=parts[0],s=parts[1];if(s==="S1")return year+" Season 1 (Jan-Apr)";if(s==="S2")return year+" Season 2 (May-Aug)";return year+" Season 3 (Sep-Dec)";}
+// --- Load player list for autocomplete ---
+db.collection("players").get().then(snapshot=>{
+  snapshot.forEach(doc=>playerList.push(doc.data().username));
+});
 
 // --- Real-time Leaderboard ---
 db.collection("players").orderBy("ratingAllTime","desc").onSnapshot(snapshot=>{
@@ -121,5 +153,28 @@ function loadH2H(){
     if(count===1) tbody.innerHTML="<tr><td colspan='5'>No matches found between these players</td></tr>";
   });
 }
-</script></body>
+
+// --- Autocomplete ---
+function setupAutocomplete(inputId,suggestionsId){
+  const input=document.getElementById(inputId);
+  const suggestionBox=document.getElementById(suggestionsId);
+  input.addEventListener("input",()=>{
+    const val=input.value.trim().toLowerCase();
+    suggestionBox.innerHTML="";
+    if(!val){suggestionBox.style.display="none";return;}
+    const matches=playerList.filter(p=>p.toLowerCase().startsWith(val)).slice(0,5);
+    matches.forEach(p=>{
+      const div=document.createElement("div");
+      div.textContent=p;
+      div.onclick=()=>{input.value=p;suggestionBox.style.display="none";}
+      suggestionBox.appendChild(div);
+    });
+    suggestionBox.style.display=matches.length? "block":"none";
+  });
+  input.addEventListener("blur",()=>{setTimeout(()=>{suggestionBox.style.display="none";},100);});
+}
+setupAutocomplete("playerA","suggestionsA");
+setupAutocomplete("playerB","suggestionsB");
+</script>
+</body>
 </html>
