@@ -173,91 +173,161 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
-const db=firebase.firestore();
+const db = firebase.firestore();
 
-// Player ID
-const params=new URLSearchParams(location.search);
-const playerId=params.get("id");
+// Get Player ID
+const params = new URLSearchParams(location.search);
+const playerId = params.get("id");
+
 if(!playerId){
   document.getElementById("app").innerHTML="<h2 style='text-align:center'>Invalid Profile</h2>";
-  throw new Error("ID Missing");
+  throw new Error("Missing ID");
 }
 
-/* --- PLAYER INFO --- */
+/* ===============================
+   PLAYER INFO + REALTIME RANK
+================================ */
+db.collection("players").onSnapshot(snapshot=>{
+
+  let players = [];
+  snapshot.forEach(doc=>{
+    const data = doc.data();
+    players.push({
+      id: doc.id,
+      rating: data.ratingAllTime || 1000
+    });
+  });
+
+  // Sort for Rank
+  players.sort((a,b)=> b.rating - a.rating);
+
+  const rankIndex = players.findIndex(p=> p.id===playerId);
+
+  if(rankIndex !== -1){
+    document.getElementById("rankBadge").innerText = "Rank #" + (rankIndex+1);
+  }
+
+});
+
 db.collection("players").doc(playerId).onSnapshot(doc=>{
+
   if(!doc.exists){
     document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>";
     return;
   }
-  const d=doc.data();
-  document.getElementById("username").innerText=d.username||"Player";
-  document.getElementById("gameId").innerText=d.gameId||"—";
-  document.getElementById("device").innerText=d.device||"—";
-  document.getElementById("rating").innerText=d.rating||1000;
 
-  const wins=d.wins||0, losses=d.losses||0, draws=d.draws||0;
-  document.getElementById("wins").innerText=wins;
-  document.getElementById("losses").innerText=losses;
-  document.getElementById("draws").innerText=draws;
-  const total=wins+losses+draws;
-  document.getElementById("winrate").innerText=total>0?((wins/total)*100).toFixed(1)+"%":"0%";
+  const d = doc.data();
 
+  document.getElementById("username").innerText = d.username || "Player";
+  document.getElementById("gameId").innerText = d.gameId || "—";
+  document.getElementById("device").innerText = d.deviceName || "—";
+
+  const rating = d.ratingAllTime || 1000;
+  document.getElementById("rating").innerText = rating;
+
+  const wins = d.wins || 0;
+  const losses = d.losses || 0;
+  const draws = d.draws || 0;
+
+  document.getElementById("wins").innerText = wins;
+  document.getElementById("losses").innerText = losses;
+  document.getElementById("draws").innerText = draws;
+
+  const total = wins + losses + draws;
+  document.getElementById("winrate").innerText =
+    total > 0 ? ((wins/total)*100).toFixed(1)+"%" : "0%";
+
+  // Facebook
+  const fb = document.getElementById("facebook");
   if(d.facebook && d.facebook.startsWith("http")){
-    const fb=document.getElementById("facebook");
-    fb.href=d.facebook; fb.innerText="View Facebook Profile";
+    fb.href = d.facebook;
+    fb.innerText = "View Facebook Profile";
   } else {
-    document.getElementById("facebook").innerText="—";
+    fb.innerText = "—";
   }
+
 });
 
-/* --- RANK --- */
-db.collection("players").orderBy("rating","desc").get().then(snapshot=>{
-  let rank=1;
-  snapshot.forEach(doc=>{
-    if(doc.id===playerId){
-      document.getElementById("rankBadge").innerText="Rank #"+rank;
-    }
-    rank++;
-  });
-});
-
-/* --- RECENT MATCHES WITH BADGES --- */
+/* ===============================
+   RECENT MATCHES (Player Only)
+================================ */
 db.collection("matches")
 .where("status","==","approved")
 .orderBy("createdAt","desc")
-.limit(10)
+.limit(20)
 .onSnapshot(snapshot=>{
-  const tbody=document.getElementById("matchesBody");
-  tbody.innerHTML="";
+
+  const tbody = document.getElementById("matchesBody");
+  tbody.innerHTML = "";
+  let count = 0;
+
   snapshot.forEach(doc=>{
-    const m=doc.data();
-    let opponent="", result="", badgeClass="";
-    if(m.player1Id===playerId){opponent=m.player2; result=(m.winner===playerId)?"Win":(m.winner===null?"Draw":"Lose");}
-    else if(m.player2Id===playerId){opponent=m.player1; result=(m.winner===playerId)?"Win":(m.winner===null?"Draw":"Lose");}
-    else return;
+    const m = doc.data();
 
-    badgeClass=result==="Win"?"result-win":result==="Lose"?"result-lose":"result-draw";
-    const date=m.createdAt ? m.createdAt.toDate().toLocaleDateString() : "-";
+    if(m.player1Id !== playerId && m.player2Id !== playerId) return;
 
-    tbody.innerHTML+=`<tr>
-      <td>${date}</td>
-      <td>${opponent}</td>
-      <td><span class="result-badge ${badgeClass}">${result}</span></td>
-      <td>${m.score}</td>
-    </tr>`;
+    count++;
+
+    let opponent = "";
+    let result = "";
+    let badgeClass = "";
+
+    if(m.player1Id === playerId){
+      opponent = m.player2;
+      result = (m.winner === playerId) ? "Win" :
+               (m.winner === null) ? "Draw" : "Lose";
+    } else {
+      opponent = m.player1;
+      result = (m.winner === playerId) ? "Win" :
+               (m.winner === null) ? "Draw" : "Lose";
+    }
+
+    badgeClass =
+      result==="Win" ? "result-win" :
+      result==="Lose" ? "result-lose" :
+      "result-draw";
+
+    const date = m.createdAt
+      ? m.createdAt.toDate().toLocaleDateString()
+      : "-";
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${date}</td>
+        <td>${opponent || "-"}</td>
+        <td><span class="result-badge ${badgeClass}">${result}</span></td>
+        <td>${m.score || "-"}</td>
+      </tr>
+    `;
   });
-  if(tbody.innerHTML==="") tbody.innerHTML="<tr><td colspan='4'>No recent matches</td></tr>";
+
+  if(count===0){
+    tbody.innerHTML="<tr><td colspan='4'>No recent matches</td></tr>";
+  }
+
 });
 
-/* --- RATING CHART --- */
-const ctx=document.getElementById("ratingChart").getContext("2d");
-const ratingChart=new Chart(ctx,{
+/* ===============================
+   RATING CHART
+================================ */
+const ctx = document.getElementById("ratingChart").getContext("2d");
+
+const ratingChart = new Chart(ctx,{
   type:'line',
-  data:{labels:[],datasets:[{label:'Rating',data:[],borderColor:'#FFD700',backgroundColor:'rgba(255,215,0,0.2)',tension:0.4,fill:true}]},
+  data:{
+    labels:[],
+    datasets:[{
+      label:'Rating',
+      data:[],
+      borderColor:'#FFD700',
+      backgroundColor:'rgba(255,215,0,0.2)',
+      tension:0.4,
+      fill:true
+    }]
+  },
   options:{
     responsive:true,
-    plugins:{tooltip:{mode:'index',intersect:false}},
-    animation:{duration:1000,easing:'easeOutQuart'},
+    plugins:{legend:{display:false}},
     scales:{y:{beginAtZero:false}}
   }
 });
@@ -266,18 +336,27 @@ db.collection("ratingHistory")
 .where("playerId","==",playerId)
 .orderBy("timestamp","asc")
 .onSnapshot(snapshot=>{
-  const labels=[]; const data=[];
+
+  const labels=[];
+  const data=[];
+
   snapshot.forEach(doc=>{
-    const r=doc.data();
-    const ts=r.timestamp;
-    const date=ts.seconds ? new Date(ts.seconds*1000).toLocaleDateString() : new Date(ts).toLocaleDateString();
+    const r = doc.data();
+    if(!r.timestamp) return;
+
+    const date = r.timestamp.seconds
+      ? new Date(r.timestamp.seconds*1000).toLocaleDateString()
+      : new Date(r.timestamp).toLocaleDateString();
+
     labels.push(date);
     data.push(r.rating);
   });
-  ratingChart.data.labels=labels;
-  ratingChart.data.datasets[0].data=data;
+
+  ratingChart.data.labels = labels;
+  ratingChart.data.datasets[0].data = data;
   ratingChart.update();
+
 });
-</script>
+    </script>
 </body>
 </html>
