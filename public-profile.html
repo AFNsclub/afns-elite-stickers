@@ -9,7 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- Chart.js for Rating Graph -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -41,7 +41,6 @@ body{
   animation:fadeIn 0.8s ease;
 }
 @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-
 header{text-align:center;margin-bottom:20px;}
 header img{width:100px; filter:drop-shadow(0 0 20px var(--gold));}
 h1{margin:10px 0;color:var(--gold); text-shadow:0 0 15px var(--gold);}
@@ -126,7 +125,7 @@ footer a{color:var(--neon); text-decoration:none; font-weight:700;}
     <div class="stat-box"><div class="stat-title">Rating</div><div class="stat-value" id="rating">0</div></div>
     <div class="stat-box"><div class="stat-title">Wins</div><div class="stat-value" id="wins">0</div></div>
     <div class="stat-box"><div class="stat-title">Losses</div><div class="stat-value" id="losses">0</div></div>
-    <div class="stat-box"><div class="stat-title">Draw</div><div class="stat-value" id="draws">0</div></div>
+    <div class="stat-box"><div class="stat-title">Draws</div><div class="stat-value" id="draws">0</div></div>
     <div class="stat-box"><div class="stat-title">Win Rate</div><div class="stat-value" id="winrate">0%</div></div>
   </div>
 </div>
@@ -186,7 +185,12 @@ db.collection("players").doc(playerId).get().then(doc=>{
   const total=wins+losses+draws;
   document.getElementById("winrate").innerText=total>0?((wins/total)*100).toFixed(1)+"%":"0%";
 
-  if(d.facebook && d.facebook.startsWith("http")){const fb=document.getElementById("facebook"); fb.href=d.facebook; fb.innerText="View Facebook Profile";} else {document.getElementById("facebook").innerText="—";}
+  if(d.facebook && d.facebook.startsWith("http")){
+    const fb=document.getElementById("facebook");
+    fb.href=d.facebook; fb.innerText="View Facebook Profile";
+  } else {
+    document.getElementById("facebook").innerText="—";
+  }
 });
 
 /* Rank */
@@ -217,7 +221,7 @@ db.collection("matches").where("status","==","approved").orderBy("createdAt","de
   });
 });
 
-/* Rating History Graph + Realtime Update */
+/* Rating History Graph */
 const ctx=document.getElementById("ratingChart").getContext("2d");
 const ratingChart=new Chart(ctx,{
   type:'line',
