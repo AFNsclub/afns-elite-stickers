@@ -9,6 +9,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- Chart.js for Rating Graph -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 :root{
   --gold:#FFD700;
@@ -17,9 +20,7 @@
   --bg2:#021b33;
   --card:rgba(0,0,0,.65);
 }
-
 *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
-
 body{
   min-height:100vh;
   background:radial-gradient(circle at top,var(--bg2),var(--bg1));
@@ -29,9 +30,8 @@ body{
   align-items:flex-start;
   padding:30px;
 }
-
 .container{
-  max-width:500px;
+  max-width:600px;
   width:100%;
   background:var(--card);
   border-radius:20px;
@@ -40,7 +40,6 @@ body{
   box-shadow:0 0 40px rgba(0,247,255,.35),0 0 20px rgba(255,215,0,.25);
   animation:fadeIn 0.8s ease;
 }
-
 @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
 header{text-align:center;margin-bottom:20px;}
@@ -56,16 +55,14 @@ h1{margin:10px 0;color:var(--gold); text-shadow:0 0 15px var(--gold);}
   font-weight:700;
   box-shadow:0 0 10px var(--neon);
 }
-
 .card{margin-top:20px;background:rgba(255,255,255,.05);padding:20px;border-radius:20px;}
 .row{margin-bottom:14px;}
 .label{font-size:12px;color:#aaa;}
 .value{font-size:15px;font-weight:700;}
-
 .stats{
   margin-top:20px;
   display:grid;
-  grid-template-columns:repeat(2,1fr);
+  grid-template-columns:repeat(3,1fr);
   gap:12px;
 }
 .stat-box{
@@ -81,7 +78,24 @@ h1{margin:10px 0;color:var(--gold); text-shadow:0 0 15px var(--gold);}
 }
 .stat-title{font-size:12px;color:#aaa;}
 .stat-value{font-size:18px;font-weight:700;margin-top:4px;}
-
+.chart-container{
+  margin-top:30px;
+  background:rgba(0,0,0,.3);
+  padding:15px;
+  border-radius:20px;
+}
+table{
+  width:100%;
+  margin-top:20px;
+  border-collapse:collapse;
+}
+th,td{
+  padding:10px;
+  text-align:center;
+  border-bottom:1px solid rgba(255,255,255,.2);
+}
+th{color:var(--gold);}
+tr:nth-child(even){background:rgba(255,255,255,.05);}
 footer{
   margin-top:30px;
   text-align:center;
@@ -117,6 +131,27 @@ footer a{color:var(--neon); text-decoration:none; font-weight:700;}
   </div>
 </div>
 
+<div class="chart-container">
+  <canvas id="ratingChart" height="200"></canvas>
+</div>
+
+<div class="card">
+  <h3 style="color:var(--gold);margin-bottom:12px;">Recent Matches</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Opponent</th>
+        <th>Result</th>
+        <th>Score</th>
+      </tr>
+    </thead>
+    <tbody id="matchesBody">
+      <tr><td colspan="4">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
 <footer>
   Design by <a href="#">SI Shohan</a> | © 2026 AFNS Elite Strikers
 </footer>
@@ -133,57 +168,78 @@ firebase.initializeApp({
 const db=firebase.firestore();
 const params=new URLSearchParams(location.search);
 const playerId=params.get("id");
+if(!playerId){document.getElementById("app").innerHTML="<h2 style='text-align:center'>Invalid Profile</h2>"; throw new Error("ID Missing");}
 
-if(!playerId){
-  document.getElementById("app").innerHTML="<h2 style='text-align:center'>Invalid Profile</h2>";
-  throw new Error("ID Missing");
-}
-
-/* Load Player */
+/* Load Player Info */
 db.collection("players").doc(playerId).get().then(doc=>{
-  if(!doc.exists){
-    document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>";
-    return;
-  }
+  if(!doc.exists){document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>"; return;}
   const d=doc.data();
-
   document.getElementById("username").innerText=d.username||"Player";
   document.getElementById("gameId").innerText=d.gameId||"—";
   document.getElementById("device").innerText=d.device||"—";
   document.getElementById("rating").innerText=d.rating||1000;
 
-  const wins=d.wins||0;
-  const losses=d.losses||0;
-  const draws=d.draws||0;
-
+  const wins=d.wins||0, losses=d.losses||0, draws=d.draws||0;
   document.getElementById("wins").innerText=wins;
   document.getElementById("losses").innerText=losses;
   document.getElementById("draws").innerText=draws;
-
   const total=wins+losses+draws;
-  const winRate=total>0?((wins/total)*100).toFixed(1):0;
-  document.getElementById("winrate").innerText=winRate+"%";
+  document.getElementById("winrate").innerText=total>0?((wins/total)*100).toFixed(1)+"%":"0%";
 
-  if(d.facebook && d.facebook.startsWith("http")){
-    const fb=document.getElementById("facebook");
-    fb.href=d.facebook;
-    fb.innerText="View Facebook Profile";
-  }else{
-    document.getElementById("facebook").innerText="—";
-  }
+  if(d.facebook && d.facebook.startsWith("http")){const fb=document.getElementById("facebook"); fb.href=d.facebook; fb.innerText="View Facebook Profile";} else {document.getElementById("facebook").innerText="—";}
 });
 
-/* Calculate Rank */
-db.collection("players").orderBy("rating","desc").get().then(snapshot=>{
+/* Rank */
+db.collection("players").orderBy("rating","desc").onSnapshot(snapshot=>{
   let rank=1;
   snapshot.forEach(doc=>{
-    if(doc.id===playerId){
-      document.getElementById("rankBadge").innerText="Rank #"+rank;
-    }
+    if(doc.id===playerId){document.getElementById("rankBadge").innerText="Rank #"+rank;}
     rank++;
   });
 });
-</script>
 
+/* Recent Matches */
+db.collection("matches").where("status","==","approved").orderBy("createdAt","desc").limit(10).onSnapshot(snapshot=>{
+  const tbody=document.getElementById("matchesBody");
+  tbody.innerHTML="";
+  snapshot.forEach(doc=>{
+    const m=doc.data();
+    let opponent="";
+    if(m.player1Id===playerId){opponent=m.player2;} else if(m.player2Id===playerId){opponent=m.player1;}
+    const result=(m.winner===playerId)?"Win":(m.winner===null?"Draw":"Lose");
+    const date=m.createdAt?m.createdAt.toDate().toLocaleDateString():"-";
+    tbody.innerHTML+=`<tr>
+      <td>${date}</td>
+      <td>${opponent}</td>
+      <td>${result}</td>
+      <td>${m.score}</td>
+    </tr>`;
+  });
+});
+
+/* Rating History Graph + Realtime Update */
+const ctx=document.getElementById("ratingChart").getContext("2d");
+const ratingChart=new Chart(ctx,{
+  type:'line',
+  data:{labels:[],datasets:[{label:'Rating',data:[],borderColor:'#FFD700',backgroundColor:'rgba(255,215,0,0.2)',tension:0.4,fill:true}]},
+  options:{
+    responsive:true,
+    animation:{duration:1000,easing:'easeOutQuart'},
+    scales:{y:{beginAtZero:false}}
+  }
+});
+
+db.collection("ratingHistory").where("playerId","==",playerId).orderBy("timestamp","asc").onSnapshot(snapshot=>{
+  const labels=[]; const data=[];
+  snapshot.forEach(doc=>{
+    const r=doc.data();
+    labels.push(new Date(r.timestamp.seconds*1000).toLocaleDateString());
+    data.push(r.rating);
+  });
+  ratingChart.data.labels=labels;
+  ratingChart.data.datasets[0].data=data;
+  ratingChart.update();
+});
+</script>
 </body>
 </html>
