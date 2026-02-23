@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Player Dashboard | AFNS Elite</title>
+<title>AFNS Player Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -10,28 +10,66 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{margin:0;font-family:Segoe UI,sans-serif;background:linear-gradient(180deg,#010814,#021b33);color:white;text-align:center;}
-.container{max-width:700px;margin:auto;padding:20px;}
-h1,h2{margin:10px;}
-canvas{background:#0c1b2a;border-radius:15px;padding:10px;}
-.match-history{margin-top:20px;text-align:left;}
-.match-card{background:#0f2545;padding:12px;border-radius:12px;margin-bottom:10px;box-shadow:0 0 12px rgba(0,0,0,.5);}
-.win{border-left:5px solid #4cff8f;}
-.loss{border-left:5px solid #ff6b6b;}
-.draw{border-left:5px solid #ffd700;}
-.small{font-size:12px;color:#aaa;margin-top:4px;}
+:root{
+  --gold:#FFD700;
+  --silver:#C0C0C0;
+  --bronze:#CD7F32;
+  --bg-dark:#010814;
+  --card:#0c1b2a;
+  --text:#ffffff;
+  --neon:#00f7ff;
+}
+body{margin:0;font-family:Segoe UI,sans-serif;background:linear-gradient(180deg,#010814,#021b33);color:var(--text);}
+.container{max-width:900px;margin:auto;padding:20px;}
+.card{background:var(--card);border-radius:20px;padding:20px;margin:15px 0;box-shadow:0 0 25px rgba(0,247,255,.2);}
+h1,h2{text-align:center;margin:10px;}
+h1{color:var(--gold);text-shadow:0 0 15px rgba(255,215,0,.6);}
+.rating-box{font-size:2.5rem;font-weight:bold;padding:15px 30px;margin:15px auto;width:200px;background:#081a33;border-radius:15px;box-shadow:0 0 20px rgba(0,247,255,.3);transition:all 0.8s ease;text-align:center;}
+.up{color:#00ff88;}
+.down{color:#ff5555;}
+table{width:100%;border-collapse:collapse;margin-top:15px;}
+th,td{padding:10px;text-align:center;}
+th{background:#061423;}
+tr:nth-child(even){background:#081a33;}
+.player-link{color:white;text-decoration:none;}
+.player-link:hover{color:var(--gold);}
+.chart-container{position:relative;width:100%;height:300px;margin-top:20px;}
 </style>
 </head>
-<body>
 
+<body>
 <div class="container">
 <h1 id="playerName">Loading...</h1>
-<h2>Rating History</h2>
-<canvas id="ratingChart" height="200"></canvas>
 
-<div class="match-history">
-<h2>Recent Matches</h2>
-<div id="matchList"></div>
+<!-- Player Info -->
+<div class="card">
+<div>📧 Email: <span id="playerEmail">—</span></div>
+<div>📱 Phone: <span id="playerPhone">—</span></div>
+<div>💻 Device: <span id="playerDevice">—</span></div>
+<div>🌐 Facebook: <span id="playerFB" style="color:var(--neon);cursor:pointer;text-decoration:underline;">—</span></div>
+</div>
+
+<!-- Rating Box -->
+<div class="card">
+<h2>🔥 Current Rating</h2>
+<div class="rating-box" id="ratingBox">1000</div>
+</div>
+
+<!-- Rating History Graph -->
+<div class="card">
+<h2>📈 Rating History</h2>
+<div class="chart-container"><canvas id="ratingChart"></canvas></div>
+</div>
+
+<!-- Recent Matches -->
+<div class="card">
+<h2>📜 Recent Matches</h2>
+<table>
+<thead>
+<tr><th>Date</th><th>Opponent</th><th>Score</th><th>Result</th></tr>
+</thead>
+<tbody id="matchBody"><tr><td colspan="4">Loading...</td></tr></tbody>
+</table>
 </div>
 </div>
 
@@ -41,63 +79,109 @@ firebase.initializeApp({
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
-const db=firebase.firestore();
-const urlParams=new URLSearchParams(window.location.search);
-const playerId=urlParams.get("id");
 
-const playerName=document.getElementById("playerName");
-const matchList=document.getElementById("matchList");
+const db = firebase.firestore();
+const ratingBox = document.getElementById("ratingBox");
+const ratingChartCtx = document.getElementById("ratingChart").getContext("2d");
+const matchBody = document.getElementById("matchBody");
 
-async function loadPlayerData(){
-  const doc=await db.collection("players").doc(playerId).get();
-  if(!doc.exists){playerName.innerText="Player Not Found";return;}
-  const p=doc.data();
-  playerName.innerText=p.username||"-";
+function getQueryParam(param){const url=new URL(window.location.href);return url.searchParams.get(param);}
 
-  // Rating history
-  const ratings=[]; const dates=[];
-  const snaps=await db.collection("matches")
-    .where("status","==","approved")
-    .where("player1","==",p.username)
-    .orderBy("createdAt").get();
-  for(const d of snaps.docs){
-    const m=d.data();
-    ratings.push(m.ratingAfter1||1000);
-    dates.push(m.createdAt?.toDate().toLocaleDateString()||"");
+const playerId = getQueryParam("id");
+if(!playerId){alert("Player ID missing");}
+
+let currentRating = 1000;
+let ratingChart = new Chart(ratingChartCtx,{
+  type:'line',
+  data:{labels:[],datasets:[{label:'Rating',data:[],borderColor:'#00f7ff',backgroundColor:'rgba(0,247,255,0.2)',tension:0.3,fill:true,pointRadius:3}]},
+  options:{responsive:true,scales:{y:{beginAtZero:true}},plugins:{legend:{labels:{color:'#FFD700'}}}}
+});
+
+function updateRating(r){
+  ratingBox.classList.remove("up","down");
+  if(r>currentRating) ratingBox.classList.add("up");
+  else if(r<currentRating) ratingBox.classList.add("down");
+  let start = parseInt(ratingBox.innerText);
+  let end = r;
+  let duration = 1000;
+  let startTime = null;
+  function animate(timestamp){
+    if(!startTime) startTime=timestamp;
+    const progress=Math.min(1,(timestamp-startTime)/duration);
+    ratingBox.innerText = Math.round(start + (end-start)*progress);
+    if(progress<1) requestAnimationFrame(animate);
+    else ratingBox.innerText=end;
   }
-
-  const ctx=document.getElementById("ratingChart").getContext("2d");
-  new Chart(ctx,{type:"line",data:{labels:dates,datasets:[{
-    label:"Rating",data:ratings,fill:false,borderColor:"#FFD700",tension:0.3,pointBackgroundColor:"#00ff99"
-  }]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false}}}});
+  requestAnimationFrame(animate);
+  currentRating=r;
 }
 
-// Load matches
-async function loadMatchHistory(){
-  const doc=await db.collection("players").doc(playerId).get();
+// Load Player Info & Rating
+db.collection("players").doc(playerId).onSnapshot(doc=>{
   if(!doc.exists) return;
-  const username=doc.data().username;
-  const snap1=await db.collection("matches").where("player1","==",username).where("status","==","approved").get();
-  const snap2=await db.collection("matches").where("player2","==",username).where("status","==","approved").get();
-  const allMatches=[...snap1.docs,...snap2.docs].sort((a,b)=>{
-    const t1=a.data().createdAt?.toDate()?.getTime()||0;
-    const t2=b.data().createdAt?.toDate()?.getTime()||0;
-    return t2-t1;
-  });
-  matchList.innerHTML="";
-  if(allMatches.length===0){matchList.innerHTML="<div>No matches yet</div>";return;}
-  for(const m of allMatches){
-    const opponent=m.data().player1===username?m.data().player2:m.data().player1;
-    let cls="draw";
-    if(m.data().resultType==="win"){cls=m.data().winner===username?"win":"loss";}
-    matchList.innerHTML+=`<div class="match-card ${cls}">
-      <b>${m.data().resultType.toUpperCase()}</b> vs ${opponent} <br>
-      Score: ${m.data().score}<div class="small">${m.data().createdAt?.toDate().toLocaleString()||""}</div>
-    </div>`;
-  }
-}
+  const d = doc.data();
+  document.getElementById("playerName").innerText=d.username||"-";
+  document.getElementById("playerEmail").innerText=d.email||"-";
+  document.getElementById("playerPhone").innerText=d.phone||"-";
+  document.getElementById("playerDevice").innerText=d.deviceName||"-";
+  const fb = d.facebook||"";
+  const fbEl = document.getElementById("playerFB");
+  fbEl.innerText = fb? "View Profile":"—";
+  fbEl.onclick = ()=>{if(fb) window.open(fb,"_blank");};
 
-loadPlayerData(); loadMatchHistory();
+  const r = d.rating || 1000;
+  updateRating(r);
+
+  // Load Rating History Graph
+  db.collection("matches").where("status","==","approved")
+    .where("player1Id","==",playerId).orderBy("createdAt")
+    .onSnapshot(snap1=>{
+      db.collection("matches").where("status","==","approved")
+        .where("player2Id","==",playerId).orderBy("createdAt")
+        .onSnapshot(snap2=>{
+          const matches = [...snap1.docs,...snap2.docs].sort((a,b)=>{
+            return (a.data().createdAt?.toDate()||0) - (b.data().createdAt?.toDate()||0);
+          });
+          const labels=[], data=[];
+          let currentR=1000;
+          matches.forEach(m=>{
+            const match=m.data();
+            const val = match.player1Id===playerId?match.ratingAfter1:match.ratingAfter2||currentR;
+            currentR = val;
+            labels.push(match.createdAt?.toDate().toLocaleDateString()||"-");
+            data.push(currentR);
+          });
+          ratingChart.data.labels=labels;
+          ratingChart.data.datasets[0].data=data;
+          ratingChart.update();
+        });
+    });
+
+  // Load Recent Matches
+  db.collection("matches").where("status","==","approved")
+    .where("player1Id","==",playerId).orderBy("createdAt","desc")
+    .onSnapshot(snap1=>{
+      db.collection("matches").where("status","==","approved")
+        .where("player2Id","==",playerId).orderBy("createdAt","desc")
+        .onSnapshot(snap2=>{
+          const matches = [...snap1.docs,...snap2.docs].sort((a,b)=>{
+            return (b.data().createdAt?.toDate()||0) - (a.data().createdAt?.toDate()||0);
+          });
+          matchBody.innerHTML="";
+          if(matches.length===0){matchBody.innerHTML="<tr><td colspan='4'>No matches</td></tr>"; return;}
+          matches.forEach(m=>{
+            const match = m.data();
+            const opponent = match.player1Id===playerId?match.player2:match.player1;
+            const score = match.score||"-";
+            let result = "Draw";
+            if(match.winner){
+              result = match.winner===d.username?"Win":"Loss";
+            }
+            matchBody.innerHTML += `<tr><td>${match.createdAt?.toDate().toLocaleDateString()||"-"}</td><td>${opponent||"-"}</td><td>${score}</td><td>${result}</td></tr>`;
+          });
+        });
+    });
+});
 </script>
 </body>
 </html>
