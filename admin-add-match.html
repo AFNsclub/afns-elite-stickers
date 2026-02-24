@@ -1,118 +1,112 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Add Match Result</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<style>
-body{margin:0;font-family:Arial;background:#050b1e;color:#fff}
-.container{max-width:420px;margin:auto;padding:20px}
-.card{background:#0b1622;padding:18px;border-radius:16px}
-select,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none}
-button{background:#4f8cff;color:#fff;font-weight:bold}
-button[disabled]{background:#333}
-.msg{margin-top:12px}
-</style>
-</head>
-
+<title>AFNS Elite Leaderboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- Firebase --><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script><style>
+body{margin:0;font-family:Arial;background:radial-gradient(circle at top,#1a2f5c 0%,#0b1c33 40%,#1a0f1f 75%,#000 100%);color:#fff;}
+.container{max-width:900px;margin:auto;padding:20px;}
+header{text-align:center;margin-bottom:20px;}header img{width:80px;}
+table{width:100%;border-collapse:collapse;background:#0f2545;border-radius:12px;overflow:hidden;}
+th, td{padding:12px;text-align:center;border-bottom:1px solid #081a2e;}
+th{background:#081a2e;}
+tr:hover{background:rgba(255,255,255,0.05);}
+.highlight{background:linear-gradient(90deg,#ffd34d,#ff9800);color:#000;}
+.podium{background:linear-gradient(45deg,#ffd700,#ff6b00);font-weight:bold;}
+.badge{display:inline-block;padding:2px 8px;margin-left:4px;border-radius:12px;font-size:11px;color:#fff;}
+.badge-legend{background:#ffcc00;}
+.badge-elite{background:#ff3b3b;}
+.badge-pro{background:#4db8ff;}
+.badge-rising{background:#aaa;}
+.avatar{width:24px;height:24px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+.filter-btns{margin-bottom:12px;text-align:center;}
+.filter-btns button{margin:0 6px;padding:6px 14px;border-radius:20px;border:none;cursor:pointer;}
+.active-filter{background:#ffd700;color:#000;}
+</style></head>
 <body>
-
 <div class="container">
-<h1>⚔️ Add Match</h1>
-
-<div class="card">
-<select id="player1"></select>
-<select id="player2"></select>
-<select id="winner"></select>
-
-<button id="submitBtn" onclick="addMatch()">Submit Match</button>
-<div class="msg" id="msg"></div>
-</div>
-</div>
-
-<script>
-firebase.initializeApp({
-  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
-  authDomain:"afnsclub.firebaseapp.com",
-  projectId:"afnsclub"
-});
-
+<header>
+  <img src="logo.png" alt="AFNS Logo">
+  <h2>AFNS Elite Leaderboard</h2>
+</header><div class="filter-btns">
+<button onclick="setSeason('all')" id="s_all" class="active-filter">All Season</button>
+<button onclick="setSeason('S1')" id="s_S1">Season 1</button>
+<button onclick="setSeason('S2')" id="s_S2">Season 2</button>
+</div><table id="leaderboard">
+<thead>
+<tr>
+<th>Rank</th>
+<th>Player</th>
+<th>Rating</th>
+<th>Wins</th>
+<th>Losses</th>
+<th>Draws</th>
+<th>Win %</th>
+<th>Streak</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div><script>
+firebase.initializeApp({apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",authDomain:"afnsclub.firebaseapp.com",projectId:"afnsclub"});
 const auth=firebase.auth();
 const db=firebase.firestore();
-let CAN_ADD=false;
+let uid="",username="",currentSeason="all";
 
-/* 🔐 AUTH + PERMISSION */
-auth.onAuthStateChanged(async user=>{
-  if(!user){
-    location.href="admin-login.html";
-    return;
-  }
-
-  const admin=await db.collection("admins").doc(user.uid).get();
-  if(!admin.exists || !admin.data().permissions?.addMatch){
-    alert("Permission denied");
-    submitBtn.disabled=true;
-    return;
-  }
-
-  CAN_ADD=true;
+auth.onAuthStateChanged(user=>{
+  if(!user){location="login.html";return;}
+  uid=user.uid;
+  db.collection("players").doc(uid).get().then(snap=>{username=snap.data()?.username||user.email.split("@")[0];loadLeaderboard();});
 });
 
-/* LOAD PLAYERS */
-db.collection("players").get().then(snap=>{
-  snap.forEach(d=>{
-    const o=`<option value="${d.id}">${d.data().username}</option>`;
-    player1.innerHTML+=o;
-    player2.innerHTML+=o;
-    winner.innerHTML+=o;
-  });
-});
-
-/* ADD MATCH */
-async function addMatch(){
-  if(!CAN_ADD){
-    alert("Permission denied");
-    return;
-  }
-
-  if(player1.value===player2.value){
-    msg.innerHTML="❌ Same player";
-    return;
-  }
-
-  const win=winner.value;
-  const lose=win===player1.value?player2.value:player1.value;
-
-  const batch=db.batch();
-  const ref=db.collection("matches").doc();
-
-  batch.set(ref,{
-    player1:player1.value,
-    player2:player2.value,
-    winner:win,
-    result:"win",
-    time:firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  batch.update(db.collection("players").doc(win),{
-    wins:firebase.firestore.FieldValue.increment(1),
-    rating:firebase.firestore.FieldValue.increment(10)
-  });
-
-  batch.update(db.collection("players").doc(lose),{
-    losses:firebase.firestore.FieldValue.increment(1),
-    rating:firebase.firestore.FieldValue.increment(-5)
-  });
-
-  await batch.commit();
-  msg.innerHTML="✅ Match added";
+function setSeason(season){
+  currentSeason=season;
+  document.querySelectorAll(".filter-btns button").forEach(b=>b.classList.remove("active-filter"));
+  document.getElementById("s_"+season).classList.add("active-filter");
+  loadLeaderboard();
 }
-</script>
 
-</body>
-</html>
+async function loadLeaderboard(){
+  const tbody=document.querySelector("#leaderboard tbody");
+  tbody.innerHTML="<tr><td colspan='8'>Loading...</td></tr>";
+
+  const snap=await db.collection("players").get();
+  let players=snap.docs.map(d=>{
+    const p=d.data();
+    return {
+      username:p.username||"Unknown",
+      rating:p.rating||1000,
+      wins:p.wins||0,
+      losses:p.losses||0,
+      draws:p.draws||0,
+      streak:p.streak||0,
+      avatar:p.avatar||"avatar.png",
+      winRate:p.wins&&(p.wins+p.losses+p.draws)?Math.round(p.wins/(p.wins+p.losses+p.draws)*100):0
+    };
+  });
+
+  players.sort((a,b)=>b.rating-a.rating);
+  tbody.innerHTML="";
+  players.forEach((p,index)=>{
+    const tr=document.createElement("tr");
+    if(p.username===username) tr.classList.add("highlight");
+    let badge="";
+    if(p.rating>=2000) badge="<span class='badge badge-legend'>Legend</span>";
+    else if(p.rating>=1500) badge="<span class='badge badge-elite'>Elite</span>";
+    else if(p.rating>=1000) badge="<span class='badge badge-pro'>Pro</span>";
+    else badge="<span class='badge badge-rising'>Rising</span>";
+
+    tr.innerHTML=`
+      <td>${index<3?`🏆${index+1}`:index+1}</td>
+      <td><img src='${p.avatar}' class='avatar'>${p.username} ${badge}</td>
+      <td>${p.rating}</td>
+      <td>${p.wins}</td>
+      <td>${p.losses}</td>
+      <td>${p.draws}</td>
+      <td>${p.winRate}%</td>
+      <td>${p.streak>0?`🔥${p.streak}`:0}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+</script></body>
+  </html>
