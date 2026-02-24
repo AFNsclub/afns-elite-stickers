@@ -171,10 +171,9 @@ projectId:"afnsclub"
 
 const auth=firebase.auth();
 const db=firebase.firestore();
-
 let uid,username="",fbUrl="";
 let currentFilter="all",currentSeason="all";
-let chart=null;
+let chart;
 
 auth.onAuthStateChanged(async user=>{
 if(!user){location="login.html";return;}
@@ -185,20 +184,13 @@ let snap=await docRef.get();
 username=snap.data()?.username||user.email.split("@")[0];
 document.getElementById("v_email").innerText=user.email;
 
-docRef.onSnapshot(doc=>{
-const d=doc.data()||{};
-
-const ratingVal=Number(d.rating)||1000;
-const winsVal=Number(d.wins)||0;
-const lossVal=Number(d.losses)||0;
-const drawVal=Number(d.draws)||0;
-const total=winsVal+lossVal+drawVal;
-const winPercent=total?Math.round((winsVal/total)*100):0;
-
-animateValue("rating",Number(rating.innerText)||0,ratingVal,500);
-animateValue("wins",Number(wins.innerText)||0,winsVal,500);
-animateValue("losses",Number(losses.innerText)||0,lossVal,500);
-animateValue("winRate",Number(winRate.innerText.replace("%",""))||0,winPercent,500,"%");
+db.collection("players").doc(uid).onSnapshot(doc=>{
+const d=doc.data();
+animateValue("rating",+rating.innerText,d.rating||1000,500);
+animateValue("wins",+wins.innerText,d.wins||0,500);
+animateValue("losses",+losses.innerText,d.losses||0,500);
+const total=(d.wins||0)+(d.losses||0)+(d.draws||0);
+animateValue("winRate",+winRate.innerText.replace("%",""),total?Math.round((d.wins/total)*100):0,500,"%");
 
 v_username.innerText=d.username||"—";
 v_phone.innerText=d.phone||"—";
@@ -209,11 +201,11 @@ fbUrl=d.facebook||"";
 fbLink.classList.toggle("hidden",!fbUrl);
 
 rankBadge.innerText=
-ratingVal>=2000?"👑 Legend":
-ratingVal>=1500?"🔥 Elite":
-ratingVal>=1000?"⭐ Pro":"🥉 Rising";
+d.rating>=2000?"👑 Legend":
+d.rating>=1500?"🔥 Elite":
+d.rating>=1000?"⭐ Pro":"🥉 Rising";
 
-progressBar.style.width=Math.min(100,(ratingVal%500)/5)+"%";
+progressBar.style.width=Math.min(100,(d.rating%500)/5)+"%";
 });
 });
 
@@ -251,53 +243,31 @@ loadMatchHistory();
 async function loadMatchHistory(){
 matchList.innerHTML="Loading...";
 streakBox.innerHTML="";
-
 const snap1=await db.collection("matches")
 .where("player1","==",username)
 .where("status","==","approved").get();
-
 const snap2=await db.collection("matches")
 .where("player2","==",username)
 .where("status","==","approved").get();
 
-/* 🔥 Remove duplicates safely */
-const map=new Map();
-[...snap1.docs,...snap2.docs].forEach(d=>{
-map.set(d.id,d.data());
-});
+let all=[...snap1.docs,...snap2.docs]
+.sort((a,b)=>b.data().createdAt?.seconds-a.data().createdAt?.seconds);
 
-let all=[...map.values()]
-.sort((a,b)=>{
-const t1=a.createdAt?.seconds||0;
-const t2=b.createdAt?.seconds||0;
-return t2-t1;
-});
+if(!all.length){matchList.innerHTML="<div class='empty'>No matches</div>";return;}
 
-if(!all.length){
-matchList.innerHTML="<div class='empty'>No matches</div>";
-return;
-}
-
-let streak=0,maxStreak=0;
-let winData=[];
+let streak=0,maxStreak=0,winData=[];
 matchList.innerHTML="";
 
-all.forEach(m=>{
-
-if(currentSeason!=="all" && m.season!==currentSeason) return;
-
+all.forEach(d=>{
+const m=d.data();
+if(currentSeason!=="all"&&m.season!==currentSeason)return;
 const opponent=m.player1===username?m.player2:m.player1;
 
 let my=0,opp=0;
 if(m.score?.includes("-")){
 const s=m.score.split("-");
-if(m.player1===username){
-my=parseInt(s[0])||0;
-opp=parseInt(s[1])||0;
-}else{
-my=parseInt(s[1])||0;
-opp=parseInt(s[0])||0;
-}
+if(m.player1===username){my=parseInt(s[0]);opp=parseInt(s[1]);}
+else{my=parseInt(s[1]);opp=parseInt(s[0]);}
 }
 
 let result="DRAW",cls="draw";
@@ -305,18 +275,17 @@ if(my>opp){result="WIN";cls="win";streak++;maxStreak=Math.max(maxStreak,streak);
 else if(my<opp){result="LOSS";cls="loss";streak=0;}
 else{streak=0;}
 
-if(currentFilter!=="all" && currentFilter!==cls) return;
+if(currentFilter!=="all"&&currentFilter!==cls)return;
 
 const ratingChange=m.ratingChange?.[username]||0;
-
 matchList.innerHTML+=`
 <div class="match-card ${cls}">
 <b>${result}</b> vs ${opponent}<br>
-Score: ${m.score||"-"}
+Score: ${m.score}
 <div class="${ratingChange>=0?'rating-plus':'rating-minus'}">
 Rating ${ratingChange>=0?'+':''}${ratingChange}
 </div>
-<div class="small">${m.createdAt?.toDate()?.toLocaleString()||""}</div>
+<div class="small">${m.createdAt?.toDate().toLocaleString()||""}</div>
 </div>`;
 
 winData.push(cls==="win"?1:0);
@@ -324,49 +293,18 @@ winData.push(cls==="win"?1:0);
 
 streakBox.innerHTML="🔥 Winning Streak: "+maxStreak;
 
-/* Chart */
+// Update Chart
 const ctx=document.getElementById('winChart').getContext('2d');
-
 const labels=winData.map((_,i)=>i+1);
-const percentages=winData.map((v,i)=>{
-const total=i+1;
-const wins=winData.slice(0,i+1).reduce((a,b)=>a+b,0);
-return Math.round((wins/total)*100);
-});
-
+const data={labels, datasets:[{label:'Win %', data:winData.map((v,i)=>
+Math.round(winData.slice(0,i+1).reduce((a,b)=>a+b,0)/(i+1)*100)), borderColor:'#4cff8f', backgroundColor:'rgba(76,255,143,0.2)', tension:0.3}]};
 if(chart) chart.destroy();
-
-chart=new Chart(ctx,{
-type:'line',
-data:{
-labels,
-datasets:[{
-data:percentages,
-borderColor:'#4cff8f',
-backgroundColor:'rgba(76,255,143,0.2)',
-tension:0.3
-}]
-},
-options:{
-responsive:true,
-plugins:{legend:{display:false}},
-scales:{
-y:{
-min:0,
-max:100,
-ticks:{callback:v=>v+'%'}
-}
-}
-}
-});
+chart=new Chart(ctx,{type:'line',data,options:{responsive:true, plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
 }
 
 function logout(){auth.signOut().then(()=>location="login.html");}
 function openFb(){if(fbUrl)window.open(fbUrl,"_blank");}
-function toggleEdit(edit){
-viewBox.classList.toggle("hidden",edit);
-editBox.classList.toggle("hidden",!edit);
-}
+function toggleEdit(edit){viewBox.classList.toggle("hidden",edit);editBox.classList.toggle("hidden",!edit);}
 function saveProfile(){
 db.collection("players").doc(uid).update({
 phone:phone.value.trim(),
