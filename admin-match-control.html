@@ -162,23 +162,99 @@ async function submitMatch(){
 /* ===== ADMIN ACTIONS (APPROVE/REJECT/ROLLBACK) ===== */
 async function approveMatch(matchId){
   const matchRef=db.collection("matches").doc(matchId);
+
   await db.runTransaction(async tx=>{
-    const mSnap=await tx.get(matchRef);if(!mSnap.exists)throw "Match not found";
-    const m=mSnap.data();if(m.status==="approved")throw "Already approved";
-    const p1Ref=db.collection("players").doc(m.player1Id),p2Ref=db.collection("players").doc(m.player2Id);
-    const p1Snap=await tx.get(p1Ref),p2Snap=await tx.get(p2Ref);if(!p1Snap.exists||!p2Snap.exists)throw"Player missing";
-    let p1=p1Snap.data(),p2=p2Snap.data();p1.wins=p1.wins||0;p1.losses=p1.losses||0;p1.draws=p1.draws||0;
-    p2.wins=p2.wins||0;p2.losses=p2.losses||0;p2.draws=p2.draws||0;
-    let r1All=p1.ratingAllTime||1000,r2All=p2.ratingAllTime||1000,r1Season=p1.ratingSeason||1000,r2Season=p2.ratingSeason||1000;
-    const [s1,s2]=m.score.split("-").map(Number),K=m.matchType==="tournament"?48:32;
-    const calc=(rA,rB,scoreA)=> Math.round(rA+K*(scoreA-1/(1+Math.pow(10,(rB-rA)/400))));
-    let a1=0,a2=0;if(s1===s2){a1=a2=0.5;} else if(s1>s2){a1=1;a2=0;} else{a1=0;a2=1;}
-    const newAll1=calc(r1All,r2All,a1),newAll2=calc(r2All,r1All,a2),newSeason1=calc(r1Season,r2Season,a1),newSeason2=calc(r2Season,r1Season,a2);
-    if(s1===s2){p1.draws++;p2.draws++;}else if(s1>s2){p1.wins++;p2.losses++;}else{p2.wins++;p1.losses++;}
-    tx.update(p1Ref,{ratingAllTime:newAll1,ratingSeason:newSeason1,wins:p1.wins,losses:p1.losses,draws:p1.draws,badge:updateBadge(p1.wins)});
-    tx.update(p2Ref,{ratingAllTime:newAll2,ratingSeason:newSeason2,wins:p2.wins,losses:p2.losses,draws:p2.draws,badge:updateBadge(p2.wins)});
-    tx.update(matchRef,{status:"approved",ratingBefore1:r1All,ratingBefore2:r2All,ratingBeforeSeason1:r1Season,ratingBeforeSeason2:r2Season,ratingAfter1:newAll1,ratingAfter2:newAll2,approvedAt:firebase.firestore.FieldValue.serverTimestamp()});
-  }).then(()=>alert("Match Approved ✅")).catch(e=>alert("Error: "+e));
+    const mSnap=await tx.get(matchRef);
+    if(!mSnap.exists) throw "Match not found";
+
+    const m=mSnap.data();
+    if(m.status==="approved") throw "Already approved";
+
+    const p1Ref=db.collection("players").doc(m.player1Id);
+    const p2Ref=db.collection("players").doc(m.player2Id);
+
+    const p1Snap=await tx.get(p1Ref);
+    const p2Snap=await tx.get(p2Ref);
+
+    let p1=p1Snap.data();
+    let p2=p2Snap.data();
+
+    p1.wins=p1.wins||0;
+    p1.losses=p1.losses||0;
+    p1.draws=p1.draws||0;
+
+    p2.wins=p2.wins||0;
+    p2.losses=p2.losses||0;
+    p2.draws=p2.draws||0;
+
+    let r1All=p1.ratingAllTime||1000;
+    let r2All=p2.ratingAllTime||1000;
+
+    let r1Season=p1.ratingSeason||1000;
+    let r2Season=p2.ratingSeason||1000;
+
+    const [s1,s2]=m.score.split("-").map(Number);
+    const K=m.matchType==="tournament"?48:32;
+
+    const calc=(rA,rB,scoreA)=>
+      Math.round(rA+K*(scoreA-1/(1+Math.pow(10,(rB-rA)/400))));
+
+    let a1=0,a2=0;
+
+    if(s1===s2){ a1=a2=0.5; }
+    else if(s1>s2){ a1=1;a2=0; }
+    else{ a1=0;a2=1; }
+
+    const newAll1=calc(r1All,r2All,a1);
+    const newAll2=calc(r2All,r1All,a2);
+
+    const newSeason1=calc(r1Season,r2Season,a1);
+    const newSeason2=calc(r2Season,r1Season,a2);
+
+    if(s1===s2){
+      p1.draws++; p2.draws++;
+    }else if(s1>s2){
+      p1.wins++; p2.losses++;
+    }else{
+      p2.wins++; p1.losses++;
+    }
+
+    tx.update(p1Ref,{
+      ratingAllTime:newAll1,
+      ratingSeason:newSeason1,
+      wins:p1.wins,
+      losses:p1.losses,
+      draws:p1.draws,
+      badge:updateBadge(p1.wins)
+    });
+
+    tx.update(p2Ref,{
+      ratingAllTime:newAll2,
+      ratingSeason:newSeason2,
+      wins:p2.wins,
+      losses:p2.losses,
+      draws:p2.draws,
+      badge:updateBadge(p2.wins)
+    });
+
+    tx.update(matchRef,{
+      status:"approved",
+      ratingBefore1:r1All,
+      ratingBefore2:r2All,
+      ratingBeforeSeason1:r1Season,
+      ratingBeforeSeason2:r2Season,
+      ratingAfter1:newAll1,
+      ratingAfter2:newAll2,
+      approvedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      ratingChange:{
+        [m.player1]: newAll1-r1All,
+        [m.player2]: newAll2-r2All
+      }
+    });
+  });
+
+  alert("Match Approved ✅");
+}
 }
 
 async function rejectMatch(id){await db.collection("matches").doc(id).update({status:"rejected"});}
