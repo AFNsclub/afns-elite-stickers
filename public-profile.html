@@ -27,20 +27,18 @@ body{
   color:#fff;
   display:flex;
   justify-content:center;
-  align-items:flex-start;
   padding:30px;
 }
 .container{
-  max-width:600px;
+  max-width:650px;
   width:100%;
   background:var(--card);
   border-radius:20px;
   padding:25px 30px;
   backdrop-filter:blur(12px);
-  box-shadow:0 0 40px rgba(0,247,255,.35),0 0 20px rgba(255,215,0,.25);
+  box-shadow:0 0 40px rgba(0,247,255,.35);
 }
 header{text-align:center;margin-bottom:20px;}
-header img{width:100px;}
 h1{margin:10px 0;color:var(--gold);}
 .rank-badge{
   display:inline-block;
@@ -69,30 +67,7 @@ h1{margin:10px 0;color:var(--gold);}
 }
 .stat-title{font-size:12px;color:#aaa;}
 .stat-value{font-size:18px;font-weight:700;margin-top:4px;}
-.chart-container{
-  margin-top:30px;
-  background:rgba(0,0,0,.3);
-  padding:15px;
-  border-radius:20px;
-}
-select{
-  padding:6px 10px;
-  border-radius:10px;
-  background:#000;
-  color:#FFD700;
-  border:1px solid #FFD700;
-}
-table{
-  width:100%;
-  margin-top:20px;
-  border-collapse:collapse;
-}
-th,td{
-  padding:10px;
-  text-align:center;
-  border-bottom:1px solid rgba(255,255,255,.2);
-}
-th{color:var(--gold);}
+
 .result-badge{
   padding:4px 10px;
   border-radius:12px;
@@ -102,12 +77,10 @@ th{color:var(--gold);}
 .result-win{background:var(--win);}
 .result-lose{background:var(--lose);}
 .result-draw{background:var(--draw);}
-footer{
-  margin-top:30px;
-  text-align:center;
-  font-size:13px;
-  color:var(--gold);
-}
+table{width:100%;margin-top:20px;border-collapse:collapse;}
+th,td{padding:10px;text-align:center;border-bottom:1px solid rgba(255,255,255,.2);}
+th{color:var(--gold);}
+footer{text-align:center;margin-top:30px;font-size:13px;color:var(--gold);}
 </style>
 </head>
 
@@ -115,7 +88,6 @@ footer{
 <div class="container" id="app">
 
 <header>
-  <img src="logo.png" alt="Logo">
   <h1 id="username">Player</h1>
   <div class="rank-badge" id="rankBadge">Rank #--</div>
 </header>
@@ -123,7 +95,9 @@ footer{
 <div class="card">
   <div class="row"><div class="label">Game ID</div><div class="value" id="gameId">—</div></div>
   <div class="row"><div class="label">Device</div><div class="value" id="device">—</div></div>
-  <div class="row"><div class="label">Facebook</div><div class="value"><a id="facebook" target="_blank"></a></div></div>
+  <div class="row"><div class="label">Facebook</div>
+    <div class="value"><a id="facebook" target="_blank" style="color:#00f7ff;"></a></div>
+  </div>
 
   <div class="stats">
     <div class="stat-box"><div class="stat-title">Rating</div><div class="stat-value" id="rating">0</div></div>
@@ -132,15 +106,6 @@ footer{
     <div class="stat-box"><div class="stat-title">Draws</div><div class="stat-value" id="draws">0</div></div>
     <div class="stat-box"><div class="stat-title">Win Rate</div><div class="stat-value" id="winrate">0%</div></div>
   </div>
-</div>
-
-<div class="chart-container">
-  <div style="text-align:right;margin-bottom:10px;">
-    <select id="seasonFilter">
-      <option value="all">All Seasons</option>
-    </select>
-  </div>
-  <canvas id="ratingChart" height="200"></canvas>
 </div>
 
 <div class="card">
@@ -161,7 +126,7 @@ footer{
 </div>
 
 <footer>
-  Design by <a href="#">SI Shohan</a> | © 2026 AFNS Elite Strikers
+  © 2026 AFNS Elite Strikers
 </footer>
 
 </div>
@@ -177,11 +142,11 @@ const db = firebase.firestore();
 const params = new URLSearchParams(location.search);
 const playerId = params.get("id");
 if(!playerId){
-  document.getElementById("app").innerHTML="<h2 style='text-align:center'>Invalid Profile</h2>";
+  document.getElementById("app").innerHTML="<h2>Invalid Profile</h2>";
   throw new Error("Missing ID");
 }
 
-/* PLAYER INFO + RANK */
+/* Rank System */
 db.collection("players").onSnapshot(snapshot=>{
   let players=[];
   snapshot.forEach(doc=>{
@@ -194,128 +159,67 @@ db.collection("players").onSnapshot(snapshot=>{
   }
 });
 
+/* Player Info */
 db.collection("players").doc(playerId).onSnapshot(doc=>{
   if(!doc.exists){
-    document.getElementById("app").innerHTML="<h2 style='text-align:center'>Profile Not Found</h2>";
+    document.getElementById("app").innerHTML="<h2>Profile Not Found</h2>";
     return;
   }
   const d=doc.data();
+
   document.getElementById("username").innerText=d.username||"Player";
   document.getElementById("gameId").innerText=d.gameId||"—";
   document.getElementById("device").innerText=d.deviceName||"—";
-  document.getElementById("rating").innerText=d.ratingAllTime||1000;
+
+  // Smooth Rating Animation
+  animateValue("rating",0,d.ratingAllTime||1000,800);
+
   document.getElementById("wins").innerText=d.wins||0;
   document.getElementById("losses").innerText=d.losses||0;
   document.getElementById("draws").innerText=d.draws||0;
-});
 
-/* RECENT MATCHES + CHART */
-const seasonFilter=document.getElementById("seasonFilter");
-let allMatches=[];
+  const total=(d.wins||0)+(d.losses||0)+(d.draws||0);
+  const winrate=total?Math.round((d.wins/total)*100):0;
+  document.getElementById("winrate").innerText=winrate+"%";
 
-const ctx=document.getElementById("ratingChart").getContext("2d");
-const ratingChart=new Chart(ctx,{
-  type:'line',
-  data:{labels:[],datasets:[{data:[],borderWidth:3,tension:.4,fill:false}]},
-  options:{
-    responsive:true,
-    animation:{duration:1200},
-    plugins:{
-      legend:{display:false},
-      tooltip:{
-        callbacks:{
-          label:function(context){
-            const raw=context.raw;
-            const sign=raw.change>0?"+":"";
-            return "Rating: "+raw.rating+" ("+sign+raw.change+")";
-          }
-        }
-      }
-    },
-    scales:{y:{beginAtZero:false}}
+  if(d.facebook){
+    const fb=document.getElementById("facebook");
+    fb.href=d.facebook;
+    fb.innerText="Visit Profile";
   }
 });
 
-function updateSeasonOptions(){
-  const seasons=new Set();
-  allMatches.forEach(m=>{if(m.seasonId)seasons.add(m.seasonId);});
-  seasons.forEach(s=>{
-    if(!document.querySelector(`option[value="${s}"]`)){
-      const opt=document.createElement("option");
-      opt.value=s;
-      opt.innerText=s;
-      seasonFilter.appendChild(opt);
-    }
-  });
-}
-
-function updateChart(){
-  const selected=seasonFilter.value;
-  const labels=[];
-  const data=[];
-  allMatches.forEach(m=>{
-    if(selected!=="all"&&m.seasonId!==selected)return;
-    if(m.player1Id!==playerId&&m.player2Id!==playerId)return;
-
-    let after,before;
-    if(m.player1Id===playerId){
-      after=m.ratingAfter1;
-      before=m.ratingBefore1;
-    }else{
-      after=m.ratingAfter2;
-      before=m.ratingBefore2;
-    }
-    if(!after||!before)return;
-    const change=after-before;
-    labels.push(m.createdAt.toDate().toLocaleDateString());
-    data.push({rating:after,change:change});
-  });
-
-  ratingChart.data.labels=labels;
-  ratingChart.data.datasets[0].data=data;
-
-  if(data.length){
-    const last=data[data.length-1];
-    ratingChart.data.datasets[0].borderColor=
-      last.change>0?"#4cff8f":
-      last.change<0?"#ff4c4c":"#ffd166";
-  }
-
-  ratingChart.update();
-}
-
+/* Recent Matches */
 db.collection("matches")
 .where("status","==","approved")
-.orderBy("createdAt","asc")
+.orderBy("createdAt","desc")
+.limit(20)
 .onSnapshot(snapshot=>{
-  allMatches=[];
-  snapshot.forEach(doc=>allMatches.push(doc.data()));
-  updateSeasonOptions();
-  updateChart();
-
   const tbody=document.getElementById("matchesBody");
   tbody.innerHTML="";
   let count=0;
 
-  allMatches.slice().reverse().forEach(m=>{
-    if(m.player1Id!==playerId&&m.player2Id!==playerId)return;
-    if(count>=20)return;
+  snapshot.forEach(doc=>{
+    const m=doc.data();
+    if(m.player1Id!==playerId && m.player2Id!==playerId) return;
+
     count++;
 
     let opponent,result,badgeClass;
     if(m.player1Id===playerId){
       opponent=m.player2;
-      result=(m.winner===playerId)?"Win":
-             (m.winner===null)?"Draw":"Lose";
+      result=m.winner===playerId?"Win":
+             m.winner===null?"Draw":"Lose";
     }else{
       opponent=m.player1;
-      result=(m.winner===playerId)?"Win":
-             (m.winner===null)?"Draw":"Lose";
+      result=m.winner===playerId?"Win":
+             m.winner===null?"Draw":"Lose";
     }
+
     badgeClass=result==="Win"?"result-win":
                result==="Lose"?"result-lose":"result-draw";
 
-    const date=m.createdAt.toDate().toLocaleDateString();
+    const date=m.createdAt?.toDate().toLocaleDateString()||"-";
 
     tbody.innerHTML+=`
       <tr>
@@ -331,7 +235,21 @@ db.collection("matches")
   }
 });
 
-seasonFilter.addEventListener("change",updateChart);
+/* Smooth Counter */
+function animateValue(id,start,end,duration){
+  let startTime=null;
+  const element=document.getElementById(id);
+  function animation(currentTime){
+    if(!startTime) startTime=currentTime;
+    const progress=Math.min((currentTime-startTime)/duration,1);
+    element.innerText=Math.floor(progress*(end-start)+start);
+    if(progress<1){
+      requestAnimationFrame(animation);
+    }
+  }
+  requestAnimationFrame(animation);
+}
 </script>
+
 </body>
 </html>
