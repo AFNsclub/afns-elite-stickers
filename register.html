@@ -5,82 +5,36 @@
 <title>Create Account | AFNS Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase 9 Compat -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-:root{
-  --gold:#ffd700;
-  --neon:#00f7ff;
-  --bg1:#02060c;
-  --bg2:#0c1b2a;
-  --card:rgba(0,0,0,.65);
-}
-
+/* আপনার অরিজিনাল ডিজাইন হুবহু রাখা হয়েছে */
+:root{ --gold:#ffd700; --neon:#00f7ff; --bg1:#02060c; --bg2:#0c1b2a; --card:rgba(0,0,0,.65); }
 *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,Arial,sans-serif;}
-body{
-  min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px;
-  background: radial-gradient(circle at top,var(--neon),transparent 40%),
-              radial-gradient(circle at bottom,var(--gold),transparent 40%),
-              linear-gradient(180deg,var(--bg2),var(--bg1));
-  color:#fff;
-}
-
-.card{
-  width:100%; max-width:420px; padding:30px; border-radius:24px; background:var(--card);
-  backdrop-filter:blur(12px); box-shadow:0 0 40px rgba(0,247,255,.35),0 0 20px rgba(255,215,0,.25);
-  animation:fadeIn .8s ease;
-}
-
+body{ min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; background: radial-gradient(circle at top,var(--neon),transparent 40%), radial-gradient(circle at bottom,var(--gold),transparent 40%), linear-gradient(180deg,var(--bg2),var(--bg1)); color:#fff; overflow-x: hidden; }
+.card{ width:100%; max-width:420px; padding:30px; border-radius:24px; background:var(--card); backdrop-filter:blur(12px); box-shadow:0 0 40px rgba(0,247,255,.35),0 0 20px rgba(255,215,0,.25); animation:fadeIn .8s ease; position: relative; z-index: 2; }
 @keyframes fadeIn{from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)}}
-
 .logo{width:95px; display:block; margin:0 auto 15px; filter:drop-shadow(0 0 20px rgba(255,215,0,.6));}
 h2{text-align:center;color:var(--gold);margin-bottom:22px;font-size:22px;text-shadow:0 0 15px rgba(255,215,0,.6);}
-
 .input-group{position:relative;margin-bottom:14px;}
-input{
-  width:100%; padding:14px 15px; border:none; border-radius:14px;
-  background:#021420; color:#fff; font-size:15px; transition:.2s;
-}
-input:focus{box-shadow:0 0 10px var(--neon); transform:scale(1.02);}
-
-.toggle{
-  position:absolute; right:12px; top:50%; transform:translateY(-50%);
-  cursor:pointer; font-size:13px; color:var(--neon); font-weight:700;
-}
-
-button{
-  width:100%; padding:15px; border:none; border-radius:18px;
-  background:linear-gradient(90deg,var(--neon),#008cff); color:#000; font-size:17px; font-weight:900;
-  cursor:pointer; margin-top:10px; transition:.2s;
-}
+input{ width:100%; padding:14px 15px; border:none; border-radius:14px; background:#021420; color:#fff; font-size:15px; transition:.2s; border: 1px solid rgba(0,247,255,0.1); }
+input:focus{box-shadow:0 0 10px var(--neon); transform:scale(1.02); outline: none; border-color: var(--neon);}
+.toggle{ position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:13px; color:var(--neon); font-weight:700; z-index: 5;}
+button{ width:100%; padding:15px; border:none; border-radius:18px; background:linear-gradient(90deg,var(--neon),#008cff); color:#000; font-size:17px; font-weight:900; cursor:pointer; margin-top:10px; transition:.2s; }
 button:hover{box-shadow:0 0 15px var(--neon);}
 button:active{transform:scale(.96);}
 button:disabled{opacity:.6; cursor:not-allowed;}
-
 .msg{margin-top:14px; text-align:center; font-weight:700; font-size:14px; min-height:20px;}
 .error{color:#ff6b6b;}
 .success{color:#4cff8f;}
+.footer{ position:fixed; bottom:10px; width:100%; text-align:center; font-size:13px; color:var(--gold); font-weight:700; opacity:.8; z-index: 2;}
 
-.footer{
-  position:fixed; bottom:10px; width:100%; text-align:center; font-size:13px; color:var(--gold);
-  font-weight:700; opacity:.8;
-}
-
-.fire-bg{
-  position:fixed; bottom:0; left:0; width:100%; height:0;
-  background:radial-gradient(circle at center,#ffae00,#ff0000,transparent 70%);
-  animation:fireRise 2s ease-out forwards; z-index:1;
-}
+/* Effects */
+.fire-bg{ position:fixed; bottom:0; left:0; width:100%; height:0; background:radial-gradient(circle at center,#ffae00,#ff0000,transparent 70%); animation:fireRise 2s ease-out forwards; z-index:1; }
 @keyframes fireRise{0%{height:0;opacity:1}50%{height:70%;opacity:.9}100%{height:0;opacity:0}}
-
-.welcome{
-  position:fixed; top:40%; left:50%; transform:translate(-50%,-50%) scale(.5);
-  text-align:center; font-size:26px; font-weight:900; color:var(--gold);
-  opacity:0; animation:fadeInWelcome 2s forwards; z-index:3;
-}
+.welcome{ position:fixed; top:40%; left:50%; transform:translate(-50%,-50%) scale(.5); text-align:center; font-size:26px; font-weight:900; color:var(--gold); opacity:0; animation:fadeInWelcome 2s forwards; z-index:10; pointer-events: none; }
 @keyframes fadeInWelcome{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 </style>
 </head>
@@ -88,27 +42,25 @@ button:disabled{opacity:.6; cursor:not-allowed;}
 <body>
 
 <div class="card">
-  <img src="logo.png" class="logo">
+  <img src="logo.png" class="logo" alt="AFNS LOGO">
   <h2>Create Player Account</h2>
 
-  <div class="input-group"><input id="username" placeholder="Player Username"></div>
-  <div class="input-group"><input id="email" type="email" placeholder="Gmail"></div>
-  <div class="input-group"><input id="phone" placeholder="Mobile Number (BD)"></div>
+  <div class="input-group"><input id="username" placeholder="Player Username" autocomplete="off"></div>
+  <div class="input-group"><input id="email" type="email" placeholder="Gmail Address"></div>
+  <div class="input-group"><input id="phone" placeholder="Mobile Number (01xxxxxxxxx)"></div>
   <div class="input-group"><input id="facebook" placeholder="Facebook Profile Link"></div>
-  <div class="input-group"><input id="gameid" placeholder="Game / Owner ID"></div>
-  <div class="input-group"><input id="device" placeholder="Device Name"></div>
+  <div class="input-group"><input id="gameid" placeholder="In-Game Owner ID"></div>
+  <div class="input-group"><input id="device" placeholder="Your Device (e.g. iPhone 13)"></div>
   <div class="input-group">
-    <input id="password" type="password" placeholder="Password">
-    <span class="toggle" onclick="togglePassword()">Show</span>
+    <input id="password" type="password" placeholder="Password (Min 6 chars)">
+    <span class="toggle" id="eyeToggle" onclick="togglePassword()">Show</span>
   </div>
 
   <button id="createBtn" onclick="createAccount()">Create Account</button>
   <div id="message" class="msg"></div>
 </div>
 
-<div class="footer">
-  Design by SI Shohan | © 2026 AFNS Elite Strikers
-</div>
+<div class="footer">Design by SI Shohan | © 2026 AFNS Elite Strikers</div>
 
 <script>
 firebase.initializeApp({
@@ -120,155 +72,96 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const usernameInput = document.getElementById("username");
-const emailInput = document.getElementById("email");
-const phoneInput = document.getElementById("phone");
-const facebookInput = document.getElementById("facebook");
-const gameidInput = document.getElementById("gameid");
-const deviceInput = document.getElementById("device");
-const passwordInput = document.getElementById("password");
-const createBtn = document.getElementById("createBtn");
-const msg = document.getElementById("message");
+function togglePassword(){
+  const pass = document.getElementById("password");
+  const eye = document.getElementById("eyeToggle");
+  if(pass.type === "password"){
+    pass.type = "text";
+    eye.innerText = "Hide";
+  } else {
+    pass.type = "password";
+    eye.innerText = "Show";
+  }
+}
 
 function showMsg(text,type){
+  const msg = document.getElementById("message");
   msg.innerText=text;
   msg.className="msg "+type;
 }
 
-function togglePassword(){
-  passwordInput.type = passwordInput.type==="password"?"text":"password";
-}
-
-/* ===============================
-   AUTO SEASON SYSTEM
-================================ */
-
-function getSeasonIndex(month){
-  if(month>=8) return 3;
-  if(month>=4) return 2;
-  return 1;
-}
-
-async function ensureSeason(){
-  const now=new Date();
-  const seasonId = now.getFullYear()+"-S"+getSeasonIndex(now.getMonth());
-  const ref = db.collection("seasons").doc(seasonId);
-
-  const snap = await ref.get();
-  if(!snap.exists){
-    await ref.set({
-      seasonId,
-      active:true,
-      startedAt:firebase.firestore.FieldValue.serverTimestamp(),
-      baseRating:1000
-    });
-  }
-
-  return seasonId;
-}
-
-/* ===============================
-   ACCOUNT CREATE
-================================ */
-
 async function createAccount(){
-  createBtn.disabled=true;
-  showMsg("⏳ Creating account...","");
+  const createBtn = document.getElementById("createBtn");
+  const username = document.getElementById("username").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const facebook = document.getElementById("facebook").value.trim();
+  const gameid = document.getElementById("gameid").value.trim();
+  const device = document.getElementById("device").value.trim();
+  const password = document.getElementById("password").value.trim();
 
-  const username=usernameInput.value.trim();
-  const email=emailInput.value.trim();
-  const phone=phoneInput.value.trim();
-  const facebook=facebookInput.value.trim();
-  const gameid=gameidInput.value.trim();
-  const device=deviceInput.value.trim();
-  const password=passwordInput.value.trim();
-
+  // Validation
   if(!username||!email||!phone||!facebook||!gameid||!device||!password){
-    showMsg("⚠️ All fields required","error");
-    createBtn.disabled=false;
-    return;
+    return showMsg("⚠️ Please fill all fields!","error");
   }
-
   if(!phone.match(/^01[0-9]{9}$/)){
-    showMsg("❌ Invalid BD mobile number","error");
-    createBtn.disabled=false;
-    return;
+    return showMsg("❌ Invalid BD mobile number","error");
+  }
+  if(password.length < 6){
+    return showMsg("❌ Password must be 6+ chars","error");
   }
 
-  if(password.length<6){
-    showMsg("❌ Password minimum 6 characters","error");
-    createBtn.disabled=false;
-    return;
-  }
+  createBtn.disabled=true;
+  showMsg("⏳ Checking availability...","");
 
   try{
-
-    // Username unique check
+    // Username duplicate check (Crucial for search system)
     const check = await db.collection("players")
       .where("usernameLower","==",username.toLowerCase())
       .get();
 
     if(!check.empty){
-      showMsg("❌ Username already taken","error");
+      showMsg("❌ Username already taken!","error");
       createBtn.disabled=false;
       return;
     }
 
     // Create Auth User
-    const cred = await auth.createUserWithEmailAndPassword(email,password);
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
     const uid = cred.user.uid;
 
-    // Ensure Season
-    const seasonId = await ensureSeason();
-
-    // Auto badge
-    const initialRating = 1000;
-    let badge="🛡️ Rookie";
-    if(initialRating>=2000) badge="👑 Legend";
-    else if(initialRating>=1500) badge="🔥 Elite";
-    else if(initialRating>=1200) badge="🎖 Pro";
-
-    // Create Firestore Player Doc
+    // Create Firestore Doc
     await db.collection("players").doc(uid).set({
-      username,
-      usernameLower:username.toLowerCase(),
-      email,
-      phone,
-      facebook,
-      gameId:gameid,
-      device,
-      ratingSeason:initialRating,
-      ratingAllTime:initialRating,
-      wins:0,
-      losses:0,
-      draws:0,
-      badge,
-      seasonId,
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      username: username,
+      usernameLower: username.toLowerCase(), // Search এর জন্য এটি দরকার
+      email: email,
+      phone: phone,
+      facebook: facebook,
+      ownerId: gameid,
+      deviceName: device,
+      ratingSeason: 1000,
+      ratingAllTime: 1000,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      matchesPlayed: 0, // প্রোফাইল পেজের জন্য নতুন ফিল্ড
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    showMsg("✅ Account Created Successfully!","success");
+    showMsg("✅ Success! Welcome to the Elite.","success");
 
-    const fire=document.createElement("div");
-    fire.className="fire-bg";
-    document.body.appendChild(fire);
+    // Effects
+    const fire=document.createElement("div"); fire.className="fire-bg"; document.body.appendChild(fire);
+    const welcome=document.createElement("div"); welcome.className="welcome";
+    welcome.innerHTML="🔥 WELCOME "+username.toUpperCase()+" 🔥"; document.body.appendChild(welcome);
 
-    const welcome=document.createElement("div");
-    welcome.className="welcome";
-    welcome.innerHTML="🔥 Welcome "+username+" 🔥";
-    document.body.appendChild(welcome);
+    setTimeout(()=>{ window.location.href="player.html"; }, 2500);
 
-    setTimeout(()=>{window.location.href="player.html";},2500);
-
-  }catch(error){
-
-    // যদি Firestore fail করে → Auth user delete
-    if(auth.currentUser){
-      try{ await auth.currentUser.delete(); }catch(e){}
-    }
-
+  } catch(error){
     showMsg("❌ "+error.message,"error");
     createBtn.disabled=false;
+    // Cleanup if auth created but firestore failed
+    if(auth.currentUser) await auth.currentUser.delete();
   }
 }
 </script>
