@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>🛠 Admin Panel | AFNS Elite Strikers</title>
@@ -12,39 +12,38 @@
 :root { --neon: #00f7ff; --gold: #ffd700; --bg: #02060c; --card: rgba(13, 25, 41, 0.9); }
 body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
 .container { width: 100%; max-width: 750px; background: var(--card); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 0 30px rgba(0,0,0,0.5); }
-h2 { text-align: center; color: var(--gold); text-transform: uppercase; margin-bottom: 20px; }
+h2 { text-align: center; color: var(--gold); text-transform: uppercase; margin-bottom: 20px; letter-spacing: 2px; }
 .control-box { background: rgba(255, 215, 0, 0.05); border: 1px dashed var(--gold); padding: 20px; border-radius: 15px; margin-bottom: 30px; }
-.control-box label { font-size: 12px; color: var(--gold); font-weight: bold; display: block; margin-top: 10px; }
+.control-box label { font-size: 13px; color: var(--gold); font-weight: bold; display: block; margin-top: 10px; text-transform: uppercase; }
 .control-box input { background: rgba(0,0,0,0.3); color: #fff; border: 1px solid var(--gold); padding: 12px; border-radius: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; outline: none; }
 .btn-save { background: var(--gold); color: #000; width: 100%; padding: 14px; margin-top: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+.btn-save:hover { background: #fff; box-shadow: 0 0 15px var(--gold); }
 .match-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 5px solid var(--neon); }
 .match-info { font-size: 14px; margin-bottom: 10px; line-height: 1.6; }
-.btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
-button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-.btn-approve { background: #00ff99; color: #000; }
-.btn-delete { background: #ff4444; color: white; }
-#resultCanvas { display: none; }
+.match-info b { color: var(--neon); }
+.btn-group { display: flex; gap: 10px; }
+.btn-approve { background: #00ff99; color: #000; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border:none; flex:1; text-transform: uppercase; }
+.btn-delete { background: #ff4444; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border:none; flex:1; text-transform: uppercase; }
+.status-tag { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
 </style>
 </head>
 
 <body>
-
 <div class="container">
   <h2>🛠 Admin Control Center</h2>
   
   <div class="control-box">
     <h3 style="margin:0; color:var(--gold); text-align:center;">Tournament Settings</h3>
     <label>Current Tournament Name:</label>
-    <input type="text" id="tNameInput" placeholder="টুর্নামেন্টের নাম দিন">
-    <label>Players per Team:</label>
-    <input type="number" id="pLimitInput" placeholder="যেমন: 6">
+    <input type="text" id="tNameInput" placeholder="Enter tournament name">
+    <label>Players Per Team:</label>
+    <input type="number" id="pLimitInput" placeholder="e.g. 6">
     <button class="btn-save" id="saveSettingsBtn" onclick="updateSettings()">Save All Settings</button>
   </div>
 
-  <div id="adminMatchList">Loading Matches...</div>
+  <h3 style="color:var(--neon); border-bottom: 1px solid var(--neon); padding-bottom: 5px; margin-top: 30px;">Match Management</h3>
+  <div id="adminMatchList">Syncing matches...</div>
 </div>
-
-<canvas id="resultCanvas"></canvas>
 
 <script>
 const firebaseConfig = {
@@ -55,13 +54,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ১. সেটিংস আপডেট লজিক
+// 1. Update Settings Logic
 async function updateSettings() {
     const name = document.getElementById("tNameInput").value;
     const limit = document.getElementById("pLimitInput").value;
     const btn = document.getElementById("saveSettingsBtn");
 
-    if(!name || !limit) return alert("দয়া করে সব ফিল্ড পূরণ করুন!");
+    if(!name || !limit) return alert("Please fill all fields!");
 
     btn.disabled = true;
     btn.innerText = "Saving...";
@@ -72,16 +71,17 @@ async function updateSettings() {
             playerCount: parseInt(limit),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("✅ সেটিংস সফলভাবে সেভ হয়েছে!");
+        alert("✅ Settings updated successfully!");
     } catch (error) {
-        alert("❌ এরর: আপনার এই পারমিশন নেই। ডাটাবেসে আপনার রোল 'owner' অথবা 'permission' চেক করুন।");
+        console.error(error);
+        alert("❌ Permission Denied: Check your Admin role or Firebase Rules.");
     } finally {
         btn.disabled = false;
         btn.innerText = "Save All Settings";
     }
 }
 
-// অটোমেটিক সেটিংস লোড
+// Sync current settings
 db.collection("settings").doc("tournament").onSnapshot(doc => {
     if(doc.exists) {
         document.getElementById("tNameInput").value = doc.data().currentTournament || "";
@@ -89,7 +89,7 @@ db.collection("settings").doc("tournament").onSnapshot(doc => {
     }
 });
 
-// ২. ম্যাচ লিস্ট লোড
+// 2. Load Match List
 db.collection("matches").orderBy("createdAt", "desc").onSnapshot(snap => {
   const list = document.getElementById("adminMatchList");
   list.innerHTML = snap.empty ? "<p style='text-align:center; color:#666;'>No matches found.</p>" : "";
@@ -98,10 +98,13 @@ db.collection("matches").orderBy("createdAt", "desc").onSnapshot(snap => {
     const m = doc.data();
     const div = document.createElement("div");
     div.className = "match-card";
+    const statusColor = m.status === 'pending' ? '#ffcc00' : '#00ff99';
+
     div.innerHTML = `
       <div class="match-info">
-        <b>ID:</b> ${doc.id.substring(0,6)} | <b>Score:</b> <span style="font-size:18px; color:var(--gold)">${m.score}</span><br>
-        <b>Status:</b> ${m.status} | <b>Event:</b> ${m.tName}
+        <b>ID:</b> ${doc.id.substring(0,6)} | <b>Event:</b> ${m.tName || 'Friendly'}<br>
+        <b>Score:</b> <span style="font-size:18px; color:var(--gold)">${m.score}</span><br>
+        <b>Status:</b> <span class="status-tag" style="background:${statusColor}; color:#000">${m.status || 'unknown'}</span>
       </div>
       <div class="btn-group">
         ${m.status === 'pending' ? `<button class="btn-approve" onclick="approveMatch('${doc.id}')">Approve</button>` : ''}
@@ -112,43 +115,51 @@ db.collection("matches").orderBy("createdAt", "desc").onSnapshot(snap => {
   });
 });
 
+// 3. Approve Match Logic
 async function approveMatch(matchId) {
-  if(!confirm("Approve this match?")) return;
-  const matchRef = db.collection("matches").doc(matchId);
-  const mSnap = await matchRef.get();
-  const m = mSnap.data();
-  
-  const scores = m.score.split("-").map(Number);
-  let result = scores[0] > scores[1] ? "homeWin" : (scores[0] < scores[1] ? "awayWin" : "draw");
-
-  const updatePlayerStats = async (pName, isWinner, isDraw) => {
-    const pQuery = await db.collection("players").where("username", "==", pName).get();
-    if(!pQuery.empty) {
-      let ratingChange = isDraw ? 2 : (isWinner ? 15 : -10);
-      await pQuery.docs[0].ref.update({
-        wins: firebase.firestore.FieldValue.increment(isWinner && !isDraw ? 1 : 0),
-        losses: firebase.firestore.FieldValue.increment(!isWinner && !isDraw ? 1 : 0),
-        draws: firebase.firestore.FieldValue.increment(isDraw ? 1 : 0),
-        matchesPlayed: firebase.firestore.FieldValue.increment(1),
-        ratingAllTime: firebase.firestore.FieldValue.increment(ratingChange),
-        ratingSeason: firebase.firestore.FieldValue.increment(ratingChange)
-      });
-    }
-  };
+  if(!confirm("Are you sure? This will update player ratings.")) return;
 
   try {
+    const matchRef = db.collection("matches").doc(matchId);
+    const mSnap = await matchRef.get();
+    const m = mSnap.data();
+    
+    const scores = m.score.split("-").map(Number);
+    let result = scores[0] > scores[1] ? "homeWin" : (scores[0] < scores[1] ? "awayWin" : "draw");
+
+    const updatePlayer = async (pName, isWinner, isDraw) => {
+      const q = await db.collection("players").where("username", "==", pName).get();
+      if(!q.empty) {
+        let ratingChange = isDraw ? 2 : (isWinner ? 15 : -10);
+        await q.docs[0].ref.update({
+          wins: firebase.firestore.FieldValue.increment(isWinner && !isDraw ? 1 : 0),
+          losses: firebase.firestore.FieldValue.increment(!isWinner && !isDraw ? 1 : 0),
+          draws: firebase.firestore.FieldValue.increment(isDraw ? 1 : 0),
+          matchesPlayed: firebase.firestore.FieldValue.increment(1),
+          ratingAllTime: firebase.firestore.FieldValue.increment(ratingChange),
+          ratingSeason: firebase.firestore.FieldValue.increment(ratingChange)
+        });
+      }
+    };
+
     const half = Math.ceil(m.players.length / 2);
     for(let i=0; i<m.players.length; i++) {
         const isHome = i < half;
-        await updatePlayerStats(m.players[i], (isHome && result === "homeWin") || (!isHome && result === "awayWin"), result === "draw");
+        await updatePlayer(m.players[i], (isHome && result === "homeWin") || (!isHome && result === "awayWin"), result === "draw");
     }
+
     await matchRef.update({ status: "approved" });
-    alert("✅ Approved!");
-  } catch (e) { alert("❌ Error: " + e.message); }
+    alert("✅ Match Approved!");
+  } catch (e) {
+    alert("❌ Error: " + e.message);
+  }
 }
 
 async function deleteMatch(id) {
-  if(confirm("Delete this match?")) await db.collection("matches").doc(id).delete();
+  if(confirm("Permanently delete this match?")) {
+    await db.collection("matches").doc(id).delete();
+    alert("🗑 Match deleted.");
+  }
 }
 </script>
 </body>
