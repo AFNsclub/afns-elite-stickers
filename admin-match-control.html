@@ -45,6 +45,7 @@ button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 
 <canvas id="resultCanvas"></canvas>
 
 <script>
+// Firebase Initialization
 firebase.initializeApp({
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
@@ -52,6 +53,7 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
+// ১. সেটিংস আপডেট লজিক
 async function updateSettings() {
     const name = document.getElementById("tNameInput").value;
     const limit = document.getElementById("pLimitInput").value;
@@ -69,6 +71,7 @@ db.collection("settings").doc("tournament").onSnapshot(doc => {
     }
 });
 
+// ২. রিয়েলটাইম ম্যাচ লিস্ট লোড
 db.collection("matches").orderBy("createdAt", "desc").onSnapshot(snap => {
   const list = document.getElementById("adminMatchList");
   list.innerHTML = "";
@@ -80,7 +83,7 @@ db.collection("matches").orderBy("createdAt", "desc").onSnapshot(snap => {
       <div class="match-info">
         <b>ID:</b> ${doc.id.substring(0,6)} | <b>Event:</b> ${m.tName}<br>
         <b>Home:</b> ${m.hTeamName || m.players[0]} <br>
-        <b>Away:</b> ${m.aTeamName || (m.players[m.players.length/2])}<br>
+        <b>Away:</b> ${m.aTeamName || m.players[m.players.length-1]}<br>
         <b>Score:</b> <span style="font-size:18px; color:var(--gold)">${m.score}</span> | <b>Status:</b> ${m.status}
       </div>
       <div class="btn-group">
@@ -92,70 +95,85 @@ db.collection("matches").orderBy("createdAt", "desc").onSnapshot(snap => {
   });
 });
 
+// ৩. ম্যাচ এপ্রুভাল লজিক (পুরাতন ও নতুন সিস্টেমের সমন্বয়)
 async function approveMatch(matchId) {
-  if(!confirm("Approve this match? Stats will be updated.")) return;
+  if(!confirm("Approve this match? Stats and Ratings will be updated.")) return;
 
   const matchRef = db.collection("matches").doc(matchId);
   const mSnap = await matchRef.get();
   const m = mSnap.data();
   const scores = m.score.split("-").map(Number);
   
-  // রেজাল্ট ডিটেকশন
-  let result = "draw"; // 0 for draw, 1 for home win, 2 for away win
+  let result = "draw"; 
   if(scores[0] > scores[1]) result = "homeWin";
   if(scores[1] > scores[0]) result = "awayWin";
 
-  // হাফ-হাফ করে প্লেয়ার ভাগ করা (Home vs Away)
   const half = Math.ceil(m.players.length / 2);
   const homePlayers = m.players.slice(0, half);
   const awayPlayers = m.players.slice(half);
 
-  const updatePlayerStats = async (pName, isWinner, isDraw) => {
+  // প্রোফাইল পেজে রেটিং প্লাস-মাইনাস দেখানোর জন্য ট্র্যাকার
+  let ratingLogs = { rB1: 0, rA1: 0, rB2: 0, rA2: 0 };
+
+  const updatePlayerStats = async (pName, isWinner, isDraw, isHomeSide) => {
     const pQuery = await db.collection("players").where("username", "==", pName).get();
     if(!pQuery.empty) {
       const pDoc = pQuery.docs[0];
       const pRef = pDoc.ref;
+      const pData = pDoc.data();
+      
+      let currentRating = Number(pData.ratingAllTime) || 1000;
       let ratingChange = isDraw ? 2 : (isWinner ? 15 : -10);
+      let newRating = currentRating + ratingChange;
+
+      // রেটিং হিস্ট্রি লগার (পুরাতন ডাটা ফিল্ড সাপোর্ট)
+      if(isHomeSide) { ratingLogs.rB1 = currentRating; ratingLogs.rA1 = newRating; }
+      else { ratingLogs.rB2 = currentRating; ratingLogs.rA2 = newRating; }
       
       await pRef.update({
         wins: firebase.firestore.FieldValue.increment(isWinner && !isDraw ? 1 : 0),
         losses: firebase.firestore.FieldValue.increment(!isWinner && !isDraw ? 1 : 0),
         draws: firebase.firestore.FieldValue.increment(isDraw ? 1 : 0),
-        matchesPlayed: firebase.firestore.FieldValue.increment(1),
-        ratingAllTime: firebase.firestore.FieldValue.increment(ratingChange),
+        ratingAllTime: newRating,
         ratingSeason: firebase.firestore.FieldValue.increment(ratingChange)
       });
     }
   };
 
   try {
-    // হোম প্লেয়ার আপডেট
-    for(let p of homePlayers) await updatePlayerStats(p, result === "homeWin", result === "draw");
-    // অ্যাওয়ে প্লেয়ার আপডেট
-    for(let p of awayPlayers) await updatePlayerStats(p, result === "awayWin", result === "draw");
+    // প্লেয়ারদের আপডেট করা
+    for(let p of homePlayers) await updatePlayerStats(p, result === "homeWin", result === "draw", true);
+    for(let p of awayPlayers) await updatePlayerStats(p, result === "awayWin", result === "draw", false);
 
-    await matchRef.update({ status: "approved" });
+    // ম্যাচ ডকুমেন্টে রেটিং লগ সেভ করা যাতে প্রোফাইল পেজ সেটা পড়তে পারে
+    await matchRef.update({ 
+      status: "approved",
+      ratingBefore1: ratingLogs.rB1,
+      ratingAfter1: ratingLogs.rA1,
+      ratingBefore2: ratingLogs.rB2,
+      ratingAfter2: ratingLogs.rA2,
+      approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
     await generateAndSaveCard(matchId, m);
-    alert("Approved Successfully! Card Generated.");
+    alert("✅ Match Approved Successfully!");
   } catch (e) {
     alert("Error: " + e.message);
   }
 }
 
+// ৪. রেজাল্ট কার্ড জেনারেটর
 async function generateAndSaveCard(id, data) {
   const canvas = document.getElementById('resultCanvas');
   const ctx = canvas.getContext('2d');
   canvas.width = 1000; canvas.height = 600;
 
-  // Background Gradient
   const grad = ctx.createLinearGradient(0, 0, 0, 600);
   grad.addColorStop(0, '#051937');
   grad.addColorStop(1, '#000000');
   ctx.fillStyle = grad; ctx.fillRect(0,0,1000,600);
   
-  // Neon Border
   ctx.strokeStyle = '#00f7ff'; ctx.lineWidth = 10; ctx.strokeRect(20,20,960,560);
-
   ctx.fillStyle = '#ffd700'; ctx.font = 'bold 40px Arial'; ctx.textAlign = 'center';
   ctx.fillText(data.tName.toUpperCase(), 500, 100);
   
@@ -164,19 +182,20 @@ async function generateAndSaveCard(id, data) {
 
   ctx.font = 'bold 35px Arial';
   ctx.fillStyle = '#00f7ff';
-  ctx.textAlign = 'right'; ctx.fillText(data.hTeamName || data.players[0], 400, 310);
-  ctx.textAlign = 'left'; ctx.fillText(data.aTeamName || data.players[data.players.length-1], 600, 310);
+  ctx.textAlign = 'right'; ctx.fillText(data.hTeamName || data.players[0], 400, 320);
+  ctx.textAlign = 'left'; ctx.fillText(data.aTeamName || data.players[data.players.length-1], 600, 320);
 
   const cardImg = canvas.toDataURL("image/png");
   await db.collection("approved_results").doc(id).set({
     cardImage: cardImg,
-    expiresAt: Date.now() + (12 * 60 * 60 * 1000),
+    expiresAt: Date.now() + (24 * 60 * 60 * 1000), // ২৪ ঘণ্টা মেয়াদ
     tName: data.tName
   });
 }
 
+// ৫. ডিলিট ম্যাচ
 async function deleteMatch(id) {
-  if(confirm("Delete this match?")) {
+  if(confirm("Are you sure you want to delete this match record?")) {
     await db.collection("matches").doc(id).delete();
   }
 }
