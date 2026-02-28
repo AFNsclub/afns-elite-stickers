@@ -13,6 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+/* ====== SAME OLD CSS (UNCHANGED) ====== */
 :root{
   --gold:#FFD700;
   --silver:#C0C0C0;
@@ -104,6 +105,7 @@ tr:hover{background:rgba(0,0,0,.4);}
 
 <h1>🏆 AFNS Elite Strikers</h1>
 
+<!-- ================= LEADERBOARD ================= -->
 <div class="container">
   <h2 id="seasonTitle">Season Ranking</h2>
   <button id="toggleBtn">Switch to All Time</button>
@@ -125,6 +127,7 @@ tr:hover{background:rgba(0,0,0,.4);}
   </table>
 </div>
 
+<!-- ================= GRAPH ================= -->
 <div class="container">
   <h2>Player Rating Graph</h2>
   <div class="chart-container">
@@ -132,6 +135,7 @@ tr:hover{background:rgba(0,0,0,.4);}
   </div>
 </div>
 
+<!-- ================= H2H ================= -->
 <div class="container">
   <h2>Head-to-Head Comparison</h2>
 
@@ -147,6 +151,13 @@ tr:hover{background:rgba(0,0,0,.4);}
     </div>
 
     <button onclick="loadH2H()">Compare</button>
+
+    <!-- NEW BUTTON -->
+    <button onclick="goToComparePage()"
+    style="background:linear-gradient(90deg,#FFD700,#ff9800);color:#000;">
+    Open Full Compare Page
+    </button>
+
   </div>
 
   <table style="margin-top:15px;">
@@ -178,15 +189,22 @@ let mode="season";
 let cachedDocs=[];
 let ratingChart=null;
 let playerList=[];
+let playerMap={}; // NEW
 
 const rankingBody=document.getElementById("rankingBody");
 const toggleBtn=document.getElementById("toggleBtn");
 const seasonTitle=document.getElementById("seasonTitle");
 
+/* ===== GET PLAYERS WITH ID MAP ===== */
 db.collection("players").get().then(snap=>{
-  snap.forEach(doc=>playerList.push(doc.data().username));
+  snap.forEach(doc=>{
+    const username=doc.data().username;
+    playerList.push(username);
+    playerMap[username.toLowerCase()]=doc.id;
+  });
 });
 
+/* ===== REALTIME LEADERBOARD ===== */
 db.collection("players")
 .orderBy("ratingAllTime","desc")
 .onSnapshot(snapshot=>{
@@ -268,13 +286,11 @@ function loadGraph(){
         data:ratings
       }]
     },
-    options:{
-      responsive:true,
-      animation:{duration:1000}
-    }
+    options:{responsive:true}
   });
 }
 
+/* ===== OLD H2H FUNCTION (UNCHANGED) ===== */
 function loadH2H(){
   const a=document.getElementById("playerA").value.toLowerCase();
   const b=document.getElementById("playerB").value.toLowerCase();
@@ -320,6 +336,29 @@ function loadH2H(){
   });
 }
 
+/* ===== NEW REDIRECT FUNCTION ===== */
+function goToComparePage(){
+  const a=document.getElementById("playerA").value.toLowerCase();
+  const b=document.getElementById("playerB").value.toLowerCase();
+
+  if(!a||!b){
+    alert("Enter both players");
+    return;
+  }
+
+  const id1=playerMap[a];
+  const id2=playerMap[b];
+
+  if(!id1||!id2){
+    alert("Player not found");
+    return;
+  }
+
+  window.location.href=
+  `compare.html?p1=${id1}&p2=${id2}`;
+}
+
+/* ===== AUTOCOMPLETE (UNCHANGED) ===== */
 function setupAutocomplete(inputId,boxId){
   const input=document.getElementById(inputId);
   const box=document.getElementById(boxId);
@@ -353,7 +392,8 @@ function setupAutocomplete(inputId,boxId){
 
 setupAutocomplete("playerA","suggestionsA");
 setupAutocomplete("playerB","suggestionsB");
+
 </script>
 
 </body>
-  </html>
+</html>
