@@ -4,65 +4,221 @@
 <meta charset="UTF-8">
 <title>Match Results | AFNS Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
-:root { --neon: #00f7ff; --gold: #ffd700; --bg: #02060c; }
-body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; }
-header { padding: 40px; text-align: center; background: radial-gradient(circle, rgba(0,247,255,0.1), transparent); width: 100%; }
-.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; width: 90%; max-width: 1200px; padding: 20px; }
-.card { background: rgba(13,25,41,0.8); border-radius: 15px; border: 1px solid rgba(255,215,0,0.2); padding: 10px; transition: 0.3s; }
-.card:hover { transform: scale(1.02); border-color: var(--neon); }
-.card img { width: 100%; border-radius: 10px; }
-.download-btn { width: 100%; padding: 10px; margin-top: 10px; background: var(--gold); border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
-#empty { display: none; color: #555; margin-top: 50px; }
+:root {
+  --neon: #00f7ff;
+  --gold: #ffd700;
+  --bg-dark: #02060c;
+  --glass: rgba(255, 255, 255, 0.03);
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background: radial-gradient(circle at top left, #051937, #000c1d, #02060c);
+  color: white;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+header {
+  text-align: center;
+  padding: 50px 20px;
+  width: 100%;
+  background: linear-gradient(to bottom, rgba(0,247,255,0.05), transparent);
+}
+
+header h1 {
+  font-size: 2.5rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 5px;
+  margin: 0;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+header p {
+  color: var(--neon);
+  font-weight: 600;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+.gallery-container {
+  width: 90%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 30px;
+  padding: 20px 0 100px;
+}
+
+.result-card {
+  background: var(--glass);
+  border-radius: 20px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-card:hover {
+  transform: translateY(-10px);
+  border-color: var(--neon);
+  box-shadow: 0 15px 40px rgba(0, 247, 255, 0.2);
+}
+
+.result-card img {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  padding: 0 5px;
+}
+
+.match-tag {
+  font-size: 12px;
+  background: rgba(0, 247, 255, 0.1);
+  color: var(--neon);
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.download-btn {
+  background: linear-gradient(135deg, var(--gold), #b8860b);
+  color: black;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.download-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px var(--gold);
+}
+
+#no-results {
+  display: none;
+  text-align: center;
+  margin-top: 100px;
+  color: #555;
+  font-size: 1.2rem;
+}
+
+/* ১২ ঘণ্টার টাইমার বার (Visual) */
+.expiry-bar {
+  height: 3px;
+  background: var(--neon);
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
 </style>
 </head>
 <body>
 
 <header>
-  <h1 style="color:var(--gold); letter-spacing:3px;">OFFICIAL RESULTS</h1>
-  <p>Cards valid for 12 hours after approval</p>
+  <h1>Official Gallery</h1>
+  <p>Matches disappear after 12 hours</p>
 </header>
 
-<div id="empty">No active matches to display.</div>
-<div class="gallery" id="gallery"></div>
+<div id="no-results">
+  <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="100" style="opacity: 0.2;"><br>
+  No active match results found.
+</div>
+
+<div class="gallery-container" id="gallery">
+  </div>
 
 <script>
-firebase.initializeApp({ apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM", authDomain: "afnsclub.firebaseapp.com", projectId: "afnsclub" });
+// Firebase Initialization
+firebase.initializeApp({
+  apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain: "afnsclub.firebaseapp.com",
+  projectId: "afnsclub"
+});
+
 const db = firebase.firestore();
 
-function loadResults() {
-  const now = Date.now();
+function fetchResults() {
+  const currentTime = Date.now();
+  const gallery = document.getElementById('gallery');
+  const emptyState = document.getElementById('no-results');
+
+  // শুধু সেই রেজাল্টগুলো নিবে যেগুলোর সময় এখনো শেষ হয়নি (ExpiresAt > CurrentTime)
   db.collection("approved_results")
-    .where("expiresAt", ">", now)
+    .where("expiresAt", ">", currentTime)
     .orderBy("expiresAt", "desc")
-    .onSnapshot(snap => {
-      const gallery = document.getElementById("gallery");
+    .onSnapshot((querySnapshot) => {
       gallery.innerHTML = "";
-      if (snap.empty) { document.getElementById("empty").style.display = "block"; return; }
-      document.getElementById("empty").style.display = "none";
       
-      snap.forEach(doc => {
-        const d = doc.data();
-        gallery.innerHTML += `
-          <div class="card">
-            <img src="${d.cardImage}" alt="Result">
-            <button class="download-btn" onclick="downloadImage('${d.cardImage}')">DOWNLOAD CARD</button>
-          </div>`;
-      });
+      if (querySnapshot.empty) {
+        emptyState.style.display = "block";
+      } else {
+        emptyState.style.display = "none";
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          createCard(data);
+        });
+      }
     });
 }
 
-function downloadImage(url) {
-  const a = document.createElement('a');
-  a.href = url; a.download = 'AFNS_Match_Result.png';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+function createCard(data) {
+  const gallery = document.getElementById('gallery');
+  
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  
+  card.innerHTML = `
+    <img src="${data.cardImage}" alt="Match Result">
+    <div class="card-footer">
+      <div class="match-tag">${data.tName || 'Tournament'}</div>
+      <button class="download-btn" onclick="downloadImage('${data.cardImage}')">SAVE CARD</button>
+    </div>
+    <div class="expiry-bar"></div>
+  `;
+  
+  gallery.appendChild(card);
 }
 
-window.onload = loadResults;
-// প্রতি ১ মিনিটে চেক করবে এক্সপায়ার হয়েছে কি না
-setInterval(loadResults, 60000);
+function downloadImage(dataUrl) {
+  const link = document.createElement('a');
+  link.href = dataUrl;
+  link.download = `AFNS_Result_${Date.now()}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// পেজ লোড হলে ফাংশন রান করা
+window.onload = fetchResults;
+
+// প্রতি ৫ মিনিটে একবার পেজ অটো-চেক করবে কোনো কার্ড এক্সপায়ার হলো কিনা
+setInterval(() => {
+  fetchResults();
+}, 300000);
 </script>
+
 </body>
 </html>
