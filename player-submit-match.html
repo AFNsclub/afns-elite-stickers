@@ -10,39 +10,33 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-:root{
-  --neon:#00f7ff;
-  --gold:#ffd700;
-  --bg-dark:#02060c;
-  --card-glass:rgba(255, 255, 255, 0.05);
-}
+:root{ --neon:#00f7ff; --gold:#ffd700; --bg-dark:#050a12; }
 body{
-  margin:0; min-height:100vh;
-  display:flex; flex-direction: column; align-items:center;
-  padding:20px;
-  background: radial-gradient(circle at 10% 20%, rgba(0, 247, 255, 0.15), transparent 40%),
-              radial-gradient(circle at 90% 80%, rgba(255, 215, 0, 0.1), transparent 40%),
-              #050a12;
-  font-family: 'Segoe UI', Roboto, sans-serif; color:white;
+  margin:0; min-height:100vh; padding:20px; display:flex; flex-direction:column; align-items:center;
+  background: radial-gradient(circle at top right, rgba(0,247,255,0.1), transparent), var(--bg-dark);
+  font-family: 'Segoe UI', sans-serif; color:white;
 }
 .container{
-  width:100%; max-width:480px; background: rgba(13, 25, 41, 0.8);
-  border-radius:24px; padding:30px; margin-top:10px;
-  backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  width:100%; max-width:650px; background: rgba(13, 25, 41, 0.85);
+  border-radius:24px; padding:30px; border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(15px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
-h2{text-align:center; color:var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 25px;}
-label{display:block; margin-top:15px; font-weight:600; font-size: 13px; color: var(--neon); text-transform: uppercase;}
-input, select, button{ width:100%; padding:14px; margin-top:8px; border:none; border-radius:12px; box-sizing: border-box; outline: none;}
-input, select{ background: rgba(0,0,0,0.4); color:#fff; border: 1px solid rgba(0, 247, 255, 0.2); transition: 0.3s;}
-input:focus{ border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 247, 255, 0.2);}
-button{ background: linear-gradient(135deg, var(--neon), #008cff); color:#000; font-weight:800; cursor:pointer; margin-top: 25px; transition: 0.3s; text-transform: uppercase;}
-button:active{ transform: scale(0.98);}
-.msg{ margin-top:15px; text-align:center; font-weight:600;}
-.searchBox{ position:relative;}
-.dropdown{ position:absolute; width:100%; background:#0d1929; max-height:160px; overflow-y:auto; border-radius:12px; z-index:1000; border: 1px solid var(--neon);}
-.dropdown div{ padding:12px; cursor:pointer; border-bottom: 1px solid rgba(255,255,255,0.05);}
+h2{text-align:center; color:var(--gold); text-transform: uppercase; letter-spacing: 2px;}
+.section-title{ color: var(--neon); font-size: 14px; font-weight: bold; margin: 20px 0 10px; text-transform: uppercase; border-bottom: 1px solid rgba(0,247,255,0.2); padding-bottom: 5px;}
+
+label{display:block; margin-top:12px; font-size: 12px; font-weight: 600; color: #aaa;}
+input, select, button{ width:100%; padding:12px; margin-top:6px; border-radius:10px; border:none; box-sizing: border-box; outline:none;}
+input, select{ background: rgba(0,0,0,0.3); color:#fff; border: 1px solid rgba(0,247,255,0.2); transition: 0.3s;}
+input:focus{ border-color: var(--neon); box-shadow: 0 0 10px rgba(0,247,255,0.1);}
+
+.squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.searchBox{ position:relative; }
+.dropdown{ position:absolute; width:100%; background:#0d1929; max-height:140px; overflow-y:auto; border-radius:8px; z-index:100; border:1px solid var(--neon); display:none;}
+.dropdown div{ padding:10px; cursor:pointer; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.05);}
 .dropdown div:hover{ background: var(--neon); color:#000;}
+
+button{ background: linear-gradient(135deg, var(--neon), #008cff); color:#000; font-weight:800; cursor:pointer; margin-top:30px; text-transform: uppercase;}
+button:active{ transform: scale(0.98); }
 </style>
 </head>
 <body>
@@ -51,125 +45,133 @@ button:active{ transform: scale(0.98);}
   <h2>Match Center</h2>
 
   <label>Match Mode</label>
-  <select id="matchCategory" onchange="toggleMatchMode()">
+  <select id="matchCategory" onchange="toggleUI()">
     <option value="1v1">Individual (1vs1)</option>
-    <option value="team">Squad War (Team)</option>
+    <option value="team">Squad War (Dynamic)</option>
   </select>
 
-  <div id="teamSection" style="display:none;">
-    <label>Home Team</label>
-    <input type="text" id="homeTeam" placeholder="e.g. ARGENTINA PES">
-    <label>Away Team</label>
-    <input type="text" id="awayTeam" placeholder="e.g. BRAZIL STARS">
+  <div id="teamInfo" style="display:none;">
+    <div class="squad-grid">
+      <div><label>Home Team Name</label><input type="text" id="hTeam" placeholder="e.g. ARG PES"></div>
+      <div><label>Away Team Name</label><input type="text" id="aTeam" placeholder="e.g. BRA STARS"></div>
+    </div>
   </div>
 
-  <label id="p1Label">Home Player</label>
-  <div class="searchBox">
-    <input type="text" id="player1" onkeyup="filterPlayers('player1')" autocomplete="off" placeholder="Search Player...">
-    <div id="player1List" class="dropdown"></div>
+  <div id="squadArea">
+    <div id="singleFields">
+      <div class="squad-grid">
+        <div><label>Home Player</label><div class="searchBox"><input type="text" id="p1_1" onkeyup="searchP(this)"><div class="dropdown"></div></div></div>
+        <div><label>Away Player</label><div class="searchBox"><input type="text" id="p2_1" onkeyup="searchP(this)"><div class="dropdown"></div></div></div>
+      </div>
+    </div>
+
+    <div id="teamFields" style="display:none;">
+      <div class="squad-grid">
+        <div id="homeSquadList"><div class="section-title">Home Squad</div></div>
+        <div id="awaySquadList"><div class="section-title">Away Squad</div></div>
+      </div>
+      <div class="squad-grid">
+        <div id="homeSubList"><div class="section-title" style="color:var(--gold)">Home Subs</div></div>
+        <div id="awaySubList"><div class="section-title" style="color:var(--gold)">Away Subs</div></div>
+      </div>
+    </div>
   </div>
 
-  <label id="p2Label">Away Player</label>
-  <div class="searchBox">
-    <input type="text" id="player2" onkeyup="filterPlayers('player2')" autocomplete="off" placeholder="Search Player...">
-    <div id="player2List" class="dropdown"></div>
-  </div>
+  <div class="section-title">Match Details</div>
+  <label>Final Score (Home - Away)</label>
+  <input type="text" id="score" placeholder="e.g. 2-1">
 
-  <label>Final Score (e.g. 2 - 1)</label>
-  <input type="text" id="score" placeholder="X - X">
+  <label>Tournament Name</label>
+  <input type="text" id="tName" placeholder="Friendly or Elite Season X">
 
-  <label>Event Type</label>
-  <select id="matchType" onchange="toggleTournament()">
-    <option value="Friendly">Friendly Match</option>
-    <option value="Tournament">Elite Tournament</option>
-  </select>
-
-  <div id="tournamentBox" style="display:none;">
-    <label>Tournament Name</label>
-    <input type="text" id="tournamentName" placeholder="Elite Season 5">
-  </div>
-
-  <button id="submitBtn" onclick="submitMatch()">Submit Match Data</button>
-  <div id="message" class="msg"></div>
+  <button onclick="submitReport()">Submit Match Report</button>
+  <div id="message" style="text-align:center; margin-top:15px; font-weight:bold;"></div>
 </div>
 
 <script>
-// Firebase Initialization
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
   projectId:"afnsclub"
 });
 const db = firebase.firestore();
-const auth = firebase.auth();
 let allPlayers = [];
-let playerMap = {};
 
-auth.onAuthStateChanged(user => { if(!user) location.href="login.html"; else loadPlayers(); });
+// এডমিন সেটিংস থেকে প্লেয়ার সংখ্যা লোড করা
+async function setupDynamicFields() {
+  const settings = await db.collection("settings").doc("tournament").get();
+  const count = settings.exists ? settings.data().playerCount : 7; // ডিফল্ট ৭
+  
+  genInputs("homeSquadList", "p1_m", count, "Player");
+  genInputs("awaySquadList", "p2_m", count, "Player");
+  genInputs("homeSubList", "p1_s", 3, "Sub"); // ৩ জন সাব ফিক্সড
+  genInputs("awaySubList", "p2_s", 3, "Sub");
+  loadPlayers();
+}
+
+function genInputs(targetId, prefix, count, label) {
+  const el = document.getElementById(targetId);
+  for(let i=1; i<=count; i++){
+    el.innerHTML += `<label>${label} ${i}</label>
+    <div class="searchBox"><input type="text" id="${prefix}_${i}" onkeyup="searchP(this)" placeholder="Search..."><div class="dropdown"></div></div>`;
+  }
+}
 
 async function loadPlayers(){
   const snap = await db.collection("players").get();
-  snap.forEach(doc => {
-      const name = doc.data().username || doc.id;
-      allPlayers.push(name);
-      playerMap[name] = doc.id; // এডমিন প্যানেলের স্ট্যাটাস আপডেটের জন্য আইডি সেভ রাখা হলো
-  });
+  snap.forEach(doc => allPlayers.push(doc.data().username || doc.id));
 }
 
-function toggleMatchMode() {
-  const isTeam = document.getElementById("matchCategory").value === "team";
-  document.getElementById("teamSection").style.display = isTeam ? "block" : "none";
-  document.getElementById("p1Label").innerText = isTeam ? "Home Representative" : "Home Player";
-  document.getElementById("p2Label").innerText = isTeam ? "Away Representative" : "Away Player";
-}
-
-function toggleTournament() {
-  document.getElementById("tournamentBox").style.display = 
-    document.getElementById("matchType").value === "Tournament" ? "block" : "none";
-}
-
-function filterPlayers(id){
-  const input = document.getElementById(id);
-  const list = document.getElementById(id+"List");
+function searchP(input){
+  const list = input.nextSibling;
   const val = input.value.toLowerCase();
   list.innerHTML = "";
-  if(val.length < 1) return;
-  allPlayers.filter(n => n.toLowerCase().includes(val)).slice(0,5).forEach(n => {
-    let d = document.createElement("div"); d.textContent = n;
-    d.onclick = () => { input.value = n; list.innerHTML = ""; };
-    list.appendChild(d);
-  });
+  if(val.length < 1) { list.style.display="none"; return; }
+  const filtered = allPlayers.filter(n => n.toLowerCase().includes(val)).slice(0,5);
+  if(filtered.length > 0){
+    list.style.display="block";
+    filtered.forEach(n => {
+      let d = document.createElement("div"); d.textContent = n;
+      d.onclick = () => { input.value = n; list.style.display="none"; };
+      list.appendChild(d);
+    });
+  } else { list.style.display="none"; }
 }
 
-async function submitMatch(){
+function toggleUI() {
+  const isTeam = document.getElementById("matchCategory").value === "team";
+  document.getElementById("teamInfo").style.display = isTeam ? "block" : "none";
+  document.getElementById("teamFields").style.display = isTeam ? "block" : "none";
+  document.getElementById("singleFields").style.display = isTeam ? "none" : "block";
+}
+
+async function submitReport(){
+  const btn = document.querySelector("button");
   const msg = document.getElementById("message");
-  const data = {
-    p1: document.getElementById("player1").value,
-    p2: document.getElementById("player2").value,
-    p1Id: playerMap[document.getElementById("player1").value],
-    p2Id: playerMap[document.getElementById("player2").value],
-    score: document.getElementById("score").value,
+  btn.disabled = true; msg.innerText = "Submitting...";
+
+  const report = {
     mode: document.getElementById("matchCategory").value,
-    type: document.getElementById("matchType").value,
-    tName: document.getElementById("tournamentName").value || "Friendly Match",
-    hTeam: document.getElementById("homeTeam").value || "HOME",
-    aTeam: document.getElementById("awayTeam").value || "AWAY",
-    status: "pending", // প্লেয়ার সাবমিট করলে পেন্ডিং থাকবে
+    score: document.getElementById("score").value,
+    tName: document.getElementById("tName").value || "Friendly",
+    status: "pending",
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  if(!data.p1 || !data.p2 || !data.score) { msg.innerHTML = "<span style='color:red'>Fill all fields!</span>"; return; }
-  if(!data.p1Id || !data.p2Id) { msg.innerHTML = "<span style='color:red'>Invalid Player Selected!</span>"; return; }
+  if(report.mode === "team"){
+    report.hTeam = document.getElementById("hTeam").value;
+    report.aTeam = document.getElementById("aTeam").value;
+    // এখানে স্কোয়াড ডাটা লুপ করে নেওয়ার লজিক থাকবে (অ্যাডমিন প্যানেলে দেখানোর জন্য)
+  }
 
-  msg.innerHTML = "Submitting to Admin...";
   try {
-    await db.collection("matches").add(data);
+    await db.collection("matches").add(report);
     msg.innerHTML = "<span style='color:var(--neon)'>Success! Waiting for Admin Approval.</span>";
-    // সাবমিট সফল হলে ইনপুট খালি করে দেওয়া
-    document.getElementById("score").value = "";
-  } catch(e) { msg.innerHTML = "Error: " + e.message; }
+    setTimeout(()=> location.reload(), 2000);
+  } catch(e) { msg.innerText = "Error: " + e.message; btn.disabled = false; }
 }
-</script>
 
+window.onload = setupDynamicFields;
+</script>
 </body>
 </html>
