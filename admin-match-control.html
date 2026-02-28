@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>🛠 Admin Panel | AFNS Elite Strikers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -14,12 +13,9 @@
 body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
 .container { width: 100%; max-width: 750px; background: var(--card); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 0 30px rgba(0,0,0,0.5); }
 h2 { text-align: center; color: var(--gold); text-transform: uppercase; margin-bottom: 20px; }
-
-/* Control Box */
 .control-box { background: rgba(255, 215, 0, 0.05); border: 1px dashed var(--gold); padding: 20px; border-radius: 15px; margin-bottom: 30px; }
 .control-box input { background: rgba(0,0,0,0.3); color: #fff; border: 1px solid var(--gold); padding: 10px; border-radius: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
 .btn-save { background: var(--gold); color: #000; width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
 .match-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 5px solid var(--neon); }
 .match-info { font-size: 14px; margin-bottom: 10px; line-height: 1.6; }
 .match-info b { color: var(--neon); }
@@ -35,23 +31,20 @@ button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 
 
 <div class="container">
   <h2>🛠 Admin Control Center</h2>
-
   <div class="control-box">
-    <h3 style="margin-top:0; color:var(--gold); text-align:center;">Settings (Tournament & Squad)</h3>
-    <label>Current Tournament Name:</label>
-    <input type="text" id="tNameInput" placeholder="e.g. Elite Season 5">
-    <label>Players per Team (Box count):</label>
-    <input type="number" id="pLimitInput" placeholder="e.g. 7">
+    <h3 style="margin-top:0; color:var(--gold); text-align:center;">Tournament Settings</h3>
+    <label>Tournament Name:</label>
+    <input type="text" id="tNameInput">
+    <label>Players per Team:</label>
+    <input type="number" id="pLimitInput">
     <button class="btn-save" onclick="updateSettings()">Save All Settings</button>
   </div>
-
-  <div id="adminMatchList">লোডিং ম্যাচ লিস্ট...</div>
+  <div id="adminMatchList">Loading Matches...</div>
 </div>
 
 <canvas id="resultCanvas"></canvas>
 
 <script>
-// Firebase Config
 firebase.initializeApp({
   apiKey: "AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain: "afnsclub.firebaseapp.com",
@@ -59,20 +52,16 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-// ১. সেটিংস আপডেট ফাংশন
 async function updateSettings() {
     const name = document.getElementById("tNameInput").value;
     const limit = document.getElementById("pLimitInput").value;
-    if(!name || !limit) return alert("সব ঘর পূরণ করুন!");
-    
     await db.collection("settings").doc("tournament").set({
         currentTournament: name,
         playerCount: parseInt(limit)
     });
-    alert("সেটিংস সেভ হয়েছে! ইউজার এখন এটিই দেখবে।");
+    alert("Settings Saved!");
 }
 
-// বর্তমানে থাকা সেটিংস লোড করা
 db.collection("settings").doc("tournament").onSnapshot(doc => {
     if(doc.exists) {
         document.getElementById("tNameInput").value = doc.data().currentTournament;
@@ -80,21 +69,18 @@ db.collection("settings").doc("tournament").onSnapshot(doc => {
     }
 });
 
-// ২. ম্যাচ লিস্ট লোড করা
 db.collection("matches").orderBy("createdAt", "desc").onSnapshot(snap => {
   const list = document.getElementById("adminMatchList");
   list.innerHTML = "";
-  
   snap.forEach(doc => {
     const m = doc.data();
     const div = document.createElement("div");
     div.className = "match-card";
-    
     div.innerHTML = `
       <div class="match-info">
         <b>ID:</b> ${doc.id.substring(0,6)} | <b>Event:</b> ${m.tName}<br>
-        <b>Type:</b> ${m.type} (${m.mode})<br>
-        <b>Match:</b> ${m.hTeamName || m.players[0]} VS ${m.aTeamName || m.players[1]}<br>
+        <b>Home:</b> ${m.hTeamName || m.players[0]} <br>
+        <b>Away:</b> ${m.aTeamName || (m.players[m.players.length/2])}<br>
         <b>Score:</b> <span style="font-size:18px; color:var(--gold)">${m.score}</span> | <b>Status:</b> ${m.status}
       </div>
       <div class="btn-group">
@@ -106,79 +92,92 @@ db.collection("matches").orderBy("createdAt", "desc").onSnapshot(snap => {
   });
 });
 
-// ৩. ম্যাচ অ্যাপ্রুভ এবং ডাটা আপডেট (টিম + প্লেয়ার)
-async function approveMatch(id) {
-  if(!confirm("অ্যাপ্রুভ করতে চান? এটি প্লেয়ার ও টিমের র‍্যাঙ্ক আপডেট করবে।")) return;
+async function approveMatch(matchId) {
+  if(!confirm("Approve this match? Stats will be updated.")) return;
 
-  const matchRef = db.collection("matches").doc(id);
-  const snap = await matchRef.get();
-  const m = snap.data();
-  const score = m.score.split("-").map(Number);
+  const matchRef = db.collection("matches").doc(matchId);
+  const mSnap = await matchRef.get();
+  const m = mSnap.data();
+  const scores = m.score.split("-").map(Number);
+  
+  // রেজাল্ট ডিটেকশন
+  let result = "draw"; // 0 for draw, 1 for home win, 2 for away win
+  if(scores[0] > scores[1]) result = "homeWin";
+  if(scores[1] > scores[0]) result = "awayWin";
+
+  // হাফ-হাফ করে প্লেয়ার ভাগ করা (Home vs Away)
+  const half = Math.ceil(m.players.length / 2);
+  const homePlayers = m.players.slice(0, half);
+  const awayPlayers = m.players.slice(half);
+
+  const updatePlayerStats = async (pName, isWinner, isDraw) => {
+    const pQuery = await db.collection("players").where("username", "==", pName).get();
+    if(!pQuery.empty) {
+      const pDoc = pQuery.docs[0];
+      const pRef = pDoc.ref;
+      let ratingChange = isDraw ? 2 : (isWinner ? 15 : -10);
+      
+      await pRef.update({
+        wins: firebase.firestore.FieldValue.increment(isWinner && !isDraw ? 1 : 0),
+        losses: firebase.firestore.FieldValue.increment(!isWinner && !isDraw ? 1 : 0),
+        draws: firebase.firestore.FieldValue.increment(isDraw ? 1 : 0),
+        matchesPlayed: firebase.firestore.FieldValue.increment(1),
+        ratingAllTime: firebase.firestore.FieldValue.increment(ratingChange),
+        ratingSeason: firebase.firestore.FieldValue.increment(ratingChange)
+      });
+    }
+  };
 
   try {
-    await db.runTransaction(async (transaction) => {
-      // ৩.১ টিমের ডাটা আপডেট (যদি টুর্নামেন্ট হয়)
-      if(m.type === "Tournament") {
-          const hRef = db.collection("teams").doc(m.hTeamName);
-          const aRef = db.collection("teams").doc(m.aTeamName);
-          
-          let hWin = score[0] > score[1] ? 3 : (score[0] === score[1] ? 1 : 0);
-          let aWin = score[1] > score[0] ? 3 : (score[0] === score[1] ? 1 : 0);
+    // হোম প্লেয়ার আপডেট
+    for(let p of homePlayers) await updatePlayerStats(p, result === "homeWin", result === "draw");
+    // অ্যাওয়ে প্লেয়ার আপডেট
+    for(let p of awayPlayers) await updatePlayerStats(p, result === "awayWin", result === "draw");
 
-          transaction.set(hRef, { points: firebase.firestore.FieldValue.increment(hWin), played: firebase.firestore.FieldValue.increment(1) }, {merge:true});
-          transaction.set(aRef, { points: firebase.firestore.FieldValue.increment(aWin), played: firebase.firestore.FieldValue.increment(1) }, {merge:true});
-      }
-
-      // ৩.২ প্লেয়ারের ডাটা আপডেট (লুপ)
-      m.players.forEach(pName => {
-        if(pName) {
-           const pRef = db.collection("players").doc(pName);
-           transaction.set(pRef, { matchesPlayed: firebase.firestore.FieldValue.increment(1) }, {merge:true});
-        }
-      });
-
-      transaction.update(matchRef, { status: "approved" });
-    });
-
-    await generateAndSaveCard(id, m);
-    alert("Success! র‍্যাঙ্ক আপডেট এবং রেজাল্ট কার্ড তৈরি হয়েছে। ✅");
-  } catch(e) { alert("Error: " + e.message); }
+    await matchRef.update({ status: "approved" });
+    await generateAndSaveCard(matchId, m);
+    alert("Approved Successfully! Card Generated.");
+  } catch (e) {
+    alert("Error: " + e.message);
+  }
 }
 
-// ৪. রেজাল্ট কার্ড জেনারেশন (১২ ঘণ্টা পর অটো-ডিলিট লজিকসহ)
 async function generateAndSaveCard(id, data) {
   const canvas = document.getElementById('resultCanvas');
   const ctx = canvas.getContext('2d');
-  canvas.width = 1000; canvas.height = 500;
+  canvas.width = 1000; canvas.height = 600;
 
-  // BG
-  ctx.fillStyle = '#020b16'; ctx.fillRect(0,0,1000,500);
+  // Background Gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, 600);
+  grad.addColorStop(0, '#051937');
+  grad.addColorStop(1, '#000000');
+  ctx.fillStyle = grad; ctx.fillRect(0,0,1000,600);
   
-  // Text
-  ctx.fillStyle = '#ffd700'; ctx.font = 'bold 35px Arial'; ctx.textAlign = 'center';
-  ctx.fillText(data.tName.toUpperCase(), 500, 150);
-  
-  ctx.fillStyle = 'white'; ctx.font = 'bold 80px Arial';
-  ctx.fillText(data.score, 500, 280);
+  // Neon Border
+  ctx.strokeStyle = '#00f7ff'; ctx.lineWidth = 10; ctx.strokeRect(20,20,960,560);
 
-  ctx.font = 'bold 40px Arial';
-  ctx.textAlign = 'right'; ctx.fillText(data.hTeamName || data.players[0], 400, 270);
-  ctx.textAlign = 'left'; ctx.fillText(data.aTeamName || data.players[1], 600, 270);
+  ctx.fillStyle = '#ffd700'; ctx.font = 'bold 40px Arial'; ctx.textAlign = 'center';
+  ctx.fillText(data.tName.toUpperCase(), 500, 100);
+  
+  ctx.fillStyle = 'white'; ctx.font = 'bold 120px Arial';
+  ctx.fillText(data.score, 500, 320);
+
+  ctx.font = 'bold 35px Arial';
+  ctx.fillStyle = '#00f7ff';
+  ctx.textAlign = 'right'; ctx.fillText(data.hTeamName || data.players[0], 400, 310);
+  ctx.textAlign = 'left'; ctx.fillText(data.aTeamName || data.players[data.players.length-1], 600, 310);
 
   const cardImg = canvas.toDataURL("image/png");
-  const expiry = Date.now() + (12 * 60 * 60 * 1000); // ১২ ঘণ্টা পর
-
   await db.collection("approved_results").doc(id).set({
     cardImage: cardImg,
-    expiresAt: expiry,
+    expiresAt: Date.now() + (12 * 60 * 60 * 1000),
     tName: data.tName
   });
 }
 
 async function deleteMatch(id) {
-  if(confirm("মুছে ফেলতে চান?")) {
+  if(confirm("Delete this match?")) {
     await db.collection("matches").doc(id).delete();
-    await db.collection("approved_results").doc(id).delete();
   }
 }
 </script>
