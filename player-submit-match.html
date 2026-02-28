@@ -43,11 +43,6 @@ button:active{ transform: scale(0.98);}
 .dropdown{ position:absolute; width:100%; background:#0d1929; max-height:160px; overflow-y:auto; border-radius:12px; z-index:1000; border: 1px solid var(--neon);}
 .dropdown div{ padding:12px; cursor:pointer; border-bottom: 1px solid rgba(255,255,255,0.05);}
 .dropdown div:hover{ background: var(--neon); color:#000;}
-
-/* কার্ড ডিসপ্লে */
-#cardContainer { display:none; margin-top: 25px; width: 100%; text-align: center; }
-#resultCanvas { width: 100%; border-radius: 16px; border: 1px solid var(--gold); box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-.download-btn { background: var(--gold); color: #000; margin-top: 15px; }
 </style>
 </head>
 <body>
@@ -94,13 +89,8 @@ button:active{ transform: scale(0.98);}
     <input type="text" id="tournamentName" placeholder="Elite Season 5">
   </div>
 
-  <button id="submitBtn" onclick="submitMatch()">Submit & Generate Card</button>
+  <button id="submitBtn" onclick="submitMatch()">Submit Match Data</button>
   <div id="message" class="msg"></div>
-
-  <div id="cardContainer">
-    <canvas id="resultCanvas"></canvas>
-    <button class="download-btn" onclick="downloadCard()">Download Result Image</button>
-  </div>
 </div>
 
 <script>
@@ -113,12 +103,17 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const auth = firebase.auth();
 let allPlayers = [];
+let playerMap = {};
 
 auth.onAuthStateChanged(user => { if(!user) location.href="login.html"; else loadPlayers(); });
 
 async function loadPlayers(){
   const snap = await db.collection("players").get();
-  snap.forEach(doc => allPlayers.push(doc.data().username || doc.id));
+  snap.forEach(doc => {
+      const name = doc.data().username || doc.id;
+      allPlayers.push(name);
+      playerMap[name] = doc.id; // এডমিন প্যানেলের স্ট্যাটাস আপডেটের জন্য আইডি সেভ রাখা হলো
+  });
 }
 
 function toggleMatchMode() {
@@ -151,106 +146,29 @@ async function submitMatch(){
   const data = {
     p1: document.getElementById("player1").value,
     p2: document.getElementById("player2").value,
+    p1Id: playerMap[document.getElementById("player1").value],
+    p2Id: playerMap[document.getElementById("player2").value],
     score: document.getElementById("score").value,
     mode: document.getElementById("matchCategory").value,
     type: document.getElementById("matchType").value,
     tName: document.getElementById("tournamentName").value || "Friendly Match",
     hTeam: document.getElementById("homeTeam").value || "HOME",
-    aTeam: document.getElementById("awayTeam").value || "AWAY"
+    aTeam: document.getElementById("awayTeam").value || "AWAY",
+    status: "pending", // প্লেয়ার সাবমিট করলে পেন্ডিং থাকবে
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
   if(!data.p1 || !data.p2 || !data.score) { msg.innerHTML = "<span style='color:red'>Fill all fields!</span>"; return; }
+  if(!data.p1Id || !data.p2Id) { msg.innerHTML = "<span style='color:red'>Invalid Player Selected!</span>"; return; }
 
-  msg.innerHTML = "Saving to Database...";
+  msg.innerHTML = "Submitting to Admin...";
   try {
-    await db.collection("matches").add({ ...data, createdAt: new Date() });
-    msg.innerHTML = "<span style='color:var(--neon)'>Success! Creating Premium Card...</span>";
-    drawPremiumCard(data);
+    await db.collection("matches").add(data);
+    msg.innerHTML = "<span style='color:var(--neon)'>Success! Waiting for Admin Approval.</span>";
+    // সাবমিট সফল হলে ইনপুট খালি করে দেওয়া
+    document.getElementById("score").value = "";
   } catch(e) { msg.innerHTML = "Error: " + e.message; }
 }
-
-function drawPremiumCard(data) {
-  const canvas = document.getElementById('resultCanvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = 1000; canvas.height = 500;
-  
-  // Background Gradient
-  const grad = ctx.createLinearGradient(0, 0, 1000, 500);
-  grad.addColorStop(0, '#020b16'); grad.addColorStop(1, '#051937');
-  ctx.fillStyle = grad; ctx.fillRect(0, 0, 1000, 500);
-
-  // Decorative Shapes
-  ctx.fillStyle = 'rgba(0, 247, 255, 0.05)';
-  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(400,0); ctx.lineTo(300,500); ctx.lineTo(0,500); ctx.fill();
-
-  // Load Logo
-  const logo = new Image();
-  logo.src = 'logo.png'; 
-  logo.onload = () => {
-    ctx.drawImage(logo, 450, 30, 100, 100);
-    
-    // Match Info Header
-    ctx.fillStyle = varColor('--gold');
-    ctx.font = 'bold 25px Arial'; ctx.textAlign = 'center';
-    ctx.fillText(data.tName.toUpperCase(), 500, 160);
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.font = '18px Arial';
-    ctx.fillText(new Date().toLocaleDateString(), 500, 190);
-
-    // Score Section
-    const s = data.score.split("-");
-    drawScoreHex(ctx, 420, 220, s[0] || "0", '#ff4b2b'); // Home Score
-    drawScoreHex(ctx, 510, 220, s[1] || "0", '#00d2ff'); // Away Score
-
-    // Team/Player Names
-    ctx.fillStyle = 'white'; ctx.font = 'bold 40px Arial';
-    ctx.textAlign = 'right'; ctx.fillText(data.mode === 'team' ? data.hTeam : data.p1, 400, 280);
-    ctx.textAlign = 'left'; ctx.fillText(data.mode === 'team' ? data.aTeam : data.p2, 600, 280);
-    
-    // Sub-names (Representatives)
-    if(data.mode === 'team'){
-        ctx.font = '20px Arial'; ctx.fillStyle = 'rgba(255,255,255,0.5)';
-        ctx.textAlign = 'right'; ctx.fillText("Capt: " + data.p1, 400, 310);
-        ctx.textAlign = 'left'; ctx.fillText("Capt: " + data.p2, 600, 310);
-    }
-
-    // Footer
-    ctx.fillStyle = 'rgba(0, 247, 255, 0.3)';
-    ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center';
-    ctx.fillText("AFNS ELITE STRIKERS OFFICIAL RESULT", 500, 460);
-    
-    document.getElementById("cardContainer").style.display = "block";
-    document.getElementById("submitBtn").style.display = "none";
-  };
-}
-
-function drawScoreHex(ctx, x, y, score, color) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.roundRect(x, y, 75, 100, 10);
-    ctx.fill();
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 60px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(score, x + 37, y + 70);
-}
-
-function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-
-function downloadCard() {
-  const link = document.createElement('a');
-  link.download = 'AFNS_Match_Result.png';
-  link.href = document.getElementById('resultCanvas').toDataURL();
-  link.click();
-}
-
-CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-  if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
-  this.beginPath(); this.moveTo(x + r, y);
-  this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r);
-  this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r);
-  this.closePath(); return this;
-};
 </script>
 
 </body>
