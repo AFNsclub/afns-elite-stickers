@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Player Comparison | AFNS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI,sans-serif;
+  background:linear-gradient(180deg,#010814,#021b33);
+  color:white;
+  padding:20px;
+}
+h1{text-align:center;color:#FFD700;}
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  background:rgba(0,0,0,.65);
+  padding:25px;
+  border-radius:20px;
+  margin-top:20px;
+}
+
+.summary{
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+.card{
+  flex:1;
+  margin:10px;
+  padding:20px;
+  background:rgba(0,0,0,.5);
+  border-radius:15px;
+  text-align:center;
+  position:relative;
+  transition:0.3s;
+}
+
+.better{
+  border:3px solid #00f7ff;
+  box-shadow:0 0 25px #00f7ff;
+}
+
+.badge{
+  position:absolute;
+  top:-12px;
+  right:-12px;
+  background:#FFD700;
+  color:#000;
+  padding:6px 12px;
+  border-radius:20px;
+  font-weight:bold;
+}
+
+.rating-diff{
+  margin-top:8px;
+  font-size:14px;
+  color:#00f7ff;
+}
+
+.bar-container{
+  background:#111;
+  height:22px;
+  border-radius:12px;
+  margin-top:10px;
+  overflow:hidden;
+}
+
+.bar{
+  height:100%;
+  width:0%;
+  background:#00f7ff;
+  transition:width 1s ease-in-out;
+}
+
+.draw-box{
+  text-align:center;
+  margin-top:20px;
+  font-size:18px;
+  color:#FFD700;
+}
+
+.dominant{
+  background:rgba(255,215,0,.2) !important;
+}
+
+table{
+  width:100%;
+  margin-top:25px;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+  text-align:center;
+}
+
+th{background:rgba(0,0,0,.4);}
+
+.trend-container{
+  margin-top:30px;
+}
+
+.rivalry-panel{
+  margin-top:30px;
+  background:rgba(255,255,255,.05);
+  padding:20px;
+  border-radius:15px;
+}
+.rivalry-panel h3{text-align:center;color:#FFD700;margin-bottom:15px;}
+.rivalry-panel p{margin:6px 0;font-weight:600;}
+</style>
+</head>
+<body>
+
+<h1>⚔ Player Comparison</h1>
+
+<div class="container">
+
+  <div class="summary">
+    <div class="card" id="card1">
+      <div id="badge1"></div>
+      <h2 id="name1">Player 1</h2>
+      <p>Wins: <span id="wins1">0</span></p>
+      <p>Rating: <span id="rating1">0</span></p>
+      <div id="ratingDiff1" class="rating-diff"></div>
+      <div class="bar-container">
+        <div id="bar1" class="bar"></div>
+      </div>
+    </div>
+
+    <div class="card" id="card2">
+      <div id="badge2"></div>
+      <h2 id="name2">Player 2</h2>
+      <p>Wins: <span id="wins2">0</span></p>
+      <p>Rating: <span id="rating2">0</span></p>
+      <div id="ratingDiff2" class="rating-diff"></div>
+      <div class="bar-container">
+        <div id="bar2" class="bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="draw-box">
+    🤝 Draw Matches: <span id="drawCount">0</span>
+  </div>
+
+  <h2 style="margin-top:30px;text-align:center;">Head-to-Head Matches</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Player 1</th>
+        <th>Player 2</th>
+        <th>Score</th>
+        <th>Winner</th>
+      </tr>
+    </thead>
+    <tbody id="matchTable">
+      <tr><td colspan="5">Loading...</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Match Trend Graph -->
+  <div class="trend-container">
+    <h2 style="text-align:center;">📈 Match Trend Graph</h2>
+    <canvas id="trendChart"></canvas>
+  </div>
+
+  <!-- All-time Rivalry Panel -->
+  <div class="rivalry-panel">
+    <h3>👑 All-Time Rivalry Stats</h3>
+    <p>Total Matches: <span id="totalMatches">0</span></p>
+    <p><span id="player1Wins"></span> Wins - <span id="player2Wins"></span> Wins</p>
+    <p>Draws: <span id="totalDraws">0</span></p>
+    <p>Dominant Match Margin: <span id="dominantMargin">0</span></p>
+  </div>
+
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
+  authDomain:"afnsclub.firebaseapp.com",
+  projectId:"afnsclub"
+});
+
+const db=firebase.firestore();
+const params=new URLSearchParams(window.location.search);
+const id1=params.get("p1");
+const id2=params.get("p2");
+
+let player1,player2;
+let trendChart=null;
+
+Promise.all([
+  db.collection("players").doc(id1).get(),
+  db.collection("players").doc(id2).get()
+]).then(([doc1,doc2])=>{
+  player1=doc1.data();
+  player2=doc2.data();
+
+  document.getElementById("name1").innerText=player1.username;
+  document.getElementById("name2").innerText=player2.username;
+
+  const r1=player1.ratingAllTime||1000;
+  const r2=player2.ratingAllTime||1000;
+  document.getElementById("rating1").innerText=r1;
+  document.getElementById("rating2").innerText=r2;
+
+  const diff=Math.abs(r1-r2);
+  const percent=((diff/Math.max(r1,r2))*100).toFixed(1);
+  if(r1>r2){
+    document.getElementById("ratingDiff1").innerText=`⚡ +${percent}% Higher Rating`;
+  } else if(r2>r1){
+    document.getElementById("ratingDiff2").innerText=`⚡ +${percent}% Higher Rating`;
+  }
+
+  loadMatches();
+});
+
+function loadMatches(){
+  db.collection("matches")
+  .where("status","==","approved")
+  .orderBy("timestamp","asc")
+  .get()
+  .then(snapshot=>{
+    const tbody=document.getElementById("matchTable");
+    tbody.innerHTML="";
+    let count=1,win1=0,win2=0,draws=0,dominantMargin=0;
+    const trendLabels=[];
+    const trendData1=[];
+    const trendData2=[];
+
+    snapshot.forEach(doc=>{
+      const m=doc.data();
+      if(
+        (m.player1===player1.username && m.player2===player2.username)
+        || (m.player2===player1.username && m.player1===player2.username)
+      ){
+        let score1=parseInt(m.score?.split("-")[0]||0);
+        let score2=parseInt(m.score?.split("-")[1]||0);
+        const margin=Math.abs(score1-score2);
+
+        if(m.winner===player1.username) win1++;
+        else if(m.winner===player2.username) win2++;
+        else draws++;
+
+        if(margin>dominantMargin) dominantMargin=margin;
+
+        tbody.innerHTML+=`
+          <tr id="row${count}" ${margin===dominantMargin?'class="dominant"':''}>
+            <td>${count}</td>
+            <td>${m.player1}</td>
+            <td>${m.player2}</td>
+            <td>${m.score}</td>
+            <td>${m.winner||"Draw"}</td>
+          </tr>
+        `;
+
+        trendLabels.push(`M${count}`);
+        trendData1.push(score1);
+        trendData2.push(score2);
+
+        count++;
+      }
+    });
+
+    document.getElementById("wins1").innerText=win1;
+    document.getElementById("wins2").innerText=win2;
+    document.getElementById("drawCount").innerText=draws;
+
+    const total=win1+win2+draws||1;
+    setTimeout(()=>{
+      document.getElementById("bar1").style.width=(win1/total*100)+"%";
+      document.getElementById("bar2").style.width=(win2/total*100)+"%";
+    },200);
+
+    autoHighlight(win1,win2);
+
+    // Rivalry Panel
+    document.getElementById("totalMatches").innerText=count-1;
+    document.getElementById("player1Wins").innerText=player1.username + ': '+win1;
+    document.getElementById("player2Wins").innerText=player2.username + ': '+win2;
+    document.getElementById("totalDraws").innerText=draws;
+    document.getElementById("dominantMargin").innerText=dominantMargin;
+
+    // Trend Graph
+    const ctx=document.getElementById("trendChart").getContext("2d");
+    if(trendChart) trendChart.destroy();
+    trendChart=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:trendLabels,
+        datasets:[
+          {label:player1.username, data:trendData1, borderColor:'#00f7ff', fill:false, tension:0.3},
+          {label:player2.username, data:trendData2, borderColor:'#ff4c4c', fill:false, tension:0.3}
+        ]
+      },
+      options:{responsive:true, plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true}}}
+    });
+
+  });
+}
+
+function autoHighlight(w1,w2){
+  if(w1>w2){
+    document.getElementById("card1").classList.add("better");
+    document.getElementById("badge1").innerHTML='<div class="badge">🔥 Better Player</div>';
+  }else if(w2>w1){
+    document.getElementById("card2").classList.add("better");
+    document.getElementById("badge2").innerHTML='<div class="badge">🔥 Better Player</div>';
+  }
+}
+</script>
+</body>
+</html>
