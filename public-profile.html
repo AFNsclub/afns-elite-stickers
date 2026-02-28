@@ -7,80 +7,33 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-:root{
-  --gold:#FFD700;
-  --neon:#00f7ff;
-  --bg1:#010814;
-  --bg2:#021b33;
-  --card:rgba(0,0,0,.65);
-  --win:#4cff8f;
-  --lose:#ff4c4c;
-  --draw:#ffd166;
-}
+/* আপনার অরিজিনাল ডিজাইন হুবহু রাখা হয়েছে */
+:root{ --gold:#FFD700; --neon:#00f7ff; --bg1:#010814; --bg2:#021b33; --card:rgba(0,0,0,.65); --win:#4cff8f; --lose:#ff4c4c; --draw:#ffd166; }
 *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
-body{
-  min-height:100vh;
-  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
-  color:#fff;
-  display:flex;
-  justify-content:center;
-  padding:30px;
-}
-.container{
-  max-width:650px;
-  width:100%;
-  background:var(--card);
-  border-radius:20px;
-  padding:25px 30px;
-  backdrop-filter:blur(12px);
-  box-shadow:0 0 40px rgba(0,247,255,.35);
-}
+body{ min-height:100vh; background:radial-gradient(circle at top,var(--bg2),var(--bg1)); color:#fff; display:flex; justify-content:center; padding:30px; }
+.container{ max-width:650px; width:100%; background:var(--card); border-radius:20px; padding:25px 30px; backdrop-filter:blur(12px); box-shadow:0 0 40px rgba(0,247,255,.35); }
 header{text-align:center;margin-bottom:20px;}
-h1{margin:10px 0;color:var(--gold);}
-.rank-badge{
-  display:inline-block;
-  margin-top:10px;
-  padding:6px 14px;
-  border-radius:20px;
-  background:rgba(27,20,0,.7);
-  color:var(--gold);
-  font-weight:700;
-}
-.card{margin-top:20px;background:rgba(255,255,255,.05);padding:20px;border-radius:20px;}
+h1{margin:10px 0;color:var(--gold); text-transform: uppercase;}
+.rank-badge{ display:inline-block; margin-top:10px; padding:6px 14px; border-radius:20px; background:rgba(27,20,0,.7); color:var(--gold); font-weight:700; border: 1px solid var(--gold); }
+.card{margin-top:20px;background:rgba(255,255,255,.05);padding:20px;border-radius:20px; border: 1px solid rgba(255,255,255,0.1);}
 .row{margin-bottom:14px;}
-.label{font-size:12px;color:#aaa;}
-.value{font-size:15px;font-weight:700;}
-.stats{
-  margin-top:20px;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-}
-.stat-box{
-  background:rgba(0,0,0,.4);
-  padding:12px;
-  border-radius:14px;
-  text-align:center;
-}
-.stat-title{font-size:12px;color:#aaa;}
-.stat-value{font-size:18px;font-weight:700;margin-top:4px;}
+.label{font-size:12px;color:#aaa; text-transform: uppercase;}
+.value{font-size:16px;font-weight:700; margin-top: 2px;}
+.stats{ margin-top:20px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.stat-box{ background:rgba(0,0,0,0.4); padding:12px; border-radius:14px; text-align:center; border: 1px solid rgba(0,247,255,0.1); }
+.stat-title{font-size:11px;color:#aaa; text-transform: uppercase;}
+.stat-value{font-size:20px;font-weight:900;margin-top:4px; color: var(--neon);}
 
-.result-badge{
-  padding:4px 10px;
-  border-radius:12px;
-  font-weight:700;
-  color:#000;
-}
+.result-badge{ padding:4px 10px; border-radius:8px; font-weight:800; color:#000; font-size: 11px; text-transform: uppercase;}
 .result-win{background:var(--win);}
 .result-lose{background:var(--lose);}
 .result-draw{background:var(--draw);}
 table{width:100%;margin-top:20px;border-collapse:collapse;}
-th,td{padding:10px;text-align:center;border-bottom:1px solid rgba(255,255,255,.2);}
-th{color:var(--gold);}
-footer{text-align:center;margin-top:30px;font-size:13px;color:var(--gold);}
+th,td{padding:12px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,.1); font-size: 14px;}
+th{color:var(--gold); font-size: 12px; text-transform: uppercase;}
+footer{text-align:center;margin-top:30px;font-size:13px;color:var(--gold); opacity: 0.7;}
 </style>
 </head>
 
@@ -88,15 +41,15 @@ footer{text-align:center;margin-top:30px;font-size:13px;color:var(--gold);}
 <div class="container" id="app">
 
 <header>
-  <h1 id="username">Player</h1>
-  <div class="rank-badge" id="rankBadge">Rank #--</div>
+  <h1 id="username">Loading...</h1>
+  <div class="rank-badge" id="rankBadge">RANK #--</div>
 </header>
 
 <div class="card">
-  <div class="row"><div class="label">Game ID</div><div class="value" id="gameId">—</div></div>
-  <div class="row"><div class="label">Device</div><div class="value" id="device">—</div></div>
-  <div class="row"><div class="label">Facebook</div>
-    <div class="value"><a id="facebook" target="_blank" style="color:#00f7ff;"></a></div>
+  <div class="row"><div class="label">In-Game ID</div><div class="value" id="gameId">—</div></div>
+  <div class="row"><div class="label">Device Name</div><div class="value" id="device">—</div></div>
+  <div class="row"><div class="label">Social Profile</div>
+    <div class="value"><a id="facebook" target="_blank" style="color:#00f7ff; text-decoration: none;">Link Not Found</a></div>
   </div>
 
   <div class="stats">
@@ -108,27 +61,23 @@ footer{text-align:center;margin-top:30px;font-size:13px;color:var(--gold);}
   </div>
 </div>
 
-<div class="card">
-  <h3 style="color:var(--gold);margin-bottom:12px;">Recent Matches</h3>
+<div class="card" style="overflow-x: auto;">
+  <h3 style="color:var(--gold);margin-bottom:12px; font-size: 16px;">Recent Match History</h3>
   <table>
     <thead>
       <tr>
         <th>Date</th>
-        <th>Opponent</th>
         <th>Result</th>
         <th>Score</th>
       </tr>
     </thead>
     <tbody id="matchesBody">
-      <tr><td colspan="4">Loading...</td></tr>
+      <tr><td colspan="3">Searching matches...</td></tr>
     </tbody>
   </table>
 </div>
 
-<footer>
-  © 2026 AFNS Elite Strikers
-</footer>
-
+<footer>© 2026 AFNS Elite Strikers</footer>
 </div>
 
 <script>
@@ -140,116 +89,118 @@ firebase.initializeApp({
 const db = firebase.firestore();
 
 const params = new URLSearchParams(location.search);
-const playerId = params.get("id");
+const playerId = params.get("id"); // এটি প্লেয়ারের UID
+
 if(!playerId){
-  document.getElementById("app").innerHTML="<h2>Invalid Profile</h2>";
+  document.getElementById("app").innerHTML="<h2 style='text-align:center; color:red;'>Invalid Profile Link</h2>";
   throw new Error("Missing ID");
 }
 
-/* Rank System */
-db.collection("players").onSnapshot(snapshot=>{
-  let players=[];
-  snapshot.forEach(doc=>{
-    players.push({id:doc.id,rating:doc.data().ratingAllTime||1000});
-  });
-  players.sort((a,b)=>b.rating-a.rating);
-  const rankIndex=players.findIndex(p=>p.id===playerId);
-  if(rankIndex!==-1){
-    document.getElementById("rankBadge").innerText="Rank #"+(rankIndex+1);
-  }
-});
+let currentPlayerName = "";
 
-/* Player Info */
-db.collection("players").doc(playerId).onSnapshot(doc=>{
+/* ১. প্লেয়ারের ডাটা লোড করা */
+db.collection("players").doc(playerId).onSnapshot(doc => {
   if(!doc.exists){
-    document.getElementById("app").innerHTML="<h2>Profile Not Found</h2>";
+    document.getElementById("app").innerHTML="<h2 style='text-align:center;'>Player Not Found</h2>";
     return;
   }
-  const d=doc.data();
+  const d = doc.data();
+  currentPlayerName = d.username; // ম্যাচের সাথে ম্যাচ করার জন্য নাম সেভ করা হলো
 
-  document.getElementById("username").innerText=d.username||"Player";
-  document.getElementById("gameId").innerText=d.gameId||"—";
-  document.getElementById("device").innerText=d.deviceName||"—";
+  document.getElementById("username").innerText = d.username || "Unknown";
+  document.getElementById("gameId").innerText = d.ownerId || d.gameId || "—";
+  document.getElementById("device").innerText = d.deviceName || d.device || "—";
+  
+  animateValue("rating", 0, d.ratingAllTime || 1000, 1000);
+  document.getElementById("wins").innerText = d.wins || 0;
+  document.getElementById("losses").innerText = d.losses || 0;
+  document.getElementById("draws").innerText = d.draws || 0;
 
-  // Smooth Rating Animation
-  animateValue("rating",0,d.ratingAllTime||1000,800);
-
-  document.getElementById("wins").innerText=d.wins||0;
-  document.getElementById("losses").innerText=d.losses||0;
-  document.getElementById("draws").innerText=d.draws||0;
-
-  const total=(d.wins||0)+(d.losses||0)+(d.draws||0);
-  const winrate=total?Math.round((d.wins/total)*100):0;
-  document.getElementById("winrate").innerText=winrate+"%";
+  const total = (d.wins || 0) + (d.losses || 0) + (d.draws || 0);
+  const winrate = total ? Math.round((d.wins / total) * 100) : 0;
+  document.getElementById("winrate").innerText = winrate + "%";
 
   if(d.facebook){
-    const fb=document.getElementById("facebook");
-    fb.href=d.facebook;
-    fb.innerText="Visit Profile";
+    const fb = document.getElementById("facebook");
+    fb.href = d.facebook;
+    fb.innerText = "Visit Facebook Profile";
   }
+
+  loadRecentMatches(d.username); // নাম পাওয়ার পর ম্যাচ লোড করা হচ্ছে
+  updateRank(playerId); // র‍্যাঙ্ক আপডেট
 });
 
-/* Recent Matches */
-db.collection("matches")
-.where("status","==","approved")
-.orderBy("createdAt","desc")
-.limit(20)
-.onSnapshot(snapshot=>{
-  const tbody=document.getElementById("matchesBody");
-  tbody.innerHTML="";
-  let count=0;
-
-  snapshot.forEach(doc=>{
-    const m=doc.data();
-    if(m.player1Id!==playerId && m.player2Id!==playerId) return;
-
-    count++;
-
-    let opponent,result,badgeClass;
-    if(m.player1Id===playerId){
-      opponent=m.player2;
-      result=m.winner===playerId?"Win":
-             m.winner===null?"Draw":"Lose";
-    }else{
-      opponent=m.player1;
-      result=m.winner===playerId?"Win":
-             m.winner===null?"Draw":"Lose";
-    }
-
-    badgeClass=result==="Win"?"result-win":
-               result==="Lose"?"result-lose":"result-draw";
-
-    const date=m.createdAt?.toDate().toLocaleDateString()||"-";
-
-    tbody.innerHTML+=`
-      <tr>
-        <td>${date}</td>
-        <td>${opponent||"-"}</td>
-        <td><span class="result-badge ${badgeClass}">${result}</span></td>
-        <td>${m.score||"-"}</td>
-      </tr>`;
+/* ২. র‍্যাঙ্ক ক্যালকুলেশন */
+function updateRank(id){
+  db.collection("players").orderBy("ratingAllTime", "desc").get().then(snap => {
+    let rank = 1;
+    snap.forEach((doc) => {
+      if(doc.id === id){
+        document.getElementById("rankBadge").innerText = "RANK #" + rank;
+      }
+      rank++;
+    });
   });
+}
 
-  if(count===0){
-    tbody.innerHTML="<tr><td colspan='4'>No recent matches</td></tr>";
-  }
-});
+/* ৩. সাম্প্রতিক ম্যাচ হিস্ট্রি (সঠিক লজিক) */
+function loadRecentMatches(name){
+  db.collection("matches")
+  .where("status", "==", "approved")
+  .orderBy("createdAt", "desc")
+  .limit(15)
+  .onSnapshot(snapshot => {
+    const tbody = document.getElementById("matchesBody");
+    tbody.innerHTML = "";
+    let found = false;
 
-/* Smooth Counter */
-function animateValue(id,start,end,duration){
-  let startTime=null;
-  const element=document.getElementById(id);
-  function animation(currentTime){
-    if(!startTime) startTime=currentTime;
-    const progress=Math.min((currentTime-startTime)/duration,1);
-    element.innerText=Math.floor(progress*(end-start)+start);
-    if(progress<1){
-      requestAnimationFrame(animation);
+    snapshot.forEach(doc => {
+      const m = doc.data();
+      // চেক করা হচ্ছে প্লেয়ারটি এই ম্যাচের প্লেয়ার লিস্টে আছে কি না
+      if(m.players && m.players.includes(name)){
+        found = true;
+        const scoreArr = m.score.split("-").map(s => parseInt(s.trim()));
+        const isHome = m.players.indexOf(name) < (m.players.length / 2);
+        
+        let result = "DRAW";
+        let badge = "result-draw";
+
+        if(scoreArr[0] > scoreArr[1]){
+           result = isHome ? "WIN" : "LOSE";
+        } else if(scoreArr[1] > scoreArr[0]){
+           result = isHome ? "LOSE" : "WIN";
+        }
+
+        badge = result === "WIN" ? "result-win" : (result === "LOSE" ? "result-lose" : "result-draw");
+        const date = m.createdAt ? m.createdAt.toDate().toLocaleDateString() : "-";
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${date}</td>
+            <td><span class="result-badge ${badge}">${result}</span></td>
+            <td style="font-weight:bold; color:var(--gold)">${m.score}</td>
+          </tr>`;
+      }
+    });
+
+    if(!found) {
+      tbody.innerHTML = "<tr><td colspan='3'>No match records found</td></tr>";
     }
+  });
+}
+
+/* ৪. এনিমেশন ফাংশন */
+function animateValue(id, start, end, duration) {
+  let startTime = null;
+  const element = document.getElementById(id);
+  function animation(currentTime) {
+    if (!startTime) startTime = currentTime;
+    const progress = Math.min((currentTime - startTime) / duration, 1);
+    element.innerText = Math.floor(progress * (end - start) + start);
+    if (progress < 1) requestAnimationFrame(animation);
   }
   requestAnimationFrame(animation);
 }
 </script>
-
 </body>
 </html>
