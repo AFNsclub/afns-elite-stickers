@@ -18,9 +18,23 @@ input, select, button{ width:100%; padding:12px; margin-top:6px; border-radius:1
 input, select{ background: rgba(0,0,0,0.3); color:#fff; border: 1px solid rgba(0,247,255,0.2); }
 .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .searchBox{ position:relative; }
-.dropdown{ position:absolute; width:100%; background:#0d1929; max-height:140px; overflow-y:auto; border-radius:8px; z-index:100; border:1px solid var(--neon); display:none;}
-.dropdown div{ padding:10px; cursor:pointer; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.05);}
+
+/* DROPDOWN STYLING FIX */
+.dropdown{ 
+    position:absolute; 
+    width:100%; 
+    background:#0d1929; 
+    max-height:160px; 
+    overflow-y:auto; 
+    border-radius:8px; 
+    z-index:999; 
+    border:1px solid var(--neon); 
+    display:none;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+.dropdown div{ padding:10px; cursor:pointer; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #fff;}
 .dropdown div:hover{ background: var(--neon); color:#000;}
+
 button{ background: linear-gradient(135deg, var(--neon), #008cff); color:#000; font-weight:800; cursor:pointer; margin-top:30px; text-transform: uppercase;}
 </style>
 </head>
@@ -29,24 +43,36 @@ button{ background: linear-gradient(135deg, var(--neon), #008cff); color:#000; f
 <div class="container">
   <h2 id="matchTitle">Match Center</h2>
 
-  <label>Event Type</label>
+  <label>Match Mode</label>
   <select id="matchType" onchange="toggleMatchUI()">
     <option value="Friendly">Friendly Match (1v1)</option>
-    <option value="Tournament">Elite Tournament (Squad)</option>
+    <option value="Tournament">Squad War (Team)</option>
   </select>
 
   <div id="teamInfo" style="display:none;">
     <div class="squad-grid">
-      <div><label>Home Team</label><input type="text" id="hTeam" placeholder="Home Team Name"></div>
-      <div><label>Away Team</label><input type="text" id="aTeam" placeholder="Away Team Name"></div>
+      <div><label>Home Team</label><input type="text" id="hTeam" placeholder="e.g. ARGENTINA PES"></div>
+      <div><label>Away Team</label><input type="text" id="aTeam" placeholder="e.g. BRAZIL STARS"></div>
     </div>
   </div>
 
   <div id="squadArea">
     <div id="singleFields">
       <div class="squad-grid">
-        <div><label>Home Player</label><div class="searchBox"><input type="text" class="p-search" placeholder="Search..."><div class="dropdown"></div></div></div>
-        <div><label>Away Player</label><div class="searchBox"><input type="text" class="p-search" placeholder="Search..."><div class="dropdown"></div></div></div>
+        <div>
+            <label>Home Player</label>
+            <div class="searchBox">
+                <input type="text" class="p-search" placeholder="Search Player...">
+                <div class="dropdown"></div>
+            </div>
+        </div>
+        <div>
+            <label>Away Player</label>
+            <div class="searchBox">
+                <input type="text" class="p-search" placeholder="Search Player...">
+                <div class="dropdown"></div>
+            </div>
+        </div>
       </div>
     </div>
 
@@ -59,27 +85,46 @@ button{ background: linear-gradient(135deg, var(--neon), #008cff); color:#000; f
   </div>
 
   <div class="section-title">Match Result</div>
-  <label>Final Score</label>
-  <input type="text" id="score" placeholder="e.g. 3-0">
+  <label>Final Score (e.g. 2 - 1)</label>
+  <input type="text" id="score" placeholder="X - X">
 
-  <button onclick="submitReport()">Submit Match</button>
+  <button id="subBtn" onclick="submitReport()">Submit Match</button>
   <div id="message" style="text-align:center; margin-top:15px;"></div>
 </div>
 
 <script>
-firebase.initializeApp({ apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM", authDomain:"afnsclub.firebaseapp.com", projectId:"afnsclub" });
+// Firebase Initialization
+firebase.initializeApp({ 
+    apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM", 
+    authDomain:"afnsclub.firebaseapp.com", 
+    projectId:"afnsclub" 
+});
 const db = firebase.firestore();
-let allPlayers = [], adminTName = "Friendly", adminPCount = 1;
 
-async function loadSettings() {
+let allPlayers = []; 
+let adminTName = "Friendly"; 
+let adminPCount = 1;
+
+// ১. সেটিংস এবং প্লেয়ার ডাটা লোড করা
+async function loadData() {
   const settings = await db.collection("settings").doc("tournament").get();
   if(settings.exists) {
     adminTName = settings.data().currentTournament;
     adminPCount = settings.data().playerCount;
   }
-  loadPlayers();
+
+  // প্লেয়ার লিস্ট লোড (সার্চের জন্য)
+  const snap = await db.collection("players").get();
+  allPlayers = [];
+  snap.forEach(doc => {
+    const p = doc.data();
+    if(p.username) allPlayers.push(p.username);
+  });
+  
+  attachSearch(); // প্রথমবার সার্চ কানেক্ট
 }
 
+// ২. ডাইনামিক স্কোয়াড বক্স তৈরি
 function genSquadFields() {
   const hList = document.getElementById("homeSquadList");
   const aList = document.getElementById("awaySquadList");
@@ -87,13 +132,50 @@ function genSquadFields() {
   aList.innerHTML = '<div class="section-title">Away Squad</div>';
   
   for(let i=1; i<=adminPCount; i++) {
-    [hList, aList].forEach(list => {
-      list.innerHTML += `<label>Player ${i}</label><div class="searchBox"><input type="text" class="p-search" placeholder="Search..."><div class="dropdown"></div></div>`;
-    });
+    hList.innerHTML += `<label>Player ${i}</label><div class="searchBox"><input type="text" class="p-search" placeholder="Search..."><div class="dropdown"></div></div>`;
+    aList.innerHTML += `<label>Player ${i}</label><div class="searchBox"><input type="text" class="p-search" placeholder="Search..."><div class="dropdown"></div></div>`;
   }
-  attachSearch();
+  attachSearch(); // নতুন বক্সগুলোর জন্য আবার সার্চ কানেক্ট
 }
 
+// ৩. সার্চ লজিক (The Fix)
+function attachSearch() {
+  document.querySelectorAll('.p-search').forEach(input => {
+    const list = input.parentElement.querySelector('.dropdown');
+
+    input.oninput = () => {
+      const val = input.value.trim().toLowerCase();
+      list.innerHTML = "";
+      
+      if(val.length < 1) { 
+        list.style.display="none"; 
+        return; 
+      }
+
+      const filtered = allPlayers.filter(n => n.toLowerCase().includes(val)).slice(0,5);
+      
+      if(filtered.length > 0) {
+        list.style.display = "block";
+        filtered.forEach(n => {
+          let d = document.createElement("div"); 
+          d.textContent = n;
+          d.onclick = () => { 
+            input.value = n; 
+            list.style.display="none"; 
+          };
+          list.appendChild(d);
+        });
+      } else {
+        list.style.display = "none";
+      }
+    };
+    
+    // বাইরে ক্লিক করলে লিস্ট বন্ধ হওয়া
+    input.onblur = () => setTimeout(() => list.style.display="none", 200);
+  });
+}
+
+// ৪. UI পরিবর্তন
 function toggleMatchUI() {
   const type = document.getElementById("matchType").value;
   const isTourney = type === "Tournament";
@@ -104,48 +186,41 @@ function toggleMatchUI() {
   if(isTourney) genSquadFields();
 }
 
-async function loadPlayers(){
-  const snap = await db.collection("players").get();
-  snap.forEach(doc => allPlayers.push(doc.data().username || doc.id));
-  attachSearch();
-}
-
-function attachSearch() {
-  document.querySelectorAll('.p-search').forEach(input => {
-    input.onkeyup = () => {
-      const list = input.nextSibling;
-      const val = input.value.toLowerCase();
-      list.innerHTML = "";
-      if(val.length < 1) { list.style.display="none"; return; }
-      const filtered = allPlayers.filter(n => n.toLowerCase().includes(val)).slice(0,5);
-      list.style.display = filtered.length ? "block" : "none";
-      filtered.forEach(n => {
-        let d = document.createElement("div"); d.textContent = n;
-        d.onclick = () => { input.value = n; list.style.display="none"; };
-        list.appendChild(d);
-      });
-    };
-  });
-}
-
+// ৫. সাবমিশন লজিক
 async function submitReport() {
+  const subBtn = document.getElementById("subBtn");
   const type = document.getElementById("matchType").value;
+  const score = document.getElementById("score").value;
+
+  if(!score) return alert("Please enter final score!");
+
+  subBtn.disabled = true;
+  subBtn.innerText = "Submitting...";
+
   const report = {
     type: type,
     tName: type === "Tournament" ? adminTName : "Friendly Match",
-    score: document.getElementById("score").value,
+    score: score,
+    hTeamName: document.getElementById("hTeam").value || "",
+    aTeamName: document.getElementById("aTeam").value || "",
     status: "pending",
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
-  // Logic to collect all squad names into an array
-  const inputs = document.querySelectorAll(type === "Tournament" ? "#teamFields .p-search" : "#singleFields .p-search");
-  report.players = Array.from(inputs).map(i => i.value);
 
-  await db.collection("matches").add(report);
-  alert("Submitted!");
+  const inputs = document.querySelectorAll(type === "Tournament" ? "#teamFields .p-search" : "#singleFields .p-search");
+  report.players = Array.from(inputs).map(i => i.value).filter(v => v !== "");
+
+  try {
+    await db.collection("matches").add(report);
+    alert("Match Report Submitted for Review!");
+    location.reload();
+  } catch(e) {
+    alert("Error: " + e.message);
+    subBtn.disabled = false;
+  }
 }
 
-window.onload = loadSettings;
+window.onload = loadData;
 </script>
 </body>
 </html>
