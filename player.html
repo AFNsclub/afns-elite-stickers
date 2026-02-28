@@ -12,26 +12,31 @@
 
 <style>
 /* আপনার দেওয়া অরিজিনাল থিম এবং সিএসএস হুবহু রাখা হয়েছে */
-body{ margin:0; font-family:Arial; background:radial-gradient(circle at top,#1a2f5c 0%,#0b1c33 40%,#1a0f1f 75%,#000 100%); color:#fff; }
+body{ margin:0; font-family:'Segoe UI', Arial, sans-serif; background:radial-gradient(circle at top,#1a2f5c 0%,#0b1c33 40%,#1a0f1f 75%,#000 100%); color:#fff; min-height: 100vh; }
 .container{max-width:700px;margin:auto;padding:20px;}
 header{text-align:center;margin-bottom:20px;}
-header img{width:90px;}
-.card{ background:linear-gradient(145deg,#0f2545,#081a2e); padding:20px; border-radius:22px; box-shadow:0 0 25px rgba(255,215,0,.15); transition: transform 0.3s ease; }
-.name{font-size:22px;font-weight:bold;color:#ffd34d;}
-.rank-badge{ display:inline-block;padding:6px 14px;border-radius:25px; background:linear-gradient(45deg,#ff3b3b,#ffae00); color:#fff; font-weight:bold; margin-top:6px; }
-.progress{background:#0c223f;border-radius:10px;overflow:hidden;height:10px;margin:12px 0;}
-.progress-bar{height:100%;background:linear-gradient(90deg,#4db8ff,#ffd34d);width:0%;transition:.7s ease;}
-.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:15px;}
-.stat{ background:linear-gradient(145deg,#132f55,#0d203a); padding:14px; border-radius:14px; text-align:center; }
-.stat h3{margin:5px 0;color:#ffd34d;}
-button{ width:100%;padding:12px;margin-top:10px;border:none; border-radius:12px;cursor:pointer;font-weight:bold; background:linear-gradient(45deg,#1e5eff,#00c6ff); color:#fff; }
+header img{width:90px; filter: drop-shadow(0 0 10px var(--neon));}
+.card{ background:linear-gradient(145deg,#0f2545,#081a2e); padding:25px; border-radius:22px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+.name{font-size:24px;font-weight:bold;color:#ffd34d; text-transform: uppercase; letter-spacing: 1px;}
+.rank-badge{ display:inline-block;padding:6px 16px;border-radius:25px; color:#fff; font-weight:bold; margin-top:8px; font-size: 13px; text-transform: uppercase;}
+.progress{background:#0c223f;border-radius:10px;overflow:hidden;height:10px;margin:15px 0; border: 1px solid rgba(255,255,255,0.1);}
+.progress-bar{height:100%;background:linear-gradient(90deg,#00f7ff,#ffd700);width:0%;transition:1.2s cubic-bezier(0.17, 0.67, 0.83, 0.67);}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:20px;}
+.stat{ background:rgba(255,255,255,0.03); padding:15px; border-radius:16px; text-align:center; border: 1px solid rgba(255,255,255,0.05); }
+.stat div{ font-size: 12px; color: #aaa; text-transform: uppercase; margin-bottom: 5px;}
+.stat h3{margin:0;color:#ffd34d; font-size: 22px;}
+button{ width:100%;padding:14px;margin-top:12px;border:none; border-radius:12px;cursor:pointer;font-weight:bold; background:linear-gradient(45deg,#1e5eff,#00c6ff); color:#fff; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;}
+button:hover{ transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 198, 255, 0.4); }
+.secondary{ background: #1a2a3a !important; }
 .hidden{display:none;}
-input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none; background:#0d1929; color:#fff;}
-.match-card{ background:linear-gradient(145deg,#0f2545,#081a2e); padding:12px; border-radius:12px; margin-bottom:10px; border-left:5px solid #ffd700; animation: fadeUp 0.5s forwards; }
-@keyframes fadeUp{ to{transform: translateY(0); opacity:1;} }
-.win{border-left-color:#4cff8f;} .loss{border-left-color:#ff6b6b;} .draw{border-left-color:#ffd700;}
-.rating-plus{color:#4cff8f; font-weight:bold;} .rating-minus{color:#ff6b6b; font-weight:bold;}
-#winChart{margin-top:20px;background:#081a2e;padding:10px;border-radius:12px;}
+input{width:100%;padding:12px;margin:8px 0;border-radius:10px;border:1px solid rgba(0,247,255,0.2); background:#050d1a; color:#fff; outline: none;}
+input:focus{ border-color: #00f7ff; }
+.match-card{ background:rgba(255,255,255,0.03); padding:15px; border-radius:14px; margin-bottom:12px; border-left:5px solid #ffd700; transition: 0.3s; }
+.win{border-left-color:#4cff8f; background: rgba(76, 255, 143, 0.05);} 
+.loss{border-left-color:#ff6b6b; background: rgba(255, 107, 107, 0.05);} 
+.draw{border-left-color:#ffd700; background: rgba(255, 215, 0, 0.05);}
+.info-line{ font-size: 14px; margin: 8px 0; color: #ccc; }
+#winChart{margin-top:20px;background:rgba(0,0,0,0.2);padding:15px;border-radius:16px; border: 1px solid rgba(255,255,255,0.05);}
 </style>
 </head>
 
@@ -39,54 +44,59 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none; backgr
 <div class="container">
 <header>
   <img src="logo.png" alt="AFNS Logo">
-  <h2>AFNS Elite Player Profile</h2>
+  <h2>Player Profile</h2>
 </header>
 
 <div class="card" id="viewBox">
   <div class="name" id="v_username">Loading...</div>
-  <div class="email" id="v_email">—</div>
+  <div class="info-line" id="v_email" style="opacity: 0.6; font-size: 13px;">—</div>
   <div id="rankBadge" class="rank-badge">Unranked</div>
   <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 
-  <div class="info-line">🌐 Facebook: <span id="fbLink" class="fb-link hidden" onclick="openFb()" style="color:#4db8ff; cursor:pointer;">View Profile</span></div>
-  <div class="info-line">📱 Phone: <span id="v_phone">—</span></div>
-  <div class="info-line">👑 Owner ID: <span id="v_ownerId">—</span></div>
-  <div class="info-line">💻 Device: <span id="v_device">—</span></div>
+  <div class="info-line">🌐 FB: <span id="fbLink" class="hidden" onclick="openFb()" style="color:#00f7ff; cursor:pointer; font-weight: bold;">[View Profile]</span><span id="fbNone">Not Set</span></div>
+  <div class="info-line">📱 Phone: <span id="v_phone" style="color: #fff;">—</span></div>
+  <div class="info-line">👑 Owner ID: <span id="v_ownerId" style="color: #fff;">—</span></div>
+  <div class="info-line">💻 Device: <span id="v_device" style="color: #fff;">—</span></div>
 
   <div class="stats">
-    <div class="stat"><div>Rating</div><h3 id="rating">1000</h3></div>
-    <div class="stat"><div>Played</div><h3 id="played">0</h3></div>
-    <div class="stat"><div>Wins</div><h3 id="wins">0</h3></div>
+    <div class="stat"><div>Rating Points</div><h3 id="rating">1000</h3></div>
     <div class="stat"><div>Win Rate</div><h3 id="winRate">0%</h3></div>
+    <div class="stat"><div>Total Wins</div><h3 id="wins">0</h3></div>
+    <div class="stat"><div>Matches</div><h3 id="played">0</h3></div>
   </div>
 
-  <button onclick="location.href='index.html'">Submit Match</button>
-  <button onclick="toggleHistory(true)">Match History</button>
-  <button onclick="toggleEdit(true)">Edit Profile</button>
-  <button class="secondary" onclick="logout()" style="background:#333;">Logout</button>
+  <button onclick="location.href='index.html'">Submit New Match</button>
+  <button class="secondary" onclick="toggleHistory(true)">📜 Match History</button>
+  <button class="secondary" onclick="toggleEdit(true)">⚙️ Edit Profile</button>
+  <button onclick="logout()" style="background:linear-gradient(45deg,#ff4b2b, #ff416c); margin-top: 20px;">Logout</button>
 </div>
 
 <div id="editBox" class="hidden card">
-  <h3 style="color:var(--gold)">Edit Profile</h3>
-  <input id="phone" placeholder="Phone Number">
-  <input id="ownerId" placeholder="In-Game Owner ID">
-  <input id="facebook" placeholder="Facebook Profile Link">
-  <input id="deviceName" placeholder="Device Name (e.g. iPhone 13)">
+  <h3 style="color:#ffd34d; text-align: center;">Update Details</h3>
+  <label style="font-size: 11px; color: #aaa;">MOBILE NUMBER</label>
+  <input id="phone" placeholder="e.g. 017xxxxxxxx">
+  <label style="font-size: 11px; color: #aaa;">IN-GAME OWNER ID</label>
+  <input id="ownerId" placeholder="e.g. 123-456-789">
+  <label style="font-size: 11px; color: #aaa;">FACEBOOK PROFILE LINK</label>
+  <input id="facebook" placeholder="https://facebook.com/yourid">
+  <label style="font-size: 11px; color: #aaa;">DEVICE NAME</label>
+  <input id="deviceName" placeholder="e.g. Xiaomi Note 10 Pro">
+  
   <button onclick="saveProfile()">Save Changes</button>
-  <button class="secondary" onclick="toggleEdit(false)" style="background:#333;">Cancel</button>
+  <button class="secondary" onclick="toggleEdit(false)">Cancel</button>
 </div>
 
-<div class="match-history hidden" id="matchHistory">
-  <h3 style="color:var(--gold)">📜 Match History</h3>
-  <div class="streak-box" id="streakBox" style="color:#4cff8f; margin-bottom:10px; font-weight:bold;"></div>
+<div class="match-history hidden card" id="matchHistory">
+  <h3 style="color:#ffd34d; text-align: center;">📜 Recent Performance</h3>
   <canvas id="winChart" height="150"></canvas>
-  <div id="matchList"></div>
-  <button onclick="toggleHistory(false)" style="background:#333;">Back to Profile</button>
+  <div id="matchList" style="margin-top: 20px;"></div>
+  <button class="secondary" onclick="toggleHistory(false)">Back to Profile</button>
 </div>
 
 </div>
 
 <script>
+// Firebase Config
 firebase.initializeApp({
   apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM",
   authDomain:"afnsclub.firebaseapp.com",
@@ -110,73 +120,93 @@ auth.onAuthStateChanged(async user=>{
     
     document.getElementById("v_username").innerText = d.username || "Striker";
     document.getElementById("v_phone").innerText = d.phone || "Not Set";
-    document.getElementById("v_ownerId").innerText = d.ownerId || "Not Set";
-    document.getElementById("v_device").innerText = d.deviceName || "Not Set";
+    document.getElementById("v_ownerId").innerText = d.ownerId || d.gameId || "Not Set";
+    document.getElementById("v_device").innerText = d.deviceName || d.device || "Not Set";
     
-    if(d.facebook) document.getElementById("fbLink").classList.remove("hidden");
+    if(d.facebook) {
+        document.getElementById("fbLink").classList.remove("hidden");
+        document.getElementById("fbNone").classList.add("hidden");
+    }
 
-    // স্ট্যাটস আপডেট
+    // স্ট্যাটস
     const rating = d.ratingAllTime || 1000;
-    document.getElementById("rating").innerText = rating;
-    document.getElementById("played").innerText = d.matchesPlayed || 0;
-    document.getElementById("wins").innerText = d.wins || 0;
+    const wins = d.wins || 0;
+    const total = d.matchesPlayed || (wins + (d.losses||0) + (d.draws||0));
     
-    const winRate = d.matchesPlayed ? Math.round(((d.wins||0)/d.matchesPlayed)*100) : 0;
+    document.getElementById("rating").innerText = rating;
+    document.getElementById("played").innerText = total;
+    document.getElementById("wins").innerText = wins;
+    
+    const winRate = total ? Math.round((wins/total)*100) : 0;
     document.getElementById("winRate").innerText = winRate + "%";
 
-    // র‍্যাঙ্ক ব্যাজ লজিক
-    const badge = document.getElementById("rankBadge");
-    if(rating >= 2000) { badge.innerText="👑 Legend"; badge.style.background="linear-gradient(45deg,#ffd700,#ff8c00)"; }
-    else if(rating >= 1500) { badge.innerText="🔥 Elite"; badge.style.background="linear-gradient(45deg,#ff4b2b,#ff416c)"; }
-    else { badge.innerText="⭐ Pro Striker"; badge.style.background="linear-gradient(45deg,#00b4db,#0083b0)"; }
-
-    document.getElementById("progressBar").style.width = Math.min(100, (rating/25)) + "%";
+    // র‍্যাঙ্ক সিস্টেম
+    updateRankUI(rating);
   });
 });
 
+function updateRankUI(rating) {
+    const badge = document.getElementById("rankBadge");
+    const bar = document.getElementById("progressBar");
+    
+    if(rating >= 2200) { badge.innerText="👑 Legend"; badge.style.background="linear-gradient(45deg,#ffd700,#ff8c00)"; }
+    else if(rating >= 1800) { badge.innerText="🔥 Elite Striker"; badge.style.background="linear-gradient(45deg,#ff4b2b,#ff416c)"; }
+    else if(rating >= 1400) { badge.innerText="🎖️ Diamond"; badge.style.background="linear-gradient(45deg,#00b4db,#0083b0)"; }
+    else { badge.innerText="🛡️ Rookie"; badge.style.background="linear-gradient(45deg,#555,#222)"; }
+    
+    // বার ক্যালকুলেশন (Max 2500 ধরে)
+    bar.style.width = Math.min(100, (rating/2500)*100) + "%";
+}
+
 async function loadMatchHistory(){
   const list = document.getElementById("matchList");
-  list.innerHTML = "Loading History...";
+  list.innerHTML = "<div style='text-align:center;'>Loading History...</div>";
   
-  // নতুন সিস্টেম অনুযায়ী ম্যাচ ফিল্টার (যেখানে এই প্লেয়ারটি খেলেছে)
   const snap = await db.collection("matches")
     .where("status","==","approved")
-    .orderBy("createdAt","desc").get();
+    .orderBy("createdAt","desc")
+    .limit(10)
+    .get();
 
   list.innerHTML = "";
-  let winCount = 0, totalForChart = [];
+  let performanceData = [];
 
   snap.forEach(doc => {
     const m = doc.data();
-    // চেক করা হচ্ছে প্লেয়ারটি এই ম্যাচে ছিল কি না
     if(m.players && m.players.includes(currentUserData.username)){
-        const score = m.score.split("-").map(Number);
-        const isHome = m.players[0] === currentUserData.username;
+        const score = m.score.split("-").map(s => parseInt(s.trim()));
+        const isHome = m.players.indexOf(currentUserData.username) < (m.players.length / 2);
         
-        let result = "DRAW", cls = "draw";
+        let result = "DRAW", cls = "draw", point = 0.5;
+        
         if(score[0] > score[1]) {
             result = isHome ? "WIN" : "LOSS";
             cls = isHome ? "win" : "loss";
+            point = isHome ? 1 : 0;
         } else if(score[1] > score[0]) {
             result = isHome ? "LOSS" : "WIN";
             cls = isHome ? "loss" : "win";
+            point = isHome ? 0 : 1;
         }
 
-        if(result === "WIN") winCount++;
-        totalForChart.push(result === "WIN" ? 1 : 0);
+        performanceData.push(point);
 
         list.innerHTML += `
           <div class="match-card ${cls}">
-            <b style="color:var(--gold)">${result}</b> | ${m.tName}<br>
-            <span>${m.hTeamName || m.players[0]} ${m.score} ${m.aTeamName || m.players[1]}</span>
-            <div class="small" style="font-size:11px; opacity:0.6; margin-top:5px;">${m.createdAt?.toDate().toLocaleDateString()}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <b style="color:${result==='WIN'?'#4cff8f':result==='LOSS'?'#ff6b6b':'#ffd700'}">${result}</b>
+                <span style="font-size:10px; opacity:0.5;">${m.createdAt?.toDate().toLocaleDateString() || 'Recent'}</span>
+            </div>
+            <div style="margin-top:5px; font-size:13px;">
+                ${m.hTeamName || m.players[0]} <span style="color:#ffd700; font-weight:bold;">${m.score}</span> ${m.aTeamName || m.players[m.players.length-1]}
+            </div>
           </div>
         `;
     }
   });
 
-  if(list.innerHTML === "") list.innerHTML = "<div class='empty'>No matches found!</div>";
-  updateChart(totalForChart.reverse());
+  if(list.innerHTML === "") list.innerHTML = "<div style='text-align:center; opacity:0.5;'>No matches found!</div>";
+  updateChart(performanceData.reverse());
 }
 
 function updateChart(data){
@@ -190,12 +220,21 @@ function updateChart(data){
                 label: 'Performance',
                 data: data,
                 borderColor: '#00f7ff',
+                backgroundColor: 'rgba(0, 247, 255, 0.1)',
+                borderWidth: 3,
                 tension: 0.4,
                 fill: true,
-                backgroundColor: 'rgba(0, 247, 255, 0.1)'
+                pointRadius: 4,
+                pointBackgroundColor: '#00f7ff'
             }]
         },
-        options: { plugins: { legend: { display: false } }, scales: { y: { display: false } } }
+        options: { 
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                y: { min: 0, max: 1, ticks: { display: false }, grid: { display: false } },
+                x: { grid: { color: 'rgba(255,255,255,0.05)' } }
+            } 
+        }
     });
 }
 
@@ -210,24 +249,28 @@ function toggleEdit(show){
     document.getElementById("viewBox").classList.toggle("hidden", show);
     if(show){
         document.getElementById("phone").value = currentUserData.phone || "";
-        document.getElementById("ownerId").value = currentUserData.ownerId || "";
+        document.getElementById("ownerId").value = currentUserData.ownerId || currentUserData.gameId || "";
         document.getElementById("facebook").value = currentUserData.facebook || "";
-        document.getElementById("deviceName").value = currentUserData.deviceName || "";
+        document.getElementById("deviceName").value = currentUserData.deviceName || currentUserData.device || "";
     }
 }
 
 async function saveProfile(){
-    await db.collection("players").doc(uid).update({
-        phone: document.getElementById("phone").value,
-        ownerId: document.getElementById("ownerId").value,
-        facebook: document.getElementById("facebook").value,
-        deviceName: document.getElementById("deviceName").value
-    });
-    alert("Profile Updated!");
-    toggleEdit(false);
+    try {
+        await db.collection("players").doc(uid).update({
+            phone: document.getElementById("phone").value,
+            ownerId: document.getElementById("ownerId").value,
+            facebook: document.getElementById("facebook").value,
+            deviceName: document.getElementById("deviceName").value
+        });
+        alert("✅ Profile Updated Successfully!");
+        toggleEdit(false);
+    } catch(e) {
+        alert("❌ Error: " + e.message);
+    }
 }
 
-function logout(){ auth.signOut().then(()=> location="login.html"); }
+function logout(){ if(confirm("Logout now?")) auth.signOut().then(()=> location="login.html"); }
 function openFb(){ if(currentUserData.facebook) window.open(currentUserData.facebook, "_blank"); }
 </script>
 </body>
