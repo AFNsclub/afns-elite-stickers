@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AFNS Elite Strikers | Realtime Leaderboard</title>
+<title>AFNS Elite Strikers | Leaderboard Fixed</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -10,18 +10,18 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* আপনার আগের CSS হুবহু এখানে থাকবে */
+/* আগের স্টাইল হুবহু থাকবে */
 :root{ --gold:#FFD700; --silver:#C0C0C0; --bronze:#CD7F32; --neon:#00f7ff; --bg-dark:#010814; --text:#ffffff; }
 body{ margin:0; font-family:Segoe UI,sans-serif; background:linear-gradient(180deg,var(--bg-dark),#021b33); color:var(--text); display:flex; flex-direction:column; align-items:center; padding:20px; }
-.container{ max-width:900px; width:100%; background:rgba(0,0,0,.65); border-radius:20px; padding:25px 30px; backdrop-filter:blur(12px); margin-bottom:30px; box-shadow:0 0 40px rgba(0,247,255,.3); }
+.container{ max-width:1000px; width:100%; background:rgba(0,0,0,.65); border-radius:20px; padding:25px 30px; backdrop-filter:blur(12px); margin-bottom:30px; box-shadow:0 0 40px rgba(0,247,255,.3); overflow-x: auto;}
 h1{color:var(--gold); text-align:center;} h2{color:var(--neon); text-align:center;}
-table{width:100%; border-collapse:collapse; margin-top:15px;}
-th,td{ padding:12px; text-align:center; border-bottom:1px solid rgba(255,255,255,.1); }
-.rank1{background:var(--gold); color:#000;} .rank2{background:var(--silver); color:#000;} .rank3{background:var(--bronze); color:#000;}
+table{width:100%; border-collapse:collapse; margin-top:15px; min-width: 600px;}
+th,td{ padding:12px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); }
+.rank1{background:var(--gold); color:#000; font-weight: bold;} 
+.rank2{background:var(--silver); color:#000; font-weight: bold;} 
+.rank3{background:var(--bronze); color:#000; font-weight: bold;}
 button{ padding:10px 20px; border:none; border-radius:10px; cursor:pointer; font-weight:700; background:linear-gradient(90deg,var(--neon),#008cff); color:#000; margin:5px;}
-.autocomplete-wrapper{position:relative; flex:1;}
-.autocomplete-suggestions{ position:absolute; background:#0c1b2a; width:100%; max-height:150px; overflow-y:auto; z-index:10;}
-.autocomplete-suggestions div{ padding:8px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);}
+.p-img{width: 30px; height: 30px; border-radius: 50%; vertical-align: middle; margin-right: 8px;}
 </style>
 </head>
 <body>
@@ -37,12 +37,15 @@ button{ padding:10px 20px; border:none; border-radius:10px; cursor:pointer; font
       <tr>
         <th>Rank</th>
         <th>Player</th>
-        <th>Played</th>
+        <th>W</th>
+        <th>L</th>
+        <th>D</th>
+        <th>Total</th>
         <th>Rating</th>
       </tr>
     </thead>
     <tbody id="rankingBody">
-      <tr><td colspan="4">Loading...</td></tr>
+      <tr><td colspan="7">Loading Player Stats...</td></tr>
     </tbody>
   </table>
 </div>
@@ -50,35 +53,6 @@ button{ padding:10px 20px; border:none; border-radius:10px; cursor:pointer; font
 <div class="container">
   <h2>Player Rating Graph</h2>
   <canvas id="ratingChart"></canvas>
-</div>
-
-<div class="container">
-  <h2>Head-to-Head Comparison</h2>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;">
-    <div class="autocomplete-wrapper">
-      <input type="text" id="playerA" placeholder="Player A" style="width:100%; padding:10px; border-radius:5px; border:none;"/>
-      <div class="autocomplete-suggestions" id="suggestionsA"></div>
-    </div>
-    <div class="autocomplete-wrapper">
-      <input type="text" id="playerB" placeholder="Player B" style="width:100%; padding:10px; border-radius:5px; border:none;"/>
-      <div class="autocomplete-suggestions" id="suggestionsB"></div>
-    </div>
-    <button onclick="loadH2H()">Compare</button>
-  </div>
-
-  <table style="margin-top:15px;">
-    <thead>
-      <tr>
-        <th>Event</th>
-        <th>Home</th>
-        <th>Score</th>
-        <th>Away</th>
-      </tr>
-    </thead>
-    <tbody id="h2hBody">
-      <tr><td colspan="4">Enter players to compare</td></tr>
-    </tbody>
-  </table>
 </div>
 
 <script>
@@ -92,15 +66,10 @@ const db=firebase.firestore();
 let mode="season";
 let cachedDocs=[];
 let ratingChart=null;
-let playerList=[];
 
-// প্লেয়ার লিস্ট লোড করা
-db.collection("players").get().then(snap=>{
-  snap.forEach(doc=>{ playerList.push(doc.data().username || doc.id); });
-});
-
-// রিয়েলটাইম লিসেনার
-db.collection("players").orderBy("ratingAllTime","desc").onSnapshot(snapshot=>{
+// রিয়েলটাইম লিডারবোর্ড লিসেনার
+// (পুরাতন ম্যাচ বা প্লেয়ার না আসার কারণ হতে পারে orderBy লজিক, তাই আমরা এটি সব প্লেয়ারের জন্য সেট করছি)
+db.collection("players").onSnapshot(snapshot=>{
   cachedDocs=snapshot.docs;
   reloadLeaderboard();
 });
@@ -108,94 +77,61 @@ db.collection("players").orderBy("ratingAllTime","desc").onSnapshot(snapshot=>{
 function reloadLeaderboard(){
   const rankingBody=document.getElementById("rankingBody");
   rankingBody.innerHTML="";
-  let rank=1;
 
-  cachedDocs.forEach(doc=>{
+  // সর্টিং লজিক (রেটিং অনুযায়ী সাজানো)
+  let sortedData = [...cachedDocs].sort((a, b) => {
+      let rA = mode === "season" ? (a.data().ratingSeason || 1000) : (a.data().ratingAllTime || 1000);
+      let rB = mode === "season" ? (b.data().ratingSeason || 1000) : (b.data().ratingAllTime || 1000);
+      return rB - rA;
+  });
+
+  let rank=1;
+  sortedData.forEach(doc=>{
     const p=doc.data();
     const rating = mode==="season" ? p.ratingSeason||1000 : p.ratingAllTime||1000;
+    
+    // ডাটাবেজ থেকে Wins/Losses/Draws নেওয়া
+    const w = p.wins || 0;
+    const l = p.losses || 0;
+    const d = p.draws || 0;
+    const total = (p.matchesPlayed) ? p.matchesPlayed : (w + l + d);
+
     const cls = rank===1?"rank1":rank===2?"rank2":rank===3?"rank3":"";
 
     rankingBody.innerHTML+=`
       <tr class="${cls}">
         <td>${rank}</td>
-        <td>${p.username || doc.id}</td>
-        <td>${p.matchesPlayed || 0}</td>
-        <td>${rating}</td>
+        <td style="text-align:left;">${p.username || doc.id}</td>
+        <td style="color:#4cff8f">${w}</td>
+        <td style="color:#ff6b6b">${l}</td>
+        <td style="color:#ffd700">${d}</td>
+        <td>${total}</td>
+        <td style="font-weight:bold; color:var(--neon)">${rating}</td>
       </tr>`;
     rank++;
   });
-  loadGraph();
+  loadGraph(sortedData);
 }
 
-// গ্রাফ লোড করা
-function loadGraph(){
-  const labels = cachedDocs.map(d=>d.data().username || d.id);
-  const ratings = cachedDocs.map(d=> mode==="season" ? d.data().ratingSeason||1000 : d.data().ratingAllTime||1000);
+function loadGraph(data){
+  const labels = data.map(d=>d.data().username || d.id);
+  const ratings = data.map(d=> mode==="season" ? d.data().ratingSeason||1000 : d.data().ratingAllTime||1000);
   const ctx=document.getElementById("ratingChart").getContext("2d");
   if(ratingChart) ratingChart.destroy();
   ratingChart = new Chart(ctx,{
     type:"bar",
-    data:{ labels:labels, datasets:[{ label:"Player Rating", data:ratings, backgroundColor: '#00f7ff' }] },
-    options:{ scales:{ y:{beginAtZero:false} } }
+    data:{ labels:labels, datasets:[{ label:"Rating Points", data:ratings, backgroundColor: '#00f7ff' }] },
+    options:{ responsive: true, scales:{ y:{beginAtZero:false} } }
   });
 }
 
-// হেড টু হেড কম্পারিজন (নতুন ডাটা লজিক অনুযায়ী)
-function loadH2H(){
-  const a = document.getElementById("playerA").value.toLowerCase();
-  const b = document.getElementById("playerB").value.toLowerCase();
-  const tbody = document.getElementById("h2hBody");
-
-  if(!a || !b) return alert("উভয় প্লেয়ারের নাম দিন");
-
-  db.collection("matches").where("status","==","approved").get().then(snap => {
-    tbody.innerHTML = "";
-    let found = false;
-    snap.forEach(doc => {
-      const m = doc.data();
-      // চেক করা হচ্ছে প্লেয়াররা এই ম্যাচের প্লেয়ার লিস্টে আছে কি না
-      const pList = m.players.map(p => p.toLowerCase());
-      if(pList.includes(a) && pList.includes(b)){
-        found = true;
-        tbody.innerHTML += `
-          <tr>
-            <td>${m.tName}</td>
-            <td>${m.hTeamName || m.players[0]}</td>
-            <td style="color:var(--gold); font-weight:bold;">${m.score}</td>
-            <td>${m.aTeamName || m.players[1]}</td>
-          </tr>`;
-      }
-    });
-    if(!found) tbody.innerHTML = "<tr><td colspan='4'>কোনো ম্যাচ পাওয়া যায়নি</td></tr>";
-  });
-}
-
-// টগল বাটন লজিক
+// মোড টগল লজিক
 document.getElementById("toggleBtn").onclick=()=>{
   mode = mode==="season" ? "alltime":"season";
   document.getElementById("toggleBtn").innerText = mode==="season" ? "Switch to All Time":"Switch to Season";
   document.getElementById("seasonTitle").innerText = mode==="season" ? "Season Ranking":"All Time Ranking";
   reloadLeaderboard();
 };
-
-// অটো-কমপ্লিট লজিক
-function setupAutocomplete(inputId, boxId){
-  const input=document.getElementById(inputId);
-  const box=document.getElementById(boxId);
-  input.onkeyup=()=>{
-    const val = input.value.toLowerCase();
-    box.innerHTML="";
-    if(!val) return;
-    playerList.filter(p=>p.toLowerCase().includes(val)).slice(0,5).forEach(p=>{
-      const d=document.createElement("div"); d.textContent=p;
-      d.onclick=()=>{ input.value=p; box.innerHTML=""; };
-      box.appendChild(d);
-    });
-  };
-}
-setupAutocomplete("playerA","suggestionsA");
-setupAutocomplete("playerB","suggestionsB");
-
 </script>
 </body>
 </html>
