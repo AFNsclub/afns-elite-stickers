@@ -204,20 +204,23 @@ async function submitReport() {
   const selector = type === "Tournament" ? "#teamFields .p-search" : "#singleFields .p-search";
   const inputs = document.querySelectorAll(selector);
   
-  // গুরুত্বপূর্ণ: প্লেয়ারের নাম এবং আইডি দুটোই নিতে হবে
-  const players = [];
-  const playerIds = [];
+  let players = [];
+  let playerIds = [];
   
   inputs.forEach(input => {
-      if(input.value.trim() !== "") {
-          players.push(input.value.trim());
-          playerIds.push(input.getAttribute('data-uid') || "");
-      }
+    const val = input.value.trim();
+    const uid = input.getAttribute('data-uid');
+    if(val !== "") {
+      players.push(val);
+      playerIds.push(uid || "unknown"); // UID না থাকলে unknown যাবে
+    }
   });
   
+  // ভ্যালিডেশন
   if (players.length < (type === "Tournament" ? (adminPCount * 2) : 2)) {
-      return alert("সব প্লেয়ারের নাম ড্রপডাউন থেকে সিলেক্ট করুন!");
+    return alert("সব প্লেয়ারের নাম ড্রপডাউন থেকে সিলেক্ট করুন!");
   }
+  if(!scoreRaw.includes("-")) return alert("Score format ভুল! (যেমন: 2-1)");
 
   subBtn.disabled = true;
   subBtn.innerText = "Submitting...";
@@ -227,19 +230,22 @@ async function submitReport() {
     tName: type === "Tournament" ? adminTName : "Friendly Match",
     score: scoreRaw.replace(/\s/g, ""), 
     players: players,
-    playerIds: playerIds, // এটি এডমিন প্যানেলের জন্য জরুরি
+    playerIds: playerIds, 
     status: "pending",
-    submittedBy: firebase.auth().currentUser.email,
+    submittedBy: firebase.auth().currentUser ? firebase.auth().currentUser.email : "Guest",
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
   try {
+    // এখানে matches কালেকশনে ডাটা পাঠাচ্ছে
     await db.collection("matches").add(report);
     alert("✅ ম্যাচ সাবমিট হয়েছে!");
-    location.href = 'profile.html';
+    window.location.href = 'profile.html'; // সরাসরি রিডাইরেক্ট
   } catch(e) {
-    alert("❌ Error: " + e.message);
+    console.error("Submission Error:", e);
+    alert("❌ এরর: " + e.message);
     subBtn.disabled = false;
+    subBtn.innerText = "Submit for Review";
   }
 }
 
