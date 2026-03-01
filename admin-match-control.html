@@ -127,29 +127,30 @@ async function approveMatch(matchId) {
     const scores = m.score.split("-").map(Number);
     let result = scores[0] > scores[1] ? "homeWin" : (scores[0] < scores[1] ? "awayWin" : "draw");
 
-    const updatePlayer = async (pName, isWinner, isDraw) => {
-      const q = await db.collection("players").where("username", "==", pName).get();
-      if(!q.empty) {
-        let ratingChange = isDraw ? 2 : (isWinner ? 15 : -10);
-        await q.docs[0].ref.update({
+    // প্লেয়ার আপডেট ফাংশন (নামের বদলে আইডি দিয়ে খোঁজা নিরাপদ)
+    const updatePlayer = async (pId, isWinner, isDraw) => {
+      if(!pId) return;
+      let ratingChange = isDraw ? 5 : (isWinner ? 20 : -10);
+      
+      await db.collection("players").doc(pId).update({
           wins: firebase.firestore.FieldValue.increment(isWinner && !isDraw ? 1 : 0),
           losses: firebase.firestore.FieldValue.increment(!isWinner && !isDraw ? 1 : 0),
           draws: firebase.firestore.FieldValue.increment(isDraw ? 1 : 0),
           matchesPlayed: firebase.firestore.FieldValue.increment(1),
           ratingAllTime: firebase.firestore.FieldValue.increment(ratingChange),
           ratingSeason: firebase.firestore.FieldValue.increment(ratingChange)
-        });
-      }
+      });
     };
 
-    const half = Math.ceil(m.players.length / 2);
-    for(let i=0; i<m.players.length; i++) {
+    const half = Math.ceil(m.playerIds.length / 2);
+    for(let i=0; i<m.playerIds.length; i++) {
         const isHome = i < half;
-        await updatePlayer(m.players[i], (isHome && result === "homeWin") || (!isHome && result === "awayWin"), result === "draw");
+        const isWinner = (isHome && result === "homeWin") || (!isHome && result === "awayWin");
+        await updatePlayer(m.playerIds[i], isWinner, result === "draw");
     }
 
     await matchRef.update({ status: "approved" });
-    alert("✅ Match Approved!");
+    alert("✅ Match Approved & Ratings Updated!");
   } catch (e) {
     alert("❌ Error: " + e.message);
   }
