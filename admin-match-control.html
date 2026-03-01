@@ -20,10 +20,9 @@ h2 { text-align: center; color: var(--gold); text-transform: uppercase; margin-b
 .btn-save:hover { background: #fff; box-shadow: 0 0 15px var(--gold); }
 .match-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 5px solid var(--neon); }
 .match-info { font-size: 14px; margin-bottom: 10px; line-height: 1.6; }
-.match-info b { color: var(--neon); }
 .btn-group { display: flex; gap: 10px; }
-.btn-approve { background: #00ff99; color: #000; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border:none; flex:1; text-transform: uppercase; }
-.btn-delete { background: #ff4444; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border:none; flex:1; text-transform: uppercase; }
+.btn-approve { background: #00ff99; color: #000; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border:none; flex:1; }
+.btn-delete { background: #ff4444; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border:none; flex:1; }
 .status-tag { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
 </style>
 </head>
@@ -35,9 +34,9 @@ h2 { text-align: center; color: var(--gold); text-transform: uppercase; margin-b
   <div class="control-box">
     <h3 style="margin:0; color:var(--gold); text-align:center;">Tournament Settings</h3>
     <label>Current Tournament Name:</label>
-    <input type="text" id="tNameInput" placeholder="Enter tournament name">
+    <input type="text" id="tNameInput">
     <label>Players Per Team:</label>
-    <input type="number" id="pLimitInput" placeholder="e.g. 6">
+    <input type="number" id="pLimitInput">
     <button class="btn-save" id="saveSettingsBtn" onclick="updateSettings()">Save All Settings</button>
   </div>
 
@@ -54,9 +53,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 1. Update Settings Logic
+// ১. সেটিংস আপডেট (Fix করা হয়েছে)
 async function updateSettings() {
-    const name = document.getElementById("tNameInput").value;
+    const name = document.getElementById("tNameInput").value.trim();
     const limit = document.getElementById("pLimitInput").value;
     const btn = document.getElementById("saveSettingsBtn");
 
@@ -73,26 +72,25 @@ async function updateSettings() {
         });
         alert("✅ Settings updated successfully!");
     } catch (error) {
-        console.error(error);
-        alert("❌ Permission Denied: Check your Admin role or Firebase Rules.");
+        alert("❌ Error: " + error.message);
     } finally {
         btn.disabled = false;
         btn.innerText = "Save All Settings";
     }
 }
 
-// Sync current settings
+// সেটিংস সিঙ্ক
 db.collection("settings").doc("tournament").onSnapshot(doc => {
     if(doc.exists) {
-        document.getElementById("tNameInput").value = doc.data().currentTournament || "";
-        document.getElementById("pLimitInput").value = doc.data().playerCount || "";
+        document.getElementById("tNameInput").value = doc.data().currentTournament;
+        document.getElementById("pLimitInput").value = doc.data().playerCount;
     }
 });
 
-// 2. Load Match List
+// ২. ম্যাচ লিস্ট লোড
 db.collection("matches").orderBy("createdAt", "desc").onSnapshot(snap => {
   const list = document.getElementById("adminMatchList");
-  list.innerHTML = snap.empty ? "<p style='text-align:center; color:#666;'>No matches found.</p>" : "";
+  list.innerHTML = snap.empty ? "<p>No matches found.</p>" : "";
   
   snap.forEach(doc => {
     const m = doc.data();
@@ -102,9 +100,9 @@ db.collection("matches").orderBy("createdAt", "desc").onSnapshot(snap => {
 
     div.innerHTML = `
       <div class="match-info">
-        <b>ID:</b> ${doc.id.substring(0,6)} | <b>Event:</b> ${m.tName || 'Friendly'}<br>
-        <b>Score:</b> <span style="font-size:18px; color:var(--gold)">${m.score}</span><br>
-        <b>Status:</b> <span class="status-tag" style="background:${statusColor}; color:#000">${m.status || 'unknown'}</span>
+        <b>Event:</b> ${m.tName}<br>
+        <b>Score:</b> <span style="color:var(--gold)">${m.score}</span><br>
+        <b>Status:</b> <span class="status-tag" style="background:${statusColor}">${m.status}</span>
       </div>
       <div class="btn-group">
         ${m.status === 'pending' ? `<button class="btn-approve" onclick="approveMatch('${doc.id}')">Approve</button>` : ''}
@@ -115,51 +113,53 @@ db.collection("matches").orderBy("createdAt", "desc").onSnapshot(snap => {
   });
 });
 
-// 3. Approve Match Logic
+// ৩. এপ্রুভ লজিক (সবচেয়ে গুরুত্বপূর্ণ ফিক্স)
 async function approveMatch(matchId) {
-  if(!confirm("Are you sure? This will update player ratings.")) return;
+  if(!confirm("Are you sure?")) return;
 
   try {
     const matchRef = db.collection("matches").doc(matchId);
     const mSnap = await matchRef.get();
     const m = mSnap.data();
     
+    if(!m.playerIds || m.playerIds.length === 0) return alert("Error: No Player IDs found!");
+
     const scores = m.score.split("-").map(Number);
     let result = scores[0] > scores[1] ? "homeWin" : (scores[0] < scores[1] ? "awayWin" : "draw");
 
-    // প্লেয়ার আপডেট ফাংশন (নামের বদলে আইডি দিয়ে খোঁজা নিরাপদ)
-    const updatePlayer = async (pId, isWinner, isDraw) => {
-      if(!pId) return;
-      let ratingChange = isDraw ? 5 : (isWinner ? 20 : -10);
-      
-      await db.collection("players").doc(pId).update({
-          wins: firebase.firestore.FieldValue.increment(isWinner && !isDraw ? 1 : 0),
-          losses: firebase.firestore.FieldValue.increment(!isWinner && !isDraw ? 1 : 0),
-          draws: firebase.firestore.FieldValue.increment(isDraw ? 1 : 0),
-          matchesPlayed: firebase.firestore.FieldValue.increment(1),
-          ratingAllTime: firebase.firestore.FieldValue.increment(ratingChange),
-          ratingSeason: firebase.firestore.FieldValue.increment(ratingChange)
-      });
-    };
-
+    const batch = db.batch(); // Batch Update ব্যবহারের মাধ্যমে সব একসাথে হবে
     const half = Math.ceil(m.playerIds.length / 2);
+
     for(let i=0; i<m.playerIds.length; i++) {
+        const pId = m.playerIds[i];
+        if(!pId || pId === "unknown") continue;
+
         const isHome = i < half;
         const isWinner = (isHome && result === "homeWin") || (!isHome && result === "awayWin");
-        await updatePlayer(m.playerIds[i], isWinner, result === "draw");
+        const change = result === "draw" ? 5 : (isWinner ? 20 : -10);
+
+        const pRef = db.collection("players").doc(pId);
+        batch.update(pRef, {
+            wins: firebase.firestore.FieldValue.increment(isWinner && result !== "draw" ? 1 : 0),
+            losses: firebase.firestore.FieldValue.increment(!isWinner && result !== "draw" ? 1 : 0),
+            draws: firebase.firestore.FieldValue.increment(result === "draw" ? 1 : 0),
+            matchesPlayed: firebase.firestore.FieldValue.increment(1),
+            ratingAllTime: firebase.firestore.FieldValue.increment(change),
+            ratingSeason: firebase.firestore.FieldValue.increment(change)
+        });
     }
 
-    await matchRef.update({ status: "approved" });
-    alert("✅ Match Approved & Ratings Updated!");
+    batch.update(matchRef, { status: "approved" });
+    await batch.commit(); // সেভ
+    alert("✅ Match Approved!");
   } catch (e) {
     alert("❌ Error: " + e.message);
   }
 }
 
 async function deleteMatch(id) {
-  if(confirm("Permanently delete this match?")) {
+  if(confirm("Delete this match?")) {
     await db.collection("matches").doc(id).delete();
-    alert("🗑 Match deleted.");
   }
 }
 </script>
