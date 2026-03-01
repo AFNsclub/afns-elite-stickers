@@ -201,15 +201,23 @@ async function submitReport() {
   const type = document.getElementById("matchType").value;
   const scoreRaw = document.getElementById("score").value.trim();
   
-  // ইনপুট ভ্যালিডেশন
   const selector = type === "Tournament" ? "#teamFields .p-search" : "#singleFields .p-search";
   const inputs = document.querySelectorAll(selector);
-  const players = Array.from(inputs).map(i => i.value.trim()).filter(v => v !== "");
+  
+  // গুরুত্বপূর্ণ: প্লেয়ারের নাম এবং আইডি দুটোই নিতে হবে
+  const players = [];
+  const playerIds = [];
+  
+  inputs.forEach(input => {
+      if(input.value.trim() !== "") {
+          players.push(input.value.trim());
+          playerIds.push(input.getAttribute('data-uid') || "");
+      }
+  });
   
   if (players.length < (type === "Tournament" ? (adminPCount * 2) : 2)) {
-      return alert("সব প্লেয়ারের নাম সঠিকভাবে সিলেক্ট করুন!");
+      return alert("সব প্লেয়ারের নাম ড্রপডাউন থেকে সিলেক্ট করুন!");
   }
-  if(!scoreRaw.includes("-")) return alert("Score format ভুল! (যেমন: 2-1)");
 
   subBtn.disabled = true;
   subBtn.innerText = "Submitting...";
@@ -218,22 +226,20 @@ async function submitReport() {
     type: type,
     tName: type === "Tournament" ? adminTName : "Friendly Match",
     score: scoreRaw.replace(/\s/g, ""), 
-    hTeamName: document.getElementById("hTeam").value || players[0],
-    aTeamName: document.getElementById("aTeam").value || players[players.length-1],
     players: players,
+    playerIds: playerIds, // এটি এডমিন প্যানেলের জন্য জরুরি
     status: "pending",
+    submittedBy: firebase.auth().currentUser.email,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
   try {
     await db.collection("matches").add(report);
-    alert("✅ ম্যাচ সাবমিট হয়েছে! এডমিন চেক করার পর রেটিং আপডেট হবে।");
+    alert("✅ ম্যাচ সাবমিট হয়েছে!");
     location.href = 'profile.html';
   } catch(e) {
-    console.error(e);
     alert("❌ Error: " + e.message);
     subBtn.disabled = false;
-    subBtn.innerText = "Submit for Review";
   }
 }
 
