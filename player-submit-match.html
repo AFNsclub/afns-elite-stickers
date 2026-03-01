@@ -31,7 +31,6 @@ input:focus{ border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 247, 255, 0
 .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .searchBox{ position:relative; }
 
-/* DROPDOWN STYLING */
 .dropdown{ 
     position:absolute; width:100%; background:#0d1929; 
     max-height:180px; overflow-y:auto; border-radius:10px; 
@@ -47,8 +46,7 @@ button{
     text-transform: uppercase; letter-spacing: 1px;
 }
 button:hover{ transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 247, 255, 0.4); }
-button:disabled{ opacity: 0.6; cursor: not-allowed; }
-
+button:disabled{ background: #444; color: #888; cursor: not-allowed; }
 .btn-home{ background: transparent; border: 1px solid #444; color: #aaa; margin-top: 10px;}
 </style>
 </head>
@@ -107,6 +105,7 @@ button:disabled{ opacity: 0.6; cursor: not-allowed; }
 </div>
 
 <script>
+// Firebase Config
 firebase.initializeApp({ 
     apiKey:"AIzaSyBtDxu0LJyb10ZkhH8IpxT5s8PcKc4nUxM", 
     authDomain:"afnsclub.firebaseapp.com", 
@@ -115,25 +114,29 @@ firebase.initializeApp({
 const db = firebase.firestore();
 
 let allPlayers = []; 
-let adminTName = "Friendly"; 
-let adminPCount = 1;
+let adminTName = "Tournament Match"; 
+let adminPCount = 2;
 
-// Load Tournament Settings & Player List
+// ১. লোডিং ফাস্ট করার জন্য Snapshot Listener ব্যবহার
 async function loadData() {
-  const settings = await db.collection("settings").doc("tournament").get();
-  if(settings.exists) {
-    adminTName = settings.data().currentTournament || "Elite League";
-    adminPCount = settings.data().playerCount || 1;
-  }
-
-  const snap = await db.collection("players").get();
-  allPlayers = [];
-  snap.forEach(doc => {
-    const p = doc.data();
-    if(p.username) allPlayers.push({ name: p.username, id: doc.id });
+  // সেটিংস লোড
+  db.collection("settings").doc("tournament").onSnapshot(doc => {
+    if(doc.exists) {
+        adminTName = doc.data().currentTournament || "Elite League";
+        adminPCount = doc.data().playerCount || 2;
+        // যদি ইউজার ইতিমধ্যে টুর্নামেন্ট মোডে থাকে তবে ইনপুট আপডেট করবে
+        if(document.getElementById("matchType").value === "Tournament") genSquadFields();
+    }
   });
-  
-  attachSearch();
+
+  // প্লেয়ার লিস্ট লোড (Fast Cache)
+  db.collection("players").orderBy("username").onSnapshot(snap => {
+    allPlayers = [];
+    snap.forEach(doc => {
+        allPlayers.push({ name: doc.data().username, id: doc.id });
+    });
+    attachSearch(); // ডাইনামিকলি সার্চ বাইন্ড করা
+  });
 }
 
 function genSquadFields() {
@@ -143,8 +146,8 @@ function genSquadFields() {
   aList.innerHTML = '<div class="section-title">Away Squad</div>';
   
   for(let i=1; i<=adminPCount; i++) {
-    hList.innerHTML += `<label>Player ${i}</label><div class="searchBox"><input type="text" class="p-search" placeholder="Search..." autocomplete="off"><div class="dropdown"></div></div>`;
-    aList.innerHTML += `<label>Player ${i}</label><div class="searchBox"><input type="text" class="p-search" placeholder="Search..." autocomplete="off"><div class="dropdown"></div></div>`;
+    hList.innerHTML += `<label>Home Player ${i}</label><div class="searchBox"><input type="text" class="p-search" placeholder="Search..." autocomplete="off"><div class="dropdown"></div></div>`;
+    aList.innerHTML += `<label>Away Player ${i}</label><div class="searchBox"><input type="text" class="p-search" placeholder="Search..." autocomplete="off"><div class="dropdown"></div></div>`;
   }
   attachSearch();
 }
@@ -157,22 +160,18 @@ function attachSearch() {
       const val = input.value.trim().toLowerCase();
       list.innerHTML = "";
       
-      if(val.length < 1) { 
-        list.style.display="none"; 
-        return; 
-      }
+      if(val.length < 1) { list.style.display="none"; return; }
 
-      const filtered = allPlayers.filter(p => p.name.toLowerCase().includes(val)).slice(0,5);
+      const filtered = allPlayers.filter(p => p.name && p.name.toLowerCase().includes(val)).slice(0,5);
       
       if(filtered.length > 0) {
         list.style.display = "block";
         filtered.forEach(p => {
           let d = document.createElement("div"); 
           d.textContent = p.name;
-          d.setAttribute('data-id', p.id);
           d.onclick = () => { 
             input.value = p.name;
-            input.setAttribute('data-uid', p.id); // Store UID for rating logic
+            input.setAttribute('data-uid', p.id); 
             list.style.display="none"; 
           };
           list.appendChild(d);
@@ -182,6 +181,7 @@ function attachSearch() {
       }
     };
     
+    // বাইরে ক্লিক করলে ড্রপডাউন বন্ধ
     input.onblur = () => setTimeout(() => list.style.display="none", 250);
   });
 }
@@ -199,48 +199,46 @@ function toggleMatchUI() {
 async function submitReport() {
   const subBtn = document.getElementById("subBtn");
   const type = document.getElementById("matchType").value;
-  const score = document.getElementById("score").value;
+  const scoreRaw = document.getElementById("score").value.trim();
   
-  // Validation
-  const inputs = document.querySelectorAll(type === "Tournament" ? "#teamFields .p-search" : "#singleFields .p-search");
-  const players = Array.from(inputs).map(i => i.value).filter(v => v !== "");
-  const playerIds = Array.from(inputs).map(i => i.getAttribute('data-uid')).filter(v => v !== null);
-
-  if(players.length < (type === "Tournament" ? 2 : 2)) return alert("Please fill in all player names!");
-  if(!score.includes("-")) return alert("Please use '-' in score (e.g. 2-1)");
+  // ইনপুট ভ্যালিডেশন
+  const selector = type === "Tournament" ? "#teamFields .p-search" : "#singleFields .p-search";
+  const inputs = document.querySelectorAll(selector);
+  const players = Array.from(inputs).map(i => i.value.trim()).filter(v => v !== "");
+  
+  if (players.length < (type === "Tournament" ? (adminPCount * 2) : 2)) {
+      return alert("সব প্লেয়ারের নাম সঠিকভাবে সিলেক্ট করুন!");
+  }
+  if(!scoreRaw.includes("-")) return alert("Score format ভুল! (যেমন: 2-1)");
 
   subBtn.disabled = true;
-  subBtn.innerText = "Processing...";
+  subBtn.innerText = "Submitting...";
 
   const report = {
     type: type,
     tName: type === "Tournament" ? adminTName : "Friendly Match",
-    score: score.replace(/\s/g, ""), // Remove spaces
+    score: scoreRaw.replace(/\s/g, ""), 
     hTeamName: document.getElementById("hTeam").value || players[0],
     aTeamName: document.getElementById("aTeam").value || players[players.length-1],
     players: players,
     status: "pending",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    
-    // Compatibility for Old System (Admin Approval logic expects these)
-    player1: players[0],
-    player2: players[players.length-1],
-    player1Id: playerIds[0] || "",
-    player2Id: playerIds[playerIds.length-1] || ""
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
   try {
     await db.collection("matches").add(report);
-    alert("✅ Match Submitted! Admin will review and update ratings soon.");
+    alert("✅ ম্যাচ সাবমিট হয়েছে! এডমিন চেক করার পর রেটিং আপডেট হবে।");
     location.href = 'profile.html';
   } catch(e) {
+    console.error(e);
     alert("❌ Error: " + e.message);
     subBtn.disabled = false;
-    subBtn.innerText = "Submit Match";
+    subBtn.innerText = "Submit for Review";
   }
 }
 
+// পেজ লোড হওয়ার সাথে সাথে ডেটা ফেচ শুরু করবে
 window.onload = loadData;
 </script>
 </body>
-</html>
+    </html>
